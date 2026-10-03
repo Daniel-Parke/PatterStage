@@ -1,0 +1,64 @@
+{
+  "id": "T-0131",
+  "intent": "U17, the first batch after the UI overhaul programme: the review's three P1 findings, each a screen that does not work at 390. The header's actions took the title's row on Chat, Scripts and Skills, so the h1 read '(' and the subtitle went one word per line; Chat kept its 240px conversation list beside a 100px transcript; and three banners squeezed their sentence into a column beside their button. One class fixes the header on every screen; one primitive, SplitPane, gives Chat, Logs, Composer and Research the same two-column shape and the same phone shape; and every banner's action wraps under its sentence below sm. The phone gate learns to measure all three.",
+  "declared": {
+    "capabilities": [
+      "edit-source",
+      "edit-tests",
+      "edit-docs"
+    ],
+    "side_effects": []
+  },
+  "mode": "standard",
+  "tier_proposed": "R1",
+  "tier_ruled": "R1",
+  "reasons": [
+    {
+      "factor": "size-threshold",
+      "tier_floor": "R1",
+      "source": "derived:diff-size",
+      "evidence": "one primitive added, one header slot and four banners given a wrap, four pages moved onto the primitive, one picker's width and one scroll effect changed, one bubble widened; no route, no schema, no protected path; three oracle suites and three live measures new, two chat suites' dead polyfills removed"
+    }
+  ],
+  "status": "done",
+  "owner_session": "t0131-u17-phone-p1-2026-09-09",
+  "claims": [
+    "src/components/ui/SplitPane.tsx",
+    "src/components/layout/PageHeader.tsx",
+    "src/components/ui/LoadErrorBanner.tsx",
+    "src/components/profiles/ProfilesDriftBanner.tsx",
+    "src/components/models/ModelsDriftBanner.tsx",
+    "src/components/chat/MessageBubble.tsx",
+    "src/components/logs/LogFilePicker.tsx",
+    "src/hooks/useChatSend.ts",
+    "src/app/work/chat/page.tsx",
+    "src/app/results/logs/page.tsx",
+    "src/app/work/composer/page.tsx",
+    "src/app/work/research/page.tsx",
+    "tests/e2e/phone.spec.ts",
+    "tests/unit/",
+    "docs/contributing/design-tokens.md",
+    "docs/guides/chat.md",
+    "docs/guides/logs.md",
+    "docs/guides/composer.md",
+    "docs/guides/research.md",
+    "CHANGELOG.md"
+  ],
+  "programme": "U17, the review's P1 batch; follows U16 (T-0130) and the review at org/reviews/2026-09-ui-review.md. U18 (P2), U19 (P3) and U20 (P4) follow.",
+  "timestamps": {
+    "opened": "2026-09-09T18:30:00Z",
+    "updated": "2026-09-09T21:30:00Z",
+    "closed": "2026-09-09T21:30:00Z"
+  },
+  "invariants": [
+    "I1 A PHONE KEEPS THE PAGE'S NAME. Below sm the header's actions take their own row unconditionally; at 390 the h1's box is at least 12rem wide on every route and the subtitle runs to three lines at most (phone.spec).",
+    "I2 ONE TWO-COLUMN SHAPE. A list that chooses and the thing chosen is SplitPane: two columns from lg, the list behind a button below lg that opens a Dialog sheet and closes on the choice; the main pane carries data-ps-split=main and has at least 85% of main at 390.",
+    "I3 THE SENTENCE FIRST. A banner's action wraps under its words below sm (basis-full sm:basis-auto); the compact LoadErrorBanner's always does; every role=alert at 390 gives its words at least three fifths of its width with the button under them.",
+    "I4 THE TRANSCRIPT SCROLLS ITSELF. The chat's auto-scroll moves its own scroller and nothing above it; smoothness is CSS, which reduced motion turns off."
+  ],
+  "commits": "d9d18575 the U17 oracles, red at 6 of 7 and a suite without its subject; 69af48ee the implementation; 9478b540 the oracles sharpened after the walk (the failed-run bubble, the transcript's scroll); the chore commit that carries this record and the derived views.",
+  "verification": "Gate by exit code on the finished tree: lint 0, tsc 0, jest 0 (6820 tests, 664 suites), knip 0, canary 0, build 0, Playwright 1 on the first run (263 passed, 6 failed, 24 skipped, two projects): four Agents tests and the Missions help deep-link timed out inside the run's first minute waiting for a control the page draws after its fetch, and the chat composer's floor was set at 300px where the row's own arithmetic (390 less the gutter, the padding, the send button and the gap) gives 282; the floor was reset to 270 with the arithmetic beside it and the three spec files re-run in isolation, 0 (35 passed, exit 0); census 0; design-lint 355 baselined violations. The walk on the isolated instance, thirteen routes at 1440x900 and 390x844 with a screenshot of each and of every open sheet: at 390 the narrowest h1 box is 358px (the floor is 192) and the tallest subtitle 48px (three lines is 48); every role=alert gives its words at least 80% of its width with the button under them; the four split-pane screens each show their opener, open the sheet, and close it on the first choice (all four); main overflows its box on no route-widths. Screenshots regenerated.",
+  "what_the_walk_found_that_the_oracles_did_not": "Two things, both on /work/chat at 390, both fixed before the gate. The failed-run bubble is a banner too: at 70% of a 358px transcript it gave its reason 35% of the row beside Retry, one word per line; it is 85% wide below sm and Retry wraps under. And the Conversations opener sat under the sticky header, because scrollIntoView on the transcript's end also scrolled main by the mobile header's 48px; the scroller moves itself now. Both are in the sharpened suites.",
+  "mutation": "Fifteen mutants against the committed tree (69af48ee), each aimed at one decision: the header slot's basis-full, the split's breakpoint, the sheet closing on the choice, the opener's aria-expanded, the pane's mark, the sheet branch itself, the compact banner's always-wrap, the banner's flex-wrap, the drift button's basis, the drift line's controls, the bubble's Retry and its width, the transcript scrolling itself, the chat's closeOnChange, and the picker's width. Fifteen of fifteen killed on the first pass. The phone spec's three measures are live-only and were not swept; the first gate's own finding, the composer floor mis-set at 300 where the row gives 282, is the record of what it reads.",
+  "deviation": "The review's fix for the chat pane said 'a Dialog sheet opened from a Conversations (1) button in the header'; the button sits at the top of the pane instead, because the header's actions row is already the row that crushed the title, and a fifth control there would have put it back. The split is lg, not the md the rail uses, because the grids it replaces split at lg and a 320px list beside a workflow canvas does not fit a 768px tablet either."
+}

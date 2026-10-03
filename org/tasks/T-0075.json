@@ -1,0 +1,36 @@
+{
+  "id": "T-0075",
+  "intent": "Four sweep-style tests assert that a list of offenders is empty without asserting they inspected anything, so each is one drift away from passing while looking at nothing. Filed as a divergence in T-0066 and closed here rather than only recorded, because the fix is four assertions and the failure mode is a test that reports success for having found no subject.",
+  "declared": {
+    "capabilities": [
+      "edit-tests"
+    ],
+    "side_effects": []
+  },
+  "mode": "standard",
+  "tier_proposed": "R1",
+  "tier_ruled": "R1",
+  "reasons": [],
+  "status": "done",
+  "owner_session": "t0075-sweep-denominators-2026-08-31",
+  "claims": [
+    "tests/unit/read-only-actually-reads.test.ts",
+    "tests/unit/missions-read-only-reads.test.ts",
+    "tests/unit/viz-chrome-tokens.test.ts",
+    "tests/unit/module-registry.test.ts"
+  ],
+  "the_rule": "A sweep must assert a denominator ON THE NOUN THE RULE IS ABOUT. That is the T-0062 lesson: the check it replaced asserted `files.length > 100` and matched 3 of 394 buttons, because the rule was about buttons and the denominator counted files. Two of the four here repeat that error exactly.",
+  "what_each_one_was_missing": [
+    "read-only-actually-reads.test.ts is the pointed one. It counted route FILES (`> 50`) while attributing guard calls to handlers via a regex on `export [async] function METHOD`. Rewrite a route as an exported const, or drift that pattern any other way, and the attribution goes empty for every file -- so every assertion in the describe passes vacuously against a full 96-file walk while reporting nothing. Its own sibling SCRIPT gets this right at check-read-only-guards.mjs:98 with a handlersSeen floor; the test did not. Now it counts handlers, and drifting the regex to `export const` turns it red, which is the exact scenario, measured.",
+    "missions-read-only-reads.test.ts asserted `files.length > 0`, which passes on ONE file. A walk that lost its way -- a moved directory, a changed extension -- would report a clean tree while inspecting almost none of it. Floored at 4 against a measured 5.",
+    "viz-chrome-tokens.test.ts had no denominator in its describe at all. `expect(bad).toEqual([])` is satisfied just as well by finding nothing to look at as by finding nothing wrong, and the two are indistinguishable from outside. Floored at 8 against a measured 10.",
+    "module-registry.test.ts walked src/app with no floor: `missing` is empty when the walk finds no pages, which is the same green as a registry that covers every one. Floored at 20 against a measured 27 page.tsx files."
+  ],
+  "why_this_was_upgraded_from_a_record_to_a_fix": "The approved plan listed these under 'records'. A record saying four tests in the suite can pass vacuously, filed beside four tests that still can, is worth less than four assertions. The fix is small, the pattern was established four times over in this programme, and leaving a known-inert guard in place is the thing the whole programme has been closing.",
+  "verification": "Gate: lint 0, tsc 0, 3435 tests / 397 suites. The read-only one is proved in both directions: drifting its attribution regex to `export const` turns the new assertion red and leaves the other thirty-one green, which is precisely the silent failure it now prevents.",
+  "timestamps": {
+    "opened": "2026-08-31T20:30:00Z",
+    "updated": "2026-08-31T21:00:00Z",
+    "closed": "2026-08-31T21:00:00Z"
+  }
+}

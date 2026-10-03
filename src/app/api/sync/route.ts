@@ -6,15 +6,13 @@
 // POST /api/sync?source=cron — Trigger a single source
 // ═══════════════════════════════════════════════════════════════
 
+import { guardRoute } from "@/lib/api/response-route";
 import { NextRequest, NextResponse } from "next/server";
 
 import { ensureSyncLayer, getSyncScheduler, runFullSync } from "@/lib/sync";
-import { logApiError } from "@/lib/api-logger";
-import { requireAuth } from "@/lib/api-auth";
+import { logApiError } from "@/lib/api/api-logger";
 
-export async function GET(request: NextRequest) {
-  const auth = requireAuth(request);
-  if (auth) return auth;
+async function GETImpl(_request: NextRequest) {
   try {
     ensureSyncLayer();
     const scheduler = getSyncScheduler();
@@ -65,9 +63,7 @@ export async function GET(request: NextRequest) {
   }
 }
 
-export async function POST(request: NextRequest) {
-  const auth = requireAuth(request);
-  if (auth) return auth;
+async function POSTImpl(request: NextRequest) {
   try {
     ensureSyncLayer();
 
@@ -117,3 +113,6 @@ export async function POST(request: NextRequest) {
     );
   }
 }
+
+export const GET = guardRoute(GETImpl);
+export const POST = guardRoute(POSTImpl);

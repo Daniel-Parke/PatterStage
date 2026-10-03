@@ -1,6 +1,6 @@
 #!/usr/bin/env npx tsx
 /**
- * Seed Control Hub professional catalog into SQLite and push profiles to Hermes.
+ * Seed PatterStage professional catalog into SQLite and push profiles to Hermes.
  * Usage: npx tsx scripts/tooling/seed-catalog.ts [--merge|--replace]
  */
 
@@ -35,8 +35,8 @@ function loadEnvLocal(): void {
 
 async function main(): Promise<void> {
   loadEnvLocal();
-  if (!process.env.CH_DATA_DIR) {
-    process.env.CH_DATA_DIR = join(homedir(), "control-hub", "data");
+  if (!process.env.PS_DATA_DIR && !process.env.CH_DATA_DIR && !process.env.CONTROL_HUB_DATA_DIR) {
+    process.env.PS_DATA_DIR = join(homedir(), "patterstage", "data");
   }
 
   const args = process.argv.slice(2);
@@ -44,11 +44,12 @@ async function main(): Promise<void> {
   const confirmOverride = args.includes("--confirm-override");
 
   const { runCatalogSeed } = await import("../../src/lib/seed/catalog-seed");
-  const result = runCatalogSeed({ target: "all", mode, confirmOverride });
+  const result = runCatalogSeed({ target: "all", mode, confirmOverride, strictSeedFailures: true });
   console.log(JSON.stringify(result, null, 2));
 }
 
 main().catch((err: unknown) => {
-  console.error(err);
-  process.exit(1);
+  void err;
+  console.error("Catalog seed failed; required input or a seed operation could not be completed.");
+  process.exitCode = 1;
 });

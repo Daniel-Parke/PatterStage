@@ -1,0 +1,78 @@
+{
+  "id": "T-0162",
+  "intent": "Make the remaining client read/write, house-control naming and Knip gates inspect their declared populations. Prove each correction with planted violations, then fix surfaced defects or hold an explicit, reasoned ratchet. Preserve release-gated removals and independent authorship of closed-oracle amendments.",
+  "declared": {
+    "capabilities": ["edit-tooling", "edit-tests", "edit-source", "edit-config", "edit-docs"],
+    "side_effects": []
+  },
+  "mode": "high-assurance",
+  "tier_proposed": "R2",
+  "tier_ruled": "R2",
+  "reasons": [
+    {
+      "factor": "operator-plan-conservative-tier",
+      "tier_floor": "R2",
+      "source": "2026-09-27 prerequisite plan",
+      "evidence": "The gate repairs certify subsequent batches; the operator assigned R2, independent amendments and representative planted-violation proof."
+    }
+  ],
+  "status": "done",
+  "owner_session": "2026-09-27-refactor-foundations",
+  "claims": [
+    "org/tasks/T-0162.json",
+    "org/claims.json",
+    "org/briefs/T-0162-oracle.md",
+    "org/briefs/T-0162-independent-amendment.md",
+    "org/HANDOVER.md",
+    "org/TASKS.md",
+    "org/STATE.md",
+    "scripts/tooling/design-lint.mjs",
+    "scripts/tooling/design-lint.baseline.json",
+    "scripts/tooling/line-census.mjs",
+    "scripts/tooling/line-census.baseline.json",
+    "scripts/tooling/check-form-control-names.mjs",
+    "src/components/ui/field/Select.tsx",
+    "src/components/ui/Input.tsx",
+    "src/components/ui/AutoTextarea.tsx",
+    "src/app/results/artifacts/page.tsx",
+    "src/app/work/composer/page.tsx",
+    "src/app/work/research/page.tsx",
+    "src/components/chat/ChatModelSelector.tsx",
+    "src/components/missions/MissionCreateForm.tsx",
+    "src/components/missions/templates/TemplateEditorModal.tsx",
+    "src/components/models/ModelEditor.tsx",
+    "knip.json",
+    "package.json",
+    "scripts/tooling/knip-ratchet.mjs",
+    "scripts/tooling/knip-baseline.json",
+    "tests/unit/t0162-knip-ratchet.test.ts",
+    "tests/unit/c6-the-page-layer.test.ts",
+    "tests/unit/c8-the-programme-is-closed.test.ts",
+    "tests/unit/form-controls-are-named.test.ts",
+    "tests/unit/model-editor-modal.test.tsx",
+    "tests/unit/b6-keyless-providers.test.tsx",
+    "tests/unit/t0162-blind-gates.test.ts",
+    "tests/unit/t0162-house-control-names.test.tsx",
+    "tests/fixtures/mutants/T-0162.json"
+  ],
+  "programme": "Prerequisite gate repair after T-0156, before trusting full Phase 1 reconnaissance or setting structural targets. components-01's raw-control end-of-line correction already landed in K6 and is not repeated. Q-011 still bars structural cleanup before an operator release.",
+  "timestamps": {
+    "opened": "2026-09-27T06:38:26Z",
+    "updated": "2026-09-27T07:28:12Z",
+    "closed": "2026-09-27T07:28:12Z"
+  },
+  "invariants": [
+    "A zero finding is credible only if a planted representative violation turns the actual gate red and the measured population is non-empty.",
+    "No failing rule, coverage floor or named test is weakened, skipped or deleted. A surfacing violation is fixed or entered as a specific justified baseline with a ratchet.",
+    "Closed C6/C8 oracle amendments for hooks-04, hooks-05 and critic-06 are dated, row-scoped, separately authored and keep test identities, under Q-015 and Q-021.",
+    "Select and Picker remain distinct; contextual names are supplied where missing under Q-025.",
+    "Release-dependent dead-code and harness removals are held until Q-011's operator release."
+  ],
+  "notes": "At 68d428d7, design-lint reported 104 already baselined raw controls while its raw-write rule and the hand-read census reported zero. The corrected detectors at 745337fa find four named raw-write files and five named effect-read files. The form-name gate counts 158 controls in 61 files, with zero unnamed after source repairs. Knip scans tests and test-harness and holds 17 exact unused issues with Q-011 reasons. The declaration-only EOS router returned R0 with no discrepancies; the operator's conservative R2 remained binding because these detectors certify later batches. T-0156 hosted push, PR and Gitleaks checks completed success before this batch landed.",
+  "rollback": "Revert the batch as a unit and restore the prior baseline only if a replacement gate is ready. A rollback otherwise restores blind spots; rerun the full gate and planted violations before accepting it.",
+  "commits": "fee8a319 opened T-0162; 32ff9efb, cbcbe209, b5905f00, 4a8bdaa2, d00be733, 43f346ff and 5ef4b44e committed red-first detector and accessibility oracles; 602f9e64 claimed the separate oracle lane; ce66f787 independently amended C6/C8/form-control oracles; accbe69e claimed the model-editor test amendment; e1d2337d independently preserved its 17 named tests with exact picker queries; 745337fa committed the detector, source and baseline repair.",
+  "verification": "Clean isolated checkout PatterStage-gate-8d98 at 745337fa: npm run gate passed all ten steps by exit code, complete=true, red=[], treeMoved=false, treeBefore=treeAfter=75da476e0e7cfe6ef36ae4257ce3a43de442f05174acbef55b91b3635b3165ec. Jest: 723 suites, 7191 passed, 3 skipped. Playwright: 282 passed, 24 skipped. A planted unused tests/helpers file made npm run lint:knip exit 1 with its exact file identity; removing it restored the 17-issue ratchet. The corrected detectors report four raw-write files, five hand-read files, 158 controls with zero unnamed, and 17 exact Knip findings. An owned Next instance with separate PS_DATA_DIR and HERMES_HOME on port 3334 walked New Model, provider dropdown and required-name validation at 1440x900 and 390x844: six named form controls each resolved once, one h1, no console or page errors, no horizontal overflow. Final modal screenshot SHA256 desktop 6bd01c8ac482d140d5dee57e198947eca38d76968cb143acd028cbc20a0b603c, phone 29ce0ee3d39f14e9edeb5e4c36e04cd23fc9f6df8598a97b8ae966a2d00e15a0; dropdown desktop dac03345bd35c7a7a358c7872602be2410f5bd8cb19ea70e6a4801b9d9630ad8, phone 49555f5d6d726445d86313f1dbf1258c95131afabdef0377967e3bc30778a58c; validation desktop 1f3e4031fceaed8f0080c59059cab8cf3ec4d9a5574c9de5819dc20478fb4447, phone b7cb1cd662993c0b0998770ea31406966adc24c5d338025423bcbedfcf85d25f. Hosted CI remains to be observed after push.",
+  "review": "Independent C6/C8 amendments kept every existing named test and dated their old/new hashes under Q-015/Q-021. Independent ModelEditor query repair kept 3/3 and 14/14 named tests and all behavioural assertions. Select and Picker remain separate under Q-025. The old U15 Knip oracle requires Jest plugin discovery of test entries; the final config preserves that convention while adding tests to the project scope. A planted unused test helper proved the scan is live. No protected file, historical task record, coverage floor or failing rule was weakened; release-dependent removals remain held under Q-011.",
+  "mutation": "Committed-tree sweep against 745337fa exited 0: seven of seven KILLED by structured assertion-failed evidence, with passing unmodified controls and verified restoration. The isolated checkout remained clean.",
+  "deviation": "No tier or protected-set deviation. The first sandboxed full Jest attempt hit uv_os_get_passwd ENOMEM and disposable migration infrastructure failures; the normal Windows run exposed one genuine U15 Knip entry conflict, fixed without changing U15. Its next full run passed 723 suites. The first one-off visual capture pressed Escape after opening a dropdown, which closed the modal; its corrected rerun completed. Neither event was counted as a green gate. The exact Knip, raw-write and hand-read baselines document surfaced debt rather than conceal it."
+}

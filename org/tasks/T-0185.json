@@ -1,0 +1,107 @@
+{
+  "id": "T-0185",
+  "intent": "Preserve mission prompt syntax, reject malformed model input before any write, and open older mission deep links beyond the board's first page.",
+  "declared": {
+    "capabilities": ["edit-source", "edit-tests", "edit-docs", "run-isolated-listener", "git", "git-push"],
+    "side_effects": ["database-write", "public-api-delta"]
+  },
+  "mode": "high-assurance",
+  "tier_proposed": "R2",
+  "tier_ruled": "R2",
+  "reasons": [
+    {"factor": "public-contract", "tier_floor": "R2", "source": "declared", "evidence": "declared side effect: public-api-delta"}
+  ],
+  "status": "done",
+  "owner_session": "2026-09-29-refactor-prerelease",
+  "claims": [
+    "org/tasks/T-0185.json",
+    "org/briefs/T-0185-oracle.md",
+    "org/briefs/T-0185-sceptic.md",
+    "org/briefs/T-0185-sceptic-oracle.md",
+    "org/briefs/T-0185-final-oracle.md",
+    "org/briefs/T-0185-census-amendment.md",
+    "org/briefs/T-0185-mutation-followup.md",
+    "org/briefs/T-0185-e2e-load-amendment.md",
+    "org/claims.json",
+    "org/HANDOVER.md",
+    "org/TASKS.md",
+    "org/STATE.md",
+    "src/lib/missions/build-mission-prompt.ts",
+    "src/lib/missions/mission-body.ts",
+    "src/lib/missions/mission-deep-link.ts",
+    "src/hooks/useMissionsApi.ts",
+    "src/hooks/useMissionsData.ts",
+    "src/lib/missions/mission-handlers/dispatch.ts",
+    "src/lib/missions/mission-handlers/promote.ts",
+    "src/lib/missions/mission-handlers/update.ts",
+    "tests/unit/mission-prompt-cdata-boundary.test.ts",
+    "tests/unit/mission-model-input-boundary.test.ts",
+    "tests/e2e/mission-old-link-boundary.spec.ts",
+    "tests/unit/mission-model-null-boundary.test.ts",
+    "tests/unit/mission-old-link-retention.test.tsx",
+    "tests/unit/mission-prompt-reference-boundary.test.ts",
+    "tests/unit/mission-old-link-overlap.test.tsx",
+    "tests/helpers/mission-model-boundary.ts",
+    "tests/helpers/mission-old-link-boundary.tsx",
+    "tests/unit/mission-prompt-instruction-literal.test.ts",
+    "tests/unit/mission-old-link-restoration-boundary.test.tsx",
+    "tests/helpers/mission-async-deferred.ts",
+    "tests/fixtures/mutants/T-0185.json",
+    "scripts/tooling/line-census.baseline.json"
+  ],
+  "timestamps": {"opened": "2026-09-29T15:44:37Z", "updated": "2026-09-29T18:11:41Z"},
+  "invariants": [
+    "A literal task tag inside context cannot replace the mission's real task when a stored prompt is parsed for edit.",
+    "An ordinary nested task example and CDATA break sequence preserve their accepted round-trip meanings.",
+    "A non-string modelId receives a client error without creating or changing a mission; valid and absent model IDs retain their existing behaviour.",
+    "An existing mission beyond the first 200 opens by its published query URL at desktop and phone widths; a truly missing ID retains missing feedback."
+  ],
+  "rollback": "Restore the previous parser, validation and lookup only with another implementation that passes the same prompt, no-write and older-link oracle without changing published URLs.",
+  "verify_line": "Literal CDATA task text in context and ordinary nested task examples round-trip through the stored dispatch prompt; modelId 42 receives 4xx without a mission write; the oldest of 201 seeded missions opens through ?mission= at 1440 and 390 widths, while a nonexistent ID still reports missing.",
+  "approval": "The operator approved prerelease T-0180–T-0187 on 2026-09-28. M6, M7 and M8 are independently rechecked source candidates in the Phase 1 defect ledger; Q-010 preserves public URLs. The source and claim expansion covers action handlers and the board's deep-link effect, which own the proposed API and UI behaviour.",
+  "oracle_provenance": "Independent R2 ORACLE 01a0edd7-2a9b-72a0-a8b6-e63b8a4ebc6f authored only three claimed files before any T-0185 source edit: tests/unit/mission-prompt-cdata-boundary.test.ts SHA-256 01FD4644A29B4243DDCA303CD16C61E3A3F6223298721FEA9C31F350A9D80E50, tests/unit/mission-model-input-boundary.test.ts SHA-256 7A2F91CC673D3C98CACD80FFE41546AD525FC9B9EBCE8EC6347575259EFD8FA1, and tests/e2e/mission-old-link-boundary.spec.ts SHA-256 261CD5AFE9C2C341CDB18D7D758E5D7949617030A311765B14645D234D7F222E. The coordinator reran focused Jest: five intended assertion failures and three passing controls. The owned-listener browser case failed the missing oldest mission name and Edit draft action at both 1440x900 and 390x844; its timestamp/page-exclusion and truly missing-ID controls passed. The independent author reported focused ESLint and test typecheck exit zero. All test names are frozen before source repair.",
+  "claim_expansion": "The independent sceptic confirmed the initial frozen tests green after repair, then found supplied modelId:null still writes through the shared parser and a retained old-link row survives deletion or external status changes. Both fall under the approved non-string-input and truthful-old-link invariants. Two new claimed suites were committed red before their source repair; the frozen originals remain unchanged. A second sceptic pass confirmed those two repairs and reproduced a task-shaped reference that overrides the real instruction, plus a state-order race where an earlier refresh resurrects a row after a later 404. Two further new suites are claimed for red-first proof before that repair.",
+  "supplemental_oracle_provenance": "Independent ORACLE 01a0edef-1193-7d51-924d-de89cba5a175 authored tests/unit/mission-model-null-boundary.test.ts SHA-256 69B75AB289C22600EE578352F0D955D08B3DB7C0493136C69A77AA781B083A45 and tests/unit/mission-old-link-retention.test.tsx SHA-256 8D9ECD6D77853FB89F27C1532838056A44268CC63E7F29B5DD5060BF717B945B. Before the supplemental source repair, the coordinator reran nine focused cases: five intended assertion failures and four passing controls. The null update case used a dispatched mission and a same-fields omitted-model control that reached the write path, avoiding a false 4xx from an invalid status. The 404/503 hook doubles carried numeric HTTP status. No frozen original test was amended.",
+  "final_oracle_provenance": "Independent ORACLE 01a0edff-4205-7720-94b3-c27119cbfa35 authored tests/unit/mission-prompt-reference-boundary.test.ts SHA-256 BF2545D7063C0EE2A28BFDC7397A29D61AA39DE569DE60A4AC2BF399FE60E484 and tests/unit/mission-old-link-overlap.test.tsx SHA-256 25EC05B6E9D07558B8BBF6845CF8FF1E24527C5B49BB46B0EE2191256BD452D5. Coordinator reran focused Jest against the unfixed source: two intended failures (reference decoy returned as instruction; stale earlier success resurrected a row after later 404) and two passing controls. The previous frozen suites remain unchanged.",
+  "mutation_followup_provenance": "Independent ORACLE 01a0ee41-b9aa-76c1-9979-08df0aa83c52 authored two new suites after the first clean-tree sweep: tests/unit/mission-prompt-instruction-literal.test.ts SHA-256 F7548C2E9F4032D9D1B86C0D6E093F8DB039EEA7ED7686ED131C549A11766963, tests/unit/mission-old-link-restoration-boundary.test.tsx SHA-256 77378E94279B208A4BE89CF15622E8270CDB5FFBCD214F0CAEFBFD14779DD3F5, and a counted deferred helper tests/helpers/mission-async-deferred.ts SHA-256 D69922E14B49ADAF14CCEDB40D3FD6B948165D406A26ABC4C96EB986D1DA9F33. Four new behaviour cases passed; coordinator reran them with C4 at 28/28. Test names and assertions in frozen suites remain unchanged. The helper keeps repeated test windows at the committed 4794 baseline.",
+  "oracle_amendments": [
+    {
+      "date": "2026-09-29",
+      "reason": "The full Jest coordinator pass found C4's fixed 4,800 repeated-test-window ceiling red at 4,908 because the four new mission boundary suites repeated setup. No ceiling or coverage rule was changed.",
+      "authoriser": "Independent R2 REVIEWER 01a0ede9-58e2-7bd2-aeaa-81309bab9c32, after measuring the four suites' 130 counted repeated lines",
+      "author": "Independent ORACLE 01a0ee0d-ed2e-70a3-98d6-d06ab55870c8",
+      "change": "Extracted genuine mock, database and old-link setup into two counted tests/helpers files. All 16 test names and every behavioural assertion remain. C4 fell 4908 to 4794, below the fixed 4800 ceiling; the committed shrink-only census baseline still requires a separately reasoned growth entry for the remaining 16 lines.",
+      "files": [
+        {"path": "tests/unit/mission-model-input-boundary.test.ts", "old_sha256": "7A2F91CC673D3C98CACD80FFE41546AD525FC9B9EBCE8EC6347575259EFD8FA1", "new_sha256": "F6D96E13046BA71D6F42F5E9AE2ABB6D9F7F69486BE30FF7465F2246AA4745B0"},
+        {"path": "tests/unit/mission-model-null-boundary.test.ts", "old_sha256": "69B75AB289C22600EE578352F0D955D08B3DB7C0493136C69A77AA781B083A45", "new_sha256": "234397B8524629115E2771809EB1A388CD9F8BA8E6268ABCA12EFD379D51185A"},
+        {"path": "tests/unit/mission-old-link-retention.test.tsx", "old_sha256": "8D9ECD6D77853FB89F27C1532838056A44268CC63E7F29B5DD5060BF717B945B", "new_sha256": "003235C39F93060CA54DF7B6075982FC558019D1CC4A89273CF2E10992D6E92A"},
+        {"path": "tests/unit/mission-old-link-overlap.test.tsx", "old_sha256": "25EC05B6E9D07558B8BBF6845CF8FF1E24527C5B49BB46B0EE2191256BD452D5", "new_sha256": "359CBF4ED7BE4E737FE898E45D5074B300F8DE5EC84E2C6D64C9AD71BCBDE879"},
+        {"path": "tests/helpers/mission-model-boundary.ts", "old_sha256": null, "new_sha256": "75EBB3352535B69546D1D800E02F30E44FEE8B587A30B93E08B321210B8C1122"},
+        {"path": "tests/helpers/mission-old-link-boundary.tsx", "old_sha256": null, "new_sha256": "28C0CBA084330FFCBEC7D476F9F27E42E46AD80CEAF94E10C11FC26041042FA3"}
+      ]
+    },
+    {
+      "date": "2026-09-29",
+      "reason": "The full gate's Jest stage found two new unused helper exports through the frozen T-0177 Knip baseline test; all other 7,410 Jest cases passed.",
+      "authoriser": "Independent R2 REVIEWER 01a0ede9-58e2-7bd2-aeaa-81309bab9c32's bounded four-suite and counted-helper amendment authorisation",
+      "author": "Independent ORACLE 01a0ee19-c312-75a1-b9ab-2cd4a1103a02, distinct from the helper's original author",
+      "change": "Removed only the export modifiers from two internal mock functions. No test name, assertion, mock response or baseline changed; the old-link suites and T-0177 test passed 12/12, test typecheck and lint:knip passed with 18 exact baseline findings.",
+      "files": [
+        {"path": "tests/helpers/mission-old-link-boundary.tsx", "old_sha256": "28C0CBA084330FFCBEC7D476F9F27E42E46AD80CEAF94E10C11FC26041042FA3", "new_sha256": "487A8475F7841F465A6624816BA13CD6AAD9BF911237590C998363ABC516BA28"}
+      ]
+    },
+    {
+      "date": "2026-09-29",
+      "reason": "The owned old-link Playwright worker exited unexpectedly with Windows code 3221226505 in two loaded full-gate runs; the spec passed alone and in one full run. The 200 ten-way HTTP fixture writes were unnecessary to the old-link behaviour being tested. This is a load-cause hypothesis, not proof that those writes caused the exit.",
+      "authoriser": "Independent R2 REVIEWER 01a0ee4f-3f54-7cc1-85c5-5db46e4c2623",
+      "author": "Independent ORACLE 01a0ee51-3a4e-7ba1-b47a-4d892e3bca83, distinct from the frozen spec author",
+      "change": "The oldest mission still saves through the real API. A single transaction inserts 200 newer minimal rows in the isolated SQLite fixture with explicit timestamps derived from the oldest row. The spec adds an exact 201-row assertion and preserves its test name, first-200 exclusion, by-ID browser journey at 1440x900 and 390x844, Edit draft action, and missing-ID feedback. Worker count, retries and timeouts did not change. The amended spec passed alone 1/1; the full gate must still verify it under load.",
+      "files": [
+        {"path": "tests/e2e/mission-old-link-boundary.spec.ts", "old_sha256": "261CD5AFE9C2C341CDB18D7D758E5D7949617030A311765B14645D234D7F222E", "new_sha256": "0205C0C3157A6D20673CD90CDEC36F9B01225B9878F01F2F18F790B7D67AA6E9"}
+      ]
+    }
+  ],
+  "verification": "The final unchanged-tree ten-step full gate on committed dev@3b60a760 exited zero at every step, with tree SHA-256 865c029170f5b85c112e27f7785273d64923ce88f4427d671f3aa1c9ffc7772f before and after: lint, TypeScript, Jest (776 passing suites, 7,415 passing tests, eight skips), Knip, canary, production build, build purity, Playwright (333 passes, 24 skips), design census and line census. The amended old-link journey passed in the loaded Playwright gate. The isolated browser walk on owned port 3997 opened the oldest of 201 missions beyond the first page at 1440x900 and 390x844, observed a live refresh after 16 seconds, checked missing-ID feedback and deletion success without a contradictory toast, and found one h1, no horizontal overflow and no console errors. Screenshot SHA-256: desktop-old 990c1667b3707760caf8f96a5c5fba2484a395cdde1509354dcc1b8cc1dac048; phone-old e5616463880499e6ee3235e5f6ef09926afbe9c16f99d8ec01835f85158be1f0; phone-after-delete 67cf5a277ca302c5148cc0e9b1d81df318ca5d2c731b3a8b53149cea0fe1dc54. The committed line census records source 102598, tests 137040, source repeated windows 1010, test repeated windows 4794 and one-importer components 104, with a written growth reason and unchanged C4 ceiling. Hosted acceptance remains to be observed after push.",
+  "mutation": "The first clean-tree sweep at 178551c2 killed four of six mutants and reported two survivors honestly. Independent behaviour suites in 2587b252 killed those survivors. The final clean committed-tree sweep at 3b60a760 killed all six mutants by named assertions, with zero NOT-APPLIED, INEFFECTIVE or SURVIVED outcomes. Restoration and unmodified controls passed; Git remained clean.",
+  "deviations": "Planned R1 rose to R2 because the declared public-api-delta activated the router's public-contract factor. No source implementation preceded the ruling. The full Jest coordinator pass found C4 at 4908 above the fixed 4800 ceiling; an independently authorised fixture consolidation brought it to 4794 without changing test names, assertions or the ceiling. Knip found two unused new helper exports, removed by a separate ORACLE. Two loaded Playwright gates then lost the new old-link worker with Windows exit 3221226505 while its isolated run passed. An independently authorised, name-preserving fixture amendment reduced 200 HTTP setup writes to one isolated SQLite transaction; the final loaded full gate passed. The original crash cause is not proven. No failing gate was weakened, and hosted jobs await the closure push."
+}

@@ -1,7 +1,7 @@
 #!/usr/bin/env npx tsx
 /**
- * Import Hermes disk state into Control Hub SQLite (profiles, root, skills).
- * Usage: npx tsx scripts/tooling/import-hermes-state.ts [--pull]
+ * Import Hermes disk state into PatterStage SQLite (profiles, root, skills).
+ * Usage: npx tsx scripts/tooling/import-hermes-state.ts [--pull | --import-missing-profiles]
  */
 
 import { existsSync, readFileSync } from "fs";
@@ -43,18 +43,20 @@ function applyHermesHomeArg(): void {
 async function main(): Promise<void> {
   loadEnvLocal();
   applyHermesHomeArg();
-  if (!process.env.CH_DATA_DIR) {
-    process.env.CH_DATA_DIR = join(homedir(), "control-hub", "data");
+  if (!process.env.PS_DATA_DIR && !process.env.CH_DATA_DIR && !process.env.CONTROL_HUB_DATA_DIR) {
+    process.env.PS_DATA_DIR = join(homedir(), "patterstage", "data");
   }
 
   const hermesHome = process.env.HERMES_HOME || join(homedir(), ".hermes");
   console.log(`HERMES_HOME=${hermesHome}`);
-  console.log(`CH_DATA_DIR=${process.env.CH_DATA_DIR}`);
+  console.log(`PS_DATA_DIR=${process.env.PS_DATA_DIR || process.env.CH_DATA_DIR}`);
 
   const pull = process.argv.includes("--pull");
+  const importMissingProfiles = process.argv.includes("--import-missing-profiles");
+  if (pull && importMissingProfiles) throw new Error("Choose either --pull or --import-missing-profiles");
 
-  const { importHermesStateFromDisk } = await import("../../src/lib/hermes-state-import");
-  const result = importHermesStateFromDisk(pull ? { force: true } : undefined);
+  const { importHermesStateFromDisk } = await import("../../src/modules/hermes/lib/state-import");
+  const result = importHermesStateFromDisk({ force: pull, strict: true, importMissingProfiles });
 
   console.log(
     JSON.stringify(
@@ -68,9 +70,15 @@ async function main(): Promise<void> {
       2,
     ),
   );
+  if (!result.root.success || result.skills.some((item) => !item.success) ||
+      result.profiles.some((item) => !item.success)) {
+    console.error("Hermes state import failed; root, skill or profile was not imported.");
+    process.exitCode = 1;
+  }
 }
 
 main().catch((err: unknown) => {
-  console.error(err);
-  process.exit(1);
+  void err;
+  console.error("Hermes state import failed; inspect local Hermes state and retry after repair. --pull refreshes existing rows.");
+  process.exitCode = 1;
 });

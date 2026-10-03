@@ -1,0 +1,14 @@
+{
+  "task": "T-0166",
+  "why": "The re-import action must settle with its button enabled after the held registry reads are released.",
+  "mutants": [
+    {
+      "id": "m1-settled-reimport-is-disabled",
+      "file": "tests/unit/the-models-page-keeps-its-body.test.tsx",
+      "anchor": "await waitFor(() => expect(screen.getByRole(\"button\", { name: /Re-import from config/ })).toBeEnabled());",
+      "replacement": "await waitFor(() => expect(screen.getByRole(\"button\", { name: /Re-import from config/ })).toBeDisabled());",
+      "tests": ["tests/unit/the-models-page-keeps-its-body.test.tsx"],
+      "why": "The final enabled-button assertion must execute after the mock releases the reload reads."
+    }
+  ]
+}

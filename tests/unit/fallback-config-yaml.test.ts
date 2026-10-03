@@ -1,6 +1,6 @@
 /** @jest-environment node */
 
-import { parseFallbackAgentSettingsFromYaml } from "@/lib/fallback-config-yaml";
+import { parseFallbackAgentSettingsFromYaml } from "@/lib/models/fallback-config-yaml";
 
 describe("parseFallbackAgentSettingsFromYaml", () => {
   it("maps agent section fields", () => {

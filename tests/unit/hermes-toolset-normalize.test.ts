@@ -1,6 +1,6 @@
 /** @jest-environment node */
 
-import { normalizePlatformToolsets } from "@/lib/hermes-toolset-normalize";
+import { normalizePlatformToolsets } from "@/modules/hermes/lib/toolset-normalize";
 
 describe("normalizePlatformToolsets", () => {
   it("dedupes entries per platform", () => {

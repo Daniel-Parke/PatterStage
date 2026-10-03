@@ -1,0 +1,26 @@
+{
+  "id": "T-0028",
+  "intent": "Hold the first-build lock-in sitting: replace all eleven 'set at first build' deferrals in docs/LOCKBOOK.md with ruled values, in one sitting, and retire the deferral string from the file. Warrant: the lock-book's own Tokens section, which sanctions the deferral only as 'set at first build plus where the value gets ruled' and states that the first-build lock-in session replaces every deferral in one sitting; check D004 is the mechanism that holds it, and the ADR-0008 recompile of 2026-08-22 shipped with that check failing on docs/LOCKBOOK.md. Source: no WO row. None of the twenty five rows converted out of org/QUEUE.md scheduled this work, because none of the twenty nine queue rows they came from did, so this record is authored at the cutover rather than converted, from the debt docs/COMPILE_REPORT.md's check-results section names as owed rather than deviated. The eleven, each with what rules it: (1) SIGNATURE_PIECES, the sanctioned animated exceptions named one by one, ruled by WG-WEB-011 (C, field-reactive) and WG-WEB-005 (C, full); (2) SURFACE_LADDER, the semantic layer over the 32 appearance-named primitives (dark-950 and siblings) that TOKENS.md forbids by name, ruled when the vendored @pattertech/ui lands; (3) ACCENTS, ruled by WG-WEB-009 (B) as one registered module-to-accent map of four entries, against the five accents applied decoratively today with no map in existence; (4) TEXT_TIERS with measured contrast, where the design-lint baseline records sub-12px type as the single largest debt category, so the measurement is owed before the tiers can be ruled; (5) MEASURE_READING; (6) MEASURE_WIDE; (7) MEASURE_FULL; (8) BLOCK_GAP; (9) STYLEGUIDE_ROUTE, owed by WG-DEL-003, which rules pixel baselines against a styleguide surface that does not yet exist, so the route is minted before the baselines are; (10) GATE_OVERFLOW at 375, owed by WG-WEB-003, no 375px overflow check exists today; (11) GATE_WEIGHT, owed by WG-WEB-008. Acceptance: (1) every one of the eleven carries a ruled value and the string 'set at first build' appears nowhere in docs/LOCKBOOK.md; (2) each value is ruled by the wargame its deferral names, or that deferral is re-argued and the outcome written to docs/RULINGS.json, so no value is decided silently inside the lock-book; (3) the token home src/app/globals.css and its code mirror src/lib/theme.ts carry the ruled values and the two agree, which is the contract the Tokens section already states; (4) GATE_OVERFLOW and GATE_WEIGHT land as commands that run, in the QC gates section beside the build and screenshot commands, because a QC gate with no command is the same deferral wearing a number; (5) docs/COMPILE_REPORT.md's check-results section is corrected to record the D004 closure against a re-measured count rather than a predicted one. Done when python -m tools.eos check --seed reports no D004 on docs/LOCKBOOK.md and the lock-book states values rather than intentions. Sequencing, in prose because the v2 schema carries no dependency field: deferral 2 waits on the vendored @pattertech/ui, deferral 9 waits on a styleguide surface, and deferral 4 waits on a contrast measurement, so the sitting cannot be held until a first build exists to measure. That is what 'first build' means here and it is why this record is proposed rather than blocked. Tier proposal R1, anticipated factor size-threshold from derived signal diff-size if the token files move with the lock-book; a lock-book-only sitting may well route R0 at the gate, in which case this record is the durable trace of a scheduled debt rather than a ceremony requirement. Closed 2026-08-24 in 42b8b6f4, with its build defect fixed in 9698240c. Eight of eleven deferrals now carry ruled, derived values: the surface ladder (aliases over existing primitives, no colour minted, and hairline honestly flagged as the one role with no rung behind it), the module-to-accent map (four modules, four accents, green excluded because it is the same hex as semantic-success), the text tiers recorded rather than re-derived, the four measures read off the tree rather than invented, and the styleguide route as a DATED deferral with its warrant, because a route nobody maintains is worse than an admitted gap. REJECTED ON FIRST REVIEW and rightly: a glob written inside a CSS comment closed the comment and broke npm run build, which meant this task's own deliverable never reached a browser. The deeper finding is that every other gate was blind to it, including this task's own test, which read the CSS as text. The test now parses it, proved by reintroducing the defect.",
+  "declared": {
+    "capabilities": [
+      "filesystem"
+    ],
+    "side_effects": []
+  },
+  "mode": "standard",
+  "tier_proposed": "R1",
+  "tier_ruled": "R0",
+  "reasons": [],
+  "status": "done",
+  "owner_session": "t0028-lockin-2026-08-24",
+  "claims": [
+    "docs/LOCKBOOK.md",
+    "src/app/globals.css",
+    "src/lib/theme.ts"
+  ],
+  "timestamps": {
+    "opened": "2026-08-22T00:00:00Z",
+    "updated": "2026-08-24T02:00:00Z",
+    "closed": "2026-08-24T02:00:00Z"
+  }
+}

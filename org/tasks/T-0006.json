@@ -1,0 +1,27 @@
+{
+  "id": "T-0006",
+  "intent": "Phase 1a to 1c: fix the two broken script imports and close both gates behind them. Warrant WG-OPS-002; setup.sh:248 and :283, setup.mjs:158 and :161, ps-deploy.mjs:426 and :428 and npm run db:seed all reach the broken imports, and the install path is death #1. Source row WO-0021. Behaviour change sanctioned: yes, bug fixes, flagged in commit messages. Acceptance: (1) scripts/tooling/ensure-hermes-model-sync.ts:55 imports ../../src/modules/hermes/lib/config-sync and scripts/tooling/import-hermes-state.ts:56 imports ../../src/modules/hermes/lib/state-import, and the modules do NOT move; (2) npm run db:seed completes, the deploy path is smoke-tested, and the six doc files printing the command are re-checked, drift finding D-8; (3) the lint:knip gate gains unresolved AFTER the fix lands, because widening first reddens CI; (4) the duplicate export closed, the db alias deleted from src/lib/db.ts:82 and all 40 db-importing lines migrated mechanically to getDb, 19 via @/lib/db plus 21 via relative ./db and ../db specifiers, plus the internal db() call at db.ts:113, with design-lint's .exec( receiver list confirmed unchanged, since it already names db(), getDb(), database and this.db; (5) proof that a future unresolved import fails CI. Done when both scripts execute against their real homes, the knip gate catches a recurrence, and getDb is the single name. Merge gate: the real-Hermes suite, npm run test:e2e-hermes, because this touches the Hermes config and state path. Tier proposal R2, anticipated factor public-contract from derived signal public-api-delta, evidence the 40-line import migration reaches src/app/api routes and the router matches any path containing api/; ci-stateful-infra also activates if the knip widening lands in the workflow file rather than in package.json alone. Closed 2026-08-22 in 966d8dc4. Both imports fixed and db:seed exercised; the knip gate gained unresolved and was proved to catch a recurrence by planting the old specifier; the db alias deleted with all 40 import lines, 249 call sites and 34 jest.mock factories migrated to getDb.",
+  "declared": {
+    "capabilities": [
+      "filesystem",
+      "database"
+    ],
+    "side_effects": []
+  },
+  "mode": "standard",
+  "tier_proposed": "R2",
+  "tier_ruled": "R0",
+  "reasons": [],
+  "status": "done",
+  "owner_session": "phase1-imports-2026-08-22",
+  "claims": [
+    "scripts/tooling/",
+    "src/",
+    "knip.json"
+  ],
+  "timestamps": {
+    "opened": "2026-08-22T00:00:00Z",
+    "updated": "2026-08-22T22:45:00Z",
+    "closed": "2026-08-22T19:20:00Z"
+  }
+}

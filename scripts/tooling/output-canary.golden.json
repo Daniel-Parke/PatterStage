@@ -1,0 +1,15 @@
+{
+  "canaryVersion": 1,
+  "goldenSurfaces": [
+    "appConfig",
+    "generatedArtefacts",
+    "httpSurface",
+    "seedPack"
+  ],
+  "surfaces": {
+    "appConfig": "25b67bb262bf3e14f944af01367e8230085da75a04bb1f39a5e8d3d8b963360e",
+    "generatedArtefacts": "e4591b8bed90d1eb6d7dd63d3ffc04c9fc3bfdbf86c2f8e68deed1fd2a052e0d",
+    "httpSurface": "2700c31cd45a95be1321497b4c43796911cb8b431231bdc4b94ba4d60d48275e",
+    "seedPack": "3ff091015b0e59349fd72de5b70ce917415d98bb053c8216b9e75772e9497edf"
+  }
+}

@@ -1,0 +1,10 @@
+title = "PatterStage review control with default rules and the current tests exclusion"
+
+[extend]
+useDefault = true
+
+[allowlist]
+description = "Current repository tests exclusion, retained for diagnostic control"
+paths = [
+  '''tests/''',
+]

@@ -1,0 +1,61 @@
+{
+  "id": "T-0148",
+  "intent": "K2: the landing discipline stops living in a session. `npm run gate` runs the nine steps by exit code from one list in code, stamping the tree before and after; `npm run sweep` runs a batch's mutants from data committed beside the tests, and reports NOT-APPLIED and INEFFECTIVE rather than calling them kills; the view-render command and the post-push CI read are written into the procedure. Nothing is removed: the runner is added beside the commands it runs.",
+  "declared": {
+    "capabilities": [
+      "edit-tooling",
+      "edit-tests",
+      "edit-docs"
+    ],
+    "side_effects": []
+  },
+  "mode": "standard",
+  "tier_proposed": "R1",
+  "tier_ruled": "R1",
+  "reasons": [
+    {
+      "factor": "size-threshold",
+      "tier_floor": "R1",
+      "source": "derived:diff-size",
+      "evidence": "two new scripts, an oracle, two mutant manifests and the procedure, over the express limit of 100 lines"
+    },
+    {
+      "factor": "public-contract",
+      "tier_floor": "R1",
+      "source": "operator ruling Q-010, 2026-09-12",
+      "evidence": "two npm scripts are ADDED and none is renamed or removed, so no documented command changes meaning. Public contract as ruled covers npm scripts, and the router's public-api-delta marker (router.py:174) reads paths containing 'api/', which package.json does not."
+    }
+  ],
+  "status": "done",
+  "owner_session": "t0147-k2-the-discipline-2026-09-12",
+  "claims": [
+    "scripts/tooling/gate.mjs",
+    "scripts/tooling/mutation-sweep.mjs",
+    "tests/fixtures/mutants/",
+    "tests/unit/k2-the-discipline-is-in-the-repo.test.ts",
+    "package.json",
+    ".gitignore",
+    "org/HANDOVER.md",
+    "org/QUESTIONS.md",
+    "org/reviews/2026-09-decision-register.md",
+    "org/tasks/T-0148.json"
+  ],
+  "programme": "K2 of the refactor and clean-up programme. It executes the operator's ruling of 2026-09-12 on Q-009 (the gate runner and the per-batch CI read) and Q-010 (the sweep in the repository, views from the pinned EOS checkout).",
+  "timestamps": {
+    "opened": "2026-09-12T13:30:00Z",
+    "updated": "2026-09-12T14:40:00Z",
+    "closed": "2026-09-12T14:40:00Z"
+  },
+  "invariants": [
+    "I1 THE STEP LIST HAS ONE HOME. The nine gate steps are declared once, in scripts/tooling/gate.mjs, and every document that used to restate them points at `npm run gate -- --list` instead. The oracle fails if a step names a command this repository does not have.",
+    "I2 A MOVED TREE IS NOT A GREEN GATE. The runner stamps HEAD, the status and both diffs before and after, and reports red when the stamp changes, because a result measured on a tree nobody committed describes nothing.",
+    "I3 A MUTANT THAT NEVER APPLIED IS NOT A KILL. The sweep reports NOT-APPLIED for an anchor it cannot place exactly once and INEFFECTIVE for a no-op or comment-only edit, and exits nonzero on either.",
+    "I4 THE SWEEP CANNOT EAT UNCOMMITTED WORK. It refuses a dirty tree before it starts and checks the tree is clean again after, because it restores files with `git checkout --`.",
+    "I5 NOTHING IS REMOVED. Two npm scripts are added; no command, document or check is deleted or renamed.",
+    "I6 THE GATE CANNOT DIRTY THE TREE IT STAMPS. Its logs go to .gate/, which is ignored, because the runner reads git status before and after and its own output in that status would report the tree as moved underneath itself."
+  ],
+  "commits": "2f0f0e97 the K2 oracle, red at 0 of 14; 7bad1939 the gate and the sweep; a5066f3b m3 anchor; the chore commit that carries this record and the views.",
+  "verification": "Gate by its own runner on the finished tree, stamp unmoved: lint 0 (52.2s), tsc 0 (3.2s), jest 0 (53.4s: 6943 tests, 687 suites, coverage 78.75% statements), knip 0 (9.7s), canary 0 (0.7s), build 0 (29.8s), e2e 0 (107.6s), census 0 (48.5s), census:lines 0 (2.0s). Five minutes end to end. The runner earned itself on its first run by stopping at lint: T-0148 had a record and no row in org/TASKS.md, which is the derived view the old procedure asked a session to remember. The oracle is 14 tests, and the K0 oracle still passes beside it. The census rise this batch holds is the oracle plus the two checks the CI batch added, and four src lines: the comment on AgentSetupNotice min-h-6.",
+  "mutation": "Three mutants against the committed tree, all killed: a moved tree reported green, an ambiguous anchor counted as applied, and a comment-only anchor counted as code. The first run reported m3 NOT-APPLIED rather than a kill, because its anchor named a line the tool no longer had; the anchor was corrected in its own commit (a5066f3b) and the mutant then died. That refusal is the tool doing its job, and it is why NOT-APPLIED exists.",
+  "deviation": "Three. (1) The sweep found a defect in itself before it landed: it read a markdown #### heading as a comment and reported INEFFECTIVE for K0 mutant m1, the one that mattered. The hash comment form now counts only outside markdown, and the fix is in the tool that shipped. (2) tooling-01 also proposed replacing the command lists in CONTRIBUTING.md and the PR template with a pointer to the runner. Not done here: the runner removes nothing, and the doc half can follow without holding this batch. (3) The baseline growth entry for this batch names the test lines and the two CI checks; four of the lines it holds are the src comment on the hit-target fix, committed in 9df98afc just before."
+}

@@ -1,0 +1,25 @@
+{
+  "id": "T-0025",
+  "intent": "Make the design-lint baseline mechanically shrink-only rather than shrink-only by doctrine. Warrant: Q-008 in org/QUESTIONS.md, raised 2026-08-22 by the plan's verification sweep and PROMOTED by the operator the same day; drift finding D-14 in the plan's section 2 is the same fact. The defect: scripts/tooling/design-lint.mjs's --update-baseline writes current counts unconditionally, so running it after a regression grows the baseline, and shrink-only lives in comments and error text rather than in the mechanism. The plan's risk register names baseline grown to absorb violations as an all-phase risk whose only control today is a person comparing totals, and Phases 3, 4 and 5 all re-key baselines. Acceptance: (1) --update-baseline refuses to write a larger total, or a larger per-key count, without an explicit second flag; (2) that second flag carries a written reason and the reason is recorded where the baseline lives; (3) a test plants a regression and proves the refusal, and proves that the second flag with a reason still works; (4) nothing else changes, because the suggestion strengthens a check and touches nothing else. Done when the baseline cannot grow silently, and every phase that re-keys a baseline is protected by mechanism rather than by vigilance. Tier proposal R1, anticipated factor size-threshold from derived signal diff-size if the test fixtures push the diff past the express limits; a single-file change with one test may well route R0 at the gate, in which case this record is the durable trace of a promoted question rather than a ceremony requirement. See T-0018, which builds the same kind of guard for the coverage floors and should share one mechanism. Closed 2026-08-23 in a6cdcd7f. --update-baseline now refuses to write a baseline whose TOTAL or whose count for any SINGLE key is higher than the committed one. The per-key half is the one that matters: two violations cleaned in one file and two added in another leave the total identical, so a totals-only ratchet would wave the regression straight through. The escape hatch needs --allow-growth with at least twelve characters of prose, and the reason is written into the baseline file itself under an append-only __growth__ log, beside the number it excuses. Shape copied deliberately from the coverage ratchet landed the same day, because two gates a person meets in the same week should behave the same way. Review independently planted a violation, watched the refusal, and confirmed the baseline was byte-identical on disk afterwards. Q-008 is answered by mechanism rather than by doctrine.",
+  "declared": {
+    "capabilities": [
+      "filesystem"
+    ],
+    "side_effects": []
+  },
+  "mode": "standard",
+  "tier_proposed": "R1",
+  "tier_ruled": "R0",
+  "reasons": [],
+  "status": "done",
+  "owner_session": "final-baseline-ratchet-2026-08-23",
+  "claims": [
+    "scripts/tooling/design-lint.mjs",
+    "tests/"
+  ],
+  "timestamps": {
+    "opened": "2026-08-22T00:00:00Z",
+    "updated": "2026-08-23T05:00:00Z",
+    "closed": "2026-08-23T05:00:00Z"
+  }
+}

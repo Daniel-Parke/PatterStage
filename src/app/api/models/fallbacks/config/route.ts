@@ -2,47 +2,24 @@
 // /api/models/fallbacks/config — GET/PUT fallback behaviour config
 // ═══════════════════════════════════════════════════════════════
 import { NextRequest, NextResponse } from "next/server";
-import { requireAuth } from "@/lib/api-auth";
-import { parseJsonBody } from "@/lib/parse-json-body";
-import { logApiError } from "@/lib/api-logger";
-import { appendAuditLine } from "@/lib/audit-log";
-import { fallbackConfigPutSchema } from "@/lib/fallback-config-schema";
-import { getFallbackConfig, updateFallbackConfigBatch } from "@/lib/fallbacks-repository";
-import { syncEnabledFallbackChainToHermes } from "@/lib/fallback-sync-helpers";
-import { zodErrorResponse } from "@/lib/api-schemas";
 
-export async function GET(request: NextRequest) {
-  const auth = requireAuth(request);
-  if (auth) return auth;
+import { parseAndValidateJsonBody } from "@/lib/api/parse-json-body";
+import { appendAuditLine } from "@/lib/api/audit-log";
+import { getFallbackConfig, updateFallbackConfigBatch } from "@/lib/models/fallbacks-repository";
+import { fallbackConfigPutSchema } from "@/lib/models/fallback-config-schema";
+import { syncEnabledFallbackChainToHermes } from "@/modules/hermes/lib/fallback-sync";
+import { ok } from "@/lib/api/api-response";
+import { route } from "@/lib/api/api-route";
 
-  try {
-    return NextResponse.json({ data: { config: getFallbackConfig() } });
-  } catch (error) {
-    logApiError("GET /api/models/fallbacks/config", "reading config", error);
-    return NextResponse.json({ error: "Failed to read fallback config" }, { status: 500 });
-  }
-}
+export const GET = route("GET /api/models/fallbacks/config", "reading fallback config", "Failed to read fallback config", async (_request: NextRequest) => {
+  return ok({ config: getFallbackConfig() });
+});
 
-export async function PUT(request: NextRequest) {
-  const auth = requireAuth(request);
-  if (auth) return auth;
-
-  const bodyResult = await parseJsonBody(request);
-  if (bodyResult instanceof NextResponse) return bodyResult;
-
-  const parsed = fallbackConfigPutSchema.safeParse(bodyResult);
-  if (!parsed.success) {
-    return zodErrorResponse(parsed.error);
-  }
-
-  try {
-    const updated = updateFallbackConfigBatch(parsed.data);
-    syncEnabledFallbackChainToHermes(updated);
-
-    appendAuditLine({ action: "fallback.config.update", resource: "config", ok: true });
-    return NextResponse.json({ data: { config: updated } });
-  } catch (error) {
-    logApiError("PUT /api/models/fallbacks/config", "updating config", error);
-    return NextResponse.json({ error: "Failed to update fallback config" }, { status: 500 });
-  }
-}
+export const PUT = route("PUT /api/models/fallbacks/config", "updating fallback config", "Failed to update fallback config", async (request: NextRequest) => {
+  const parsed = await parseAndValidateJsonBody(request, fallbackConfigPutSchema);
+  if (parsed instanceof NextResponse) return parsed;
+  const updated = updateFallbackConfigBatch(parsed);
+  syncEnabledFallbackChainToHermes(updated);
+  appendAuditLine({ action: "fallback.config.update", resource: "config", ok: true });
+  return ok({ config: updated });
+});

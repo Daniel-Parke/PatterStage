@@ -1,0 +1,7 @@
+# T-0161 hosted CI repair oracle
+
+The T-0161 push at `050ad61d` failed hosted checks. macOS Jest `build-test-macos` failed `tests/unit/t0161-required-step-failures.test.ts`: the copied deploy runner exited 0 without creating its expected status or event file. `ps-deploy.mjs` compares `fileURLToPath(import.meta.url)` with `process.argv[1]` to decide whether to run; macOS temp paths can use `/var` and `/private/var` spellings for the same file. The test must prove a direct CLI invocation through a path alias executes, rather than silently skipping `main`. Preserve the existing failure-propagation assertion and test-name set. Use a disposable directory and process only; do not touch operator data.
+
+Own only `tests/unit/t0161-required-step-failures.test.ts` and `tests/unit/t0161-direct-invocation.test.ts`. You may add one behavioural test in the new file or amend the existing fixture. Do not edit implementation, baseline, workflow or protected files. Prove red against `050ad61d` in an OS that supports the alias, ideally Linux as well as macOS. Treat a symlink or junction creation failure as infrastructure, not a passing test. Report test-name identity, exact red result, LF SHA-256 and a test-only commit from your isolated checkout. Do not push.
+
+The Ubuntu build-purity failure is a separate implementation issue: the test reports `root=true` with no entries changed. Its existing oracle is already red in hosted Linux; do not amend or weaken it. The coordinator owns that source repair.

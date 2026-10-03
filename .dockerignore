@@ -1,4 +1,4 @@
-# Control Hub — keep docker build context small and free of secrets
+# PatterStage — keep docker build context small and free of secrets
 .git
 .github
 .next
@@ -17,3 +17,25 @@ test-results
 **/*.test.ts
 **/*.test.tsx
 **/*.spec.ts
+
+# Runtime data: the local database with its WAL and SHM, the auth token, and
+# the pre-baseline copies. data/seed is the only part the runner stage wants,
+# and Dockerfile:54 copies it explicitly.
+/data/*
+!/data/seed/
+
+# Playwright's isolated E2E data dir.
+/tmp
+
+# Generated documentation output. The builder regenerates public/help through
+# prebuild, and site/ is never part of an image.
+/site
+/public/help
+
+# The governance corpus. scripts/docs/build-site.mjs:46-57 does not publish it and no build
+# step reads it.
+/org
+
+# Editor and build caches.
+.claude
+.swc

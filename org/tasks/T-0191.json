@@ -1,0 +1,799 @@
+{
+  "id": "T-0191",
+  "intent": "Repair evidenced responsive and accessible component interactions, make Story progress and cancellation truthful, preserve chapter navigation position and current async ownership, and consolidate only components with demonstrated net benefit.",
+  "declared": {
+    "capabilities": [
+      "edit-code",
+      "edit-tests",
+      "edit-docs",
+      "git",
+      "git-push",
+      "run-isolated-process",
+      "owned-temporary-git"
+    ],
+    "side_effects": [
+      "financial-impact",
+      "sends-external"
+    ]
+  },
+  "mode": "high-assurance",
+  "tier_proposed": "R2",
+  "status": "done",
+  "owner_session": "2026-10-03-t0191-coordinator",
+  "claims": [
+    "src/components/layout/AppPageShell.tsx",
+    "src/components/models/CredentialsPanel.tsx",
+    "src/components/models/FallbackChainList.tsx",
+    "src/modules/rec-room/components/StoryCard.tsx",
+    "src/app/results/sessions/[id]/page.tsx",
+    "src/components/memory/hindsight/DirectivesTab.tsx",
+    "src/components/memory/hindsight/MentalModelsTab.tsx",
+    "src/app/work/research/page.tsx",
+    "src/components/composer/ComposerRunForm.tsx",
+    "src/components/composer/WorkflowCanvas.tsx",
+    "src/components/ui/Input.tsx",
+    "src/components/ui/field/Toggle.tsx",
+    "src/components/ui/field/Select.tsx",
+    "src/components/dashboard/DispatchStrip.tsx",
+    "src/components/dashboard/ProcessesPanel.tsx",
+    "src/components/layout/BranchDropdown.tsx",
+    "src/components/ui/CategoryAccordion.tsx",
+    "src/components/session/MessageBubble.tsx",
+    "src/components/models/FallbackConfigPanel.tsx",
+    "src/app/agent/skills/page.tsx",
+    "src/components/skills/SkillsSections.tsx",
+    "src/components/skills/SkillsSearchResults.tsx",
+    "src/components/skills/SkillCategoryList.tsx",
+    "src/components/skills/SkillRowList.tsx",
+    "src/components/ui/TemplateCard.tsx",
+    "src/components/schedule/SchedulePicker.tsx",
+    "src/components/chat/MessageBubble.tsx",
+    "src/components/skills/SimpleMarkdown.tsx",
+    "src/lib/chat/chat-utils.ts",
+    "src/hooks/useChatPage.ts",
+    "src/modules/rec-room/components/GenerateOverlay.tsx",
+    "src/app/globals.css",
+    "scripts/tooling/design-lint.mjs",
+    "src/hooks/useMissionDispatch.ts",
+    "src/components/ui/Toast.tsx",
+    "src/components/ui/feedback-context.ts",
+    "src/components/providers/FeedbackProvider.tsx",
+    "src/modules/rec-room/components/ReaderBody.tsx",
+    "src/modules/rec-room/components/ChapterReader.tsx",
+    "src/modules/rec-room/components/StoryReaderOverlays.tsx",
+    "src/app/recroom/story-weaver/[id]/page.tsx",
+    "src/components/missions/MissionEditorPanel.tsx",
+    "tests/unit/components-contextual-controls.test.tsx",
+    "tests/unit/components-primitive-parity.test.tsx",
+    "tests/unit/components-collection-actions.test.tsx",
+    "tests/unit/components-chat-markdown.test.tsx",
+    "tests/unit/components-progress-feedback.test.tsx",
+    "tests/unit/components-token-preservation.test.tsx",
+    "tests/e2e/component-accessibility-responsive.spec.ts",
+    "tests/unit/u0-the-gate-sees-what-it-claims.test.ts",
+    "tests/unit/u2-the-contrast-gate-refuses.test.ts",
+    "tests/unit/components/schedule/SchedulePicker.test.tsx",
+    "org/tasks/T-0191.json",
+    "org/claims.json",
+    "org/briefs/T-0191-oracle.md",
+    "org/briefs/T-0191-review.md",
+    "org/reviews/2026-10-t0191-component-verification.md",
+    "org/reviews/2026-10-t0191-dispositions.json",
+    "org/plans/2026-09-refactor-programme.json",
+    "org/plans/2026-09-refactor-ownership.mjs",
+    "org/plans/2026-09-refactor-ownership.json",
+    "org/HANDOVER.md",
+    "org/TASKS.md",
+    "org/STATE.md",
+    "docs/manifest.json",
+    "scripts/tooling/line-census.baseline.json",
+    "scripts/tooling/design-lint.baseline.json",
+    "tests/fixtures/mutants/T-0191.json",
+    "src/hooks/useCopyToClipboard.ts",
+    "src/components/session/constants.tsx",
+    "src/components/ui/LiveDot.tsx",
+    "src/components/memory/MemoryInsights.tsx",
+    "src/components/viz/StatStrip.tsx",
+    "src/components/models/PerRowDeleteButton.tsx",
+    "src/components/missions/MissionCreateForm.tsx",
+    "org/reviews/2026-10-t0191-unit-oracle-provenance.json",
+    "src/components/auth/SessionManager.tsx",
+    "src/components/config/ConfigField.tsx",
+    "src/components/memory/MemoryProviderSettings.tsx",
+    "src/components/memory/HindsightBrowser.tsx",
+    "src/components/logs/LogFilePicker.tsx",
+    "src/components/logs/LogTerminal.tsx",
+    "src/components/session/SessionFilterBar.tsx",
+    "src/components/skills/SkillRow.tsx",
+    "src/components/spend/SpendPanel.tsx",
+    "src/app/agent/settings/page.tsx",
+    "src/components/ui/field/SearchInput.tsx",
+    "src/components/ui/field/NumberInput.tsx",
+    "src/components/ui/field/index.ts",
+    "docs/contributing/design-tokens.md",
+    "docs/images/settings.png",
+    "docs/images/memory.png",
+    "docs/images/composer.png",
+    "tests/unit/b6-config-field-unset-and-range.test.tsx",
+    "tests/unit/b7-memory-empty-states.test.tsx",
+    "tests/unit/field-kit.test.tsx",
+    "tests/unit/t0162-house-control-names.test.tsx",
+    "docs/contributing/repo-guide.md",
+    "src/app/work/chat/page.tsx",
+    "src/components/models/ModelEditor.tsx",
+    "src/app/recroom/story-weaver/layout.tsx",
+    "org/QUESTIONS.md",
+    "org/briefs/T-0191-mutation-oracle.md",
+    "org/reviews/2026-10-t0191-final-acceptance.md"
+  ],
+  "timestamps": {
+    "opened": "2026-10-03T12:13:29.785227+00:00",
+    "updated": "2026-10-03T20:19:26.784935+00:00",
+    "closed": "2026-10-03T20:19:26.784922+00:00"
+  },
+  "tier_ruled": "R2",
+  "reasons": [
+    {
+      "factor": "money",
+      "tier_floor": "R2",
+      "source": "declared",
+      "evidence": "declared side effect: financial-impact"
+    },
+    {
+      "factor": "boundary-contact",
+      "tier_floor": "R1",
+      "source": "declared",
+      "evidence": "declared side effect: sends-external"
+    }
+  ],
+  "authority": "Approved Phase2/Q016/Q025/Q032, component item rulings and existing T0108 Stop intent. Q033 keeps compatibility throughv1.0. No protected edit, paid provider execution or unruled public removal.",
+  "prerequisite": {
+    "head": "39d7a8956d597175f553c558012f9a25738cafe1",
+    "observed": "2026-10-03T12:05:19.233Z",
+    "allRequiredJobsPassed": true,
+    "allRuns": [
+      {
+        "conclusion": "success",
+        "databaseId": 37074426694,
+        "event": "pull_request",
+        "headSha": "39d7a8956d597175f553c558012f9a25738cafe1",
+        "status": "completed",
+        "url": "https://github.com/Daniel-Parke/PatterStage/actions/runs/37074426694",
+        "workflowName": "Gitleaks"
+      },
+      {
+        "conclusion": "success",
+        "databaseId": 37074426705,
+        "event": "pull_request",
+        "headSha": "39d7a8956d597175f553c558012f9a25738cafe1",
+        "status": "completed",
+        "url": "https://github.com/Daniel-Parke/PatterStage/actions/runs/37074426705",
+        "workflowName": "CI"
+      },
+      {
+        "conclusion": "success",
+        "databaseId": 37074421300,
+        "event": "push",
+        "headSha": "39d7a8956d597175f553c558012f9a25738cafe1",
+        "status": "completed",
+        "url": "https://github.com/Daniel-Parke/PatterStage/actions/runs/37074421300",
+        "workflowName": "Gitleaks"
+      },
+      {
+        "conclusion": "success",
+        "databaseId": 37074421302,
+        "event": "push",
+        "headSha": "39d7a8956d597175f553c558012f9a25738cafe1",
+        "status": "completed",
+        "url": "https://github.com/Daniel-Parke/PatterStage/actions/runs/37074421302",
+        "workflowName": "CI"
+      }
+    ],
+    "runs": [
+      {
+        "conclusion": "success",
+        "databaseId": 37074426694,
+        "event": "pull_request",
+        "headSha": "39d7a8956d597175f553c558012f9a25738cafe1",
+        "status": "completed",
+        "url": "https://github.com/Daniel-Parke/PatterStage/actions/runs/37074426694",
+        "workflowName": "Gitleaks",
+        "receipt": "tmp/t0190-hosted-closure-rerun/pull_request-gitleaks-37074426694-1791029115167.json",
+        "jobs": [
+          {
+            "id": 111061018150,
+            "name": "scan",
+            "status": "completed",
+            "conclusion": "success"
+          }
+        ]
+      },
+      {
+        "conclusion": "success",
+        "databaseId": 37074426705,
+        "event": "pull_request",
+        "headSha": "39d7a8956d597175f553c558012f9a25738cafe1",
+        "status": "completed",
+        "url": "https://github.com/Daniel-Parke/PatterStage/actions/runs/37074426705",
+        "workflowName": "CI",
+        "receipt": "tmp/t0190-hosted-closure-rerun/pull_request-ci-37074426705-1791029116512.json",
+        "jobs": [
+          {
+            "id": 111061018461,
+            "name": "e2e-smoke",
+            "status": "completed",
+            "conclusion": "success"
+          },
+          {
+            "id": 111061018526,
+            "name": "boot-smoke (macos-latest)",
+            "status": "completed",
+            "conclusion": "success"
+          },
+          {
+            "id": 111061018547,
+            "name": "boot-smoke (ubuntu-latest)",
+            "status": "completed",
+            "conclusion": "success"
+          },
+          {
+            "id": 111061018569,
+            "name": "build-test-ubuntu",
+            "status": "completed",
+            "conclusion": "success"
+          },
+          {
+            "id": 111061018604,
+            "name": "build-test-macos",
+            "status": "completed",
+            "conclusion": "success"
+          },
+          {
+            "id": 111061018615,
+            "name": "install-harness",
+            "status": "completed",
+            "conclusion": "success"
+          },
+          {
+            "id": 111061018644,
+            "name": "real-hermes-integration",
+            "status": "completed",
+            "conclusion": "success"
+          },
+          {
+            "id": 111061018652,
+            "name": "e2e-full (PLAYWRIGHT_SMOKE unset)",
+            "status": "completed",
+            "conclusion": "success"
+          },
+          {
+            "id": 111061018690,
+            "name": "shell-custom-scripts",
+            "status": "completed",
+            "conclusion": "success"
+          },
+          {
+            "id": 111061018694,
+            "name": "docker-image",
+            "status": "completed",
+            "conclusion": "success"
+          },
+          {
+            "id": 111063900297,
+            "name": "acceptance-gate (full suite + install journey + real Hermes)",
+            "status": "completed",
+            "conclusion": "success"
+          }
+        ]
+      },
+      {
+        "conclusion": "success",
+        "databaseId": 37074421300,
+        "event": "push",
+        "headSha": "39d7a8956d597175f553c558012f9a25738cafe1",
+        "status": "completed",
+        "url": "https://github.com/Daniel-Parke/PatterStage/actions/runs/37074421300",
+        "workflowName": "Gitleaks",
+        "receipt": "tmp/t0190-hosted-closure-rerun/push-gitleaks-37074421300-1791029117501.json",
+        "jobs": [
+          {
+            "id": 111061000999,
+            "name": "scan",
+            "status": "completed",
+            "conclusion": "success"
+          }
+        ]
+      },
+      {
+        "conclusion": "success",
+        "databaseId": 37074421302,
+        "event": "push",
+        "headSha": "39d7a8956d597175f553c558012f9a25738cafe1",
+        "status": "completed",
+        "url": "https://github.com/Daniel-Parke/PatterStage/actions/runs/37074421302",
+        "workflowName": "CI",
+        "receipt": "tmp/t0190-hosted-closure-rerun/push-ci-37074421302-1791029119232.json",
+        "jobs": [
+          {
+            "id": 111197456223,
+            "name": "build-test-macos",
+            "status": "completed",
+            "conclusion": "success"
+          },
+          {
+            "id": 111197456749,
+            "name": "boot-smoke (ubuntu-latest)",
+            "status": "completed",
+            "conclusion": "success"
+          },
+          {
+            "id": 111197456923,
+            "name": "shell-custom-scripts",
+            "status": "completed",
+            "conclusion": "success"
+          },
+          {
+            "id": 111197456984,
+            "name": "e2e-full (PLAYWRIGHT_SMOKE unset)",
+            "status": "completed",
+            "conclusion": "skipped"
+          },
+          {
+            "id": 111197457071,
+            "name": "boot-smoke (macos-latest)",
+            "status": "completed",
+            "conclusion": "success"
+          },
+          {
+            "id": 111197457216,
+            "name": "build-test-ubuntu",
+            "status": "completed",
+            "conclusion": "success"
+          },
+          {
+            "id": 111197457536,
+            "name": "acceptance-gate (full suite + install journey + real Hermes)",
+            "status": "completed",
+            "conclusion": "skipped"
+          },
+          {
+            "id": 111197472439,
+            "name": "real-hermes-integration",
+            "status": "completed",
+            "conclusion": "success"
+          },
+          {
+            "id": 111197475330,
+            "name": "e2e-smoke",
+            "status": "completed",
+            "conclusion": "success"
+          },
+          {
+            "id": 111197476033,
+            "name": "install-harness",
+            "status": "completed",
+            "conclusion": "success"
+          },
+          {
+            "id": 111197482238,
+            "name": "docker-image",
+            "status": "completed",
+            "conclusion": "success"
+          }
+        ]
+      }
+    ]
+  },
+  "scope_note": "Exact claims replace programme globs. Implement nothing before independent oracle freeze and red commit. Existing broad Stop intent includes edit/continue client registration and accessible overlay Stop; no new create cancellation or server/provider guarantee. Coordinator production baseline confirms missing Stop in isolated edit/continue and covered Stop in supported generate-plus-edit overlap at both widths. Keyboard coverage remains pending. Footer reachability is already proved; chapter-position reset is the confirmed defect.",
+  "invariants": [
+    "Select and Picker stay separate. Prove rendered contextual names rather than treating eight missing explicit ariaLabel props as eight unnamed controls.",
+    "Preserve numeric null/partial/clamp/range and search semantics, disabled/hint associations, keyboard/focus and exactly-once callbacks. Inspector pill-to-track is the explicitly ruled restyle.",
+    "Preserve dark-neon palette and warm Reader identity. Phone repairs must show complete text and deliberately reachable controls at390x844 and1440x900; DOM presence and automatic scrolling are not geometry proof.",
+    "Elapsed time must not invent percentage or completion. Confirmed success retains the2000ms completion delay; refusal and cancellation never announce success. Hidden/unmounted operations cannot fire obsolete completion callbacks.",
+    "Existing Stop intent cancels registered edit/continue/generate/retry requests, prevents further automatic writes and rereads confirmed state. Keep concurrency ownership and late-answer suppression; never promise rollback or refunded provider spend. Create has no new cancellation contract.",
+    "Reader chapter changes present the beginning of the selected chapter below the header while footer access, fonts/settings, departing-chapter read status and explicit paid intent survive.",
+    "Mission cancellation settles only its own pending feedback. Preserve unrelated persistent errors, stack bounds, no-provider fallback, rollback, selected identity and later operations. Long agent/model/provider values are visually accessible without losing desktop density.",
+    "Chat uses the ruled SimpleMarkdown with guarded links, exact Copy whitespace and truthful clipboard refusal. Preserve incomplete streaming fences, escaped content and Research renderer.",
+    "Retain all stored template icons, separate editor choices and unknown Zap; add missing Bot. Remove only ruled Schedule compact/mode surface and two exact retired tests. Retain other public adapters without measured full-cohort net benefit.",
+    "Remove only four ruled unused RGB mirrors and correct three stale comments. Preserve synthetic gate fixtures, retained tokens, durations, spinner/reduced-motion exceptions, all historical identities except the two explicit Schedule retirements and the four declaration-dependent RGB cases explicitly approved by the operator in Q-034, and all T0190 async/cache oracles.",
+    "Keep fixed census targets and every adverse receipt. No generated/protected/history rewrite for savings. Max two writers; independent final reviewer authors neither source nor gates."
+  ],
+  "rollback": "Revert each primitive or responsive cohort with its consumers; revert Story lifecycle and feedback changes as coherent interfaces while retaining regression tests. No schema, stored-key or data migration.",
+  "verify_line": "Independent red-first public-action oracles; exact historical test-name parity except two ruled Schedule test deletions and four Q-034 declaration-dependent RGB identities. At1440x900/390x844 prove truthful Story progress/refusal/Stop, chapter-start positioning, accessible complete control text, keyboard/touch and responsive states. Preserve current cache/ownership contracts and all retention controls. Measure actual full-cohort net benefit before each fold. Full unchanged ten-stage gate, clean committed causal sweep with restored controls, independent R2 and every hosted job at implementation and closure heads. Account for every owned finding/split/coverage row and uncertainty.",
+  "oracle_status": "130 new unit and58 browser cases pass. Historical identity changes are exactly Q034 two Schedule and four declaration-dependent RGB cases; all other identities retained.",
+  "preservation_baseline": "tmp/t0191-preservation-baseline-20261003.json",
+  "independence": {
+    "method": "clean-context authorship",
+    "supplement": "coordinator human screenshot and interactive production samples; parser metamorphic unsafe-scheme and streaming cases",
+    "finalReviewer": "Laplace, 01a1019a-65c6-7ae2-aafe-5b79b166c745; neither production nor gate author",
+    "oracleAuthor": "Sartre, 01a101b0-fa17-7b10-a55b-b6201e93c846, fresh context; no source authorship",
+    "browserOracleAuthor": "Galileo,01a101b3-7c34-7a71-94b5-334c72f652cb, fresh context; browser suite only",
+    "contextExposure": "Independent task-contract authorship with disclosed accidental partial body exposure; supplementary metamorphic parser cases. Browser and human visual review remain a separate lane."
+  },
+  "readiness": [
+    "tmp/t0191-full-readiness-review-20261002.md",
+    "tmp/t0191-primitive-cost-preparation.md",
+    "tmp/t0191-expanded-opening-20261002.md",
+    "tmp/t0191-independent-opening-critique-20261003.md",
+    "tmp/t0191-stop-overlay-review-20261002.md"
+  ],
+  "current_ui_evidence": [
+    "tmp/t0191-mission-metadata-review-20261002.md",
+    "tmp/t0191-reader-position-finding-20261002.md",
+    "tmp/t0190-green-validation/tmp/t0190-personal-1790980892020/walk.json",
+    "tmp/t0189-green-validation/tmp/t0190-personal-1790980945735/walk.json",
+    "tmp/t0190-green-validation/tmp/t0190-personal-1791028989606/walk.json"
+  ],
+  "independent_amendments": {
+    "scope": [
+      "tests/unit/u0-the-gate-sees-what-it-claims.test.ts",
+      "tests/unit/u2-the-contrast-gate-refuses.test.ts",
+      "tests/unit/components/schedule/SchedulePicker.test.tsx"
+    ],
+    "rule": "Different author; u0/u2 comments only, all fixtures/names/assertions preserved. Schedule permits only two named compact-mode identities to retire under its item ruling; capture complete original blobs/hashes/names. Additional historical changes require separate evidenced authorisation.",
+    "retired_names": [
+      "compact mode renders just the preset dropdown (no custom builder)",
+      "compact mode opens dropdown and selecting a preset calls onChange"
+    ]
+  },
+  "handoffs": "At opening regenerate explicit critic09/13->T0191,critic11->T0196,critic12->T0195 and auth/security/history coverage owners. No historical T0164 or closed-task edits; missing proof does not establish a defect. Parent completion still requires all children.",
+  "ownership_counts": {
+    "findings": 35,
+    "operatorDispositions": 9,
+    "coverage": 32
+  },
+  "prerequisite_review": "org/reviews/2026-10-t0191-component-verification.md#independent-prerequisite-verdict",
+  "historical_amendment_authority": {
+    "reviewer": "Laplace, 01a1019a-65c6-7ae2-aafe-5b79b166c745",
+    "evidence": "org/reviews/2026-10-t0191-component-verification.md",
+    "scope": [
+      "tests/unit/u0-the-gate-sees-what-it-claims.test.ts",
+      "tests/unit/u2-the-contrast-gate-refuses.test.ts",
+      "tests/unit/components/schedule/SchedulePicker.test.tsx"
+    ],
+    "status": "Independently authored and executed;65 original pass,63 retained pass, exactly two authorised compact identities retired. Original blobs, hashes, AST and name parity retained in unit provenance."
+  },
+  "oracle_unit_handoff": "org/reviews/2026-10-t0191-unit-oracle-provenance.json",
+  "scope_addendum": {
+    "date": "2026-10-03",
+    "sourceClaims": [
+      "src/hooks/useCopyToClipboard.ts",
+      "src/components/session/constants.tsx",
+      "src/components/ui/LiveDot.tsx",
+      "src/components/memory/MemoryInsights.tsx",
+      "src/components/viz/StatStrip.tsx",
+      "src/components/models/PerRowDeleteButton.tsx",
+      "src/components/missions/MissionCreateForm.tsx"
+    ],
+    "reason": "Six exact components-28 stale-comment sites plus the shared clipboard helper. The actual Session Copy oracle confirms premature visual success while pending; refusal feedback and confirmed success are separate checks. The existing11-case clipboard suite remains unchanged. All three helper consumers remain preservation obligations; Logs needs an explicit claim only if edited.",
+    "authority": "Existing approved component and truthful-feedback programme; independent R2 reviewer Laplace accepted bounded clipboard investigation before repair, without granting any historical amendment."
+  },
+  "field_migration_scope": {
+    "authority": "Explicit operator rulings components-11 Adopt Field as it is and components-12 Track switches everywhere, 2026-09-12; not a new removal decision.",
+    "inventory": "13 current ui/Input production importers, three existing claims and ten added claims; WorkflowCanvas already claimed. Four historical importing suites and the new primitive oracle require independently authored preservation adaptations.",
+    "implementation": "Move SearchInput and NumberInput into field, consolidate track Toggle and InlineToggle in field/Toggle, compose TextInput and labelled Select callers using existing Field and Input/Select, then delete ui/Input. Preserve numerical state, reset/clamp/null semantics, descriptions, disabled state, exact callbacks and all existing test identities.",
+    "amendmentStatus": "Granted by Laplace,2026-10-03, under Q-015 and explicitcomponents11/12 rulings. OriginalAPI executablefreeze first; independently authored bounded transformations afterdestinations exist. Everyexpandedidentity/assertion/interaction/fixturevalue preserved; original54/54 historicalbaseline, blobs/hashes andASTdifference verification required.",
+    "visual": "Settings and Memory label restyle and Composer stacked track switches are explicitly ruled. Capture isolated controlled states and refresh affected guide screenshots.",
+    "addedClaims": [
+      "src/components/auth/SessionManager.tsx",
+      "src/components/config/ConfigField.tsx",
+      "src/components/memory/MemoryProviderSettings.tsx",
+      "src/components/memory/HindsightBrowser.tsx",
+      "src/components/logs/LogFilePicker.tsx",
+      "src/components/logs/LogTerminal.tsx",
+      "src/components/session/SessionFilterBar.tsx",
+      "src/components/skills/SkillRow.tsx",
+      "src/components/spend/SpendPanel.tsx",
+      "src/app/agent/settings/page.tsx",
+      "src/components/ui/field/SearchInput.tsx",
+      "src/components/ui/field/NumberInput.tsx",
+      "src/components/ui/field/index.ts",
+      "docs/contributing/design-tokens.md",
+      "docs/images/settings.png",
+      "docs/images/memory.png",
+      "docs/images/composer.png",
+      "tests/unit/b6-config-field-unset-and-range.test.tsx",
+      "tests/unit/b7-memory-empty-states.test.tsx",
+      "tests/unit/field-kit.test.tsx",
+      "tests/unit/t0162-house-control-names.test.tsx"
+    ]
+  },
+  "oracle_freeze": {
+    "accepted": true,
+    "date": "2026-10-03T13:41:10.258533+00:00",
+    "reviewer": "Laplace,01a1019a-65c6-7ae2-aafe-5b79b166c745",
+    "files": [
+      {
+        "path": "tests/unit/components-contextual-controls.test.tsx",
+        "sha256": "a5cdf3fe7d157d1b350e958c3622bf1f25465df3b355cd944814ac10fba57697"
+      },
+      {
+        "path": "tests/unit/components-primitive-parity.test.tsx",
+        "sha256": "b75136d80aec9a6c476866a7e259f497f454205cc9da5c07e1dd289b5705ba1f"
+      },
+      {
+        "path": "tests/unit/components-collection-actions.test.tsx",
+        "sha256": "eddc5db45bd312f28053fdec01781b0bcdace0171373a6fe070e1fa7804a4e79"
+      },
+      {
+        "path": "tests/unit/components-chat-markdown.test.tsx",
+        "sha256": "bafa8fda08a7eae396b13265179e0ffed47cece5e4a732b4f7f960ba3e04cfcc"
+      },
+      {
+        "path": "tests/unit/components-progress-feedback.test.tsx",
+        "sha256": "b51ff9cb40535dc4ac458d027bf10a2bd7b43beed19082e439a8638ecb376455"
+      },
+      {
+        "path": "tests/unit/components-token-preservation.test.tsx",
+        "sha256": "894418c8441126d2d0c193da134c97f31de949feeb1816b5e1e2d676e4e870fb"
+      },
+      {
+        "path": "tests/e2e/component-accessibility-responsive.spec.ts",
+        "sha256": "e45007c923cd28e0e6ba0aad86f17250cded8ceb7979004891cebb2392488cc6"
+      }
+    ],
+    "total": 179,
+    "passing": 105,
+    "red": 74,
+    "verdict": "ACCEPT: bounded freeze of179 original-API oracle cases. Laplace independently verified final progress hash b51ff9cb40535dc4ac458d027bf10a2bd7b43beed19082e439a8638ecb376455, exact four acknowledgement replacements and123 unit80pass43 unchanged causal reds; accepted browser e45007c923cd28e0e6ba0aad86f17250cded8ceb7979004891cebb2392488cc6,56 cases25pass31reds. Original/intermediate receipt hashes intact; production unchanged. Both fixture-correction blockers closed. Baseline only, not implementation/release acceptance; retain context exposure, unexecuted downstream assertions and independent migration amendment procedure. Strict census accounting outstanding without waiver."
+  },
+  "implementation_progress": {
+    "unit": "Full coverage gate1791040253227 exit0:828 passing suites,8399 passing tests;2 historical skipped suites and9 skipped tests. Q-034 explains all6 authorised retirements. Existing worker-exit warning remains assignedT0195.",
+    "build": "Whole gate1791040253227 production build and both database-purity checks exit0; unchanged stampd1f63514dce067e69b02aecdf9e8da89b7b098ceb9ab76fd26266762c2dcc5d4. Isolated data only.",
+    "browser": "Exact independent explicit-drain fixture30a75481 integrated after Laplace acceptance and normal six-worker58/58 exit0 in receipt1791042795365. Refreshed coordinator14/14 walk passed run1791042953649 including immediate Stop neutrality and2100ms observation. Phone Settings/Memory/Composer images inspected. Whole gate remains required.",
+    "limits": "Synthetic provider fixtures, no paid execution or whole-product/release acceptance. Ten additional source-traced followups assignedT0192/T0193.",
+    "review": "Laplace accepted bounded Stop correction for fullgate; final acceptance pending. Original35findings/9OP/32coverage itemised; ten separate source-traced followups retainedT0192/T0193. Protected baseline audit1175/1182unchanged, only7authorisedhistorical amendments.",
+    "design_census": "Separate preflight t0191-design-census-probe.log exit0; no measure/tolerance/baseline change. Not a completed full-gate census stage.",
+    "gate_attempts": [
+      {
+        "receipt": "tmp/t0191-full-gate-1791040253227/summary.json",
+        "exit": 1,
+        "kind": "full"
+      },
+      {
+        "receipt": "tmp/t0191-full-gate-1791040894491/rerun/summary.rerun.json",
+        "exit": 1,
+        "kind": "affected-spec"
+      },
+      {
+        "receipt": "tmp/t0191-full-gate-1791041601068/rerun/summary.rerun.json",
+        "exit": 1,
+        "kind": "affected-spec-with-independent-fixture-candidate"
+      },
+      {
+        "receipt": "tmp/t0191-full-gate-1791042155421/rerun/summary.rerun.json",
+        "exit": 1,
+        "kind": "affected-spec-with-guarded-unroute-candidate"
+      },
+      {
+        "receipt": "tmp/t0191-full-gate-1791042795365/rerun/summary.rerun.json",
+        "exit": 0,
+        "kind": "affected-spec-with-explicit-drain-candidate"
+      },
+      {
+        "receipt": "tmp/t0191-full-gate-1791043080359/summary.json",
+        "exit": 1,
+        "kind": "full",
+        "failure": "EPERM atomic replacement in unchanged T0163 credential fixture;8398pass/1fail/9skip. Unchanged isolated7/7exit0, receipts t0191-t0163-alone.json/.log. Cause unresolved, exact signature assignedT0195."
+      },
+      {
+        "receipt": "tmp/t0191-full-gate-1791043589650/summary.json",
+        "exit": 1,
+        "kind": "full",
+        "failure": "All pre-browser stages pass including8399unit cases;browser422pass1reset24historicalskip. Census stages unexecuted."
+      },
+      {
+        "receipt": "tmp/t0191-full-gate-1791044238377/rerun/summary.rerun.json",
+        "exit": 1,
+        "kind": "affected-spec",
+        "failure": "55pass3fail, transport resets recur without full-suite workload."
+      },
+      {
+        "receipt": "tmp/t0191-full-gate-1791044417432/rerun/summary.rerun.json",
+        "exit": 1,
+        "kind": "instrumented-transport-diagnostic",
+        "failure": "Two captured client resets correlate with server idle-timeout destruction of reused sockets. Diagnostic instrumentation is not acceptance."
+      },
+      {
+        "receipt": "tmp/t0191-full-gate-1791045503471/rerun/summary.rerun.json",
+        "exit": 1,
+        "kind": "fresh-transport-candidate affected-spec",
+        "failure": "55 passed, 3 failed: desktop Credentials label and Fallback rows 1/2 missing expected locators. Unchanged tree stamp a51b0135373736e798f33b9d991a5ca4082452be959206cf359fd1523d9dec23. Cause unresolved; no rerun after operator stop."
+      },
+      {
+        "receipt": "tmp/t0191-full-gate-1791053077395/rerun/summary.rerun.json",
+        "exit": 1,
+        "kind": "affected-spec setup infrastructure failure",
+        "failure": "0 browser cases executed. Isolated migration process exit1 before server start. Direct diagnostic exposed Node24.21 os.userInfo uv_os_get_passwd ENOMEM in tsx temporary-directory module; identical script outside sandbox exit0, schema0to43. No test/source change or waiver."
+      },
+      {
+        "receipt": "tmp/t0191-full-gate-1791053156358/rerun/summary.rerun.json",
+        "exit": 0,
+        "kind": "affected-spec",
+        "result": "58/58 normal six-worker component browser cases; independently reviewed73e8 fixture integrated. Full gate still required."
+      },
+      {
+        "receipt": "tmp/t0191-full-gate-1791053306080/summary.json",
+        "exit": 1,
+        "kind": "full",
+        "failure": "All seven pre-browser stages pass including8399unit cases; browser422pass1phoneFallbackrow2geometryfailure24historicalskips. Both census stages unexecuted."
+      },
+      {
+        "receipt": "tmp/t0191-full-gate-1791053927189/rerun/summary.rerun.json",
+        "exit": 0,
+        "kind": "unchanged affected-spec",
+        "result": "58/58 normal six workers. Does not waive failed fullgate."
+      },
+      {
+        "receipt": "tmp/t0191-full-gate-1791054723911/rerun/summary.rerun.json",
+        "exit": 0,
+        "kind": "wheel-corrected affected-spec",
+        "result": "58/58 normal six workers, exact independently reviewedb176968e. Full gate still required."
+      },
+      {
+        "receipt": "tmp/t0191-full-gate-1791056177702/summary.json",
+        "exit": 1,
+        "kind": "full",
+        "failure": "Lint/types0; Jest8398pass1fail9historicalskip. Unchanged Hermes env provider-loop case hit Windows EPERM at atomicWriteFile renameSync38. Laterstagesunexecuted; unchangedsuitealone9/9pass. No cause proven or failure waived."
+      }
+    ],
+    "census": "102132 source,147076 tests,807/4796 repeated windows,103 one-importer components. Source-246/tests+1926 againstT0190; extra assertion line explicitly recorded by census. Fixed targets unchanged.",
+    "transport_diagnosis": {
+      "receipt": "tmp/t0191-socket-analysis.json",
+      "raw": "tmp/t0191-socket-diagnostic-1791044417434",
+      "reviewer": "Nash, independent read-only correlation of raw events",
+      "finding": "Two Playwright requests reuse pooled connections after5052/6024ms idle. Paired server sockets close through socketOnTimeout; client resets follow5/15ms later. No prior client request destruction observed. Instrumented sign-in POST returned303; its followedGET reset.",
+      "versions": "Playwright1.62.1; Node24.21.0",
+      "limits": "Explains two instrumented resets only, not every prior failure or additional assertions. No headers, cookies, tokens, bodies or queries were recorded. No production retry or server/test deadline increase. Fixture transport correction pending independent scope."
+    },
+    "pending_browser_transport_candidate": {
+      "sha256": "73e8f513b8dcf0dc20ad1b21c4de7f37ac6e34e6c5a50ffdd1f7bbf9259a77c2",
+      "status": "Integrated after independent exact review and passing affected suite",
+      "receipt": "tmp/t0191-full-gate-1791053156358/rerun/summary.rerun.json",
+      "wholeGate": "pending"
+    },
+    "wheel_diagnosis": {
+      "evidence": [
+        "tmp/t0191-read-scroll-trace.py",
+        "tmp/t0191-scroll-3657caf0da60b6d1ad2ec9e98c76424cff8716cb.png"
+      ],
+      "observed": "Fallback Move up actionx401..423,tabley21..215; helper sends horizontal74 at195,134.5 twice,scrolloffset remains0. Sticky Models header covers pointer. Existing viewport-only vertical helper can stop with target under header.",
+      "ruling": "Laplace accepted exactb176968e independently authored correction. Owned-browser original-red/candidate-green/fixed-overlay-refusal and58/58 normal six-worker app cases pass. Integrated; full gate outstanding."
+    },
+    "browser_wheel_candidate": {
+      "sha256": "b176968e10b9d78fcaba798e286bc55d8cc4b8149b513348c26fe75b6a216279",
+      "status": "Integrated after independent exact review and passing affected suite",
+      "receipt": "tmp/t0191-full-gate-1791054723911/rerun/summary.rerun.json",
+      "wholeGate": "pending"
+    },
+    "green_gate": {
+      "receipt": "tmp/t0191-full-gate-1791054875331/summary.json",
+      "stages": 10,
+      "unitPassed": 8399,
+      "browserPassed": 423,
+      "historicalSkips": {
+        "unit": 9,
+        "browser": 24
+      },
+      "treeUnchanged": true,
+      "implementation": "85ed87b279b8358bfc40c589226214c1664bdce4",
+      "tree": "a8bf4f5625e754c25402c2af2a0942844c07a115",
+      "binding": "Claim-checked staged Git trees equal before commit; independent local readiness Laplace."
+    },
+    "first_sweep": {
+      "receipt": "tmp/t0191-sweep-85ed87b2/summary.json",
+      "killed": 18,
+      "errors": [
+        "m11-dismisses-other-owners"
+      ],
+      "controlsBefore": 134,
+      "controlsAfter": 134,
+      "restored": true,
+      "verdict": "Not accepted; independent attribution amendment and full rerun required."
+    }
+  },
+  "token_retirement_ruling": {
+    "authority": "Q-034; Daniel Parke,2026-10-03, interactive response: Approve these four test retirements (Recommended)",
+    "scope": [
+      "--ps-rgb-neon-purple is space separated, not a comma list",
+      "--ps-rgb-neon-green is space separated, not a comma list",
+      "--ps-rgb-neon-pink is space separated, not a comma list",
+      "--ps-rgb-neon-orange is space separated, not a comma list"
+    ],
+    "sourceSuite": "tests/unit/lockbook-tokens.test.ts",
+    "reason": "The existing unchanged suite enumerates production declarations; approved critic-09 removal removes these four expanded identities. Do not substitute synthetic cases or absence branches under misleading old names. Remaining declarations, future declarations, non-vacuity and code-mirror checks remain; four new oracle cases assert exact ruled absence.",
+    "totalRetirements": 6,
+    "countEquation": "8275 baseline passing +130 new unit oracle -2 Schedule -4 declaration-dependent cases =8399 passing;9 historical skips separately preserved."
+  },
+  "mutation_oracle_amendment_authority": {
+    "reviewer": "Laplace",
+    "author": "Galileo,01a101b3-7c34-7a71-94b5-334c72f652cb; different from original unit author Sartre and implementer",
+    "scope": "Three assertion sites across four expanded cases: unique unrelated error presence, one newer cancellation, and timer error count before preserved visibility. Keep all names,fixtures,timings,interactions and remaining assertions; no source/manifest/runner change.",
+    "firstSweep": "tmp/t0191-sweep-85ed87b2/summary.json",
+    "result": "18KILLED,1ERROR(m11);134controls before/after and exact restoration. Query exceptions are not accepted kills.",
+    "brief": "org/briefs/T-0191-mutation-oracle.md",
+    "status": "exact candidate reviewed and integrated; full gate/test commit/sweep pending",
+    "sha256": "04bd5c1e3733589aa5627a557fa264a8b2e95d73af8a831c3dddc99bf9df2384",
+    "identities": 23,
+    "focusedControlsPassed": 23
+  },
+  "final_full_gate": {
+    "head": "2f0ccfb7214c7a4448aff06bf97e892663414e62",
+    "receipt": "tmp/t0191-full-gate-1791056851437/summary.json",
+    "sha256": "120a2dee1d3fb64c8fd0f150cb81bdf331b0ad62ac4a6f6f59fe934e9469d5f9",
+    "steps": 10,
+    "treeStamp": "d7ec1143fc00f90e7375c65e7068bfcea4afea769394d48de9e473d5972c929f",
+    "unchanged": true,
+    "jest": {
+      "passed": 8399,
+      "existingSkipped": 9
+    },
+    "browser": {
+      "passed": 423,
+      "existingSkipped": 24
+    },
+    "buildPurity": 2
+  },
+  "mutation": {
+    "receipt": "tmp/t0191-final-sweep-qualification.json",
+    "sha256": "7ce9ac00890f45674989d701532f68fb3b7b90737b2aad868101da0a1e5fdaf9",
+    "killed": 19,
+    "controls": 134,
+    "restored": true,
+    "binding": "tmp/t0191-gate-sweep-binding.json",
+    "priorSweep": "18KILLED/1ERROR preserved; independent three-site amendment followed by a complete committed sweep.",
+    "qualification": "m07 is a combined mutation; its kill does not independently prove the post-publication guard."
+  },
+  "verification": "Independent R2 at2f0ccfb7: all10 unchanged-tree stages,8399unit/423browser passes, build purity, design and line censuses;19 causal committed kills,134controls before/after and exact restoration. All required exact-head hosted jobs pass.76dispositions:53done22ruledout1deferred;11additional findings remain open with T0192/T0193. Existing9unit/24browser skips unchanged.",
+  "deviation": "Retain failed gates, isolated repeats, first failed sweep and traces. Frozen amendments have different authors and exact review; all identities and final assertions remain except Q034 six exact retirements. Latest Windows .env replacement EPERM has unresolved cause, recorded under T0195; isolated9/9 and complete unchanged-source verification pass. Real six-endpoint read latency remains with T0192; fixture preloading does not establish production latency acceptance. Gate and sweep stamps differ only in HEAD/index metadata, proven over2626actual paths. No protected edit, lowered floor, relaxed deadline, source retry or mutation-classifier change. Dev push reports configured PR-rule bypass; settings unchanged.",
+  "final_acceptance": {
+    "head": "2f0ccfb7214c7a4448aff06bf97e892663414e62",
+    "review": "org/reviews/2026-10-t0191-final-acceptance.md",
+    "reviewer": "Laplace, independent R2",
+    "verdictSHA256": "2bf270339d58fcd9893fba1fc7513ed50c4ac195413d5f0574536076c65bda84",
+    "hosted": {
+      "receipt": "tmp\\t0191-hosted-implementation\\snapshot-1791058641012.json",
+      "sha256": "8027adc5fbb248cab4104af0c5bdf5bef531026f24ca57d31dafa39e2133e646",
+      "runs": [
+        {
+          "databaseId": 37150086217,
+          "event": "pull_request",
+          "workflowName": "Gitleaks",
+          "headSha": "2f0ccfb7214c7a4448aff06bf97e892663414e62",
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/Daniel-Parke/PatterStage/actions/runs/37150086217"
+        },
+        {
+          "databaseId": 37150086222,
+          "event": "pull_request",
+          "workflowName": "CI",
+          "headSha": "2f0ccfb7214c7a4448aff06bf97e892663414e62",
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/Daniel-Parke/PatterStage/actions/runs/37150086222"
+        },
+        {
+          "databaseId": 37150083059,
+          "event": "push",
+          "workflowName": "Gitleaks",
+          "headSha": "2f0ccfb7214c7a4448aff06bf97e892663414e62",
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/Daniel-Parke/PatterStage/actions/runs/37150083059"
+        },
+        {
+          "databaseId": 37150083036,
+          "event": "push",
+          "workflowName": "CI",
+          "headSha": "2f0ccfb7214c7a4448aff06bf97e892663414e62",
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/Daniel-Parke/PatterStage/actions/runs/37150083036"
+        }
+      ]
+    },
+    "limits": "Controlled service responses and owned data; no paid-provider, physical-phone-keyboard, whole-product or release acceptance. Closure-head hosted jobs remain required."
+  },
+  "closure_next": "Observe every closure-head hosted job, then open T0192 with exact claims, router verdict, independently authored red oracles and current item reconciliation. T0200 remains deferred afterv1.0;T0201 depends on it."
+}

@@ -1,0 +1,315 @@
+{
+  "task": "T-0189",
+  "mutants": [
+    {
+      "id": "m01-total-zero-loses-authority",
+      "file": "src/lib/runs/parse-stored-usage.ts",
+      "anchor": "finiteCount(usage.totalTokens) ?? inputTokens + outputTokens",
+      "replacement": "finiteCount(usage.totalTokens) || inputTokens + outputTokens",
+      "why": "An explicit zero total must remain authoritative.",
+      "tests": [
+        "tests/unit/data-transaction-usage.test.ts"
+      ]
+    },
+    {
+      "id": "m02-total-fallback-zero",
+      "file": "src/lib/runs/parse-stored-usage.ts",
+      "anchor": "finiteCount(usage.totalTokens) ?? inputTokens + outputTokens",
+      "replacement": "finiteCount(usage.totalTokens) ?? 0",
+      "why": "Missing totals use both recorded components.",
+      "tests": [
+        "tests/unit/data-transaction-usage.test.ts"
+      ]
+    },
+    {
+      "id": "m03-nonfinite-component",
+      "file": "src/lib/runs/parse-stored-usage.ts",
+      "anchor": "return Number.isFinite(count) ? count : undefined;",
+      "replacement": "return count;",
+      "why": "Nonfinite individual fields cannot poison observations.",
+      "tests": [
+        "tests/unit/data-transaction-usage.test.ts"
+      ]
+    },
+    {
+      "id": "m04-coerce-boolean-count",
+      "file": "src/lib/runs/parse-stored-usage.ts",
+      "anchor": "if (typeof value !== \"number\" && (typeof value !== \"string\" || !value.trim())) return undefined;",
+      "replacement": "if (value === undefined) return undefined;",
+      "why": "Booleans, arrays and objects are not numeric usage fields.",
+      "tests": [
+        "tests/unit/data-transaction-usage.test.ts"
+      ]
+    },
+    {
+      "id": "m05-array-usage-root",
+      "file": "src/lib/runs/parse-stored-usage.ts",
+      "anchor": " || Array.isArray(value)",
+      "replacement": "",
+      "why": "Array roots do not establish measured usage.",
+      "tests": [
+        "tests/unit/data-transaction-usage.test.ts"
+      ]
+    },
+    {
+      "id": "m06-drop-overflow-components",
+      "file": "src/lib/runs/parse-stored-usage.ts",
+      "anchor": "return { inputTokens, outputTokens, totalTokens };",
+      "replacement": "return Number.isFinite(totalTokens) ? { inputTokens, outputTokens, totalTokens } : null;",
+      "why": "A derived overflow must not erase finite cost-bearing components.",
+      "tests": [
+        "tests/unit/data-transaction-usage.test.ts"
+      ]
+    },
+    {
+      "id": "m07-story-invalid-chapter-display",
+      "file": "src/modules/rec-room/lib/story-repository.ts",
+      "anchor": "chapters.filter(isChapter)",
+      "replacement": "chapters",
+      "why": "Display omits unusable chapter elements.",
+      "tests": [
+        "tests/unit/data-transaction-stories.test.ts"
+      ]
+    },
+    {
+      "id": "m08-story-title-rewrites-config",
+      "file": "src/modules/rec-room/lib/story-repository.ts",
+      "anchor": "Object.hasOwn(updates, \"config\")",
+      "replacement": "true",
+      "why": "Title-only updates preserve damaged stored JSON bytes.",
+      "tests": [
+        "tests/unit/data-transaction-stories.test.ts"
+      ]
+    },
+    {
+      "id": "m09-story-recovery-without-transaction",
+      "file": "src/modules/rec-room/lib/story-repository.ts",
+      "anchor": "export function reconcileStoriesOnBoot(): { failedStories: number; failedChapters: number } {",
+      "replacement": "export function reconcileStoriesOnBoot(): { failedStories: number; failedChapters: number } { const inTransaction = <T>(work: () => T): T => work();",
+      "why": "Late recovery failure restores initial status and every earlier chapter write.",
+      "tests": [
+        "tests/unit/data-transaction-stories.test.ts"
+      ]
+    },
+    {
+      "id": "m10-recover-invalid-writing-element",
+      "file": "src/modules/rec-room/lib/story-repository.ts",
+      "anchor": "if (!isChapter(c) || c.status !== \"writing\") return;",
+      "replacement": "if (!c || c.status !== \"writing\") return;",
+      "why": "Only valid writing chapters may change; invalid stored elements survive.",
+      "tests": [
+        "tests/unit/data-transaction-stories.test.ts"
+      ]
+    },
+    {
+      "id": "m11-model-defaults-without-transaction",
+      "file": "src/lib/models/models-repository.ts",
+      "anchor": "export function createModel(input: CreateModelInput): ModelRecord {",
+      "replacement": "export function createModel(input: CreateModelInput): ModelRecord { const inTransaction = <T>(work: () => T): T => work();",
+      "why": "A later default-slot failure restores all slots and removes the new model.",
+      "tests": [
+        "tests/unit/data-transaction-models.test.ts"
+      ]
+    },
+    {
+      "id": "m12-pending040-skips-completion",
+      "file": "src/lib/db/sql-migrations.ts",
+      "anchor": "if (version === 40) {",
+      "replacement": "if (version === -40) {",
+      "why": "Partial columns must not skip the remaining historical backfill/index.",
+      "tests": [
+        "tests/unit/data-transaction-migration-parity.test.ts"
+      ]
+    },
+    {
+      "id": "m13-pending040-without-transaction",
+      "file": "src/lib/db/sql-migrations.ts",
+      "anchor": "return database.transaction(() => {",
+      "replacement": "return ((work: () => number) => work)(() => {",
+      "why": "Pending completion and its version advance roll back together.",
+      "tests": [
+        "tests/unit/data-transaction-migration-parity.test.ts"
+      ]
+    },
+    {
+      "id": "m14-head-index-repair-omitted",
+      "file": "src/lib/db/index.ts",
+      "anchor": "  ensureRunsStoryIndex(database);",
+      "replacement": "  void database;",
+      "why": "Already-head databases still receive their missing historical index.",
+      "tests": [
+        "tests/unit/data-transaction-migration-parity.test.ts"
+      ]
+    },
+    {
+      "id": "m15-head-replays-backfill",
+      "file": "src/lib/db/sql-migrations.ts",
+      "anchor": "export function ensureRunsStoryIndex(database: Database.Database): void {",
+      "replacement": "export function ensureRunsStoryIndex(database: Database.Database): void { database.exec(\"UPDATE runs SET spend_source = 'composer' WHERE composer_node_run_id IS NOT NULL\");",
+      "why": "Index repair must not rewrite explicit recorded spend classifications.",
+      "tests": [
+        "tests/unit/data-transaction-migration-parity.test.ts"
+      ]
+    },
+    {
+      "id": "m16-conflicting-index-accepted",
+      "file": "src/lib/db/sql-migrations.ts",
+      "anchor": "throw new Error(\"idx_runs_story has a conflicting definition; preserve it for operator review\");",
+      "replacement": "return;",
+      "why": "A conflicting existing index fails visibly without replacement or false completion.",
+      "tests": [
+        "tests/unit/data-transaction-migration-parity.test.ts"
+      ]
+    },
+    {
+      "id": "m17-display-fallback-lost",
+      "file": "src/lib/db/safe-read.ts",
+      "anchor": "return fallback;",
+      "replacement": "return undefined as T;",
+      "why": "The shared display-only fallback retains each callers existing empty value.",
+      "tests": [
+        "tests/unit/data-transaction-repository-contracts.test.ts"
+      ]
+    },
+    {
+      "id": "m18-process-cleared-before-transaction",
+      "file": "src/lib/sync/sources/ProcessSync.ts",
+      "anchor": "replaceAgentProcesses(processes, timestamp);",
+      "replacement": "require(\"@/lib/db\").getDb().prepare(\"DELETE FROM agent_processes\").run(); replaceAgentProcesses(processes, timestamp);",
+      "why": "A failed replacement must preserve the prior complete snapshot.",
+      "tests": [
+        "tests/unit/data-transaction-sync.test.ts"
+      ]
+    },
+    {
+      "id": "m19-log-prune-outside-transaction",
+      "file": "src/lib/sync/sync-repository.ts",
+      "anchor": "    pruneErrorLogEntries();",
+      "replacement": "  })();\n  pruneErrorLogEntries();\n  getDb().transaction(() => {",
+      "why": "Prune failure must roll back newly ingested rows.",
+      "tests": [
+        "tests/unit/data-transaction-sync.test.ts"
+      ]
+    },
+    {
+      "id": "m20-repeated-log-identity-appends",
+      "file": "src/lib/sync/sync-repository.ts",
+      "anchor": "WHERE source = ? AND timestamp = ? AND message = ?",
+      "replacement": "WHERE source = ? AND timestamp = ? AND message = ? AND 0",
+      "why": "Repeated ticks must retain the earliest identity.",
+      "tests": [
+        "tests/unit/data-transaction-sync.test.ts"
+      ]
+    },
+    {
+      "id": "m21-log-group-omitted",
+      "file": "src/lib/sync/sync-repository.ts",
+      "anchor": "WHERE id IN (SELECT MIN(id) FROM error_log_entries GROUP BY source, timestamp, message)",
+      "replacement": "WHERE 1",
+      "why": "Historical duplicates must not crowd distinct errors out of the ten-row window.",
+      "tests": [
+        "tests/unit/data-transaction-sync.test.ts"
+      ]
+    },
+    {
+      "id": "m22-log-message-truncation",
+      "file": "src/lib/sync/sources/LogSync.ts",
+      "anchor": "JSON.stringify([e.source, e.timestamp, e.message])",
+      "replacement": "JSON.stringify([e.source, e.timestamp, e.message.slice(0, 80)])",
+      "why": "Distinct full-message tails survive ingestion.",
+      "tests": [
+        "tests/unit/data-transaction-sync.test.ts"
+      ]
+    },
+    {
+      "id": "m23-placeholder-is-token",
+      "file": "src/lib/sync/env-token-presence.ts",
+      "anchor": "value && value !== \"changeme\"",
+      "replacement": "value",
+      "why": "Quoted placeholders must not appear configured.",
+      "tests": [
+        "tests/unit/data-transaction-sync.test.ts"
+      ]
+    },
+    {
+      "id": "m24-whatsapp-requires-both",
+      "file": "src/lib/sync/env-token-presence.ts",
+      "anchor": "keys.some((key) => present.has(key))",
+      "replacement": "keys.every((key) => present.has(key))",
+      "why": "Either WhatsApp credential name establishes presence.",
+      "tests": [
+        "tests/unit/data-transaction-sync.test.ts"
+      ]
+    },
+    {
+      "id": "m25-source-claim-ignored",
+      "file": "src/lib/sync/SyncScheduler.ts",
+      "anchor": "if (existing) return existing;",
+      "replacement": "if (false) return existing!;",
+      "why": "Concurrent same-source callers share one underlying execution.",
+      "tests": [
+        "tests/unit/data-transaction-scheduler.test.ts"
+      ]
+    },
+    {
+      "id": "m26-timeout-releases-underlying",
+      "file": "src/lib/sync/SyncScheduler.ts",
+      "anchor": "Promise.allSettled([underlying, bounded])",
+      "replacement": "Promise.allSettled([bounded])",
+      "why": "Timeout cannot release ownership while underlying work remains pending.",
+      "tests": [
+        "tests/unit/data-transaction-scheduler.test.ts"
+      ]
+    },
+    {
+      "id": "m27-overlapping-cycle-not-shared",
+      "file": "src/lib/sync/SyncScheduler.ts",
+      "anchor": "if (this.activeCycle) return this.activeCycle;",
+      "replacement": "if (this.activeCycle) return Promise.resolve({ startedAt: new Date().toISOString(), completedAt: new Date().toISOString(), results: [], totalDurationMs: 0, allSuccessful: true });",
+      "why": "Overlapping complete cycles share the same outcome.",
+      "tests": [
+        "tests/unit/data-transaction-scheduler.test.ts"
+      ]
+    },
+    {
+      "id": "m28-registry-writer-restored",
+      "file": "src/lib/sync/sources/SessionSync.ts",
+      "anchor": "const result = syncHermesSessionsToDb();",
+      "replacement": "const result = syncHermesSessionsToDb(); require(\"@/lib/db\").getDb().prepare(\"INSERT OR REPLACE INTO sync_registry (source_name, last_synced_at, status, synced_count, error) VALUES (?, datetime('now'), 'ok', ?, NULL)\").run(this.name, result.synced);",
+      "why": "Retiring unused writers must preserve the existing registry and its history.",
+      "tests": [
+        "tests/unit/data-transaction-sync.test.ts"
+      ]
+    },
+    {
+      "id": "m29-recovery-reserialises-numeric-data",
+      "file": "src/modules/rec-room/lib/story-repository.ts",
+      "anchor": "applyJsonEdits(row.chapters, edits), ts",
+      "replacement": "JSON.stringify(JSON.parse(applyJsonEdits(row.chapters, edits))), ts",
+      "why": "Recovery must not null overflowing or round unsafe numbers in unrelated data.",
+      "tests": [
+        "tests/unit/data-transaction-stories.test.ts"
+      ]
+    },
+    {
+      "id": "m30-recovery-writes-shadowed-property",
+      "file": "src/modules/rec-room/lib/story-repository.ts",
+      "anchor": "fields.set(JSON.parse(key[1]), {",
+      "replacement": "if (!fields.has(JSON.parse(key[1]))) fields.set(JSON.parse(key[1]), {",
+      "why": "Duplicate and escaped property names use the effective last value.",
+      "tests": [
+        "tests/unit/data-transaction-stories.test.ts"
+      ]
+    },
+    {
+      "id": "m31-escaped-writing-is-filtered-out",
+      "file": "src/modules/rec-room/lib/story-repository.ts",
+      "anchor": "SELECT id, chapters FROM stories WHERE deleted_at IS NULL",
+      "replacement": "SELECT id, chapters FROM stories WHERE deleted_at IS NULL AND instr(chapters, char(34) || 'writing' || char(34)) > 0",
+      "why": "Semantic writing status is recovered even when stored using JSON escapes.",
+      "tests": [
+        "tests/unit/data-transaction-stories.test.ts"
+      ]
+    }
+  ]
+}

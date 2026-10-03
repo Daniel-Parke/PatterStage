@@ -19,7 +19,7 @@ const PROFILES_ROOT = join(SEED_ROOT, "profiles");
 const PACK_PATH = join(
   SEED_ROOT,
   "template-packs",
-  "control-hub-professional-v1.json",
+  "patterstage-professional-v1.json",
 );
 
 function agentsHeader(slug) {
@@ -57,7 +57,7 @@ function scaffoldProfile(entry) {
     writeFileSync(
       agentsPath,
       agentsHeader(entry.slug) +
-        "You operate within the Control Hub and Hermes ecosystem.\n§\nFollow project conventions and document outcomes clearly.\n",
+        "You operate within the PatterStage and Hermes ecosystem.\n§\nFollow project conventions and document outcomes clearly.\n",
       "utf-8",
     );
   }

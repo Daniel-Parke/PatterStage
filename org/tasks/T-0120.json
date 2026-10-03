@@ -1,0 +1,57 @@
+{
+  "id": "T-0120",
+  "intent": "U6 of the UI overhaul programme: colour that is actually there, one ladder for colour that means something, and three radii. Three things in one batch because they turned out to be the same thing. The status ladder had zero consumers; the radius scale had zero consumers; and the reason a class could have zero consumers and still paint was that Tailwind was scanning this repository's own documentation, so a class name written in prose became real CSS.",
+  "declared": {
+    "capabilities": [
+      "edit-source",
+      "edit-tooling",
+      "edit-tests",
+      "edit-docs"
+    ],
+    "side_effects": []
+  },
+  "mode": "standard",
+  "tier_proposed": "R1",
+  "tier_ruled": "R1",
+  "reasons": [
+    {
+      "factor": "size-threshold",
+      "tier_floor": "R1",
+      "source": "derived:diff-size",
+      "evidence": "202 component files re-cornered by codemod, twelve status maps rewritten, the Tailwind source configuration, the linter and one doc; no protected path, no schema, no route, no behaviour"
+    }
+  ],
+  "status": "done",
+  "owner_session": "t0120-u6-colour-and-scales-2026-09-08",
+  "claims": [
+    "src/",
+    "scripts/tooling/design-lint.mjs",
+    "scripts/tooling/design-lint.baseline.json",
+    "scripts/tooling/design-census.baseline.json",
+    "tests/unit/",
+    "docs/contributing/design-tokens.md"
+  ],
+  "programme": "U6, depends on U5. The primitive set in U8 paints on these tokens, so the colour and the scales are settled before anything is rebuilt.",
+  "timestamps": {
+    "opened": "2026-09-08T03:00:00Z",
+    "updated": "2026-09-08T11:00:00Z",
+    "closed": "2026-09-08T11:00:00Z"
+  },
+  "invariants": [
+    "I1 A CLASS TAILWIND CANNOT SEE DOES NOT EXIST. The scan is pinned to src/, so the stylesheet is what the code asks for rather than what the repository happens to mention. Nothing builds a class name: not with an interpolated prefix, not with an opacity concatenated onto one, not with .replace(), and not with two interpolations touching in a className.",
+    "I2 THE WORD DECIDES THE COLOUR. A status is one of thirteen ratified words before it is a colour, and STATUS_TONE is Record<StatusLabel, StatusTone>, so a word without a tone is a compile error exactly as a status without a word already was. A thing cannot be called Failed and painted the colour of Completed.",
+    "I3 WHAT IS NOT A STATUS STAYS ITS OWN SCALE, AND SAYS SO. Log severity, a notification's tone, an artifact's kind, a research step's kind, a category's colour, an achievement's tier and an on-time duration are keyed by something that is not a state word. Each exemption names its reason in its own file, and the seam test requires that.",
+    "I4 THREE RADII AND A PILL. Side-specific spellings keep their side. Two of the three conversions are pixel-identical and carry 427 of the 595 sites.",
+    "I5 THE MOTION GUARD NAMES WHAT ANIMATES. Not what used to."
+  ],
+  "commits": "f5f7f8fd, d5a32c0c and 243549c9 are the three oracles, each measured red before its half was written; 08a313c4 the source pin and the class maps; cd6b8fd3 the ladder and the first five screens; 7f920092 the radii, the remaining seven maps, the dead paint and the motion guard; and this record.",
+  "verification": "Gate by exit code on the swept tree: lint 0, tsc 0, jest 0 (6433 tests, 627 suites), knip 0, canary 0, build 0, Playwright 163 passed and 26 skipped, census 0. Walked on the isolated instance, where the dashboard's four accent pills were measured before and after.",
+  "the_measurement": "design-lint 1216 -> 726, with radius-scale-only 477 -> 0, no-template-literal-tailwind held at 0 against a rule that now sees twice as many shapes, and palette-must-be-house 187 -> 178. Census: distinctRadii 7 -> 5, distinctCardChromes 90 -> 87, distinctButtonChromes 86 -> 85. The stylesheet is 7.2 KB smaller than before the batch despite sixteen new hover rules.",
+  "the_finding": "The Spend pill on the dashboard had a border because the reconnaissance said it did not. StatPill derived its boundary from its icon colour with `textColor.replace(/^text-/, \"border-\") + \"/20\"`, and Tailwind scans source: it cannot see a class assembled at runtime. Three of the eight accents therefore had no border rule at all and every one of the eight had a dead hover. The three that worked worked because `border-yellow-400/20`, `border-blue-400/20` and `border-red-400/20` appear exactly once in the repository, in org/reviews/2026-09-ui-recon.md, the document REPORTING that the border does not work; Tailwind's automatic source detection reads markdown. Pinned to src/ and rebuilt, the pill's border computes to rgba(255, 255, 255, 0.92), which is the solid white ring the recon described. The recon was right, and committing it is what made it wrong. Measured across the repository: 94 candidate-shaped strings and 46 colour classes shipped only because a file outside src/ mentioned them, several of them classes the U4 and U5 codemods had just deleted from the product.",
+  "the_survey": "Six dimensions surveyed and each mapping refuted by a second agent before anything was written. It paid for itself four times. (1) The recon's '22 status maps across ~20 files' is 34 across 26, and 11 of its 18 exemplars are categorical maps a status ladder must not absorb. (2) Its 'failed renders in three hues, none of them the declared danger token' is wrong twice: four sites already resolved to semantic-danger, and `running` was in worse shape than `failed`, resolving to five hue families against failure's two. (3) The accent-border arithmetic settled the batch's biggest design question: at /40 the white ceiling on the panel is 3.48:1, so an accent stroke cannot reliably reach the 3:1 WCAG 1.4.11 asks of a control boundary at any sane alpha. Raising the alpha is not the answer; `border-ps-edge` is, and the accent lives in the fill, the text or the dot. (4) The radius reconciliation is exact with no residual: 663 occurrences minus 114 bare `rounded` and 68 `rounded-full` (neither in the rule's alternation) minus 4 in .ts files gives the 477 the baseline records, and the baseline counts LINES rather than occurrences.",
+  "mutation": "13 mutants against the committed tree, two rounds. Round one: 10 killed, 0 survived, 3 not applied because I had double-escaped their anchors writing them into JSON. Round two: 13 of 13. The seam test earned its place before the sweep did: on its first run it caught a map I had missed, SubsystemsPanel's word-colour map beside the dot map I had converted, with `down` painted neon-pink.",
+  "deviation": "(1) The z ladder is NOT in this batch. The survey found ordering constraints a codemod cannot honour: `z-[70]` maps to two different rungs (a reader banner is a toast, Modal.tsx is a modal), `lg:z-auto` must stay verbatim because the rail leaves the ladder entirely on a desktop, `focus:z-[90]` on the skip link has to beat everything, and a combobox portaled to document.body inside a Sheet needs to outrank a modal, which the seven-rung ladder has no name for. It also cannot be gated: the census sees ONE rendered z-layer because modals are closed while it measures. Deferred to U8, where one Dialog and one Popover own every stacking decision and the ordering becomes structural rather than numeric. (2) The raw-palette codemod is partial. 353 occurrences on 193 lines across 57 files, and under Tailwind v4 the collisions the rule's law calls exact are not: v4's red-400 is not semantic-danger, so mapping the family repaints it. The status-driven sites went with the ladder; Story Weaver's green feature accent and two categorical swatch sets did not, because they are not status and a hue map would flatten a distinction. 187 -> 178. (3) The 21 dialog and popover sites still spell shadow-xl and shadow-2xl. --shadow-ps-raised is declared and has zero consumers, which the survey caught the plan describing as an end state; the Dialog primitive is what will consume it, in U8.",
+  "harness_amendments": "no-template-literal-tailwind sees four shapes rather than two, with cases on both sides: it must refuse .replace() onto a utility prefix and two interpolations touching in a className, and leave a URL, a message and a whole class chosen from a map alone. globals.css pins the scan. And the source-seam test T-0116 deferred here now exists: that record says status-colour-through-helper was dropped from design-lint deliberately because a line-oriented regex cannot see an object literal spanning many lines, and this is the test it was deferred to.",
+  "found_by_the_gate": "The reduced-motion guard named `.animate-pulse-glow`, which has zero call sites. The class the product uses is `.pulse-glow`, on the dashboard's ONLINE dot and on every StatusDot, and it was not in the guard at all, so an operator who asked their OS for reduced motion had a dot pulsing forever on the front door. WCAG 2.3.3. Deleting the unused name without adding the used one would have left the guard naming nothing while the dot kept going.",
+  "deferred": "The z ladder and the elevation token, both to U8. The remaining 178 raw palette sites, which are a feature accent and two categorical scales. The 322 accent-tinted borders, whose four buckets the survey sorted: 82 control resting boundaries go to ps-edge with the primitives, 56 focus borders should be DELETED so the global ring paints (47 of the 56 are below 3:1 and the 9 that pass do so only by accident of their backdrop), 17 hover affordances reach 3:1 nowhere, and 83 are decoration that can stay."
+}

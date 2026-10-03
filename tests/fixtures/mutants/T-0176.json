@@ -1,0 +1,30 @@
+{
+  "task": "T-0176",
+  "why": "The three visual library versions must remain independently observable after their PRs retire.",
+  "mutants": [
+    {
+      "id": "m1-revert-xyflow-range",
+      "file": "package.json",
+      "anchor": "\"@xyflow/react\": \"^12.11.6\"",
+      "replacement": "\"@xyflow/react\": \"^12.11.0\"",
+      "tests": ["tests/unit/t0176-visual-dependency-proposals.test.ts"],
+      "why": "The canvas dependency range and lockfile must remain coherent."
+    },
+    {
+      "id": "m2-revert-tailwind-postcss-range",
+      "file": "package.json",
+      "anchor": "\"@tailwindcss/postcss\": \"^4.3.3\"",
+      "replacement": "\"@tailwindcss/postcss\": \"^4.3.1\"",
+      "tests": ["tests/unit/t0176-visual-dependency-proposals.test.ts"],
+      "why": "The styling compiler dependency range and lockfile must remain coherent."
+    },
+    {
+      "id": "m3-revert-lucide-range",
+      "file": "package.json",
+      "anchor": "\"lucide-react\": \"^1.41.0\"",
+      "replacement": "\"lucide-react\": \"^1.20.0\"",
+      "tests": ["tests/unit/t0176-visual-dependency-proposals.test.ts"],
+      "why": "The icon dependency range and lockfile must remain coherent."
+    }
+  ]
+}

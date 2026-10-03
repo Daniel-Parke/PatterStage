@@ -1,0 +1,61 @@
+{
+  "revision": "2d6468ce3818826331a01dc30fe1b40e0e81dd21",
+  "scopeVersion": 1,
+  "rule": "git ls-tree and git show at revision; LF-normalised line count; protected/history/generated/operational and tooling ledgers are separate from live reduction scopes",
+  "scopes": {
+    "documentationLive": {
+      "files": 79,
+      "lines": 11164,
+      "bytes": 644757,
+      "pathSetSha256": "069cbbf023d69dee1f45f3ec5ce13d3dcdd0a4092f8d0dfecd40967a9cd1e85c"
+    },
+    "generated": {
+      "files": 3,
+      "lines": 1022,
+      "bytes": 38558,
+      "pathSetSha256": "a020885a3a120da83dfe70d3107792d7a687c0cb8712de188a9b36c3ef85d296"
+    },
+    "history": {
+      "files": 262,
+      "lines": 29517,
+      "bytes": 6222433,
+      "pathSetSha256": "143871e560b79ab5391bec329ffac156ba7e516453b0d174f5ff510cb3bda899"
+    },
+    "operational": {
+      "files": 1,
+      "lines": 15,
+      "bytes": 946,
+      "pathSetSha256": "f60ee0db4d9087523c2483b40b884ab765777a31921b9e2d6811f86d7c851d64"
+    },
+    "organisationLive": {
+      "files": 62,
+      "lines": 6225,
+      "bytes": 535796,
+      "pathSetSha256": "25ca2c5810811215ddf14ad2558703684a356c3ac169033414c193ddb8333a49"
+    },
+    "protected": {
+      "files": 19,
+      "lines": 2452,
+      "bytes": 129527,
+      "pathSetSha256": "8281f8c0ae82418454b094291a242b46f314787430fa459e592c7175fbc5d42a"
+    },
+    "publishedBinary": {
+      "files": 21,
+      "lines": 0,
+      "bytes": 2947070,
+      "pathSetSha256": "234a6b0b18a91eaac2c5f10a5d876d99d829f3ed32986232f2dc1fddb442acef"
+    },
+    "toolingLedger": {
+      "files": 5,
+      "lines": 1971,
+      "bytes": 148495,
+      "pathSetSha256": "b7f1bfbc48443ee7fdb70b510a546becabb68cc873f483f3996fe449933aabb7"
+    },
+    "toolingLive": {
+      "files": 134,
+      "lines": 30025,
+      "bytes": 1164679,
+      "pathSetSha256": "2f480f07ba114a61de5465038cbfec047cae4875742596334656e50ae06eee8c"
+    }
+  }
+}

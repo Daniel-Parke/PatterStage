@@ -1,30 +1,33 @@
 // ═══════════════════════════════════════════════════════════════
 // Shared parsing utilities for Hindsight memory data
 // ═══════════════════════════════════════════════════════════════
+//
+// The direct-HTTP bridge (`@/lib/memory/hindsight-bridge`) returns plain
+// JSON objects — no Python `repr()` strings to parse.
 
-/** Parse the raw Python repr string from the Hindsight API into clean fields */
-export function parseMemoryContent(raw: string): { text: string; type: string; tags: string[] } {
-  const textMatch = raw.match(/'text':\s*'((?:[^'\\]|\\.)*)'/);
-  const typeMatch =
-    raw.match(/'fact_type':\s*'([^']*)'/) || raw.match(/(?:^|[^'])type='([^']*)'/);
-  const tagsMatch =
-    raw.match(/tags=\[(.*?)\]/) || raw.match(/'tags':\s*\[(.*?)\]/);
-  const text = textMatch ? textMatch[1] : raw;
-  const type = typeMatch ? typeMatch[1] : "unknown";
-  const tags = tagsMatch
-    ? tagsMatch[1]
-        .split(",")
-        .map((t) => t.trim().replace(/^'|'$/g, ""))
-        .filter(Boolean)
-    : [];
-  return { text, type, tags };
+/**
+ * Coerce a string field with a default fallback, for payload fields that
+ * may be absent or non-string (e.g. an LLM-generated error object instead
+ * of a plain string).
+ */
+export function stringOr(value: unknown): string | undefined;
+export function stringOr(value: unknown, fallback: string): string;
+export function stringOr(value: unknown, fallback?: string): string | undefined {
+  return typeof value === "string" ? value : fallback;
 }
 
-/** Parse the reflect response Python repr — extract text='...' from the repr string */
-export function parseReflectResponse(raw: string): string {
-  const match = raw.match(/^text='((?:[^'\\]|\\.)*)'/);
-  return match ? match[1] : raw;
-}
+/** Tailwind className for the standard Hindsight modal text `<input>`. */
+export const HINDSIGHT_TEXT_INPUT_CLASS =
+  "w-full bg-ps-surface-inset border border-ps-edge rounded-ps-md px-3 py-2 text-body text-ps-text-primary";
+
+/**
+ * Tailwind className for the standard Hindsight modal `<textarea>`. The
+ * call site composes the height separately:
+ * `className={\`w-full h-32 ${HINDSIGHT_TEXTAREA_CLASS}\`}`. Intentionally
+ * separate from `HINDSIGHT_TEXT_INPUT_CLASS` (`p-3 resize-none` vs `px-3 py-2`).
+ */
+export const HINDSIGHT_TEXTAREA_CLASS =
+  "bg-ps-surface-inset border border-ps-edge rounded-ps-md p-3 text-body text-ps-text-primary resize-none";
 
 /** Badge colour for Hindsight fact_type */
 export function hindsightFactTypeBadgeColor(t: string): "cyan" | "purple" | "orange" | "green" | "gray" {

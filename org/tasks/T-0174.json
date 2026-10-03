@@ -1,0 +1,29 @@
+{
+  "id": "T-0174",
+  "intent": "Carry the matched Pages upload and deploy action updates from PR #235 and #236 onto current dev, preserve the .nojekyll publishing artifact with a guarded v5 upload, and enforce the operator's main-only deployment ruling for manual dispatch.",
+  "declared": {"capabilities": ["edit-config", "edit-scripts", "edit-tests", "edit-docs", "git-push"], "side_effects": ["touches-ci", "touches-publication-boundary", "sends-external"]},
+  "mode": "high-assurance",
+  "tier_proposed": "R2",
+  "tier_ruled": "R2",
+  "reasons": [
+    {"factor": "publication-boundary", "tier_floor": "R2", "source": "declared", "evidence": "The workflow controls future GitHub Pages artifact upload and deployment; current main has no Docs workflow and this task does not dispatch it."},
+    {"factor": "boundary-contact", "tier_floor": "R1", "source": "declared", "evidence": "Changing GitHub Actions and pushing dev affects hosted validation."}
+  ],
+  "status": "done",
+  "owner_session": "2026-09-27-refactor-foundations",
+  "timestamps": {"opened": "2026-09-27T13:57:28Z", "updated": "2026-09-27T14:17:15Z"},
+  "claims": ["org/tasks/T-0174.json", "org/claims.json", "org/briefs/T-0174-oracle.md", "org/QUESTIONS.md", "org/HANDOVER.md", "org/TASKS.md", "org/STATE.md", ".github/workflows/docs-pages.yml", "scripts/docs/check-publish-artifact.mjs", "tests/unit/t0174-pages-publication.test.ts", "tests/fixtures/mutants/T-0174.json", "scripts/tooling/line-census.baseline.json", "docs/contributing/testing.md"],
+  "programme": "All four hosted workflows for T-0173 dev@0527d699 completed successfully before this task opened. PR #235 at c708426c983c0ca5f3ae38da588a9e368adb1337 and #236 at a54a1e0fddcb4b09e25c1ef98bff8505b0f13ed8 each change only the version of one Pages action. Independent reviews by Erdos and Hubble confirmed upload-pages-artifact v5 excludes dotfiles by default, including the generator's .nojekyll; deploy-pages v5 does not introduce that artifact change. The operator ruled manual Pages deployment main-only. Existing PRs remain open until the replacement has passed hosted validation and their exact heads are preserved for cleanup.",
+  "invariants": [
+    "The workflow retains the existing main push and manual triggers; its deploy job runs only when github.ref is refs/heads/main, including manual dispatch.",
+    "Upload and deploy move together to v5; upload opts into hidden files only after a pre-upload guard rejects any dot-prefixed path other than an empty root .nojekyll, and rejects symlinks.",
+    "A clean generated site contains index.html and the empty .nojekyll; the guard fails closed on missing required files and unsafe paths without printing file contents.",
+    "No Pages deployment or release is triggered from dev by this batch. Windows development and Linux publishing commands remain valid.",
+    "A distinct author freezes the acceptance oracle before implementation. Full unchanged-tree gate, reasoned census growth and committed-tree mutation sweep precede closure."
+  ],
+  "rollback": "Revert the workflow action and guard changes as one unit. The prior v3 uploader includes .nojekyll by default; no release has yet deployed the new workflow. Leave historical oracle and task evidence intact.",
+  "oracle_provenance": "Hubble (session 01a0e226-def3-7593-bb70-c4715c3d5198) authored tests/unit/t0174-pages-publication.test.ts only before implementation. Commit b00b5797 froze fourteen test names, red 13/14 and zero skipped on Windows. Four workflow assertions failed on the v3/v4/no-guard file; nine guard CLI cases failed because the CLI was absent, a prerequisite rather than behavioural proof. The same fourteen names passed after implementation, including a real Windows directory junction recognised by lstat as a symbolic link.",
+  "verification": "Focused independent oracle green 14/14, including a Windows directory junction, and the existing site inventory passes. Q-029 and Q-030 were appended to org/QUESTIONS.md before implementation. Line census holds exactly +183 testLines and +68 scriptsLines with a written reason; the other eleven measures are unchanged. The isolated generated site built 75 pages and 559 search rows, and GNU tar with the v5 packaging options contained .nojekyll, index.html and expected PNG assets. Full isolated ten-step gate passed by exit code 0 on the exact byte-matched eight-file candidate with treeBefore=treeAfter=d022f82ec0c7bad398a16032385301f9e46f319f999ff9c2cda721cb8bd02fcb: 283 Playwright passed and 24 skipped. Hosted push and PR jobs must be observed after closure push; main Pages deployment requires the operator's later release and environment setting.",
+  "mutation": "Against clean implementation commit c87e5989, all five mutants were KILLED by structured assertion-failed evidence; unmodified controls passed before and after, the working tree was restored clean, and the sweep exited 0. The mutants cover both action versions, main-only dispatch, hidden-path rejection and symlink/junction rejection.",
+  "deviation": "No implementation deviation. A hosted Pages deployment is unavailable until this workflow reaches main and Pages is enabled; generated-artifact contents and the workflow guard were verified locally instead."
+}

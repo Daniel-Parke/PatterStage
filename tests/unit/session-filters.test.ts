@@ -10,18 +10,28 @@ import {
   searchSessionsByQuery,
   sessionMatchesQuery,
   isApiNoiseSession,
-} from "@/lib/session-filters";
-import type { SessionRecord } from "@/lib/session-repository";
+} from "@/lib/sessions/session-filters";
+import type { SessionRecord } from "@/lib/sessions/session-repository";
 
 const FIXED_NOW = new Date("2026-06-02T12:00:00Z").getTime();
 
 function makeSession(overrides: Partial<SessionRecord> = {}): SessionRecord {
   return {
     id: "00000000-0000-0000-0000-000000000000",
+    agentType: "hermes",
     source: "cli",
-    status: "completed",
-    startedAt: "2026-06-02T11:59:00Z",
+    missionId: null,
+    profileName: null,
+    modelId: null,
+    provider: null,
+    title: null,
     size: 100,
+    startedAt: "2026-06-02T11:59:00Z",
+    endedAt: null,
+    status: "completed",
+    exitCode: null,
+    error: null,
+    messageCount: null,
     ...overrides,
   };
 }
@@ -139,65 +149,72 @@ describe("searchSessionsByQuery", () => {
 });
 
 describe("isApiNoiseSession", () => {
+  // The rule is how long the session LIVED, not how long ago it started. The
+  // age reading hid a five-hour api session for its first minute and showed it
+  // for ever after (T-0105, D31). A session with no endedAt is still running,
+  // so `now` is its end for this purpose.
   it("returns false for non-api sources", () => {
     const s = makeSession({ source: "cli", size: 10, startedAt: "2026-06-02T11:59:30Z" });
     expect(isApiNoiseSession(s, FIXED_NOW)).toBe(false);
   });
 
-  it("returns true for api sources that are tiny and recent", () => {
+  it("returns true for a tiny api session that lived half a minute", () => {
     const s = makeSession({
       source: "api",
-      size: 100, // < 1KB
-      startedAt: "2026-06-02T11:59:30Z", // 30s ago
+      size: 100,
+      startedAt: "2026-06-02T11:59:30Z",
+      endedAt: "2026-06-02T12:00:00Z",
     });
     expect(isApiNoiseSession(s, FIXED_NOW)).toBe(true);
+  });
+
+  it("still returns true when that session ended a week ago", () => {
+    // The discriminating case: 30 seconds of life, seven days back. Under the
+    // age rule this was not noise; under the duration rule it is.
+    const s = makeSession({
+      source: "api",
+      size: 100,
+      startedAt: "2026-05-26T09:00:00Z",
+      endedAt: "2026-05-26T09:00:30Z",
+    });
+    expect(isApiNoiseSession(s, FIXED_NOW)).toBe(true);
+  });
+
+  it("returns false for an api session that ran for five minutes, however recent", () => {
+    const s = makeSession({
+      source: "api",
+      size: 100,
+      startedAt: "2026-06-02T11:55:00Z",
+      endedAt: "2026-06-02T12:00:00Z",
+    });
+    expect(isApiNoiseSession(s, FIXED_NOW)).toBe(false);
   });
 
   it("returns false for api sources that are large enough", () => {
     const s = makeSession({
       source: "api",
-      size: 1024, // exactly 1KB — not noise
+      size: 1024,
       startedAt: "2026-06-02T11:59:30Z",
+      endedAt: "2026-06-02T11:59:45Z",
     });
     expect(isApiNoiseSession(s, FIXED_NOW)).toBe(false);
   });
 
-  it("returns false for api sources that are over a minute old", () => {
+  it("measures a still-running session against now", () => {
     const s = makeSession({
       source: "api",
       size: 100,
-      startedAt: "2026-06-02T11:58:30Z", // 90s ago
-    });
-    expect(isApiNoiseSession(s, FIXED_NOW)).toBe(false);
-  });
-
-  it("treats the 60s boundary as inclusive (exactly 60s old is still noise)", () => {
-    // isApiNoiseSession uses `ageMs > 60_000` to *exclude*; so an exact
-    // 60_000 ms age is NOT greater than 60_000, and the session is still
-    // classified as noise. The boundary only flips at 60_000 + 1 ms.
-    const s = makeSession({
-      source: "api",
-      size: 100,
-      startedAt: new Date(FIXED_NOW - 60_000).toISOString(),
+      startedAt: new Date(FIXED_NOW - 30_000).toISOString(),
+      endedAt: null,
     });
     expect(isApiNoiseSession(s, FIXED_NOW)).toBe(true);
-  });
 
-  it("returns false at 60_001ms (just past the boundary)", () => {
-    const s = makeSession({
+    const long = makeSession({
       source: "api",
       size: 100,
-      startedAt: new Date(FIXED_NOW - 60_001).toISOString(),
+      startedAt: new Date(FIXED_NOW - 90_000).toISOString(),
+      endedAt: null,
     });
-    expect(isApiNoiseSession(s, FIXED_NOW)).toBe(false);
-  });
-
-  it("returns true for an api session that is < 1s old", () => {
-    const s = makeSession({
-      source: "api",
-      size: 0,
-      startedAt: new Date(FIXED_NOW - 100).toISOString(),
-    });
-    expect(isApiNoiseSession(s, FIXED_NOW)).toBe(true);
+    expect(isApiNoiseSession(long, FIXED_NOW)).toBe(false);
   });
 });

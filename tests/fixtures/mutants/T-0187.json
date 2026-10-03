@@ -1,0 +1,181 @@
+{
+  "task": "T-0187",
+  "mutants": [
+    {
+      "id": "m1-suppress-winning-boot-warning",
+      "file": "src/instrumentation.ts",
+      "anchor": "if (warning && !legacyBootWarningEmitted) {\n      legacyBootWarningEmitted = true;\n      console.warn(`[config] ${warning}`);",
+      "replacement": "if (false && warning && !legacyBootWarningEmitted) {\n      legacyBootWarningEmitted = true;\n      console.warn(`[config] ${warning}`);",
+      "tests": ["tests/unit/legacy-boot-warning.test.ts"],
+      "why": "A selected pre-rename name must produce one token-free boot warning."
+    },
+    {
+      "id": "m2-discard-empty-canonical-precedence",
+      "file": "scripts/tooling/_env-local.mjs",
+      "anchor": "const canonical = Object.hasOwn(map, psKey) ? map[psKey] : inherited[psKey];",
+      "replacement": "const canonical = process.env[psKey];",
+      "tests": ["tests/unit/legacy-bridge-precedence.test.ts", "tests/unit/legacy-node-bridge-order.test.ts"],
+      "why": "An empty canonical line cannot silence the warning while the legacy directory still wins."
+    },
+    {
+      "id": "m3-warn-for-invalid-read-only-shell-value",
+      "file": "scripts/lib/ps-dotenv-local.sh",
+      "anchor": ": key === \"CH_READ_ONLY\" ? [\"1\", \"true\"].includes(flag)",
+      "replacement": ": key === \"CH_READ_ONLY\" ? true",
+      "tests": ["tests/unit/legacy-script-alias-warning.test.ts"],
+      "why": "An invalid read-only value must not be reported as effective configuration."
+    },
+    {
+      "id": "m4-claim-unsupported-node-alias",
+      "file": "scripts/tooling/_env-local.mjs",
+      "anchor": "for (const chKey of SUPPORTED_LEGACY_NAMES) {",
+      "replacement": "for (const chKey of [...SUPPORTED_LEGACY_NAMES, \"CH_NO_SUPPORTED_READER\"]) {",
+      "tests": ["tests/unit/legacy-supported-alias-warning.test.ts"],
+      "why": "An unsupported CH_* bridge must not be described as a selected pre-rename setting."
+    },
+    {
+      "id": "m5-claim-unsupported-shell-alias",
+      "file": "scripts/lib/ps-dotenv-local.sh",
+      "anchor": "CH_PULL_RECONCILE_DISK CH_ALLOWED_DEV_ORIGINS)",
+      "replacement": "CH_PULL_RECONCILE_DISK CH_ALLOWED_DEV_ORIGINS CH_NO_SUPPORTED_READER)",
+      "tests": ["tests/unit/legacy-supported-alias-warning.test.ts"],
+      "why": "The shell bridge may pass unknown CH_* names through but must not claim that they won a supported setting."
+    },
+    {
+      "id": "m6-claim-invalid-app-run-limit",
+      "file": "src/lib/config/legacy-boot.ts",
+      "anchor": "effective: (value) => Boolean(Number(value))",
+      "replacement": "effective: () => true",
+      "tests": ["tests/unit/legacy-run-limit-warning.test.ts"],
+      "why": "A malformed or zero run-limit input must not be described as the effective app deadline."
+    },
+    {
+      "id": "m7-claim-invalid-node-run-limit",
+      "file": "scripts/tooling/_env-local.mjs",
+      "anchor": "case \"CH_RUN_MAX_MINUTES\": return Boolean(Number(value));",
+      "replacement": "case \"CH_RUN_MAX_MINUTES\": return true;",
+      "tests": ["tests/unit/legacy-run-limit-warning.test.ts"],
+      "why": "The Node bridge must preserve an invalid legacy input without claiming it supplied the effective deadline."
+    },
+    {
+      "id": "m8-claim-invalid-shell-run-limit",
+      "file": "scripts/lib/ps-dotenv-local.sh",
+      "anchor": ": key === \"CH_RUN_MAX_MINUTES\" ? Boolean(Number(value))",
+      "replacement": ": key === \"CH_RUN_MAX_MINUTES\" ? true",
+      "tests": ["tests/unit/legacy-run-limit-warning.test.ts"],
+      "why": "The shell bridge must not claim that an invalid or zero legacy limit won."
+    },
+    {
+      "id": "m9-claim-invalid-app-deploy-flag",
+      "file": "src/lib/config/legacy-boot.ts",
+      "anchor": "effective: (value) => [\"1\", \"true\", \"yes\", \"0\", \"false\", \"no\"].includes(value.trim().toLowerCase())",
+      "replacement": "effective: () => true",
+      "tests": ["tests/unit/legacy-effective-alias-warning.test.ts"],
+      "why": "An unrecognised deploy flag must not be described as effective configuration."
+    },
+    {
+      "id": "m10-claim-invalid-node-alias-values",
+      "file": "scripts/tooling/_env-local.mjs",
+      "anchor": "&& effectiveLegacyValue(chKey, legacy)) names.push",
+      "replacement": "&& true) names.push",
+      "tests": ["tests/unit/legacy-script-alias-warning.test.ts"],
+      "why": "The Node bridge must not claim that an ignored value won a supported setting."
+    },
+    {
+      "id": "m11-claim-invalid-shell-alias-values",
+      "file": "scripts/lib/ps-dotenv-local.sh",
+      "anchor": "process.exit(selected ? 0 : 1);",
+      "replacement": "process.exit(0);",
+      "tests": ["tests/unit/legacy-script-alias-warning.test.ts"],
+      "why": "The shell bridge must not claim that an ignored value won a supported setting."
+    },
+    {
+      "id": "m12-claim-blank-node-directory",
+      "file": "scripts/tooling/_env-local.mjs",
+      "anchor": "case \"CH_DATA_DIR\": return Boolean(value.trim());",
+      "replacement": "case \"CH_DATA_DIR\": return true;",
+      "tests": ["tests/unit/legacy-script-alias-warning.test.ts"],
+      "why": "A blank data directory must fall through Node deploy discovery without a legacy-winner warning."
+    },
+    {
+      "id": "m13-ignore-inherited-node-legacy",
+      "file": "scripts/tooling/_env-local.mjs",
+      "anchor": "const legacy = process.env[chKey];",
+      "replacement": "const legacy = map[chKey];",
+      "tests": ["tests/unit/legacy-inherited-env-warning.test.ts"],
+      "why": "Inherited CH values must be reported when they supply configuration without an env file."
+    },
+    {
+      "id": "m14-ignore-inherited-shell-legacy",
+      "file": "scripts/lib/ps-dotenv-local.sh",
+      "anchor": "done <\"$f\"\n  fi",
+      "replacement": "done <\"$f\"\n  else return 0\n  fi",
+      "tests": ["tests/unit/legacy-inherited-env-warning.test.ts"],
+      "why": "An inherited alias must warn even without an env file."
+    },
+    {
+      "id": "m15-repeat-shell-legacy-name",
+      "file": "scripts/lib/ps-dotenv-local.sh",
+      "anchor": "CH_PULL_RECONCILE_DISK CH_ALLOWED_DEV_ORIGINS)",
+      "replacement": "CH_PULL_RECONCILE_DISK CH_ALLOWED_DEV_ORIGINS CH_DATA_DIR)",
+      "tests": ["tests/unit/legacy-repeated-lines-warning.test.ts"],
+      "why": "Repeated alias assignments must produce one name pair in the warning."
+    },
+    {
+      "id": "m16-ignore-final-empty-shell-canonical",
+      "file": "scripts/lib/ps-dotenv-local.sh",
+      "anchor": "if [[ \"${explicit_keys[$j]}\" == \"$ps_key\" ]]; then canonical=\"${explicit_values[$j]}\"; fi",
+      "replacement": "if [[ \"${explicit_keys[$j]}\" == \"$ps_key\" && -n \"${explicit_values[$j]}\" ]]; then canonical=\"${explicit_values[$j]}\"; fi",
+      "tests": ["tests/unit/legacy-repeated-lines-warning.test.ts"],
+      "why": "The last explicit canonical value controls warning provenance even when empty."
+    },
+    {
+      "id": "m17-claim-inherited-node-branch",
+      "file": "scripts/tooling/_env-local.mjs",
+      "anchor": "(chKey === \"CH_DATA_DIR\" || Object.hasOwn(map, chKey))",
+      "replacement": "true",
+      "tests": ["tests/unit/legacy-branch-and-port-provenance.test.ts"],
+      "why": "An inherited branch alias is not selected by the deploy runner."
+    },
+    {
+      "id": "m18-claim-inherited-shell-branch",
+      "file": "scripts/lib/ps-dotenv-local.sh",
+      "anchor": "[[ \"$explicit_legacy\" == true ]]",
+      "replacement": "[[ true == true ]]",
+      "tests": ["tests/unit/legacy-branch-and-port-provenance.test.ts"],
+      "why": "The Bash loader must not claim an inherited branch that the deploy runner ignores."
+    },
+    {
+      "id": "m19-hide-inherited-hindsight-port",
+      "file": "scripts/bootstrap/setup-hindsight.sh",
+      "anchor": "PS_WEB_PORT=\"${CONTROL_HUB_PORT:-3000}\"\n_p=\"\"",
+      "replacement": "PS_WEB_PORT=\"${CONTROL_HUB_PORT:-3000}\"",
+      "tests": ["tests/unit/legacy-branch-and-port-provenance.test.ts"],
+      "why": "An unrelated inherited scratch value must not suppress the winning legacy port warning."
+    },
+    {
+      "id": "m20-claim-legacy-node-hardware-log",
+      "file": "scripts/tooling/_env-local.mjs",
+      "anchor": "\"SCRIPTS_DIR\", \"ENABLE_DEPLOY_API\",",
+      "replacement": "\"SCRIPTS_DIR\", \"HARDWARE_LOG_DIR\", \"ENABLE_DEPLOY_API\",",
+      "tests": ["tests/unit/legacy-hardware-log-provenance.test.ts"],
+      "why": "The Node log-rotation consumer selects a nonempty canonical path even if it is whitespace."
+    },
+    {
+      "id": "m21-claim-legacy-shell-hardware-log",
+      "file": "scripts/lib/ps-dotenv-local.sh",
+      "anchor": "PS_SCRIPTS_DIR|CH_SCRIPTS_DIR|PS_ENABLE_DEPLOY_API",
+      "replacement": "PS_SCRIPTS_DIR|CH_SCRIPTS_DIR|PS_HARDWARE_LOG_DIR|CH_HARDWARE_LOG_DIR|PS_ENABLE_DEPLOY_API",
+      "tests": ["tests/unit/legacy-hardware-log-provenance.test.ts"],
+      "why": "The Bash log-rotation consumer also selects a nonempty canonical path before the legacy alias."
+    },
+    {
+      "id": "m22-repeat-concurrent-boot-warning",
+      "file": "src/instrumentation.ts",
+      "anchor": "if (warning && !legacyBootWarningEmitted) {",
+      "replacement": "if (warning) {",
+      "tests": ["tests/unit/legacy-concurrent-boot-warning.test.ts"],
+      "why": "Two overlapping register calls must claim the once-only warning after their awaits."
+    }
+  ]
+}

@@ -1,0 +1,71 @@
+{
+  "id": "T-0126",
+  "intent": "U12 of the UI overhaul programme: the Rec Room, five entries to two. Decision 6: the hub folds into the library, which stands at the door; Characters and Themes, two pages of lists that only Create ever used, become panels on Create with their editors in dialogs; three addresses redirect. The density decision is SPACIOUS, the only group where it is: this is the showcase, read rather than operated. It is also the pilot proof that the primitive set covers a real screen - seventeen of the module's eighteen components imported nothing from src/components/ui - and the batch that folds the reader's private status ladder and its thirteen-token register onto the house ones.",
+  "declared": {
+    "capabilities": [
+      "edit-source",
+      "edit-tests",
+      "edit-docs",
+      "edit-tooling"
+    ],
+    "side_effects": []
+  },
+  "mode": "standard",
+  "tier_proposed": "R1",
+  "tier_ruled": "R1",
+  "reasons": [
+    {
+      "factor": "size-threshold",
+      "tier_floor": "R1",
+      "source": "derived:diff-size",
+      "evidence": "three routes retired with 307s for each (the canary blessed in the same commit), two pages rewritten, seventeen module components rewritten or replaced, six new, five oracle suites; no schema, no API, no protected path"
+    }
+  ],
+  "status": "done",
+  "owner_session": "t0126-u12-rec-room-2026-09-07",
+  "claims": [
+    "src/app/recroom/",
+    "src/modules/rec-room/components/",
+    "src/modules/rec-room/lib/chapter-tone.ts",
+    "src/components/ui/Dialog.tsx",
+    "src/lib/modules/registry.ts",
+    "src/app/globals.css",
+    "next.config.ts",
+    "scripts/tooling/design-lint.baseline.json",
+    "scripts/tooling/output-canary.golden.json",
+    "docs/guides/",
+    "docs/start-here/tour.md",
+    "docs/manifest.json",
+    "tests/unit/",
+    "tests/e2e/"
+  ],
+  "programme": "U12, depends on U8. Decision 6, and the first module converted wholesale onto the primitive set.",
+  "timestamps": {
+    "opened": "2026-09-07T19:45:00Z",
+    "updated": "2026-09-07T23:30:00Z",
+    "closed": "2026-09-07T23:30:00Z"
+  },
+  "invariants": [
+    "I1 NO ADDRESS IS LOST. /library, /characters and /themes answer 307 to where their content went, and the two anchors are honoured on arrival even though the browser's own fragment jump fires before a client page has rendered its sections.",
+    "I2 THE LIBRARY IS THE PAGE AT THE DOOR. The rail's one Story Weaver href is unchanged and lands on every story; what the hub counted is in the subtitle and on the filters, not in a row of tiles above the list it counts.",
+    "I3 A LIST'S VERBS TRAVEL WITH IT. Deleting the Characters and Themes pages deletes no verb: every saved theme and sheet can still be made, edited, used and deleted, in a dialog, from the one screen that ever consumed them.",
+    "I4 ONE CLICK TO ADD. Putting a saved character into a story was a button that opened a picker that listed the library again; it is one press on the row, and a name already in the cast cannot be added twice.",
+    "I5 ONE STATUS LADDER. A chapter's state is a status like any other: writing is Running, pending is Queued, failed is Failed, read is done and unread is Waiting for you, all from statusToneClasses, none from a private palette.",
+    "I6 THE READER'S REGISTER IS THREE COLOURS. Page, ink and rule are warm and the reader's own; its bars, its chapter list and its dialogs are the console's surfaces. There is no second tint of the register.",
+    "I7 A CONTROL WITHOUT A PRIMITIVE IS NAMED, NOT HIDDEN. The five module files that still draw a raw control are listed in the oracle with the gap each stands for; nothing else in the module or on its two pages draws one."
+  ],
+  "commits": "be57d84d the U12 oracles, red at 71 of 75; 51d6c5fb the implementation: the library at the door, the two panels and their two editors on Create, three redirects, the reader on three tokens and the status ladder, and the module on the primitive set.",
+  "verification": "Gate by exit code on the finished tree: lint 0, tsc 0, jest 0 (6753 tests, 650 suites), knip 0, canary 0 (blessed in the same commit for the two intended surface changes: three pages gone from httpSurface, three redirects added to appConfig), build 0, Playwright 0 (176 passed, 24 skipped), census 0. design-lint's baseline re-cut from 719 to 376 violations, 86 keys retired. docs:check 75 pages and 21 routes, three guides and three screenshots fewer. Walked on the isolated instance with a seeded story, a theme and a character, at 1440x900 and 390x844: the shelf's h1 and its first block share x (248/248 at 1440, 16/16 at 390) and so do Create's (248/248); no sideways overflow on either page at either width; every retired address landed where its content went. The reader at 390 scrolled sideways by 7px before the header fix and 0 after. Screenshots regenerated.",
+  "the_hub_was_a_subset": "The hub was six tiles counted from the stories, four buttons to the other four screens, and the three most recent stories. The library, one click further in, was three of those tiles, three filters and EVERY story. A page that is a subset of the page behind it is a door with nothing in the room, so the room came forward: the library renders at /recroom/story-weaver, where the rail already pointed, and the hub's counts are one line under the title with dashes until the read lands. The tile row went for the reason Skills' strip went in T-0125: a row of numbers about the list below it is a dashboard about a list. The four buttons went because two of their destinations are panels now and the third is the page itself; the one door left is New story.",
+  "two_pages_became_two_panels_and_two_dialogs": "Characters and Themes were 721 lines for two CRUD lists that Create already read (to load a theme, to import a character) and already wrote (Save to Library, Save as Theme). What the two pages had that Create lacked was two verbs, make and edit, and the place they had them was a hand-rolled fixed overlay each. The lists are panels on Create now, each with its own read state so one failing does not take the other's list away, and each row carries the verbs; the two editors are Dialogs on the shared contract. The Themes editor absorbed Create's own 'Save as Theme' prompt, which had asked only for a name: it opens the same editor with the form's premise and chips already in it. Importing a character went from a button, a modal and a pick to one press on the row, and a name already in the cast says so and cannot be added twice, which is what the greyed-out picker entry used to mean.",
+  "the_reader_s_second_ladder": "The reader drew its chapter dots from five private tints, --ps-reader-chapter-*, and the comment T-0034 left on them said moving them onto the house ladder was 'a design decision for the lock-book, not a side effect'. The lock-book took it in the plan, and this is the batch: chapterTone() is the one map from a chapter to a rung. Two axes fold into it. A chapter has a status and, once complete, a read status; writing is Running, pending is Queued, failed is Failed, a complete chapter you have read is done and green, and one you have not is Waiting for you, the same orange the product uses for 'your move'. The header's dots, the footer's dots and the chapter list's dots were three drawings; they are one component, and the dots are 24px targets with the dot inside where they were 8px buttons (WCAG 2.5.8). The footer's row carries no titles, because the header's row a screen above already does, and a suite that asked for a chapter by title found it twice.",
+  "the_register_and_the_chrome": "Thirteen tokens described one reading surface: a dark tint and a black tint with a page, an ink and a panel each, an accent that was the house purple by another name, a rule, and the five chapter tints. WG-WEB-001 rules one register, and two near-black tints of it were a setting nobody could tell apart, so the black theme went with the ladder; a saved pageTheme from before is dropped on load rather than kept. What remains is the register itself, three colours in @theme so they are utilities: page, ink, rule. The reader's chrome - its bars, its chapter list, its dialogs - sits on the console's surfaces, which is what separates a reading page from the console around it better than a third fill ever did. The prop that threaded a five-field theme object through six components is gone with the object.",
+  "what_the_primitive_set_could_not_draw": "The oracle was written before the conversion and allowed a raw control in two files: a toggle chip and a two-line chapter row. The conversion found three more things with no primitive, and named them rather than wrapping them in a Button that would have put a chrome around them: a 24px chapter dot whose coloured fill IS its meaning (ChapterDots), a disclosure row carrying a name, a summary and a role (CharacterCard), and the reading settings' two range sliders. Each is a real gap - a Disclosure, a Chip, a Slider - and each is on the record for the primitive set rather than hidden under a pragma. ChapterDots carries the one design-lint pragma the batch adds, with its reason, because the ratchet refuses any new key and the dot is new.",
+  "the_baseline_was_owed_a_recut": "design-lint's baseline went 719 -> 376 and retired 86 keys, and only about half of that is this batch. The ratchet forbids growth but does not compel a re-cut, and none had been taken since U6: the five Selectors Picker replaced in T-0125, ScheduledMissions that U9's Automation view retired, the settings [section] page that became a redirect, all still sat in the baseline at their old counts, shrinking nothing anyone could see. The re-cut is the ratchet's other half and it belongs to every batch that deletes a file. Recorded so U16's after-census does not credit this batch with debt paid in three others.",
+  "the_first_walk_pressed_retry": "The phone walk asked for the button whose name matched /chapters/i and pressed the first one. That was 'Retry failed chapters', not 'Show chapters', and a retry is a billed provider call; on the isolated instance it failed against a gateway that is not there, and the seeded story came back with chapter 4 reset to pending and chapter 3 marked writing. A walk script is a user, and a user with a regex. The selector is exact now, and the lesson is on the record because the next walk will also have a Retry on screen. The same walk found two real things: the reader header's five buttons could not wrap at 390, so they pushed the title to nothing and ran the page 7px sideways (the actions take a row of their own below md now), and the reading-settings popover's content was 360px in a 320px panel (the five faces go two-up).",
+  "two_things_the_suites_found": "Dialog's sheet placement read window.matchMedia unguarded, so the first Dialog mounted in jsdom with placement='sheet' threw; the overlay suite from T-0096 caught it the moment MobileChapterDrawer became one. The guard treats a missing matchMedia as a wide screen. And the fragment jump: /themes redirects to /create#themes, but a client page renders its sections after the browser has already tried to scroll to the anchor, so the redirect landed at the top of the form. The page scrolls to its anchor once both libraries have loaded, the fix Settings needed in T-0125, and the e2e spec asks that the panel is in the viewport rather than merely on the page.",
+  "instruments": "A full-page screenshot of Create was the viewport, because main is the scroller and fullPage measures the document; the panels were shot by scrolling each into view. A fixture that seeds a story, a theme and a character into the isolated instance is what made the reader and the two panels walkable at all: the instance had none, and a reader with no story is a spinner.",
+  "mutation": "22 mutants against the committed tree, one round, 22 killed, 0 survived. The ones that matter most: the three that put a retired address back (the registry without Create, the library redirect deleted, the characters redirect landing on Create without its anchor), the two that turn an edit into a copy (themeId and charId dropped from an update), D89 coming back as promptId on the delete, the empty shelf drawn over a failed read, and the Dialog guard removed, which the T-0096 overlay suite kills the moment a sheet mounts in jsdom. Two aim at the dots - the current chapter unmarked, and the 24px target shrunk back to 8px - and both die on the reader-register oracle.",
+  "deviation": "(1) The plan said four guides retire; three did (library, characters, themes) and the hub's guide was rewritten as the library's, because the merged page needs a guide and the hub's was the one whose route survived. (2) The reader's h1 is centred in the reader's own bar, 72px right of the reading column's edge; S2's left-edge rule is for page headers and the reader is a pane, so it is recorded here and not changed. (3) The two pages keep safeApiCall inside useEffect - their no-raw-fetch-in-component baseline counts are unchanged at one each - because /api/stories is POST-only and useApiResource reads by GET; the hook is U15's to widen. (4) PageHeader's help '?' is a 16x16 link and its back link a 16px-tall one on every page; both are under the 24px floor, neither is this batch's, and U14's hit-target gate will meet them.",
+  "deferred": "Disclosure, Chip and Slider primitives for the five named gaps; PageHeader's two sub-24px targets; a POST path for useApiResource; the remaining hand-rolled overlays outside the module; the reader's centred h1; the Artifacts preview pane, /results/insights CLS and the ps-viz-axis strokes carried from T-0124."
+}

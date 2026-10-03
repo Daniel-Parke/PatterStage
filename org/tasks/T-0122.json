@@ -1,0 +1,56 @@
+{
+  "id": "T-0122",
+  "intent": "U8 of the UI overhaul programme: the primitive set is built, and not adopted. Cause 3 is that there is no component library, only 213 local decisions - 69% of components have exactly one importer, Card is used in 9 files against 113 that hand-roll card chrome, and Button in 38 against 321 raw <button> in 113. This batch builds what the conversion batches will consume, so that U9-U13 adopt a primitive rather than each inventing one.",
+  "declared": {
+    "capabilities": [
+      "edit-source",
+      "edit-tests"
+    ],
+    "side_effects": []
+  },
+  "mode": "standard",
+  "tier_proposed": "R1",
+  "tier_ruled": "R1",
+  "reasons": [
+    {
+      "factor": "size-threshold",
+      "tier_floor": "R1",
+      "source": "derived:diff-size",
+      "evidence": "six new modules under src/components/ui and src/hooks, three existing primitives changed, 40 files touched by the focus-ring pass; no route removed, no schema, no protected path"
+    }
+  ],
+  "status": "done",
+  "owner_session": "t0122-u8-the-primitive-set-2026-09-08",
+  "claims": [
+    "src/components/ui/",
+    "src/hooks/useDismissable.ts",
+    "src/components/logs/log-line-severity.ts",
+    "scripts/tooling/design-lint.mjs",
+    "scripts/tooling/design-census.baseline.json",
+    "tests/unit/"
+  ],
+  "programme": "U8, depends on U6. Builds S4; U9-U13 convert the screens onto it.",
+  "timestamps": {
+    "opened": "2026-09-08T17:00:00Z",
+    "updated": "2026-09-09T02:00:00Z",
+    "closed": "2026-09-09T02:00:00Z"
+  },
+  "invariants": [
+    "I1 NO SCREEN IS CONVERTED HERE. The plan says 'built with oracles, not yet adopted', and the separation is the risk control: this batch is already XL, and a 57-site JSX rewrite landing beside nine new components would make one unreviewable diff out of two independent failure modes.",
+    "I2 A PRIMITIVE ABSORBS ITS CALLERS' DISTINCTIONS RATHER THAN FLATTENING THEM. Card gains `variant` and `as` because 17 of its would-be callers spell the raised rung and 9 are a landmark element; a conversion that dropped either would have cost a fill or an accessibility landmark.",
+    "I3 A POPOVER IS NOT A MODAL. useDismissable does not trap Tab, lock body scroll or make the page inert. It shares only the topmost-only rule with useDialogA11y, because one Escape must close one thing.",
+    "I4 STATE BELONGS IN THE ACCESSIBILITY TREE, NOT ONLY IN COLOUR. SegmentedControl is a real radiogroup with aria-checked and a roving tabindex.",
+    "I5 DISABLED IS QUIET, NOT INVISIBLE, AND KEEPS ITS SHAPE. The label sits on a token at 4.59:1 (panel) and 3.64:1 (raised); the boundary stays on the control rung, because a disabled control is still a control."
+  ],
+  "commits": "733bcb73 the focus-ring oracle; 138ef5a5 the focus ring painting; a27d5819, 61e35ef1 and 5f4f52e7 the three oracles for the primitive set, each measured red; 9a59434c the primitives; and the commit that tightens four assertions the sweep found loose.",
+  "verification": "Gate by exit code: lint 0, tsc 0, jest 0 (6516 tests, 632 suites), knip 0, canary 0, build 0, Playwright 0 (186 passed, 26 skipped), census 0. design-lint 726 -> 719 (part one) -> 706. Census: distinctButtonHeights 28 -> 27, distinctButtonChromes 85 -> 83.",
+  "the_batch_boundary_was_wrong_at_first": "Part two began as an adoption codemod - a depth-tracked JSX rewrite converting hand-rolled cards to Card - and got as far as 54 conversions across 40 files before the plan was re-read. U8 builds; U9-U13 adopt. The codemod is kept in the scratchpad and its work-list recorded below, because measuring the adoption is what produced this batch's actual content: it is the reason Card needed `variant` and `as` at all.",
+  "the_codemod_was_wrong_twice_before_it_was_right": "Written through a shell heredoc it carried a literal 0x08 where `\\b` was meant, so its local-Card guard could never fire and results/insights was converted into an import collision. Rewritten with the Write tool it dropped from 54 conversions to 28, because the first version treated `rounded-ps-md` as the house card and would have silently changed 26 radii. It also scanned comments, and this codebase documents the shape a component replaced by pasting the old JSX above it, so eight commented-out card divs were conversion candidates whose closing tag `close_of` would have hunted out into live code.",
+  "the_adoption_work_list": "57 elements outside ui/ spell Card's three classes character for character: 28 are a plain <div> the codemod already converts, 9 are a <section>, <header> or <article> that `as` now covers, and the rest are multi-line tags or carry attributes the codemod does not thread. A further 65 look like cards and are not: 49 spell `rounded-ps-md`, which on inspection are buttons, chips, a <details> and a scroll well - controls, where the control radius is correct - and the remainder carry a tinted fill or an accent edge, which are decisions belonging to the screen's own batch.",
+  "the_byte": "`\\b` written into a patch script through a shell heredoc becomes 0x08, and every tool in this repo renders it invisibly. It has cost this programme three debugging sessions: a design-lint regex that required a backspace and reported zero violations for the wrong reason, this batch's codemod guard, and one that predates the programme - log-line-severity.ts:25 has carried one since 2026-08-25 (c710aab3), where it turned a sentence about a word boundary into nonsense. In a comment it is harmless; in a regex it is a gate passing for the wrong reason, and the two are one keystroke apart. The answer is a test rather than a resolution to be careful: no file under src/, scripts/ or tests/ holds a control character that is not tab, newline or carriage return. One walk of the tree, and the class is closed.",
+  "the_gate_caught_the_fix": "The first disabled treatment quieted the BORDER to the hairline rung along with the fill. The live contrast gate failed five routes at 1.63:1 against the panel and 2.38:1 against the ground, which is exactly `#474f59` on each - a disabled control is still a control, and WCAG 1.4.11's 3:1 is about whether a boundary can be seen. Disabled now loses its fill and keeps its shape.",
+  "the_bisect_was_wrong_and_the_reason_matters": "Chasing that failure, the gate was run against four earlier commits and failed identically at every one, which read as a red that predated the batch and would have gone into this record as a claim that T-0121's 'Playwright 0' was false. It is not. playwright.config.ts runs `npm run start`, which serves the last `npm run build` output: `git checkout` moved the source and left `.next` untouched, so all four readings measured one unchanging build. Rebuilding first, the gate is green at 186. A measurement taken through a stale artefact is not a measurement, and it is worth naming because the stale half is the half nobody looks at.",
+  "mutation": "28 mutants against the committed tree, two rounds. Round one: 23 killed, 4 survived, 1 not applied (my own anchor's indentation). All four survivors were U7's shape - an assertion true of the fix and also true of the mutant. Focus restoration was opened from an unfocused page, so the element to restore was document.body and jsdom ignores body.focus(), making an unconditional restore indistinguishable from a conditional one. The roving tab stop was measured only in its default position, where 'the chosen option' and 'the first option' are the same element. IconButton's name was asserted through the accessible name, which `title` also supplies, so deleting the aria-label changed nothing visible. And PageLoading's single announcement was asserted with a query that finds the wrapper whether or not the skeletons inside it also announce. Round two: 28 of 28.",
+  "deviation": "(1) Dialog, Picker and DataList are NOT built here. Dialog is a generalisation of Modal and Sheet, which already share useDialogA11y and are correct; the shape of the third overlay is only knowable while converting the twelve hand-rolled ones, and building it blind would add a third overlay component rather than remove two. Picker and DataList are the same argument - five Selectors and 41 grid-faked tables whose common shape is a hypothesis until a screen is converted against it. They move to U9, which converts the busiest screens and will produce the evidence. (2) The `features/<domain>/` split is not executed here either: it is a pure file move whose only risk is the canary, and it belongs with the batch that stops importing the moved files. (3) The focus-ring work (part one) is U14's item in the plan, pulled forward because `no-bare-outline-none` had to be tightened before 40 more files could be written against it.",
+  "deferred": "Dialog, Picker, DataList and the features/ split to U9. The 57-site Card adoption to U9-U13, work-list above. The 18 unused IconName variants, still recorded rather than done."
+}

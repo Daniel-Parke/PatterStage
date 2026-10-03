@@ -1,0 +1,24 @@
+{
+  "frozenAt": "2026-09-28",
+  "lineRevision": "babf76ac1975db8f829732005c55c80e49e5111a",
+  "scopeRevision": "ec04895f649836087badd4992f4b68c358019272",
+  "rule": "Baselines are read from the committed line-census and T-0164 scope-baseline files at these revisions. Targets are fixed by T-0165 and cannot be moved to explain a miss. Protected, historical, generated, operational and tooling-ledger scopes are reported but never reduction targets.",
+  "historical": [
+    { "key": "srcLines", "baseline": 100983, "target": 98000 },
+    { "key": "testLines", "baseline": 124351, "target": 116000 },
+    { "key": "srcRepeatedWindowLines", "baseline": 1000, "target": 600 },
+    { "key": "testRepeatedWindowLines", "baseline": 4345, "target": 2500 },
+    { "key": "oneImporterComponents", "baseline": 103, "target": 95 }
+  ],
+  "rows": [
+    { "key": "srcLines", "scope": "line", "baseline": 102141, "target": 100000, "rationale": "A fixed 2,141-line net reduction goal across named route, data, client and component work; new-interface costs are not yet measured and the overlapping 12,800-line estimate is excluded." },
+    { "key": "testLines", "scope": "line", "baseline": 133754, "target": 132000, "rationale": "A fixed 1,754-line net reduction goal from shared fixtures and narrow source-text replacements; behavioural oracle cost is unknown and test names and floors take priority." },
+    { "key": "srcRepeatedWindowLines", "scope": "line", "baseline": 1012, "target": 950, "rationale": "A fixed 62-line window reduction goal from hook return/consumer restatement and route envelopes; two-consumer folds require measured net benefit." },
+    { "key": "testRepeatedWindowLines", "scope": "line", "baseline": 4786, "target": 4600, "rationale": "A fixed 186-line window reduction goal from shared fixtures and request mocks with three or more consumers; no subject-only suite merge or assertion loss is allowed." },
+    { "key": "oneImporterComponents", "scope": "line", "baseline": 104, "target": 100, "rationale": "A fixed four-component reduction goal among 104 one-importer components; candidates are selected only after accessibility and net-cost checks, so no four are claimed dead today." },
+    { "key": "toolingLive", "scope": "toolingLive", "baseline": 30025, "target": 29500, "rationale": "A fixed 525-line net goal; the ruled bench-gateway files contain 179 lines, while wrapper and replacement-oracle costs remain to be measured and public CLI names stay." },
+    { "key": "documentationLive", "scope": "documentationLive", "baseline": 11164, "target": 10900, "rationale": "A fixed 264-line live-doc goal from duplicate root and running guidance; five ruled generated extractors are tooling scope and do not count toward this row." },
+    { "key": "organisationLive", "scope": "organisationLive", "baseline": 6225, "target": 6200, "rationale": "A fixed 25-line live-org goal from duplicate handover and process text; protected, historical and derived material is excluded and new evidence may offset reductions." }
+  ],
+  "closing": "For every row, report baseline, target, final count and delta. Any miss is named individually with its measured number and reason; the original five historical commitments are reported separately. A favourable aggregate cannot conceal a row miss."
+}

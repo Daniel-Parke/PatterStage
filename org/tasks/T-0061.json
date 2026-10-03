@@ -1,0 +1,43 @@
+{
+  "id": "T-0061",
+  "intent": "The profile create path validated the slug it had already laundered out of the name, so the check could never fire, and one name overwrote the root agent's identity files. Reported as S4 by the 2026-08-30 QA pass for the laundering; the destructive case was found here and is the more serious half.",
+  "declared": {
+    "capabilities": [
+      "edit-source"
+    ],
+    "side_effects": []
+  },
+  "mode": "standard",
+  "tier_proposed": "R2",
+  "tier_ruled": "R2",
+  "reasons": [],
+  "status": "done",
+  "owner_session": "t0061-profile-names-2026-08-30",
+  "claims": [
+    "src/lib/profile-slug.ts",
+    "src/app/api/agent/profiles/",
+    "tests/"
+  ],
+  "invariants": [
+    "I1 The NAME is judged, before slugification. The old check ran on the slug, and PROFILE_SLUG_PATTERN is a strict subset of PROFILE_PATTERN, so every output of slugifyDisplayName satisfied it by construction and the guard was structurally unreachable.",
+    "I2 No name can resolve to the root agent. 'default' has no row in agent_profiles because the root lives in agent_root, so the collision check could not see it, and resolveProfileHermesHome('default') returns the root Hermes home rather than profiles/default.",
+    "I3 Both doors are guarded. The rename checked prof.profile === 'default', the OLD slug, and never the new one.",
+    "I4 A name DECORATED with an emoji is fine; a name that leaves NOTHING to slugify is refused rather than silently renamed to the literal 'profile', where two differently-named agents would collide and the operator would be told a profile they never created already exists."
+  ],
+  "oracle_provenance": "Appended to tests/unit/profiles-api.test.ts and committed alone at 3cb916b1, ahead of the implementation at 0792d490. Measured against dev@8c608588: 11 red, 12 green. Three greens are controls: the emoji-decoration case that stops the fix over-reaching into reject-non-ascii, the ordinary-profile case that stops it degenerating into refuse-everything, and a green-on-arrival proof that no hostile name survives slugifyDisplayName as an invalid slug, which is the evidence that the old guard was dead rather than merely bypassed.",
+  "verification": "Five mutations against the committed implementation. Removing the validator turns 7 red; removing the default guard turns 6 red; allowing a nothing-to-slugify name through turns 1 red; over-reaching into ascii-only turns 1 red, which is the control earning its place. Proved end to end against a real server on a TEMP Hermes home holding a recognisable root identity: 'Default' answered 409, '../evil', '..' and 'CON' answered 400, 'QA Engineer' still answered 200, and SOUL.md and config.yaml were md5-identical afterwards. Gate: lint 0, tsc 0, 3249 tests / 384 suites, knip 0, canary 0, build 0.",
+  "mutation_finding": "A sixth mutation SURVIVED and earned a code deletion. Dropping the separate '..' traversal check turned nothing red, because every traversal-shaped name is already refused by the separator check or the leading-dot check ('..' and '../evil' start with a dot, 'a/../b' carries a separator). The only shapes it caught that they do not are names like 'a..b', which slugifies to 'a-b' and is harmless. It refused safe names and protected nothing, so it was removed at 3d06d2b0 and the remaining checks were re-mutated to confirm they now carry those cases. Verified on a fresh build: 'a..b' is accepted as 'a-b', the two traversal shapes are still refused, by the messages of the checks that now own them.",
+  "claim_retracted": "The plan for this batch said the destructive case was reachable from 'Default', 'DEFAULT', 'de fault' and 'Default!'. Measured: 'de fault' slugifies to 'de-fault' and is a perfectly good name. The claim came from an analysis rather than a run, and I repeated it to the operator before checking. The real list is Default / default / DEFAULT / Default! / ' default ' / DeFaUlT, and the test carries a note saying which case was wrong.",
+  "dead_code_kept_on_purpose": "requireSafeProfileName stays on the create path rather than being deleted, with its comment rewritten to say what it actually is: an invariant assertion at a filesystem boundary that cannot fire for any current output of the slugifier. A test asserts that unreachability directly. Deleting a fence at a path boundary to save two lines is the wrong trade; believing it guarded this path was the error.",
+  "rollback": "Revert 0792d490 and 3d06d2b0. The oracle at 3cb916b1 then goes red again.",
+  "deferred": [
+    "The collision check is DB-only. A profile directory on disk with no matching row is not detected, so pushProfileToHermes writes over it and answers 200. writeWithBackup backs up first, so it is recoverable, but it is a silent overwrite of someone else's data.",
+    "Because the collision key is the mangled slug, distinct names still collapse: 'Evil!' and 'evil' both give 'evil', and the 409 names a slug the caller never typed. The message now echoes the submitted name too, which softens it without fixing it.",
+    "'CON' is refused rather than handled. Rolling back upsertProfile when pushProfileToHermes fails is a separate concern: today a failed push leaves an orphan DB row."
+  ],
+  "timestamps": {
+    "opened": "2026-08-30T16:30:00Z",
+    "updated": "2026-08-30T17:30:00Z",
+    "closed": "2026-08-30T17:30:00Z"
+  }
+}

@@ -1,55 +1,34 @@
 /** @jest-environment node */
 
-jest.mock("next/server", () => ({
-  NextRequest: class NextRequest {
-    url: string;
-    method: string;
-    headers: Headers;
-    nextUrl: URL;
-    bodyUsed: boolean = false;
-    private _body: string;
-    constructor(url: string, init?: RequestInit) {
-      this.url = url;
-      this.method = init?.method ?? "GET";
-      this.headers = new Headers(init?.headers as HeadersInit);
-      this._body = typeof init?.body === "string" ? init.body : JSON.stringify(init?.body ?? {});
-      this.nextUrl = new URL(url);
-    }
-    async json() {
-      return JSON.parse(this._body);
-    }
-  },
-  NextResponse: class NextResponse {
-    status: number;
-    body: unknown;
-    constructor(status: number, body: unknown) {
-      this.status = status;
-      this.body = body;
-    }
-    async json() { return this.body; }
-    static json(data: unknown, init?: ResponseInit) {
-      return new NextResponse(init?.status ?? 200, data);
-    }
-  },
-}));
+import type { NextRequest } from "next/server";
+// eslint-disable-next-line @typescript-eslint/no-require-imports -- jest.mock factories are hoisted above imports
+jest.mock("next/server", () => require("../helpers/mocks").nextServerMock());
 
-jest.mock("@/lib/api-logger", () => ({ logApiError: jest.fn() }));
-jest.mock("@/lib/audit-log", () => ({ appendAuditLine: jest.fn() }));
-jest.mock("@/lib/api-auth", () => ({ requireAuth: jest.fn(() => null) }));
-jest.mock("@/lib/parse-json-body", () => ({
-  parseJsonBody: jest.fn(async (req: { json: () => Promise<unknown> }) => req.json()),
-}));
+jest.mock("@/lib/api/api-logger", () => ({ logApiError: jest.fn() }));
+jest.mock("@/lib/api/audit-log", () => ({ appendAuditLine: jest.fn() }));
+jest.mock("@/lib/api/api-auth", () => ({ requireAuth: jest.fn(() => null) }));
+jest.mock("@/lib/api/parse-json-body", () => {
+  // Mock only parseJsonBody (legacy test pattern) — leave
+  // parseAndValidateJsonBody unmocked so the real zod validation runs
+  // against the test's body. The real helper composes parseJsonBody +
+  // zod schema.safeParse, so this still exercises the schema path.
+  const actual = jest.requireActual("@/lib/api/parse-json-body");
+  return {
+    parseJsonBody: jest.fn(async (req: { json: () => Promise<unknown> }) => req.json()),
+    parseAndValidateJsonBody: actual.parseAndValidateJsonBody,
+  };
+});
 
 const mockGetFallbackConfig = jest.fn();
 const mockUpdateFallbackConfigBatch = jest.fn();
 const mockSyncEnabled = jest.fn();
 
-jest.mock("@/lib/fallbacks-repository", () => ({
+jest.mock("@/lib/models/fallbacks-repository", () => ({
   getFallbackConfig: (...args: unknown[]) => mockGetFallbackConfig(...args),
   updateFallbackConfigBatch: (...args: unknown[]) => mockUpdateFallbackConfigBatch(...args),
 }));
 
-jest.mock("@/lib/fallback-sync-helpers", () => ({
+jest.mock("@/modules/hermes/lib/fallback-sync", () => ({
   syncEnabledFallbackChainToHermes: (...args: unknown[]) => mockSyncEnabled(...args),
 }));
 
@@ -57,7 +36,7 @@ function makeRequest(body?: unknown) {
   return new (jest.requireMock("next/server").NextRequest as new (
     url: string,
     init?: RequestInit,
-  ) => unknown)("http://localhost/api/models/fallbacks/sync", {
+  ) => NextRequest)("http://localhost/api/models/fallbacks/sync", {
     method: "POST",
     headers: body ? new Headers({ "content-type": "application/json" }) : undefined,
     body: body !== undefined ? JSON.stringify(body) : undefined,
@@ -86,8 +65,8 @@ beforeEach(() => {
 
 describe("POST /api/models/fallbacks/sync", () => {
   it("persists config from body before syncing to Hermes", async () => {
-    const { POST } = await import("@/app/api/models/fallbacks/sync/route");
-    const res = (await POST(makeRequest({ config: { apiMaxRetries: 5 } }))) as {
+    const { POST } = await import("@/app/api/models/fallbacks/route");
+    const res = (await POST(makeRequest({ action: "sync", config: { apiMaxRetries: 5 } }))) as {
       status: number;
       json: () => Promise<unknown>;
     };
@@ -108,8 +87,8 @@ describe("POST /api/models/fallbacks/sync", () => {
 
   it("syncs from SQLite when body has no config", async () => {
     mockGetFallbackConfig.mockReturnValue({ ...BASE_CONFIG, apiMaxRetries: 2 });
-    const { POST } = await import("@/app/api/models/fallbacks/sync/route");
-    const res = (await POST(makeRequest({}))) as { status: number; json: () => Promise<unknown> };
+    const { POST } = await import("@/app/api/models/fallbacks/route");
+    const res = (await POST(makeRequest({ action: "sync" }))) as { status: number; json: () => Promise<unknown> };
 
     expect(res.status).toBe(200);
     expect(mockUpdateFallbackConfigBatch).not.toHaveBeenCalled();
@@ -119,8 +98,8 @@ describe("POST /api/models/fallbacks/sync", () => {
   });
 
   it("returns 400 for invalid body", async () => {
-    const { POST } = await import("@/app/api/models/fallbacks/sync/route");
-    const res = (await POST(makeRequest({ config: { apiMaxRetries: 99 } }))) as {
+    const { POST } = await import("@/app/api/models/fallbacks/route");
+    const res = (await POST(makeRequest({ action: "sync", config: { apiMaxRetries: 99 } }))) as {
       status: number;
     };
     expect(res.status).toBe(400);
@@ -131,8 +110,8 @@ describe("POST /api/models/fallbacks/sync", () => {
     mockSyncEnabled.mockImplementation(() => {
       throw new Error("config.yaml api_max_retries mismatch");
     });
-    const { POST } = await import("@/app/api/models/fallbacks/sync/route");
-    const res = (await POST(makeRequest({ config: { apiMaxRetries: 5 } }))) as {
+    const { POST } = await import("@/app/api/models/fallbacks/route");
+    const res = (await POST(makeRequest({ action: "sync", config: { apiMaxRetries: 5 } }))) as {
       status: number;
       json: () => Promise<unknown>;
     };

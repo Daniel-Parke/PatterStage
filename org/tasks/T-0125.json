@@ -1,0 +1,80 @@
+{
+  "id": "T-0125",
+  "intent": "U11 of the UI overhaul programme: the Agent group, and Settings as one page. Agents, Skills, Tools, Memory, Models and Settings, whose density decision is DENSE on all six: five are catalogues or registries you come to in order to change one thing, and the sixth is ninety-five controls that were spread over twenty-seven pages of three or four each. Decision 7 lands here, with the 307s for every old address, and so do the three primitives deferred since U8, because these are the screens whose shape they needed.",
+  "declared": {
+    "capabilities": [
+      "edit-source",
+      "edit-tests",
+      "edit-docs",
+      "edit-tooling"
+    ],
+    "side_effects": []
+  },
+  "mode": "standard",
+  "tier_proposed": "R1",
+  "tier_ruled": "R1",
+  "reasons": [
+    {
+      "factor": "size-threshold",
+      "tier_floor": "R1",
+      "source": "derived:diff-size",
+      "evidence": "three primitives, one hook, one section component, one nav, six rewritten pages and eight oracle suites; 27 routes become redirects to anchors on one page (no route deleted, every address still answers); no schema, no protected path"
+    }
+  ],
+  "status": "done",
+  "owner_session": "t0125-u11-agent-settings-2026-09-07",
+  "claims": [
+    "src/app/agent/",
+    "src/components/config/",
+    "src/components/agents/",
+    "src/components/skills/",
+    "src/components/models/",
+    "src/components/memory/",
+    "src/components/missions/SkillsPicker.tsx",
+    "src/components/missions/ToolsetsPicker.tsx",
+    "src/components/ui/Picker.tsx",
+    "src/components/ui/ProfilePicker.tsx",
+    "src/components/ui/DataList.tsx",
+    "src/components/ui/Dialog.tsx",
+    "src/components/ui/Modal.tsx",
+    "src/components/ui/Sheet.tsx",
+    "src/components/ui/Input.tsx",
+    "src/hooks/useSettingsEditor.ts",
+    "src/lib/config-schema.ts",
+    "src/lib/config-sections.ts",
+    "src/lib/modules/registry.ts",
+    "next.config.ts",
+    "scripts/tooling/design-lint.mjs",
+    "scripts/tooling/design-census.baseline.json",
+    "docs/guides/",
+    "tests/unit/"
+  ],
+  "programme": "U11, depends on U8. Converts the Agent group onto the primitive set and lands decision 7.",
+  "timestamps": {
+    "opened": "2026-09-07T13:30:00Z",
+    "updated": "2026-09-07T19:30:00Z",
+    "closed": "2026-09-07T19:30:00Z"
+  },
+  "invariants": [
+    "I1 NO ADDRESS IS LOST. Every one of the 27 section URLs answers 307 to its anchor on the one page; a near-miss still resolves; an unknown section still gets the list. Held by u11-old-section-paths against next.config and the resolver.",
+    "I2 A SAVE SENDS WHAT CHANGED. One section's Save writes that section's changed keys and nothing else: not the other 26 sections, not the keys it holds unchanged. A settings page that rewrites everything on every save is a page that turns a typo in one field into a config.yaml diff of ninety lines.",
+    "I3 ONE CONTROL PER CHOICE. The profile is chosen once, in the header, the same way on Agents, Skills and Tools; a second control for the same choice on the same screen is the defect this batch removes, whatever it looks like.",
+    "I4 A NUMBER SAYS WHAT IT COUNTS. 'runs' beside a panel counting completed runs was two numbers for what read as one fact. The strip says 'dispatched'. A count that is hard-coded is not shown at all.",
+    "I5 A LIST SHOWS ITS ITEMS. Skills opened with a strip saying the same number five times and twenty closed rows; the first screen of a catalogue carries the catalogue.",
+    "I6 A TABLE THAT CANNOT FIT RE-LAYS, IT DOES NOT CLIP. Below its breakpoint DataList stacks each row as a labelled card; a column off the right edge with no affordance is what it replaces.",
+    "I7 A TARGET IS 24x24 OR IT IS INSIDE SOMETHING THAT IS. The switch's 36x20 track is unchanged and sits inside a 44x24 button; the look did not move, the hit area did."
+  ],
+  "commits": "98732716 the U11 oracles, red at 57 of 61; 90193adc the implementation: Settings as one page with 27 redirects, one picker for the Agent group, Skills showing skills, Models stacking below xl, the Memory row on one height, and Picker, DataList and Dialog.",
+  "verification": "Gate by exit code on the finished tree: lint 0, tsc 0, jest 0 (6686 tests, 645 suites), knip 0, canary 0, build 0, Playwright 0 (188 passed, 27 skipped), census 0 in check mode after the baseline was rewritten with its two allowances recorded. Census movements: distinct border colours 35 -> 33, card chromes 85 -> 81, button chromes 79 -> 71, box-shadows 15 -> 11, control borders below 3:1 154 -> 146, sub-24px targets 86 -> 84, 12px share 0.57 -> 0.54; button heights held at 28. Walked before and after on the isolated instance at 1440x900 and 1024x768: skill names in the first viewport of /agent/skills 1 -> 11; the one Settings page carries 9903 characters of text by default where its first build carried 32794 (the index it replaces carried 3204, and each of its 27 doors led to a page of about 490 more); controls under 24px tall on the route that shows the Discord section 8 -> 2. Screenshots regenerated.",
+  "decision_7_and_what_it_cost_the_page": "Twenty-seven pages of three or four fields became one page of ninety-five controls, and the first build of it was 15,874px tall in one column: a settings page you scroll for eleven screens to reach Voice. The fields run two-up at xl now, and the .env preview - two hundred masked lines that were a fifth of everything the page said - sits behind a disclosure with its variable count on the summary line, the way the nested keys already did. The page is read through the nav and the search, not by scrolling, and both were built for that: the nav marks the section in view by IntersectionObserver and follows it (a bookmark to the twentieth section marked the twentieth entry and left the nav scrolled to the first), and the search narrows the page to the sections that match rather than a grid of doors to them.",
+  "the_nav_was_on_the_wrong_side": "The first build put the section nav LEFT of the sections, where a settings sidebar usually is, and the census's routesWithSplitBlocks went 2 -> 3: every section began 224px right of the h1 and of every other screen's content, which is the one thing S2 says a screen may not do. A table of contents goes on the right, where it gives way and the content keeps the page's left edge. Two comments and a changelog line written before the move still said 'left' after it and were caught on the last read before the commit; the guide had been corrected with the move.",
+  "what_the_census_found_that_was_not_this_batch_s": "Sub-24px hit targets read 86 -> 262 on the first census pass, and the growth was three real things, two of them older than this batch and only now on a censused route. The Toggle was a 36x20 button (78 skill rows and 31 settings switches); the settings Clear was a 48x20 span with a click (65 of them); a <details> summary was a 16px line (4). The switch keeps its 36x20 track inside a 44x24 button, Clear is a ghost Button, the summaries get a line of padding, and the count ends at 84, two under where it started. A census that only reads routes the guides document will meet a component's defects the day the component reaches such a route; that is the right time to fix them and the wrong time to be surprised.",
+  "a_legitimate_height_that_was_still_new": "The Memory search row had a 32px input beside 39px buttons. Setting the three buttons to lg made the row level at 40px and moved distinctButtonHeights 28 -> 29, because 40 is a declared height the product had never once rendered. The census is right to count it: a scale with three steps and one of them unused is a two-step scale, and a new height is a new height however legitimate its token. The row is md, 32px, which is the header's height and the right one for a toolbar beside a search box.",
+  "two_rises_allowed_and_why": "monoShare 0.63 -> 0.68 and decorativeBordersBelowThree 602 -> 728 are recorded as allowances with their reason in the baseline. Both are the same arithmetic: the census used to see one settings section per route and now sees twenty-seven sections' field grids, each with its hairline rules and its mono values, on one route. Neither makes any field more mono or any rule fainter than it was; the denominator changed. The hairline is 1.63:1 by construction and clears the live gate's 1.55 floor; T-0119 already noted that this metric's 3:1 floor punishes the hairline for doing its job, and the re-cut is U16's.",
+  "the_primitives_were_shaped_by_the_screens_that_needed_them": "Picker, DataList and Dialog were deferred from U8, again from U9 and again from U10, each time on the argument that a primitive shaped by the simplest caller would be shaped wrong. Here they had their hardest callers. Picker replaces the five Selectors (684 lines, identical trigger chrome, none of them reachable by keyboard) with one listbox that answers arrows, Home, End, Enter and Escape, announces the active option, and carries single and multiple modes, search and a ceiling. DataList is a real <table> with a caption and column headers that re-lays as stacked cards below a named breakpoint; the per-breakpoint classes are written out as literals in a map because Tailwind v4 scans source for whole class names and an assembled one emits no rule. Dialog owns the overlay for center, right, bottom and sheet placements over the existing useDialogA11y; Modal and Sheet are thin wrappers, so the twelve hand-rolled overlays have one thing to converge on. Center does not dismiss on a backdrop click and a side panel does, which is the one behaviour the two old components disagreed about.",
+  "one_read_and_a_diff": "The hook behind the page holds every section's draft, settled values, status and error keyed by id, off ONE cached read of config.yaml plus the two file sections and platform_toolsets read once. A save sends only the keys whose draft differs from settled, and settling drops nulls, which is what Clear leaves behind. The first mutant in the sweep is this: send every value the section holds instead of the diff, and the page still 'works' while writing coercions into the file. The oracle and T-0100's field suite both kill it.",
+  "instruments": "The walk's skill counter looked for the old card's data-skill attribute and read 0 on a screen showing ten skills; the count on the record is taken from the walk's first-viewport TEXT instead, which needs no cooperation from the component. Same lesson as U3 and U9: check the instrument against a case it should pass before believing a number it fails.",
+  "mutation": "20 mutants against the committed tree, one round, 20 killed, 0 survived. The ones that matter most: the diff-only save sending every value (killed by the U11 oracle and by T-0100's field suite), the 27 redirects deleted from next.config and the resolver answering the old route that now 307s again (both killed by u11-old-section-paths), the Picker choosing a disabled option or one past its ceiling, and the growth panel printing its hard-coded zero again. Two mutants aim at what a screen reader hears rather than what a sighted user sees - aria-selected on a Picker option and on a DataList row - and both are killed, so the two controls are under test in both registers.",
+  "deviation": "(1) The plan's 'Tools gets mx-auto and its 191px right-only dead space back' was already answered by U3's shell before this batch: measured, Tools' h1 and content share x=248 at 1440 before and after. (2) documentedRoutes() still filters /agent/settings/* except the page itself, so Restore and System stay documented under the Settings guide; a first rewrite that returned every module route broke docs:check and two suites and was reverted. The b16 floor of 40 documented routes is amended to 20 at the changed line, with the reason: 27 of the 40 were section pages and are anchors now. (3) The shared split-pane for Composer, Research, Logs and Chat is not this group's and stays deferred.",
+  "deferred": "The split-pane; the Artifacts preview pane; /results/insights CLS 0.054; two charts stroking ps-viz-axis at 1.27:1; the re-cut of decorativeBordersBelowThree's floor (U16); the 57-site Card adoption work-list; converting the remaining hand-rolled overlays onto Dialog now that it exists."
+}

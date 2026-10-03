@@ -1,38 +1,20 @@
-/* eslint-disable @typescript-eslint/no-require-imports */
 /** @jest-environment node */
+/* eslint-disable @typescript-eslint/no-require-imports */
 
 /**
- * Unit tests for src/lib/models-repository.ts. Uses a real in-memory
+ * Unit tests for src/lib/models/models-repository.ts. Uses a real in-memory
  * SQLite (bypassing the global jest mock) so we exercise the partial
  * unique indexes from migration 006.
  */
 
-import { execBaselineSchema } from "../helpers/baseline-db";
+import { openBaselineDb } from "../helpers/baseline-db";
 
 let testDb: import("better-sqlite3").Database | null = null;
 
-function loadRealBetterSqlite3(): typeof import("better-sqlite3") {
-  return require("better-sqlite3/lib/index.js") as typeof import("better-sqlite3");
-}
-
-jest.mock("@/lib/db", () => {
-  const actualCrypto = jest.requireActual("crypto") as typeof import("crypto");
-  return {
-    db: () => testDb!,
-    inTransaction: <T,>(fn: () => T) => testDb!.transaction(fn)(),
-    uuid: () => actualCrypto.randomUUID(),
-    now: () => new Date().toISOString(),
-    ensureDb: () => undefined,
-  };
-});
+jest.mock("@/lib/db", () => require("../helpers/baseline-db").dbSingletonMock(() => testDb));
 
 beforeEach(() => {
-  const Database = loadRealBetterSqlite3();
-  testDb = new (Database as unknown as new (path: string) => import("better-sqlite3").Database)(
-    ":memory:"
-  );
-  testDb.pragma("foreign_keys = ON");
-  execBaselineSchema(testDb);
+  testDb = openBaselineDb();
 });
 
 afterEach(() => {
@@ -42,12 +24,12 @@ afterEach(() => {
 
 describe("models-repository — listModels / getModel / createModel", () => {
   it("returns empty list before any inserts", () => {
-    const { listModels } = require("@/lib/models-repository") as typeof import("@/lib/models-repository");
+    const { listModels } = require("@/lib/models/models-repository") as typeof import("@/lib/models/models-repository");
     expect(listModels()).toEqual([]);
   });
 
   it("creates and reads a model with provider/modelId/baseUrl/contextLength", () => {
-    const { createModel, getModel, listModels } = require("@/lib/models-repository") as typeof import("@/lib/models-repository");
+    const { createModel, getModel, listModels } = require("@/lib/models/models-repository") as typeof import("@/lib/models/models-repository");
     const created = createModel({
       name: "Sonnet 4 (custom endpoint)",
       provider: "anthropic",
@@ -65,7 +47,7 @@ describe("models-repository — listModels / getModel / createModel", () => {
   });
 
   it("rejects empty name/provider/modelId", () => {
-    const { createModel } = require("@/lib/models-repository") as typeof import("@/lib/models-repository");
+    const { createModel } = require("@/lib/models/models-repository") as typeof import("@/lib/models/models-repository");
     expect(() => createModel({ name: "", provider: "anthropic", modelId: "x" })).toThrow(/name/);
     expect(() => createModel({ name: "x", provider: "", modelId: "x" })).toThrow(/provider/);
     expect(() => createModel({ name: "x", provider: "anthropic", modelId: "" })).toThrow(/modelId/);
@@ -74,15 +56,15 @@ describe("models-repository — listModels / getModel / createModel", () => {
 
 describe("models-repository — getModelWithKey resolves credential JOIN", () => {
   it("returns null apiKey when no credentialsId set", () => {
-    const { createModel, getModelWithKey } = require("@/lib/models-repository") as typeof import("@/lib/models-repository");
+    const { createModel, getModelWithKey } = require("@/lib/models/models-repository") as typeof import("@/lib/models/models-repository");
     const m = createModel({ name: "Solo", provider: "anthropic", modelId: "anthropic/claude-sonnet-4" });
     const result = getModelWithKey(m.id);
     expect(result?.apiKey).toBeNull();
   });
 
   it("returns the joined plaintext key when credential is linked", () => {
-    const { createCredential } = require("@/lib/credentials-repository") as typeof import("@/lib/credentials-repository");
-    const { createModel, getModelWithKey } = require("@/lib/models-repository") as typeof import("@/lib/models-repository");
+    const { createCredential } = require("@/lib/models/credentials-repository") as typeof import("@/lib/models/credentials-repository");
+    const { createModel, getModelWithKey } = require("@/lib/models/models-repository") as typeof import("@/lib/models/models-repository");
     const cred = createCredential({ label: "ANTH 1", provider: "anthropic", apiKey: "sk-ant-realsecret" });
     const m = createModel({
       name: "Linked",
@@ -97,7 +79,7 @@ describe("models-repository — getModelWithKey resolves credential JOIN", () =>
 
 describe("models-repository — defaults", () => {
   it("returns null defaults when no models flagged", () => {
-    const { getModelDefaults, getDefaultModel } = require("@/lib/models-repository") as typeof import("@/lib/models-repository");
+    const { getModelDefaults, getDefaultModel } = require("@/lib/models/models-repository") as typeof import("@/lib/models/models-repository");
     const defaults = getModelDefaults();
     for (const key of Object.keys(defaults) as Array<keyof typeof defaults>) {
       expect(defaults[key]).toBeNull();
@@ -107,7 +89,7 @@ describe("models-repository — defaults", () => {
 
   it("setDefaultModel writes the slot and getDefaultModel returns it", () => {
     const { createModel, setDefaultModel, getDefaultModel } =
-      require("@/lib/models-repository") as typeof import("@/lib/models-repository");
+      require("@/lib/models/models-repository") as typeof import("@/lib/models/models-repository");
     const m = createModel({ name: "A", provider: "anthropic", modelId: "anthropic/claude-sonnet-4" });
     setDefaultModel("agent", m.id);
     expect(getDefaultModel("agent")?.id).toBe(m.id);
@@ -115,7 +97,7 @@ describe("models-repository — defaults", () => {
 
   it("setDefaultModel with null clears the slot", () => {
     const { createModel, setDefaultModel, getDefaultModel } =
-      require("@/lib/models-repository") as typeof import("@/lib/models-repository");
+      require("@/lib/models/models-repository") as typeof import("@/lib/models/models-repository");
     const m = createModel({ name: "A", provider: "anthropic", modelId: "x" });
     setDefaultModel("agent", m.id);
     setDefaultModel("agent", null);
@@ -124,7 +106,7 @@ describe("models-repository — defaults", () => {
 
   it("setting a new default for the same slot clears the old default", () => {
     const { createModel, setDefaultModel, getDefaultModel } =
-      require("@/lib/models-repository") as typeof import("@/lib/models-repository");
+      require("@/lib/models/models-repository") as typeof import("@/lib/models/models-repository");
     const a = createModel({ name: "A", provider: "anthropic", modelId: "x" });
     const b = createModel({ name: "B", provider: "anthropic", modelId: "y" });
     setDefaultModel("agent", a.id);
@@ -137,7 +119,7 @@ describe("models-repository — defaults", () => {
 
   it("createModel with defaults clears existing defaults (single-default invariant)", () => {
     const { createModel, getDefaultModel } =
-      require("@/lib/models-repository") as typeof import("@/lib/models-repository");
+      require("@/lib/models/models-repository") as typeof import("@/lib/models/models-repository");
     createModel({ name: "Old", provider: "anthropic", modelId: "x", defaults: { agent: true } });
     const next = createModel({
       name: "New",
@@ -150,7 +132,7 @@ describe("models-repository — defaults", () => {
 
   it("deleting the default leaves the slot null", () => {
     const { createModel, setDefaultModel, deleteModel, getDefaultModel } =
-      require("@/lib/models-repository") as typeof import("@/lib/models-repository");
+      require("@/lib/models/models-repository") as typeof import("@/lib/models/models-repository");
     const m = createModel({ name: "A", provider: "anthropic", modelId: "x" });
     setDefaultModel("agent", m.id);
     deleteModel(m.id);
@@ -159,20 +141,20 @@ describe("models-repository — defaults", () => {
 
   it("rejects unknown task type", () => {
     const { setDefaultModel, getDefaultModel } =
-      require("@/lib/models-repository") as typeof import("@/lib/models-repository");
+      require("@/lib/models/models-repository") as typeof import("@/lib/models/models-repository");
     expect(() => setDefaultModel("not-a-real-slot" as never, null)).toThrow(/Unknown task type/);
     expect(() => getDefaultModel("nope" as never)).toThrow(/Unknown task type/);
   });
 
   it("setDefaultModel with non-existent modelId throws", () => {
-    const { setDefaultModel } = require("@/lib/models-repository") as typeof import("@/lib/models-repository");
+    const { setDefaultModel } = require("@/lib/models/models-repository") as typeof import("@/lib/models/models-repository");
     expect(() => setDefaultModel("agent", "no-such-id")).toThrow(/Model not found/);
   });
 });
 
 describe("models-repository — updateModel + deleteModel", () => {
   it("updateModel patches fields without losing untouched ones", () => {
-    const { createModel, updateModel } = require("@/lib/models-repository") as typeof import("@/lib/models-repository");
+    const { createModel, updateModel } = require("@/lib/models/models-repository") as typeof import("@/lib/models/models-repository");
     const m = createModel({
       name: "First",
       provider: "anthropic",
@@ -187,7 +169,7 @@ describe("models-repository — updateModel + deleteModel", () => {
 
   it("updateModel patches defaults to model_defaults table", () => {
     const { createModel, updateModel, getDefaultModel } =
-      require("@/lib/models-repository") as typeof import("@/lib/models-repository");
+      require("@/lib/models/models-repository") as typeof import("@/lib/models/models-repository");
     const a = createModel({ name: "A", provider: "anthropic", modelId: "x", defaults: { agent: true } });
     expect(getDefaultModel("agent")?.id).toBe(a.id);
     const b = createModel({ name: "B", provider: "anthropic", modelId: "y" });
@@ -200,14 +182,14 @@ describe("models-repository — updateModel + deleteModel", () => {
   });
 
   it("deleteModel returns false for unknown id", () => {
-    const { deleteModel } = require("@/lib/models-repository") as typeof import("@/lib/models-repository");
+    const { deleteModel } = require("@/lib/models/models-repository") as typeof import("@/lib/models/models-repository");
     expect(deleteModel("nope")).toBe(false);
   });
 });
 
 describe("models-repository — listModels returns all models (no framework scoping)", () => {
   it("listModels returns all models", () => {
-    const { createModel, listModels } = require("@/lib/models-repository") as typeof import("@/lib/models-repository");
+    const { createModel, listModels } = require("@/lib/models/models-repository") as typeof import("@/lib/models/models-repository");
     createModel({ name: "Universal", provider: "anthropic", modelId: "claude-1" });
     createModel({ name: "Hermes-only", provider: "openai", modelId: "gpt-4" });
     const all = listModels();
@@ -218,7 +200,7 @@ describe("models-repository — listModels returns all models (no framework scop
 describe("models-repository — defaults have no framework param", () => {
   it("setDefaultModel and getDefaultModel work without framework param", () => {
     const { createModel, setDefaultModel, getDefaultModel, getModelDefaults } =
-      require("@/lib/models-repository") as typeof import("@/lib/models-repository");
+      require("@/lib/models/models-repository") as typeof import("@/lib/models/models-repository");
     const m = createModel({ name: "FW Model", provider: "anthropic", modelId: "claude-fw" });
 
     setDefaultModel("agent", m.id);
@@ -229,7 +211,7 @@ describe("models-repository — defaults have no framework param", () => {
   });
 
   it("getModelDefaults returns null when no defaults set", () => {
-    const { getModelDefaults } = require("@/lib/models-repository") as typeof import("@/lib/models-repository");
+    const { getModelDefaults } = require("@/lib/models/models-repository") as typeof import("@/lib/models/models-repository");
     const defaults = getModelDefaults();
     for (const key of Object.keys(defaults) as Array<keyof typeof defaults>) {
       expect(defaults[key]).toBeNull();
@@ -237,7 +219,7 @@ describe("models-repository — defaults have no framework param", () => {
   });
 
   it("listModels returns all models", () => {
-    const { createModel, listModels } = require("@/lib/models-repository") as typeof import("@/lib/models-repository");
+    const { createModel, listModels } = require("@/lib/models/models-repository") as typeof import("@/lib/models/models-repository");
     createModel({ name: "Univ", provider: "anthropic", modelId: "a" });
     createModel({ name: "Hermes", provider: "openai", modelId: "b" });
 
@@ -248,14 +230,14 @@ describe("models-repository — defaults have no framework param", () => {
 
 describe("models-repository — model CRUD", () => {
   it("createModel returns the created model", () => {
-    const { createModel, getModel } = require("@/lib/models-repository") as typeof import("@/lib/models-repository");
+    const { createModel, getModel } = require("@/lib/models/models-repository") as typeof import("@/lib/models/models-repository");
     const m = createModel({ name: "F", provider: "anthropic", modelId: "x" });
     expect(m.name).toBe("F");
     expect(getModel(m.id)?.name).toBe("F");
   });
 
   it("updateModel works with minimal update", () => {
-    const { createModel, updateModel, getModel } = require("@/lib/models-repository") as typeof import("@/lib/models-repository");
+    const { createModel, updateModel, getModel } = require("@/lib/models/models-repository") as typeof import("@/lib/models/models-repository");
     const m = createModel({ name: "F", provider: "anthropic", modelId: "x" });
     const updated = updateModel(m.id, { name: "F Updated" });
     expect(updated?.name).toBe("F Updated");

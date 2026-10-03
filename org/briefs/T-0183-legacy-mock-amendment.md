@@ -1,0 +1,7 @@
+# T-0183 independent legacy test-double amendment
+
+Own only these six files: `tests/unit/b4-emits-memory-missions-templates.test.ts`, `tests/unit/cancel-and-gather-tell-the-truth.test.ts`, `tests/unit/mission-require-or-not-found.test.ts`, `tests/unit/mission-handlers-delete-cancel.test.ts`, `tests/unit/dispatch-mode-is-validated.test.ts`, `tests/unit/mission-promote-handler.test.ts`. Do not edit source, other tests, records or protected files. Preserve each test name and behavioural assertion. Do not skip tests.
+
+The full Jest coordinator run had 19 failures in these six suites. The new cancellation writer calls `listActiveRunsForMission` to cancel every active run; older mocks expose only `getLatestRunForMission`. Make the mock represent active rows accurately, including the test for a completed run remaining untouched. The detached queue handlers now attach `.catch` to a returned Promise; old queue mocks default to undefined. Return a resolved Promise while retaining each call assertion. In the `mission-require-or-not-found` suite, a downstream 500 is caused by the same missing repository mock; fix that rather than weakening the route assertion.
+
+Before editing, capture the full test-name set in each suite. After editing, compare the names exactly, run the six suites, test typecheck and file lint. Report any remaining failure truthfully. Do not commit; the coordinator will verify and freeze the amendment.

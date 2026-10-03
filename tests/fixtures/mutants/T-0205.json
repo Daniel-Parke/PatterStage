@@ -1,0 +1,85 @@
+{
+  "task": "T-0205",
+  "mutants": [
+    {
+      "id": "m1-read-first-line-only",
+      "anchor": "IFS= read -r -d '' STATUS < \"$STATUS_FILE\" || read_status=$?\n  if [[ \"$read_status\" != 1 ]]; then STATUS=''; return 90; fi",
+      "replacement": "IFS= read -r STATUS < \"$STATUS_FILE\" || read_status=$?\n  if [[ \"$read_status\" != 0 && \"$read_status\" != 1 ]]; then STATUS=''; return 90; fi",
+      "why": "A three-digit first line cannot hide a malformed remainder.",
+      "file": "tests/integration/test_full_install_update_process.py",
+      "tests": [
+        "tests/unit/release-install-http-context.test.ts"
+      ]
+    },
+    {
+      "id": "m2-mask-failed-transfer",
+      "anchor": "[[ \"$curl_status\" == 0 || \"$STATUS\" == 000 ]] || STATUS=''",
+      "replacement": ":",
+      "why": "A failed native transfer cannot qualify a successful-looking HTTP status.",
+      "file": "tests/integration/test_full_install_update_process.py",
+      "tests": [
+        "tests/unit/release-install-http-context.test.ts"
+      ]
+    },
+    {
+      "id": "m3-leak-owned-scratch",
+      "anchor": "if ! rm -f -- \"$STATUS_FILE\"; then",
+      "replacement": "if false; then",
+      "why": "Status scratch must be removed after successful and refused checks.",
+      "file": "tests/integration/test_full_install_update_process.py",
+      "tests": [
+        "tests/unit/release-install-http-context.test.ts"
+      ]
+    },
+    {
+      "id": "m4-retain-prior-status-by-appending",
+      "anchor": "\"$@\" > \"$STATUS_FILE\" || curl_status=$?",
+      "replacement": "\"$@\" >> \"$STATUS_FILE\" || curl_status=$?",
+      "why": "Each request starts with fresh status output rather than accumulating prior values.",
+      "file": "tests/integration/test_full_install_update_process.py",
+      "tests": [
+        "tests/unit/release-install-http-context.test.ts"
+      ]
+    },
+    {
+      "id": "m5-restore-readiness-subshell",
+      "anchor": "  status_code \"$BASE/api/health\" || true\n  HEALTH=\"$STATUS\"",
+      "replacement": "  HEALTH=$(status_code \"$BASE/api/health\" || true)",
+      "why": "All readiness curl entries must share the main probe-shell call context.",
+      "file": "tests/integration/test_full_install_update_process.py",
+      "tests": [
+        "tests/unit/release-install-http-context.test.ts"
+      ]
+    },
+    {
+      "id": "m6-accept-nul-delimiter",
+      "anchor": "if [[ \"$read_status\" != 1 ]]; then STATUS=''; return 90; fi",
+      "replacement": ":",
+      "why": "A NUL-delimited prefix must not qualify as the complete status stream.",
+      "file": "tests/integration/test_full_install_update_process.py",
+      "tests": [
+        "tests/unit/release-install-http-context.test.ts"
+      ]
+    },
+    {
+      "id": "m7-restore-resolver-binding",
+      "anchor": "        server = LoopbackHttpServer((\"127.0.0.1\", 0), Handler)",
+      "replacement": "        server = ThreadingHTTPServer((\"127.0.0.1\", 0), Handler)",
+      "why": "Literal loopback listener binding must perform zero resolver calls while retaining actual native HTTP exchanges.",
+      "file": "tests/helpers/release-install-http-probe.py",
+      "tests": [
+        "tests/unit/release-install-http-loopback.test.ts"
+      ]
+    },
+    {
+      "id": "m8-expand-canonical-jest-worker-budget",
+      "anchor": "  maxWorkers: 2,",
+      "replacement": "  maxWorkers: 8,",
+      "why": "A valid larger configured Jest pool must fail the executed positive two-worker-cap assertions in ordinary and coverage resolution.",
+      "file": "jest.config.js",
+      "tests": [
+        "tests/unit/release-jest-worker-budget.test.ts"
+      ]
+    }
+  ]
+}

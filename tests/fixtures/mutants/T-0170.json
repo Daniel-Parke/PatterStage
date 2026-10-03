@@ -1,0 +1,22 @@
+{
+  "task": "T-0170",
+  "why": "Both the proxy public-path decision and the bare liveness response must be independently observable.",
+  "mutants": [
+    {
+      "id": "m1-protect-bare-path",
+      "file": "src/proxy.ts",
+      "anchor": "const PUBLIC_PATHS = new Set([\"/api/health\", \"/api/healthz\", \"/healthz\"]);",
+      "replacement": "const PUBLIC_PATHS = new Set([\"/api/health\", \"/api/healthz\"]);",
+      "tests": ["tests/unit/t0170-healthz-liveness.test.ts"],
+      "why": "An unauthenticated bare liveness request must fail the test if the proxy blocks it."
+    },
+    {
+      "id": "m2-change-bare-body",
+      "file": "src/app/healthz/route.ts",
+      "anchor": "return new Response(\"ok\", {",
+      "replacement": "return new Response(\"healthy\", {",
+      "tests": ["tests/unit/t0170-healthz-liveness.test.ts"],
+      "why": "The response body is part of the public liveness contract."
+    }
+  ]
+}

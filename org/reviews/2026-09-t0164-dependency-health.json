@@ -1,0 +1,762 @@
+{
+  "capturedOn": "2026-09-28",
+  "sourceRevision": "aeb80725a6d3a0501a7289c0f47377f4cc2515de",
+  "lockfileSha256": "2ae2d3b5c5e3c0264d2a4f4bc157e233508341af9fabbd77a32e295b0ca82d63",
+  "capture": [
+    {
+      "command": "npm audit --json",
+      "exitCode": 1,
+      "input": ".gate/t0164-audit-all.json",
+      "inputSha256": "fb161afae025d99f3513556aed6cb3e458f3979f34cb66048a9931e909e6fdde"
+    },
+    {
+      "command": "npm audit --omit=dev --json",
+      "exitCode": 1,
+      "input": ".gate/t0164-audit-prod.json",
+      "inputSha256": "a52d8e05262a9c579162ef32e0e35704833aff93fc48bd41d33a74648078b1cc"
+    },
+    {
+      "command": "npm outdated --json",
+      "exitCode": 1,
+      "input": ".gate/t0164-outdated.json",
+      "inputSha256": "b8037437c1acf8187ab6ddc8ebd5db6b8092c9ed0f0f66537d8c0e3dfcda8c37"
+    }
+  ],
+  "counts": {
+    "all": {
+      "info": 0,
+      "low": 2,
+      "moderate": 3,
+      "high": 5,
+      "critical": 0,
+      "total": 10
+    },
+    "production": {
+      "info": 0,
+      "low": 0,
+      "moderate": 1,
+      "high": 1,
+      "critical": 0,
+      "total": 2
+    },
+    "outdatedDirect": 24
+  },
+  "vulnerabilities": [
+    {
+      "name": "@babel/core",
+      "severity": "low",
+      "direct": false,
+      "productionAudit": false,
+      "affectedRange": "<=7.29.0",
+      "installedVersions": [
+        "7.29.0"
+      ],
+      "nodes": [
+        "node_modules/@babel/core"
+      ],
+      "advisories": [
+        {
+          "source": 1123528,
+          "title": "@babel/core: Arbitrary File Read via sourceMappingURL Comment",
+          "url": "https://github.com/advisories/GHSA-4x5r-pxfx-6jf8",
+          "range": "<=7.29.0"
+        }
+      ],
+      "fixAvailable": true,
+      "parentPathCount": 1498,
+      "parentPathSha256": "29fe433a34ea6908f9d8221a6d80ceb3f856fb053892b0396627844e417a497b",
+      "rootDependencies": [
+        "eslint-config-next@16.3.6",
+        "jest@30.3.0",
+        "ts-jest@29.4.11"
+      ],
+      "parentPaths": [
+        "@babel/core@7.29.0 <- @babel/helper-module-transforms@7.28.6 <- @babel/core@7.29.0 (cycle)",
+        "@babel/core@7.29.0 <- ts-jest@29.4.11 <- patterstage@0.1.0",
+        "@babel/core@7.29.0 <- @jest/transform@30.3.0 <- ts-jest@29.4.11 <- patterstage@0.1.0",
+        "@babel/core@7.29.0 <- babel-jest@30.3.0 <- ts-jest@29.4.11 <- patterstage@0.1.0",
+        "@babel/core@7.29.0 <- eslint-plugin-react-hooks@7.0.1 <- eslint-config-next@16.3.6 <- patterstage@0.1.0",
+        "@babel/core@7.29.0 <- @jest/transform@30.3.0 <- @jest/core@30.3.0 <- jest@30.3.0 <- patterstage@0.1.0",
+        "@babel/core@7.29.0 <- @jest/transform@30.3.0 <- babel-jest@30.3.0 <- ts-jest@29.4.11 <- patterstage@0.1.0",
+        "@babel/core@7.29.0 <- babel-preset-jest@30.3.0 <- babel-jest@30.3.0 <- ts-jest@29.4.11 <- patterstage@0.1.0",
+        "@babel/core@7.29.0 <- jest-config@30.3.0 <- @jest/core@30.3.0 <- jest@30.3.0 <- patterstage@0.1.0",
+        "@babel/core@7.29.0 <- jest-config@30.3.0 <- jest-cli@30.3.0 <- jest@30.3.0 <- patterstage@0.1.0",
+        "@babel/core@7.29.0 <- jest-snapshot@30.3.0 <- @jest/core@30.3.0 <- jest@30.3.0 <- patterstage@0.1.0",
+        "@babel/core@7.29.0 <- @babel/plugin-syntax-jsx@7.28.6 <- jest-snapshot@30.3.0 <- @jest/core@30.3.0 <- jest@30.3.0 <- patterstage@0.1.0",
+        "@babel/core@7.29.0 <- @babel/plugin-syntax-typescript@7.28.6 <- jest-snapshot@30.3.0 <- @jest/core@30.3.0 <- jest@30.3.0 <- patterstage@0.1.0",
+        "@babel/core@7.29.0 <- @jest/transform@30.3.0 <- @jest/core@30.3.0 <- jest-cli@30.3.0 <- jest@30.3.0 <- patterstage@0.1.0",
+        "@babel/core@7.29.0 <- @jest/transform@30.3.0 <- @jest/core@30.3.0 <- jest@30.3.0 <- ts-jest@29.4.11 <- patterstage@0.1.0",
+        "@babel/core@7.29.0 <- @jest/transform@30.3.0 <- @jest/reporters@30.3.0 <- @jest/core@30.3.0 <- jest@30.3.0 <- patterstage@0.1.0",
+        "@babel/core@7.29.0 <- @jest/transform@30.3.0 <- jest-runner@30.3.0 <- @jest/core@30.3.0 <- jest@30.3.0 <- patterstage@0.1.0",
+        "@babel/core@7.29.0 <- @jest/transform@30.3.0 <- jest-runtime@30.3.0 <- @jest/core@30.3.0 <- jest@30.3.0 <- patterstage@0.1.0",
+        "@babel/core@7.29.0 <- @jest/transform@30.3.0 <- jest-snapshot@30.3.0 <- @jest/core@30.3.0 <- jest@30.3.0 <- patterstage@0.1.0",
+        "@babel/core@7.29.0 <- babel-jest@30.3.0 <- jest-config@30.3.0 <- @jest/core@30.3.0 <- jest@30.3.0 <- patterstage@0.1.0"
+      ],
+      "parentPathsTruncated": true
+    },
+    {
+      "name": "@humanfs/node",
+      "severity": "moderate",
+      "direct": false,
+      "productionAudit": false,
+      "affectedRange": "<0.16.8",
+      "installedVersions": [
+        "0.16.7"
+      ],
+      "nodes": [
+        "node_modules/@humanfs/node"
+      ],
+      "advisories": [
+        {
+          "source": 1158499,
+          "title": "humanfs: Recursive copy follows symlinked files and copies data from outside the source tree",
+          "url": "https://github.com/advisories/GHSA-p498-v437-472g",
+          "range": "<0.16.8"
+        }
+      ],
+      "fixAvailable": true,
+      "parentPathCount": 21,
+      "parentPathSha256": "fc9561aaa7c6ce9232bc195e58ee6d9611d49530b87349aa34b1875ebee7322d",
+      "rootDependencies": [
+        "eslint-config-next@16.3.6",
+        "eslint@9.39.4"
+      ],
+      "parentPaths": [
+        "@humanfs/node@0.16.7 <- eslint@9.39.4 <- patterstage@0.1.0",
+        "@humanfs/node@0.16.7 <- eslint@9.39.4 <- @eslint-community/eslint-utils@4.9.1 <- eslint@9.39.4 (cycle)",
+        "@humanfs/node@0.16.7 <- eslint@9.39.4 <- eslint-config-next@16.3.6 <- patterstage@0.1.0",
+        "@humanfs/node@0.16.7 <- eslint@9.39.4 <- eslint-import-resolver-typescript@3.10.1 <- eslint-config-next@16.3.6 <- patterstage@0.1.0",
+        "@humanfs/node@0.16.7 <- eslint@9.39.4 <- eslint-plugin-import@2.32.0 <- eslint-config-next@16.3.6 <- patterstage@0.1.0",
+        "@humanfs/node@0.16.7 <- eslint@9.39.4 <- eslint-plugin-jsx-a11y@6.10.2 <- eslint-config-next@16.3.6 <- patterstage@0.1.0",
+        "@humanfs/node@0.16.7 <- eslint@9.39.4 <- eslint-plugin-react-hooks@7.0.1 <- eslint-config-next@16.3.6 <- patterstage@0.1.0",
+        "@humanfs/node@0.16.7 <- eslint@9.39.4 <- eslint-plugin-react@7.37.5 <- eslint-config-next@16.3.6 <- patterstage@0.1.0",
+        "@humanfs/node@0.16.7 <- eslint@9.39.4 <- typescript-eslint@8.58.1 <- eslint-config-next@16.3.6 <- patterstage@0.1.0",
+        "@humanfs/node@0.16.7 <- eslint@9.39.4 <- @eslint-community/eslint-utils@4.9.1 <- @next/eslint-plugin-next@16.3.6 <- eslint-config-next@16.3.6 <- patterstage@0.1.0",
+        "@humanfs/node@0.16.7 <- eslint@9.39.4 <- @typescript-eslint/eslint-plugin@8.58.1 <- typescript-eslint@8.58.1 <- eslint-config-next@16.3.6 <- patterstage@0.1.0",
+        "@humanfs/node@0.16.7 <- eslint@9.39.4 <- @typescript-eslint/parser@8.58.1 <- typescript-eslint@8.58.1 <- eslint-config-next@16.3.6 <- patterstage@0.1.0",
+        "@humanfs/node@0.16.7 <- eslint@9.39.4 <- @typescript-eslint/utils@8.58.1 <- typescript-eslint@8.58.1 <- eslint-config-next@16.3.6 <- patterstage@0.1.0",
+        "@humanfs/node@0.16.7 <- eslint@9.39.4 <- eslint-plugin-import@2.32.0 <- eslint-import-resolver-typescript@3.10.1 <- eslint-config-next@16.3.6 <- patterstage@0.1.0",
+        "@humanfs/node@0.16.7 <- eslint@9.39.4 <- @eslint-community/eslint-utils@4.9.1 <- @typescript-eslint/utils@8.58.1 <- typescript-eslint@8.58.1 <- eslint-config-next@16.3.6 <- patterstage@0.1.0",
+        "@humanfs/node@0.16.7 <- eslint@9.39.4 <- @typescript-eslint/parser@8.58.1 <- @typescript-eslint/eslint-plugin@8.58.1 <- typescript-eslint@8.58.1 <- eslint-config-next@16.3.6 <- patterstage@0.1.0",
+        "@humanfs/node@0.16.7 <- eslint@9.39.4 <- @typescript-eslint/type-utils@8.58.1 <- @typescript-eslint/eslint-plugin@8.58.1 <- typescript-eslint@8.58.1 <- eslint-config-next@16.3.6 <- patterstage@0.1.0",
+        "@humanfs/node@0.16.7 <- eslint@9.39.4 <- @typescript-eslint/utils@8.58.1 <- @typescript-eslint/eslint-plugin@8.58.1 <- typescript-eslint@8.58.1 <- eslint-config-next@16.3.6 <- patterstage@0.1.0",
+        "@humanfs/node@0.16.7 <- eslint@9.39.4 <- @eslint-community/eslint-utils@4.9.1 <- @typescript-eslint/utils@8.58.1 <- @typescript-eslint/eslint-plugin@8.58.1 <- typescript-eslint@8.58.1 <- eslint-config-next@16.3.6 <- patterstage@0.1.0",
+        "@humanfs/node@0.16.7 <- eslint@9.39.4 <- @typescript-eslint/utils@8.58.1 <- @typescript-eslint/type-utils@8.58.1 <- @typescript-eslint/eslint-plugin@8.58.1 <- typescript-eslint@8.58.1 <- eslint-config-next@16.3.6 <- patterstage@0.1.0"
+      ],
+      "parentPathsTruncated": true
+    },
+    {
+      "name": "baseline-browser-mapping",
+      "severity": "moderate",
+      "direct": false,
+      "productionAudit": true,
+      "affectedRange": ">=2.0.0 <2.11.0",
+      "installedVersions": [
+        "2.10.16"
+      ],
+      "nodes": [
+        "node_modules/baseline-browser-mapping"
+      ],
+      "advisories": [
+        {
+          "source": 1193686,
+          "title": "baseline-browser-mapping process termination on invalid input causes denial of service",
+          "url": "https://github.com/advisories/GHSA-w5vr-8v7q-w6rv",
+          "range": ">=2.0.0 <2.11.0"
+        }
+      ],
+      "fixAvailable": true,
+      "parentPathCount": 1500,
+      "parentPathSha256": "c6be9c91ce77e380d24ca11aa450270cd396c25a47d1f8f7e4d71ba7a7d5757d",
+      "rootDependencies": [
+        "eslint-config-next@16.3.6",
+        "jest@30.3.0",
+        "next@16.3.6",
+        "ts-jest@29.4.11"
+      ],
+      "parentPaths": [
+        "baseline-browser-mapping@2.10.16 <- next@16.3.6 <- patterstage@0.1.0",
+        "baseline-browser-mapping@2.10.16 <- browserslist@4.28.2 <- update-browserslist-db@1.2.3 <- browserslist@4.28.2 (cycle)",
+        "baseline-browser-mapping@2.10.16 <- browserslist@4.28.2 <- @babel/helper-compilation-targets@7.28.6 <- @babel/core@7.29.0 <- @babel/helper-module-transforms@7.28.6 <- @babel/core@7.29.0 (cycle)",
+        "baseline-browser-mapping@2.10.16 <- browserslist@4.28.2 <- @babel/helper-compilation-targets@7.28.6 <- @babel/core@7.29.0 <- ts-jest@29.4.11 <- patterstage@0.1.0",
+        "baseline-browser-mapping@2.10.16 <- browserslist@4.28.2 <- @babel/helper-compilation-targets@7.28.6 <- @babel/core@7.29.0 <- @jest/transform@30.3.0 <- ts-jest@29.4.11 <- patterstage@0.1.0",
+        "baseline-browser-mapping@2.10.16 <- browserslist@4.28.2 <- @babel/helper-compilation-targets@7.28.6 <- @babel/core@7.29.0 <- babel-jest@30.3.0 <- ts-jest@29.4.11 <- patterstage@0.1.0",
+        "baseline-browser-mapping@2.10.16 <- browserslist@4.28.2 <- @babel/helper-compilation-targets@7.28.6 <- @babel/core@7.29.0 <- eslint-plugin-react-hooks@7.0.1 <- eslint-config-next@16.3.6 <- patterstage@0.1.0",
+        "baseline-browser-mapping@2.10.16 <- browserslist@4.28.2 <- @babel/helper-compilation-targets@7.28.6 <- @babel/core@7.29.0 <- @jest/transform@30.3.0 <- @jest/core@30.3.0 <- jest@30.3.0 <- patterstage@0.1.0",
+        "baseline-browser-mapping@2.10.16 <- browserslist@4.28.2 <- @babel/helper-compilation-targets@7.28.6 <- @babel/core@7.29.0 <- @jest/transform@30.3.0 <- babel-jest@30.3.0 <- ts-jest@29.4.11 <- patterstage@0.1.0",
+        "baseline-browser-mapping@2.10.16 <- browserslist@4.28.2 <- @babel/helper-compilation-targets@7.28.6 <- @babel/core@7.29.0 <- babel-preset-jest@30.3.0 <- babel-jest@30.3.0 <- ts-jest@29.4.11 <- patterstage@0.1.0",
+        "baseline-browser-mapping@2.10.16 <- browserslist@4.28.2 <- @babel/helper-compilation-targets@7.28.6 <- @babel/core@7.29.0 <- jest-config@30.3.0 <- @jest/core@30.3.0 <- jest@30.3.0 <- patterstage@0.1.0",
+        "baseline-browser-mapping@2.10.16 <- browserslist@4.28.2 <- @babel/helper-compilation-targets@7.28.6 <- @babel/core@7.29.0 <- jest-config@30.3.0 <- jest-cli@30.3.0 <- jest@30.3.0 <- patterstage@0.1.0",
+        "baseline-browser-mapping@2.10.16 <- browserslist@4.28.2 <- @babel/helper-compilation-targets@7.28.6 <- @babel/core@7.29.0 <- jest-snapshot@30.3.0 <- @jest/core@30.3.0 <- jest@30.3.0 <- patterstage@0.1.0",
+        "baseline-browser-mapping@2.10.16 <- browserslist@4.28.2 <- @babel/helper-compilation-targets@7.28.6 <- @babel/core@7.29.0 <- @babel/plugin-syntax-jsx@7.28.6 <- jest-snapshot@30.3.0 <- @jest/core@30.3.0 <- jest@30.3.0 <- patterstage@0.1.0",
+        "baseline-browser-mapping@2.10.16 <- browserslist@4.28.2 <- @babel/helper-compilation-targets@7.28.6 <- @babel/core@7.29.0 <- @babel/plugin-syntax-typescript@7.28.6 <- jest-snapshot@30.3.0 <- @jest/core@30.3.0 <- jest@30.3.0 <- patterstage@0.1.0",
+        "baseline-browser-mapping@2.10.16 <- browserslist@4.28.2 <- @babel/helper-compilation-targets@7.28.6 <- @babel/core@7.29.0 <- @jest/transform@30.3.0 <- @jest/core@30.3.0 <- jest-cli@30.3.0 <- jest@30.3.0 <- patterstage@0.1.0",
+        "baseline-browser-mapping@2.10.16 <- browserslist@4.28.2 <- @babel/helper-compilation-targets@7.28.6 <- @babel/core@7.29.0 <- @jest/transform@30.3.0 <- @jest/core@30.3.0 <- jest@30.3.0 <- ts-jest@29.4.11 <- patterstage@0.1.0",
+        "baseline-browser-mapping@2.10.16 <- browserslist@4.28.2 <- @babel/helper-compilation-targets@7.28.6 <- @babel/core@7.29.0 <- @jest/transform@30.3.0 <- @jest/reporters@30.3.0 <- @jest/core@30.3.0 <- jest@30.3.0 <- patterstage@0.1.0",
+        "baseline-browser-mapping@2.10.16 <- browserslist@4.28.2 <- @babel/helper-compilation-targets@7.28.6 <- @babel/core@7.29.0 <- @jest/transform@30.3.0 <- jest-runner@30.3.0 <- @jest/core@30.3.0 <- jest@30.3.0 <- patterstage@0.1.0",
+        "baseline-browser-mapping@2.10.16 <- browserslist@4.28.2 <- @babel/helper-compilation-targets@7.28.6 <- @babel/core@7.29.0 <- @jest/transform@30.3.0 <- jest-runtime@30.3.0 <- @jest/core@30.3.0 <- jest@30.3.0 <- patterstage@0.1.0"
+      ],
+      "parentPathsTruncated": true
+    },
+    {
+      "name": "brace-expansion",
+      "severity": "high",
+      "direct": false,
+      "productionAudit": false,
+      "affectedRange": "<=1.1.17 || 2.0.0 - 2.1.3 || 3.0.0 - 5.0.8",
+      "installedVersions": [
+        "1.1.14",
+        "2.0.2",
+        "5.0.4"
+      ],
+      "nodes": [
+        "node_modules/@typescript-eslint/typescript-estree/node_modules/minimatch/node_modules/brace-expansion",
+        "node_modules/glob/node_modules/minimatch/node_modules/brace-expansion",
+        "node_modules/minimatch/node_modules/brace-expansion"
+      ],
+      "advisories": [
+        {
+          "source": 1115541,
+          "title": "brace-expansion: Zero-step sequence causes process hang and memory exhaustion",
+          "url": "https://github.com/advisories/GHSA-f886-m6hf-6m8v",
+          "range": ">=2.0.0 <2.0.3"
+        },
+        {
+          "source": 1115543,
+          "title": "brace-expansion: Zero-step sequence causes process hang and memory exhaustion",
+          "url": "https://github.com/advisories/GHSA-f886-m6hf-6m8v",
+          "range": ">=4.0.0 <5.0.5"
+        },
+        {
+          "source": 1120311,
+          "title": "brace-expansion: Large numeric range defeats documented `max` DoS protection",
+          "url": "https://github.com/advisories/GHSA-jxxr-4gwj-5jf2",
+          "range": ">=5.0.0 <5.0.6"
+        },
+        {
+          "source": 1123896,
+          "title": "brace-expansion: DoS via exponential-time expansion of consecutive non-expanding {} groups",
+          "url": "https://github.com/advisories/GHSA-3jxr-9vmj-r5cp",
+          "range": ">=2.0.0 <2.1.2"
+        },
+        {
+          "source": 1123897,
+          "title": "brace-expansion: DoS via exponential-time expansion of consecutive non-expanding {} groups",
+          "url": "https://github.com/advisories/GHSA-3jxr-9vmj-r5cp",
+          "range": "<1.1.16"
+        },
+        {
+          "source": 1123898,
+          "title": "brace-expansion: DoS via exponential-time expansion of consecutive non-expanding {} groups",
+          "url": "https://github.com/advisories/GHSA-3jxr-9vmj-r5cp",
+          "range": ">=3.0.0 <5.0.7"
+        },
+        {
+          "source": 1130588,
+          "title": "brace-expansion: DoS via unbounded expansion length causing an out-of-memory process crash",
+          "url": "https://github.com/advisories/GHSA-mh99-v99m-4gvg",
+          "range": "<1.1.17"
+        },
+        {
+          "source": 1130589,
+          "title": "brace-expansion: DoS via unbounded expansion length causing an out-of-memory process crash",
+          "url": "https://github.com/advisories/GHSA-mh99-v99m-4gvg",
+          "range": ">=2.0.0 <2.1.3"
+        },
+        {
+          "source": 1130591,
+          "title": "brace-expansion: DoS via unbounded expansion length causing an out-of-memory process crash",
+          "url": "https://github.com/advisories/GHSA-mh99-v99m-4gvg",
+          "range": ">=4.0.0 <5.0.8"
+        },
+        {
+          "source": 1130734,
+          "title": "brace-expansion: DoS via unbounded intermediate arrays, bypassing the CVE-2026-14257 mitigation",
+          "url": "https://github.com/advisories/GHSA-rgw5-rvv9-x895",
+          "range": ">=4.0.0 <5.0.9"
+        },
+        {
+          "source": 1130736,
+          "title": "brace-expansion: DoS via unbounded intermediate arrays, bypassing the CVE-2026-14257 mitigation",
+          "url": "https://github.com/advisories/GHSA-rgw5-rvv9-x895",
+          "range": ">=2.0.0 <2.1.4"
+        },
+        {
+          "source": 1130737,
+          "title": "brace-expansion: DoS via unbounded intermediate arrays, bypassing the CVE-2026-14257 mitigation",
+          "url": "https://github.com/advisories/GHSA-rgw5-rvv9-x895",
+          "range": "<1.1.18"
+        }
+      ],
+      "fixAvailable": true,
+      "parentPathCount": 330,
+      "parentPathSha256": "822050e8790d13c9cf369f0934d4aee22ea8d64a366b43cb88d7b92e41de2ce6",
+      "rootDependencies": [
+        "eslint-config-next@16.3.6",
+        "eslint@9.39.4",
+        "jest@30.3.0",
+        "ts-jest@29.4.11"
+      ],
+      "parentPaths": [
+        "brace-expansion@1.1.14 <- minimatch@3.1.5 <- eslint@9.39.4 <- patterstage@0.1.0",
+        "brace-expansion@1.1.14 <- minimatch@3.1.5 <- @eslint/config-array@0.21.2 <- eslint@9.39.4 <- patterstage@0.1.0",
+        "brace-expansion@1.1.14 <- minimatch@3.1.5 <- @eslint/eslintrc@3.3.5 <- eslint@9.39.4 <- patterstage@0.1.0",
+        "brace-expansion@1.1.14 <- minimatch@3.1.5 <- eslint-plugin-import@2.32.0 <- eslint-config-next@16.3.6 <- patterstage@0.1.0",
+        "brace-expansion@1.1.14 <- minimatch@3.1.5 <- eslint-plugin-jsx-a11y@6.10.2 <- eslint-config-next@16.3.6 <- patterstage@0.1.0",
+        "brace-expansion@1.1.14 <- minimatch@3.1.5 <- eslint-plugin-react@7.37.5 <- eslint-config-next@16.3.6 <- patterstage@0.1.0",
+        "brace-expansion@1.1.14 <- minimatch@3.1.5 <- eslint@9.39.4 <- @eslint-community/eslint-utils@4.9.1 <- eslint@9.39.4 (cycle)",
+        "brace-expansion@1.1.14 <- minimatch@3.1.5 <- eslint@9.39.4 <- eslint-config-next@16.3.6 <- patterstage@0.1.0",
+        "brace-expansion@1.1.14 <- minimatch@3.1.5 <- @eslint/config-array@0.21.2 <- eslint@9.39.4 <- @eslint-community/eslint-utils@4.9.1 <- eslint@9.39.4 (cycle)",
+        "brace-expansion@1.1.14 <- minimatch@3.1.5 <- @eslint/config-array@0.21.2 <- eslint@9.39.4 <- eslint-config-next@16.3.6 <- patterstage@0.1.0",
+        "brace-expansion@1.1.14 <- minimatch@3.1.5 <- @eslint/eslintrc@3.3.5 <- eslint@9.39.4 <- @eslint-community/eslint-utils@4.9.1 <- eslint@9.39.4 (cycle)",
+        "brace-expansion@1.1.14 <- minimatch@3.1.5 <- @eslint/eslintrc@3.3.5 <- eslint@9.39.4 <- eslint-config-next@16.3.6 <- patterstage@0.1.0",
+        "brace-expansion@1.1.14 <- minimatch@3.1.5 <- eslint-plugin-import@2.32.0 <- eslint-import-resolver-typescript@3.10.1 <- eslint-config-next@16.3.6 <- patterstage@0.1.0",
+        "brace-expansion@1.1.14 <- minimatch@3.1.5 <- eslint@9.39.4 <- eslint-import-resolver-typescript@3.10.1 <- eslint-config-next@16.3.6 <- patterstage@0.1.0",
+        "brace-expansion@1.1.14 <- minimatch@3.1.5 <- eslint@9.39.4 <- eslint-plugin-import@2.32.0 <- eslint-config-next@16.3.6 <- patterstage@0.1.0",
+        "brace-expansion@1.1.14 <- minimatch@3.1.5 <- eslint@9.39.4 <- eslint-plugin-jsx-a11y@6.10.2 <- eslint-config-next@16.3.6 <- patterstage@0.1.0",
+        "brace-expansion@1.1.14 <- minimatch@3.1.5 <- eslint@9.39.4 <- eslint-plugin-react-hooks@7.0.1 <- eslint-config-next@16.3.6 <- patterstage@0.1.0",
+        "brace-expansion@1.1.14 <- minimatch@3.1.5 <- eslint@9.39.4 <- eslint-plugin-react@7.37.5 <- eslint-config-next@16.3.6 <- patterstage@0.1.0",
+        "brace-expansion@1.1.14 <- minimatch@3.1.5 <- eslint@9.39.4 <- typescript-eslint@8.58.1 <- eslint-config-next@16.3.6 <- patterstage@0.1.0",
+        "brace-expansion@5.0.4 <- minimatch@10.2.5 <- @typescript-eslint/typescript-estree@8.58.1 <- typescript-eslint@8.58.1 <- eslint-config-next@16.3.6 <- patterstage@0.1.0"
+      ],
+      "parentPathsTruncated": true
+    },
+    {
+      "name": "browserslist",
+      "severity": "high",
+      "direct": false,
+      "productionAudit": false,
+      "affectedRange": "<=4.28.6",
+      "installedVersions": [
+        "4.28.2"
+      ],
+      "nodes": [
+        "node_modules/browserslist"
+      ],
+      "advisories": [
+        {
+          "source": 1153171,
+          "title": "Browserslist: Unbounded memory growth (no cache eviction) via distinct query results, leading to eventual OOM",
+          "url": "https://github.com/advisories/GHSA-c83g-rgw3-j3cx",
+          "range": "<=4.28.6"
+        },
+        {
+          "source": 1153172,
+          "title": "Browserslist: Uncaught crash / prototype write via untrusted browserslist-stats.json custom stats (normalizeStats)",
+          "url": "https://github.com/advisories/GHSA-73wf-gq98-2v4g",
+          "range": "<=4.28.6"
+        }
+      ],
+      "fixAvailable": true,
+      "parentPathCount": 1499,
+      "parentPathSha256": "1e14e74af920c9090e8b4ec7ef8fc29c2b6f43d4a589d4fb8bdb69e6a4b5df0a",
+      "rootDependencies": [
+        "eslint-config-next@16.3.6",
+        "jest@30.3.0",
+        "ts-jest@29.4.11"
+      ],
+      "parentPaths": [
+        "browserslist@4.28.2 <- update-browserslist-db@1.2.3 <- browserslist@4.28.2 (cycle)",
+        "browserslist@4.28.2 <- @babel/helper-compilation-targets@7.28.6 <- @babel/core@7.29.0 <- @babel/helper-module-transforms@7.28.6 <- @babel/core@7.29.0 (cycle)",
+        "browserslist@4.28.2 <- @babel/helper-compilation-targets@7.28.6 <- @babel/core@7.29.0 <- ts-jest@29.4.11 <- patterstage@0.1.0",
+        "browserslist@4.28.2 <- @babel/helper-compilation-targets@7.28.6 <- @babel/core@7.29.0 <- @jest/transform@30.3.0 <- ts-jest@29.4.11 <- patterstage@0.1.0",
+        "browserslist@4.28.2 <- @babel/helper-compilation-targets@7.28.6 <- @babel/core@7.29.0 <- babel-jest@30.3.0 <- ts-jest@29.4.11 <- patterstage@0.1.0",
+        "browserslist@4.28.2 <- @babel/helper-compilation-targets@7.28.6 <- @babel/core@7.29.0 <- eslint-plugin-react-hooks@7.0.1 <- eslint-config-next@16.3.6 <- patterstage@0.1.0",
+        "browserslist@4.28.2 <- @babel/helper-compilation-targets@7.28.6 <- @babel/core@7.29.0 <- @jest/transform@30.3.0 <- @jest/core@30.3.0 <- jest@30.3.0 <- patterstage@0.1.0",
+        "browserslist@4.28.2 <- @babel/helper-compilation-targets@7.28.6 <- @babel/core@7.29.0 <- @jest/transform@30.3.0 <- babel-jest@30.3.0 <- ts-jest@29.4.11 <- patterstage@0.1.0",
+        "browserslist@4.28.2 <- @babel/helper-compilation-targets@7.28.6 <- @babel/core@7.29.0 <- babel-preset-jest@30.3.0 <- babel-jest@30.3.0 <- ts-jest@29.4.11 <- patterstage@0.1.0",
+        "browserslist@4.28.2 <- @babel/helper-compilation-targets@7.28.6 <- @babel/core@7.29.0 <- jest-config@30.3.0 <- @jest/core@30.3.0 <- jest@30.3.0 <- patterstage@0.1.0",
+        "browserslist@4.28.2 <- @babel/helper-compilation-targets@7.28.6 <- @babel/core@7.29.0 <- jest-config@30.3.0 <- jest-cli@30.3.0 <- jest@30.3.0 <- patterstage@0.1.0",
+        "browserslist@4.28.2 <- @babel/helper-compilation-targets@7.28.6 <- @babel/core@7.29.0 <- jest-snapshot@30.3.0 <- @jest/core@30.3.0 <- jest@30.3.0 <- patterstage@0.1.0",
+        "browserslist@4.28.2 <- @babel/helper-compilation-targets@7.28.6 <- @babel/core@7.29.0 <- @babel/plugin-syntax-jsx@7.28.6 <- jest-snapshot@30.3.0 <- @jest/core@30.3.0 <- jest@30.3.0 <- patterstage@0.1.0",
+        "browserslist@4.28.2 <- @babel/helper-compilation-targets@7.28.6 <- @babel/core@7.29.0 <- @babel/plugin-syntax-typescript@7.28.6 <- jest-snapshot@30.3.0 <- @jest/core@30.3.0 <- jest@30.3.0 <- patterstage@0.1.0",
+        "browserslist@4.28.2 <- @babel/helper-compilation-targets@7.28.6 <- @babel/core@7.29.0 <- @jest/transform@30.3.0 <- @jest/core@30.3.0 <- jest-cli@30.3.0 <- jest@30.3.0 <- patterstage@0.1.0",
+        "browserslist@4.28.2 <- @babel/helper-compilation-targets@7.28.6 <- @babel/core@7.29.0 <- @jest/transform@30.3.0 <- @jest/core@30.3.0 <- jest@30.3.0 <- ts-jest@29.4.11 <- patterstage@0.1.0",
+        "browserslist@4.28.2 <- @babel/helper-compilation-targets@7.28.6 <- @babel/core@7.29.0 <- @jest/transform@30.3.0 <- @jest/reporters@30.3.0 <- @jest/core@30.3.0 <- jest@30.3.0 <- patterstage@0.1.0",
+        "browserslist@4.28.2 <- @babel/helper-compilation-targets@7.28.6 <- @babel/core@7.29.0 <- @jest/transform@30.3.0 <- jest-runner@30.3.0 <- @jest/core@30.3.0 <- jest@30.3.0 <- patterstage@0.1.0",
+        "browserslist@4.28.2 <- @babel/helper-compilation-targets@7.28.6 <- @babel/core@7.29.0 <- @jest/transform@30.3.0 <- jest-runtime@30.3.0 <- @jest/core@30.3.0 <- jest@30.3.0 <- patterstage@0.1.0",
+        "browserslist@4.28.2 <- @babel/helper-compilation-targets@7.28.6 <- @babel/core@7.29.0 <- @jest/transform@30.3.0 <- jest-snapshot@30.3.0 <- @jest/core@30.3.0 <- jest@30.3.0 <- patterstage@0.1.0"
+      ],
+      "parentPathsTruncated": true
+    },
+    {
+      "name": "esbuild",
+      "severity": "low",
+      "direct": false,
+      "productionAudit": false,
+      "affectedRange": "0.27.3 - 0.28.0",
+      "installedVersions": [
+        "0.28.0"
+      ],
+      "nodes": [
+        "node_modules/esbuild"
+      ],
+      "advisories": [
+        {
+          "source": 1120680,
+          "title": "esbuild allows arbitrary file read when running the development server on Windows",
+          "url": "https://github.com/advisories/GHSA-g7r4-m6w7-qqqr",
+          "range": ">=0.27.3 <0.28.1"
+        }
+      ],
+      "fixAvailable": true,
+      "parentPathCount": 1,
+      "parentPathSha256": "63893cb75d67c96498d7d98e849bb8b45f8389da9ffc28f44ef3badbc3e2b8a1",
+      "rootDependencies": [
+        "tsx@4.23.13"
+      ],
+      "parentPaths": [
+        "esbuild@0.28.0 <- tsx@4.23.13 <- patterstage@0.1.0"
+      ],
+      "parentPathsTruncated": false
+    },
+    {
+      "name": "js-yaml",
+      "severity": "high",
+      "direct": true,
+      "productionAudit": true,
+      "affectedRange": "<=3.15.1 || 4.0.0 - 4.3.1",
+      "installedVersions": [
+        "3.14.2",
+        "4.2.0"
+      ],
+      "nodes": [
+        "node_modules/@istanbuljs/load-nyc-config/node_modules/js-yaml",
+        "node_modules/js-yaml"
+      ],
+      "advisories": [
+        {
+          "source": 1121859,
+          "title": "JS-YAML: Quadratic-complexity DoS in merge key handling via repeated aliases",
+          "url": "https://github.com/advisories/GHSA-h67p-54hq-rp68",
+          "range": "<3.15.0"
+        },
+        {
+          "source": 1123911,
+          "title": "js-yaml: YAML merge-key chains can force quadratic CPU consumption",
+          "url": "https://github.com/advisories/GHSA-52cp-r559-cp3m",
+          "range": ">=4.0.0 <4.3.0"
+        },
+        {
+          "source": 1123912,
+          "title": "js-yaml: YAML merge-key chains can force quadratic CPU consumption",
+          "url": "https://github.com/advisories/GHSA-52cp-r559-cp3m",
+          "range": ">=3.0.0 <3.15.0"
+        },
+        {
+          "source": 1138114,
+          "title": "JS-YAML: Quadratic CPU consumption in !!omap resolution (3.x and 4.x) — CVE-2026-59870 fix not backported",
+          "url": "https://github.com/advisories/GHSA-5p4m-2wfm-xmqj",
+          "range": ">=3.0.0 <3.15.1"
+        },
+        {
+          "source": 1138115,
+          "title": "JS-YAML: Quadratic CPU consumption in !!omap resolution (3.x and 4.x) — CVE-2026-59870 fix not backported",
+          "url": "https://github.com/advisories/GHSA-5p4m-2wfm-xmqj",
+          "range": ">=4.0.0 <4.3.1"
+        },
+        {
+          "source": 1193726,
+          "title": "js-yaml: maxTotalMergeKeys does not limit CPU use for empty merge sources",
+          "url": "https://github.com/advisories/GHSA-2883-xcg3-v3hh",
+          "range": ">=3.0.0 <3.15.2"
+        },
+        {
+          "source": 1193727,
+          "title": "js-yaml: maxTotalMergeKeys does not limit CPU use for empty merge sources",
+          "url": "https://github.com/advisories/GHSA-2883-xcg3-v3hh",
+          "range": ">=4.0.0 <4.3.2"
+        }
+      ],
+      "fixAvailable": true,
+      "parentPathCount": 135,
+      "parentPathSha256": "730b4a982a9a2020d7599da76336716a8025653d6dc9f5f10510d8a374f58eb5",
+      "rootDependencies": [
+        "eslint-config-next@16.3.6",
+        "eslint@9.39.4",
+        "jest@30.3.0",
+        "js-yaml@4.2.0",
+        "ts-jest@29.4.11"
+      ],
+      "parentPaths": [
+        "js-yaml@4.2.0 <- patterstage@0.1.0",
+        "js-yaml@4.2.0 <- @eslint/eslintrc@3.3.5 <- eslint@9.39.4 <- patterstage@0.1.0",
+        "js-yaml@4.2.0 <- @eslint/eslintrc@3.3.5 <- eslint@9.39.4 <- @eslint-community/eslint-utils@4.9.1 <- eslint@9.39.4 (cycle)",
+        "js-yaml@4.2.0 <- @eslint/eslintrc@3.3.5 <- eslint@9.39.4 <- eslint-config-next@16.3.6 <- patterstage@0.1.0",
+        "js-yaml@3.14.2 <- @istanbuljs/load-nyc-config@1.1.0 <- babel-plugin-istanbul@7.0.1 <- @jest/transform@30.3.0 <- ts-jest@29.4.11 <- patterstage@0.1.0",
+        "js-yaml@3.14.2 <- @istanbuljs/load-nyc-config@1.1.0 <- babel-plugin-istanbul@7.0.1 <- babel-jest@30.3.0 <- ts-jest@29.4.11 <- patterstage@0.1.0",
+        "js-yaml@4.2.0 <- @eslint/eslintrc@3.3.5 <- eslint@9.39.4 <- eslint-import-resolver-typescript@3.10.1 <- eslint-config-next@16.3.6 <- patterstage@0.1.0",
+        "js-yaml@4.2.0 <- @eslint/eslintrc@3.3.5 <- eslint@9.39.4 <- eslint-plugin-import@2.32.0 <- eslint-config-next@16.3.6 <- patterstage@0.1.0",
+        "js-yaml@4.2.0 <- @eslint/eslintrc@3.3.5 <- eslint@9.39.4 <- eslint-plugin-jsx-a11y@6.10.2 <- eslint-config-next@16.3.6 <- patterstage@0.1.0",
+        "js-yaml@4.2.0 <- @eslint/eslintrc@3.3.5 <- eslint@9.39.4 <- eslint-plugin-react-hooks@7.0.1 <- eslint-config-next@16.3.6 <- patterstage@0.1.0",
+        "js-yaml@4.2.0 <- @eslint/eslintrc@3.3.5 <- eslint@9.39.4 <- eslint-plugin-react@7.37.5 <- eslint-config-next@16.3.6 <- patterstage@0.1.0",
+        "js-yaml@4.2.0 <- @eslint/eslintrc@3.3.5 <- eslint@9.39.4 <- typescript-eslint@8.58.1 <- eslint-config-next@16.3.6 <- patterstage@0.1.0",
+        "js-yaml@3.14.2 <- @istanbuljs/load-nyc-config@1.1.0 <- babel-plugin-istanbul@7.0.1 <- @jest/transform@30.3.0 <- @jest/core@30.3.0 <- jest@30.3.0 <- patterstage@0.1.0",
+        "js-yaml@3.14.2 <- @istanbuljs/load-nyc-config@1.1.0 <- babel-plugin-istanbul@7.0.1 <- @jest/transform@30.3.0 <- babel-jest@30.3.0 <- ts-jest@29.4.11 <- patterstage@0.1.0",
+        "js-yaml@4.2.0 <- @eslint/eslintrc@3.3.5 <- eslint@9.39.4 <- @eslint-community/eslint-utils@4.9.1 <- @next/eslint-plugin-next@16.3.6 <- eslint-config-next@16.3.6 <- patterstage@0.1.0",
+        "js-yaml@4.2.0 <- @eslint/eslintrc@3.3.5 <- eslint@9.39.4 <- @typescript-eslint/eslint-plugin@8.58.1 <- typescript-eslint@8.58.1 <- eslint-config-next@16.3.6 <- patterstage@0.1.0",
+        "js-yaml@4.2.0 <- @eslint/eslintrc@3.3.5 <- eslint@9.39.4 <- @typescript-eslint/parser@8.58.1 <- typescript-eslint@8.58.1 <- eslint-config-next@16.3.6 <- patterstage@0.1.0",
+        "js-yaml@4.2.0 <- @eslint/eslintrc@3.3.5 <- eslint@9.39.4 <- @typescript-eslint/utils@8.58.1 <- typescript-eslint@8.58.1 <- eslint-config-next@16.3.6 <- patterstage@0.1.0",
+        "js-yaml@4.2.0 <- @eslint/eslintrc@3.3.5 <- eslint@9.39.4 <- eslint-plugin-import@2.32.0 <- eslint-import-resolver-typescript@3.10.1 <- eslint-config-next@16.3.6 <- patterstage@0.1.0",
+        "js-yaml@3.14.2 <- @istanbuljs/load-nyc-config@1.1.0 <- babel-plugin-istanbul@7.0.1 <- @jest/transform@30.3.0 <- @jest/core@30.3.0 <- jest-cli@30.3.0 <- jest@30.3.0 <- patterstage@0.1.0"
+      ],
+      "parentPathsTruncated": true
+    },
+    {
+      "name": "minimatch",
+      "severity": "moderate",
+      "direct": false,
+      "productionAudit": false,
+      "affectedRange": "",
+      "installedVersions": [
+        "10.2.5",
+        "3.1.5",
+        "9.0.9"
+      ],
+      "nodes": [
+        "node_modules/@typescript-eslint/typescript-estree/node_modules/minimatch"
+      ],
+      "advisories": [],
+      "fixAvailable": true,
+      "parentPathCount": 330,
+      "parentPathSha256": "2b64ee135509c80fd81b19451b98cf9e9aa2835cd27ec2cb35645891688a1233",
+      "rootDependencies": [
+        "eslint-config-next@16.3.6",
+        "eslint@9.39.4",
+        "jest@30.3.0",
+        "ts-jest@29.4.11"
+      ],
+      "parentPaths": [
+        "minimatch@3.1.5 <- eslint@9.39.4 <- patterstage@0.1.0",
+        "minimatch@3.1.5 <- @eslint/config-array@0.21.2 <- eslint@9.39.4 <- patterstage@0.1.0",
+        "minimatch@3.1.5 <- @eslint/eslintrc@3.3.5 <- eslint@9.39.4 <- patterstage@0.1.0",
+        "minimatch@3.1.5 <- eslint-plugin-import@2.32.0 <- eslint-config-next@16.3.6 <- patterstage@0.1.0",
+        "minimatch@3.1.5 <- eslint-plugin-jsx-a11y@6.10.2 <- eslint-config-next@16.3.6 <- patterstage@0.1.0",
+        "minimatch@3.1.5 <- eslint-plugin-react@7.37.5 <- eslint-config-next@16.3.6 <- patterstage@0.1.0",
+        "minimatch@3.1.5 <- eslint@9.39.4 <- @eslint-community/eslint-utils@4.9.1 <- eslint@9.39.4 (cycle)",
+        "minimatch@3.1.5 <- eslint@9.39.4 <- eslint-config-next@16.3.6 <- patterstage@0.1.0",
+        "minimatch@10.2.5 <- @typescript-eslint/typescript-estree@8.58.1 <- typescript-eslint@8.58.1 <- eslint-config-next@16.3.6 <- patterstage@0.1.0",
+        "minimatch@3.1.5 <- @eslint/config-array@0.21.2 <- eslint@9.39.4 <- @eslint-community/eslint-utils@4.9.1 <- eslint@9.39.4 (cycle)",
+        "minimatch@3.1.5 <- @eslint/config-array@0.21.2 <- eslint@9.39.4 <- eslint-config-next@16.3.6 <- patterstage@0.1.0",
+        "minimatch@3.1.5 <- @eslint/eslintrc@3.3.5 <- eslint@9.39.4 <- @eslint-community/eslint-utils@4.9.1 <- eslint@9.39.4 (cycle)",
+        "minimatch@3.1.5 <- @eslint/eslintrc@3.3.5 <- eslint@9.39.4 <- eslint-config-next@16.3.6 <- patterstage@0.1.0",
+        "minimatch@3.1.5 <- eslint-plugin-import@2.32.0 <- eslint-import-resolver-typescript@3.10.1 <- eslint-config-next@16.3.6 <- patterstage@0.1.0",
+        "minimatch@3.1.5 <- eslint@9.39.4 <- eslint-import-resolver-typescript@3.10.1 <- eslint-config-next@16.3.6 <- patterstage@0.1.0",
+        "minimatch@3.1.5 <- eslint@9.39.4 <- eslint-plugin-import@2.32.0 <- eslint-config-next@16.3.6 <- patterstage@0.1.0",
+        "minimatch@3.1.5 <- eslint@9.39.4 <- eslint-plugin-jsx-a11y@6.10.2 <- eslint-config-next@16.3.6 <- patterstage@0.1.0",
+        "minimatch@3.1.5 <- eslint@9.39.4 <- eslint-plugin-react-hooks@7.0.1 <- eslint-config-next@16.3.6 <- patterstage@0.1.0",
+        "minimatch@3.1.5 <- eslint@9.39.4 <- eslint-plugin-react@7.37.5 <- eslint-config-next@16.3.6 <- patterstage@0.1.0",
+        "minimatch@3.1.5 <- eslint@9.39.4 <- typescript-eslint@8.58.1 <- eslint-config-next@16.3.6 <- patterstage@0.1.0"
+      ],
+      "parentPathsTruncated": true
+    },
+    {
+      "name": "postcss",
+      "severity": "high",
+      "direct": true,
+      "productionAudit": false,
+      "affectedRange": "<=8.5.22",
+      "installedVersions": [
+        "8.5.15",
+        "8.5.23",
+        "8.5.28"
+      ],
+      "nodes": [
+        "node_modules/postcss"
+      ],
+      "advisories": [
+        {
+          "source": 1130709,
+          "title": "PostCSS: incomplete fix of GHSA-6g55-p6wh-862q — attacker-controlled sourceMappingURL reads arbitrary .map files when `from` is unset",
+          "url": "https://github.com/advisories/GHSA-fxqj-rqcc-2cmp",
+          "range": "<=8.5.22"
+        },
+        {
+          "source": 1139510,
+          "title": "PostCSS: Path Traversal in Previous Source Map Auto-Loading (sourceMappingURL) leads to Arbitrary .map File Disclosure",
+          "url": "https://github.com/advisories/GHSA-r28c-9q8g-f849",
+          "range": "<=8.5.17"
+        }
+      ],
+      "fixAvailable": {
+        "name": "postcss",
+        "version": "8.5.28",
+        "isSemVerMajor": false
+      },
+      "parentPathCount": 3,
+      "parentPathSha256": "f16e64c12d869a7adc34681e3aab066084e0f71ec515a99a32ac932f4cb6708e",
+      "rootDependencies": [
+        "@tailwindcss/postcss@4.3.3",
+        "next@16.3.6",
+        "postcss@8.5.15"
+      ],
+      "parentPaths": [
+        "postcss@8.5.15 <- patterstage@0.1.0",
+        "postcss@8.5.23 <- next@16.3.6 <- patterstage@0.1.0",
+        "postcss@8.5.28 <- @tailwindcss/postcss@4.3.3 <- patterstage@0.1.0"
+      ],
+      "parentPathsTruncated": false
+    },
+    {
+      "name": "ws",
+      "severity": "high",
+      "direct": false,
+      "productionAudit": false,
+      "affectedRange": "8.0.0 - 8.20.1",
+      "installedVersions": [
+        "8.20.0"
+      ],
+      "nodes": [
+        "node_modules/ws"
+      ],
+      "advisories": [
+        {
+          "source": 1119108,
+          "title": "ws: Uninitialized memory disclosure",
+          "url": "https://github.com/advisories/GHSA-58qx-3vcg-4xpx",
+          "range": ">=8.0.0 <8.20.1"
+        },
+        {
+          "source": 1123259,
+          "title": "ws: Memory exhaustion DoS from tiny fragments and data chunks",
+          "url": "https://github.com/advisories/GHSA-96hv-2xvq-fx4p",
+          "range": ">=8.0.0 <8.21.0"
+        }
+      ],
+      "fixAvailable": true,
+      "parentPathCount": 2,
+      "parentPathSha256": "72c30c75b08ec9ddcd34119357fbccad899534da9a0e44af229bbe786f548ecd",
+      "rootDependencies": [
+        "jest-environment-jsdom@30.3.0"
+      ],
+      "parentPaths": [
+        "ws@8.20.0 <- jsdom@26.1.0 <- jest-environment-jsdom@30.3.0 <- patterstage@0.1.0",
+        "ws@8.20.0 <- jsdom@26.1.0 <- @jest/environment-jsdom-abstract@30.3.0 <- jest-environment-jsdom@30.3.0 <- patterstage@0.1.0"
+      ],
+      "parentPathsTruncated": false
+    }
+  ],
+  "outdatedDirect": {
+    "@playwright/test": {
+      "current": "1.62.1",
+      "wanted": "1.63.0",
+      "latest": "1.63.0"
+    },
+    "@tanstack/react-query": {
+      "current": "5.102.8",
+      "wanted": "5.104.0",
+      "latest": "5.104.0"
+    },
+    "@testing-library/jest-dom": {
+      "current": "6.9.1",
+      "wanted": "6.9.1",
+      "latest": "7.0.1"
+    },
+    "@testing-library/react": {
+      "current": "16.3.2",
+      "wanted": "16.3.3",
+      "latest": "16.3.3"
+    },
+    "@types/better-sqlite3": {
+      "current": "7.6.13",
+      "wanted": "7.6.13",
+      "latest": "9.6.0"
+    },
+    "@types/node": {
+      "current": "20.19.43",
+      "wanted": "20.19.43",
+      "latest": "26.6.3"
+    },
+    "@types/react": {
+      "current": "19.2.18",
+      "wanted": "19.3.0",
+      "latest": "19.3.0"
+    },
+    "@types/react-dom": {
+      "current": "19.2.3",
+      "wanted": "19.3.0",
+      "latest": "19.3.0"
+    },
+    "@xyflow/react": {
+      "current": "12.11.6",
+      "wanted": "12.12.0",
+      "latest": "12.12.0"
+    },
+    "better-sqlite3": {
+      "current": "12.11.1",
+      "wanted": "12.11.1",
+      "latest": "13.0.3"
+    },
+    "cross-env": {
+      "current": "7.0.3",
+      "wanted": "7.0.3",
+      "latest": "10.1.0"
+    },
+    "eslint": {
+      "current": "9.39.4",
+      "wanted": "9.39.5",
+      "latest": "10.11.0"
+    },
+    "jest": {
+      "current": "30.3.0",
+      "wanted": "30.5.2",
+      "latest": "30.5.2"
+    },
+    "jest-environment-jsdom": {
+      "current": "30.3.0",
+      "wanted": "30.5.2",
+      "latest": "30.5.2"
+    },
+    "js-yaml": {
+      "current": "4.2.0",
+      "wanted": "4.3.2",
+      "latest": "5.4.2"
+    },
+    "knip": {
+      "current": "6.34.0",
+      "wanted": "6.38.0",
+      "latest": "6.38.0"
+    },
+    "lucide-react": {
+      "current": "1.41.0",
+      "wanted": "1.48.0",
+      "latest": "1.48.0"
+    },
+    "markdown-it": {
+      "current": "15.0.1",
+      "wanted": "15.0.2",
+      "latest": "15.0.2"
+    },
+    "postcss": {
+      "current": "8.5.15",
+      "wanted": "8.5.15",
+      "latest": "8.5.28"
+    },
+    "react": {
+      "current": "19.2.8",
+      "wanted": "19.2.8",
+      "latest": "19.3.0"
+    },
+    "react-dom": {
+      "current": "19.2.8",
+      "wanted": "19.2.8",
+      "latest": "19.3.0"
+    },
+    "ts-jest": {
+      "current": "29.4.11",
+      "wanted": "29.4.14",
+      "latest": "29.4.14"
+    },
+    "tsx": {
+      "current": "4.23.13",
+      "wanted": "4.23.15",
+      "latest": "4.23.15"
+    },
+    "typescript": {
+      "current": "5.9.3",
+      "wanted": "5.9.3",
+      "latest": "7.0.2"
+    }
+  },
+  "limit": "npm advisory and parent attribution is a dependency-tree finding, not proof of an exploitable application route or a compatible fix. Local installed-tree and captured-audit snapshot only. parentPaths lists the 20 shortest paths when more exist; parentPathCount and SHA-256 cover every generated path. Recursive npm explain cycles are terminated and labelled."
+}

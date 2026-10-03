@@ -1,0 +1,46 @@
+{
+  "id": "T-0142",
+  "intent": "C5 of the consolidation programme: comments that narrate. A quarter of src was comment and 104 files of sixty lines or more were forty percent comment or more. What names the defect a decision fixes stays; what narrated the extraction arithmetic, the byte-equivalence of a move, the session it happened in and what the code used to be goes. Read file by file, never cut by regex; not one code line moves.",
+  "declared": {
+    "capabilities": [
+      "edit-source"
+    ],
+    "side_effects": []
+  },
+  "mode": "standard",
+  "tier_proposed": "R1",
+  "tier_ruled": "R1",
+  "reasons": [
+    {
+      "factor": "size-threshold",
+      "tier_floor": "R1",
+      "source": "derived:diff-size",
+      "evidence": "comments only, proved by a stripped-code comparison of every changed file against the batch's base; no code, no route, no schema, no protected path; one oracle suite"
+    }
+  ],
+  "status": "done",
+  "owner_session": "t0142-c5-comments-that-narrate-2026-09-11",
+  "claims": [
+    "src/",
+    "scripts/tooling/line-census.baseline.json",
+    "tests/unit/c5-comments-that-narrate.test.ts",
+    "org/plans/2026-09-consolidation.md",
+    "org/HANDOVER.md"
+  ],
+  "programme": "C5 of org/plans/2026-09-consolidation.md; C6 (the page layer, T-0143) follows.",
+  "timestamps": {
+    "opened": "2026-09-11T00:00:00Z",
+    "updated": "2026-09-11T03:00:00Z",
+    "closed": "2026-09-11T03:00:00Z"
+  },
+  "invariants": [
+    "I1 A COMMENT BATCH IS COMMENTS. Every file changed under src has code, with comments stripped, byte-identical to the base's; scratchpad/c5/verify-comments-only.mjs said so at the gate.",
+    "I2 WHAT SAYS WHY STAYS. A comment naming a defect, a ruling, a decision, a contract or a non-obvious reason was kept or trimmed to that sentence; every design-lint pragma and eslint directive is where it was.",
+    "I3 NARRATION IS GONE. No comment in src narrates byte-equivalence, extraction or refactor history, a session number or counted wins; the oracle refuses one.",
+    "I4 THE ESSAY COUNT IS UNDER THE LINE. commentEssays reads at or under 60, from 104."
+  ],
+  "commits": "2ce44c12 the C5 oracle, red at 4 of 6; 9336c4ee the comments, file by file, with the plan's progress note and the handover page; the chore commit that carries this record and the derived views.",
+  "verification": "Gate by exit code on the finished tree: lint 0, tsc 0, jest 0 (6880 tests, 679 suites), knip 0, canary 0, build 0, Playwright 0 (272 passed, 24 skipped, 0 failed, two projects), census 0, census:lines 0. The line census before and after: src 105422 to 100962 lines; comment essays 104 to 8. 171 files changed under src, 0 with code changes. The diff under src: 171 files changed, 1874 insertions(+), 6334 deletions(-). The oracle: no comment narrates byte-equivalence, extraction history, a session or counted wins; every design-lint pragma and eslint directive the tree had is still there (37 pragma lines, 13 directives); the census reads the essays under the plan's line.",
+  "mutation": "Three mutants against the committed tree, all killed by the oracle: a byte-equivalence note put back in api-write.ts; a session diary put back in the same file; the hermes-outside-adapter pragma cut from useModelActions.ts along with the comment it sits in. Every anchor is a comment, which the sweep calls inert unless forced; forced, because the oracle reads comments.",
+  "deviation": "Ten agents over disjoint file groups read from written briefs: seven in the first pass (about 2,370 lines), three in a second pass over the files still over forty percent comment (about 2,082 lines), because the first pass left 73 essays against the plan's 60. Files kept above forty percent with a written reason: api-logger (the @param floor of its docblocks), log-line-severity, memory-error-copy, modules/server and script-ext (short files whose comments are the contract). The verifier has one edge case it reports rather than hides: a slash-star inside a line comment reads as a block opener. Two stale facts were corrected rather than cut: the dashboard's top-templates header cap is DASHBOARD_STRIP_CAP (six), and the v30 rung in db/index renames agent_root.hermes_md to framework_md. The handover page and the plan's Progress note ride in the feat commit so they sit in the gated tree."
+}

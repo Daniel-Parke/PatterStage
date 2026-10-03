@@ -1,0 +1,29 @@
+{
+  "task": "T-0183",
+  "mutants": [
+    {
+      "id": "m1-cancel-only-newest-run",
+      "file": "src/lib/missions/cancel-finalise.ts",
+      "anchor": "for (const run of listActiveRunsForMission(missionId)) {",
+      "replacement": "for (const run of listActiveRunsForMission(missionId).slice(0, 1)) {",
+      "tests": ["tests/unit/mission-dispatch-edge-contract.test.ts"],
+      "why": "Cancelling only the newest run lets an older active poll reverse cancellation."
+    },
+    {
+      "id": "m2-consume-pending-cron-claim",
+      "file": "src/lib/orchestration/scheduler/tick.ts",
+      "anchor": "if (existing && (existing.runId || existing.status !== \"started\")) {",
+      "replacement": "if (existing) {",
+      "tests": ["tests/unit/mission-schedule-claim-contention.test.ts"],
+      "why": "A second tick must leave a due occurrence untouched while its gateway result is unknown."
+    },
+    {
+      "id": "m3-premature-operator-review-label",
+      "file": "src/lib/missions/mission-repository.ts",
+      "anchor": "result = NULL, updated_at = ?",
+      "replacement": "result = 'Submission outcome unconfirmed. Check the gateway before retrying after a restart.', updated_at = ?",
+      "tests": ["tests/unit/mission-dispatch-edge-contract.test.ts"],
+      "why": "An ordinary live submit is running, not yet an outcome requiring operator review."
+    }
+  ]
+}

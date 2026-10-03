@@ -1,6 +1,7 @@
 /** @jest-environment jsdom */
 
 import { act, renderHook, waitFor } from "@testing-library/react";
+import { queryWrapper } from "../helpers/render-with-query";
 
 import { useModelsPage } from "@/hooks/useModelsPage";
 
@@ -44,7 +45,7 @@ afterEach(() => {
 
 describe("useModelsPage fallback config persist", () => {
   it("debounces PUT /api/models/fallbacks/config after edits", async () => {
-    const { result } = renderHook(() => useModelsPage());
+    const { result } = renderHook(() => useModelsPage(), { wrapper: queryWrapper() });
 
     await waitFor(() => expect(result.current.loading).toBe(false));
 

@@ -1,0 +1,56 @@
+{
+  "id": "T-0137",
+  "intent": "C2 of the consolidation programme: one type each. The mission draft's optional fields were spelled in nine files, each a different interface carrying the same list; the model's identity in seven, twice as an ApiModel two files each declared; a sync source's failure result in seven sources, six identical lines each. MissionDraftFields, ModelIdentity and ModelRow are spelled once and extended where a shape adds its own fields; syncSuccess and syncFailure say a source's result in one line.",
+  "declared": {
+    "capabilities": [
+      "edit-source",
+      "edit-tests"
+    ],
+    "side_effects": []
+  },
+  "mode": "standard",
+  "tier_proposed": "R1",
+  "tier_ruled": "R1",
+  "reasons": [
+    {
+      "factor": "size-threshold",
+      "tier_floor": "R1",
+      "source": "derived:diff-size",
+      "evidence": "one type file added, three types and two helpers declared once, fifteen files' interfaces made to extend or alias them, seven sync sources' result blocks folded onto the helpers, the census's draft predicate sharpened to three lines; no route, no schema, no protected path, no behaviour (tsc proves the shapes equal); one oracle suite"
+    }
+  ],
+  "status": "done",
+  "owner_session": "t0137-c2-one-type-each-2026-09-10",
+  "claims": [
+    "src/lib/missions/mission-types.ts",
+    "src/lib/missions/",
+    "src/types/console.ts",
+    "src/lib/models/model-types.ts",
+    "src/lib/models-repository.ts",
+    "src/components/models/types.ts",
+    "src/components/models/ModelEditor.tsx",
+    "src/hooks/useModels.ts",
+    "src/modules/hermes/lib/",
+    "src/lib/sync/",
+    "src/modules/hermes/sync/ConfigSync.ts",
+    "scripts/tooling/line-census.mjs",
+    "scripts/tooling/line-census.baseline.json",
+    "tests/unit/c2-one-type-each.test.ts"
+  ],
+  "programme": "C2 of org/plans/2026-09-consolidation.md; C3 (one way to write) follows.",
+  "timestamps": {
+    "opened": "2026-09-10T07:20:00Z",
+    "updated": "2026-09-10T08:40:00Z",
+    "closed": "2026-09-10T08:40:00Z"
+  },
+  "invariants": [
+    "I1 THE DRAFT'S FIELDS ARE ONE TYPE. MissionDraftFields in mission-types.ts; a Mission, the body a route reads, the patch a field update takes, the input a promote takes and the row the repository creates extend it; the ten-plus-three fields with optional goals and a plain modelId are spelled in that one file.",
+    "I2 THE MODEL'S IDENTITY IS ONE TYPE. ModelIdentity and ModelRow in lib/models/model-types.ts; the repository's record, the API's row, the editor's record, the Hermes config entry, the import's parsed model and the diff's argument extend or alias them.",
+    "I3 A SYNC RESULT IS ONE LINE. syncSuccess and syncFailure in sync/types.ts; no source spells the six-line failure block.",
+    "I4 A NULLABLE PATCH IS NOT THE DRAFT. The update blocks that carry the same names as `string | null` are a different shape and keep their own spelling; the census predicate tells them apart by the plain modelId."
+  ],
+  "commits": "50f9898c the C2 oracle, red at 4 of 4 and a suite without its subjects; f05cd3b9 the three types, the two helpers, the fifteen files and the seven sources; the chore commit that carries this record and the derived views.",
+  "verification": "Gate by exit code on the finished tree: lint 0, tsc 0, jest 0 (6876 tests, 678 suites), knip 0, canary 0, build 0, Playwright 1 (271 passed, 24 skipped, two projects; the one failure was the composer spec's request for the saved workflow reset on its socket, apiRequestContext.get ECONNRESET, and that spec alone passed 3 of 3, exit 0), census 0, census:lines 0. The line census before and after: src 106405 to 106274 lines; files spelling a repeated type shape 23 to 2; repeated six-line windows in src 1358 to 1192; tests 121926 to 122030 (the oracle suite, held with its reason); comment essays 107 to 108 (components/models/types.ts lost its fourteen ApiModel lines and kept its comments, held with that reason). tsc is the proof the shapes were the same: every extending interface compiles against the type it now extends, and the oracle assigns a Mission to the draft's fields and a ModelRecord to the identity.",
+  "mutation": "Five mutants against the committed tree, four killed: the two sync helpers' fields and success flag, and the Hermes config entry re-declared as its own shape. One survived: the draft's toolsets and goals re-spelled under MissionBodyFields without the modelId line, which the three-line predicate deliberately does not count because a template carries exactly those two lines; a full re-spelling of the three is caught. Recorded as a limit of the predicate, not tightened, since tightening it would count the templates again.",
+  "deviation": "The plan's row said 'repeated type shapes 23 files to 3'; the measure reads 2, because the sync helpers' own spelling no longer matches the six-line predicate, and the plan's target is read as met. The recon's count of nine draft spellings included three template types that carry optional toolsets over required goals; those are templates, not drafts, and keep their own shape, which the sharpened predicate no longer counts. The repository's own SQLite row is also named ModelRow, in snake_case; the library's is imported under an alias there rather than renaming the row that twelve queries cast to."
+}

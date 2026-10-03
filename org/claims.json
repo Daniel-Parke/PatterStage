@@ -1,0 +1,6 @@
+{
+  "version": 1,
+  "assigned": "2026-10-03",
+  "lanes": [],
+  "note": "T0191 accepted at2f0ccfb7; observe closure-head hosted jobs before T0192. Retain two-writer cap and Q033 retirement deferral."
+}

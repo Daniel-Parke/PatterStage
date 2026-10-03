@@ -1,0 +1,51 @@
+{
+  "id": "T-0135",
+  "intent": "C0 of the consolidation programme: the referee before the work. The operator asked (2026-09-09) for the whole codebase reviewed and consolidated to make development and maintenance easier; the UI overhaul's recon had found dead code gone and its sixteen batches moved the source count by 33 lines. This batch measures where the lines are and which are the same shape built many times, files the reconnaissance and the plan, and lands the line census that holds every later batch to a number that can only fall.",
+  "declared": {
+    "capabilities": [
+      "edit-source",
+      "edit-tests",
+      "edit-docs"
+    ],
+    "side_effects": []
+  },
+  "mode": "standard",
+  "tier_proposed": "R1",
+  "tier_ruled": "R1",
+  "reasons": [
+    {
+      "factor": "size-threshold",
+      "tier_floor": "R1",
+      "source": "derived:diff-size",
+      "evidence": "one tooling script and its baseline, one npm script, one guide paragraph, one review and one plan under org/; no product source, no route, no schema, no protected path; one oracle suite"
+    }
+  ],
+  "status": "done",
+  "owner_session": "t0135-c0-line-census-2026-09-10",
+  "claims": [
+    "scripts/tooling/line-census.mjs",
+    "scripts/tooling/line-census.baseline.json",
+    "package.json",
+    "docs/contributing/testing.md",
+    "org/reviews/2026-09-consolidation-recon.md",
+    "org/plans/2026-09-consolidation.md",
+    "tests/unit/c0-the-line-census.test.ts"
+  ],
+  "programme": "C0 of org/plans/2026-09-consolidation.md; C1 (one route body) follows.",
+  "timestamps": {
+    "opened": "2026-09-10T03:40:00Z",
+    "updated": "2026-09-10T05:00:00Z",
+    "closed": "2026-09-10T05:00:00Z"
+  },
+  "invariants": [
+    "I1 A MEASURE MAY FALL AND MAY NOT RISE. line-census.baseline.json holds twelve counts; npm run census:lines exits 1 on any rise unless --allow-growth names a reason; a fall is reported and held by --update-baseline.",
+    "I2 A SHAPE IS MATCHED ON CODE, NOT COMMENTS. The census strips comments before it looks for a hook or a helper, so a comment naming useApiResource does not count as using it.",
+    "I3 THE PLAN IS MEASURED BY THE CENSUS. Every batch's target is a key in the baseline, and C8 reads the after against the before.",
+    "I4 NO FEATURE GOES WITHOUT THE OPERATOR. Decision 2 of the overhaul stands across this programme; the plan proposes none."
+  ],
+  "commits": "c3380973 the C0 oracle, red at 4 of 4; 4c5d37c9 the census, the recon and the plan; the chore commit that carries this record and the derived views.",
+  "verification": "Gate by exit code on the finished tree: lint 0, tsc 0, jest 0 (6864 tests, 676 suites), knip 0, canary 0, build 0, Playwright 0 (272 passed, 24 skipped, two projects), census 0, and the new step census:lines 0 with twelve measures held. The oracle proves the ratchet on a fixture tree: a baseline cut, a file grown by two lines refused with the measure named, the same growth allowed with a reason, a file shrunk accepted with the fall named. The baseline at the batch's close: {\"srcLines\": 107123, \"testLines\": 121762, \"srcRepeatedWindowLines\": 1416, \"testRepeatedWindowLines\": 6028, \"routesWithTryCatch\": 82, \"handRolledReadHooks\": 5, \"writeHooksWithoutMutation\": 4, \"repeatedTypeShapeFiles\": 23, \"oneImporterComponents\": 130, \"libRootFiles\": 71, \"commentEssays\": 107, \"suitesMockingDbInline\": 100}.",
+  "mutation": "Four mutants against the committed tree (4c5d37c9): growth no longer failing, growth reported but exiting green, a fall not reported, and the fixture root flag ignored. Four of four killed on the first pass.",
+  "what_the_recon_found": "src 107,123 lines (comments 24%), tests 121,762. Literal duplication in src is small: 1,416 lines inside a repeated six-line window (1.3%); in tests 6,028 (three stanzas: the paths mock in twelve files, a Request stub in eleven, the better-sqlite3 db stanza in ten; 100 suites mock @/lib/db inline). The same shape built many times: 120 of 169 API handlers end in the same try/catch; the mission draft's fields are spelled in nine files, the model row in seven, the sync failure in seven; five files still read by hand and four action hooks write by hand; 130 of 202 components have one importer, 29 of them under sixty lines; 71 files sit at the lib root; 107 files are 40% comment or more. The honest ceiling: src minus 6,000 to 10,000, tests minus 4,000 to 6,000, no feature removed.",
+  "deviation": "The plan the operator's words asked for says 'massively reducing the line counts'; the reconnaissance says what the tree allows without removing product, and the targets are set there (src 107,123 to at most 98,000; tests 121,762 to at most 116,000). A larger reduction is a feature decision and stays the operator's."
+}

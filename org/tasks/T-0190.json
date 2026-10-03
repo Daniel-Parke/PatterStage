@@ -1,0 +1,1282 @@
+{
+  "id": "T-0190",
+  "intent": "Converge shared client reads and preference writes; prevent stale Chat and Mission responses from replacing current input or selection; preserve explicit Story and Hindsight actions and truthful scoped feedback. Account for21findings,5splitrulings,22coverageitems and reviewed races.",
+  "declared": {
+    "capabilities": [
+      "edit-code",
+      "edit-tests",
+      "edit-docs",
+      "git",
+      "git-push",
+      "run-isolated-process",
+      "owned-temporary-git"
+    ],
+    "side_effects": [
+      "financial-impact",
+      "sends-external"
+    ]
+  },
+  "mode": "high-assurance",
+  "tier_proposed": "R2",
+  "status": "done",
+  "owner_session": "2026-10-02-t0190-coordinator",
+  "claims": [
+    "src/hooks/useChatPage.ts",
+    "src/hooks/useChatConversations.ts",
+    "src/hooks/useChatSend.ts",
+    "src/hooks/useChatTranscript.ts",
+    "src/hooks/useAgentRunStream.ts",
+    "src/lib/chat/chat-utils.ts",
+    "src/hooks/useMissionsApi.ts",
+    "src/hooks/useMissionsData.ts",
+    "src/hooks/useMissionCategories.ts",
+    "src/hooks/useMissionDispatch.ts",
+    "src/hooks/useMissionTemplateActions.ts",
+    "src/hooks/useMissionComposer.ts",
+    "src/hooks/useMissionsPage.ts",
+    "src/app/work/missions/page.tsx",
+    "src/components/missions/MissionsList.tsx",
+    "src/components/missions/MissionEditorPanel.tsx",
+    "src/components/missions/MissionCreateForm.tsx",
+    "src/hooks/useApiResource.ts",
+    "src/lib/api/api-write.ts",
+    "src/lib/api/api-fetch.ts",
+    "src/hooks/useOperatorPrefs.ts",
+    "src/hooks/usePreferenceWrite.ts",
+    "src/components/layout/Sidebar.tsx",
+    "src/app/recroom/story-weaver/[id]/page.tsx",
+    "src/app/recroom/story-weaver/create/page.tsx",
+    "src/components/memory/HindsightBrowser.tsx",
+    "src/components/memory/hindsight/useHindsightCrudTab.ts",
+    "src/components/memory/hindsight/useHindsightMemories.ts",
+    "src/components/memory/hindsight/useHindsightModels.ts",
+    "src/components/memory/hindsight/useHindsightDirectives.ts",
+    "src/lib/memory/hindsight-client.ts",
+    "src/hooks/useModels.ts",
+    "src/hooks/useModelsPage.ts",
+    "src/hooks/useModelActions.ts",
+    "src/hooks/useModelFallbackConfig.ts",
+    "src/hooks/useModelFallbackChain.ts",
+    "src/hooks/useVersionFooter.ts",
+    "src/components/providers/FeedbackProvider.tsx",
+    "src/lib/ui/theme.ts",
+    "src/components/ui/Input.tsx",
+    "src/components/ui/Select.tsx",
+    "tests/unit/chat-response-ownership.test.tsx",
+    "tests/unit/mission-query-ownership.test.tsx",
+    "tests/unit/story-client-boundaries.test.tsx",
+    "tests/unit/hindsight-query-feedback.test.tsx",
+    "tests/unit/preference-write-contract.test.tsx",
+    "tests/unit/client-query-observers.test.tsx",
+    "tests/e2e/client-read-ownership.spec.ts",
+    "tests/unit/b14-story-reader-writes-on-request.test.tsx",
+    "tests/unit/story-stop-and-the-write-latch.test.tsx",
+    "tests/unit/story-stop-holds-every-call.test.tsx",
+    "tests/unit/story-cost-is-on-screen.test.tsx",
+    "tests/unit/hindsight-browser-render.test.tsx",
+    "tests/unit/b7-memory-empty-states.test.tsx",
+    "org/tasks/T-0190.json",
+    "org/claims.json",
+    "org/briefs/T-0190-oracle.md",
+    "org/briefs/T-0190-review.md",
+    "org/reviews/2026-10-t0190-client-verification.md",
+    "org/reviews/2026-10-t0190-dispositions.json",
+    "org/plans/2026-09-refactor-programme.json",
+    "org/HANDOVER.md",
+    "org/TASKS.md",
+    "org/STATE.md",
+    "docs/manifest.json",
+    "scripts/tooling/line-census.baseline.json",
+    "scripts/tooling/design-lint.baseline.json",
+    "tests/fixtures/mutants/T-0190.json",
+    "org/briefs/T-0190-client-implementation.md",
+    "tests/unit/client-late-ownership.test.tsx",
+    "org/briefs/T-0190-supplementary-oracle.md",
+    "org/briefs/T-0190-client-repair.md",
+    "tests/unit/mission-link-poll-ownership.test.tsx",
+    "org/briefs/T-0190-poll-oracle.md",
+    "tests/unit/story-cache-settlement.test.tsx",
+    "org/briefs/T-0190-story-cache-oracle.md",
+    "tests/unit/mission-link-handoff.test.tsx",
+    "tests/helpers/mission-link-query-fixture.tsx",
+    "org/briefs/T-0190-oracle-amendment.md",
+    "tests/unit/mission-write-continuation.test.tsx",
+    "org/briefs/T-0190-continuation-oracle.md",
+    "org/briefs/T-0190-mutation-tests.md",
+    "org/reviews/2026-10-t0190-final-acceptance.md"
+  ],
+  "timestamps": {
+    "opened": "2026-10-02T17:49:07.371181+00:00",
+    "updated": "2026-10-02T22:45:23.884673+00:00",
+    "closed": "2026-10-02T22:45:23.884673+00:00"
+  },
+  "tier_ruled": "R2",
+  "reasons": [
+    {
+      "factor": "money",
+      "tier_floor": "R2",
+      "source": "declared",
+      "evidence": "declared side effect: financial-impact"
+    },
+    {
+      "factor": "boundary-contact",
+      "tier_floor": "R1",
+      "source": "declared",
+      "evidence": "declared side effect: sends-external"
+    }
+  ],
+  "authority": "Approved Phase2/Q016/Q032 and item rulings. Q033 preserves compatibility throughv1.0. No protected edit, public endpoint/key removal or provider execution authorised by this record.",
+  "prerequisite": {
+    "head": "888413eb58950754af82f4882e2504c3c842892d",
+    "observed": "2026-10-02T17:48:42.522Z",
+    "allRequiredJobsPassed": true,
+    "runs": [
+      {
+        "conclusion": "success",
+        "databaseId": 37041748268,
+        "event": "pull_request",
+        "headSha": "888413eb58950754af82f4882e2504c3c842892d",
+        "status": "completed",
+        "url": "https://github.com/Daniel-Parke/PatterStage/actions/runs/37041748268",
+        "workflowName": "Gitleaks",
+        "receipt": "tmp/t0189-hosted-closure/pull_request-gitleaks-37041748268-1790963318911.json",
+        "jobs": [
+          {
+            "id": 110953268910,
+            "name": "scan",
+            "status": "completed",
+            "conclusion": "success"
+          }
+        ]
+      },
+      {
+        "conclusion": "success",
+        "databaseId": 37041748290,
+        "event": "pull_request",
+        "headSha": "888413eb58950754af82f4882e2504c3c842892d",
+        "status": "completed",
+        "url": "https://github.com/Daniel-Parke/PatterStage/actions/runs/37041748290",
+        "workflowName": "CI",
+        "receipt": "tmp/t0189-hosted-closure/pull_request-ci-37041748290-1790963320072.json",
+        "jobs": [
+          {
+            "id": 110953270421,
+            "name": "boot-smoke (ubuntu-latest)",
+            "status": "completed",
+            "conclusion": "success"
+          },
+          {
+            "id": 110953270424,
+            "name": "e2e-full (PLAYWRIGHT_SMOKE unset)",
+            "status": "completed",
+            "conclusion": "success"
+          },
+          {
+            "id": 110953270569,
+            "name": "install-harness",
+            "status": "completed",
+            "conclusion": "success"
+          },
+          {
+            "id": 110953270666,
+            "name": "build-test-ubuntu",
+            "status": "completed",
+            "conclusion": "success"
+          },
+          {
+            "id": 110953270670,
+            "name": "shell-custom-scripts",
+            "status": "completed",
+            "conclusion": "success"
+          },
+          {
+            "id": 110953270700,
+            "name": "e2e-smoke",
+            "status": "completed",
+            "conclusion": "success"
+          },
+          {
+            "id": 110953270707,
+            "name": "boot-smoke (macos-latest)",
+            "status": "completed",
+            "conclusion": "success"
+          },
+          {
+            "id": 110953270848,
+            "name": "build-test-macos",
+            "status": "completed",
+            "conclusion": "success"
+          },
+          {
+            "id": 110953270880,
+            "name": "real-hermes-integration",
+            "status": "completed",
+            "conclusion": "success"
+          },
+          {
+            "id": 110953270936,
+            "name": "docker-image",
+            "status": "completed",
+            "conclusion": "success"
+          },
+          {
+            "id": 110957354264,
+            "name": "acceptance-gate (full suite + install journey + real Hermes)",
+            "status": "completed",
+            "conclusion": "success"
+          }
+        ]
+      },
+      {
+        "conclusion": "success",
+        "databaseId": 37041738676,
+        "event": "push",
+        "headSha": "888413eb58950754af82f4882e2504c3c842892d",
+        "status": "completed",
+        "url": "https://github.com/Daniel-Parke/PatterStage/actions/runs/37041738676",
+        "workflowName": "CI",
+        "receipt": "tmp/t0189-hosted-closure/push-ci-37041738676-1790963321291.json",
+        "jobs": [
+          {
+            "id": 110953237986,
+            "name": "real-hermes-integration",
+            "status": "completed",
+            "conclusion": "success"
+          },
+          {
+            "id": 110953238256,
+            "name": "build-test-macos",
+            "status": "completed",
+            "conclusion": "success"
+          },
+          {
+            "id": 110953238268,
+            "name": "boot-smoke (ubuntu-latest)",
+            "status": "completed",
+            "conclusion": "success"
+          },
+          {
+            "id": 110953238304,
+            "name": "boot-smoke (macos-latest)",
+            "status": "completed",
+            "conclusion": "success"
+          },
+          {
+            "id": 110953238317,
+            "name": "docker-image",
+            "status": "completed",
+            "conclusion": "success"
+          },
+          {
+            "id": 110953238411,
+            "name": "shell-custom-scripts",
+            "status": "completed",
+            "conclusion": "success"
+          },
+          {
+            "id": 110953238412,
+            "name": "install-harness",
+            "status": "completed",
+            "conclusion": "success"
+          },
+          {
+            "id": 110953238458,
+            "name": "build-test-ubuntu",
+            "status": "completed",
+            "conclusion": "success"
+          },
+          {
+            "id": 110953239063,
+            "name": "e2e-smoke",
+            "status": "completed",
+            "conclusion": "success"
+          },
+          {
+            "id": 110953239985,
+            "name": "e2e-full (PLAYWRIGHT_SMOKE unset)",
+            "status": "completed",
+            "conclusion": "skipped"
+          },
+          {
+            "id": 110956781455,
+            "name": "acceptance-gate (full suite + install journey + real Hermes)",
+            "status": "completed",
+            "conclusion": "skipped"
+          }
+        ]
+      },
+      {
+        "conclusion": "success",
+        "databaseId": 37041738660,
+        "event": "push",
+        "headSha": "888413eb58950754af82f4882e2504c3c842892d",
+        "status": "completed",
+        "url": "https://github.com/Daniel-Parke/PatterStage/actions/runs/37041738660",
+        "workflowName": "Gitleaks",
+        "receipt": "tmp/t0189-hosted-closure/push-gitleaks-37041738660-1790963322521.json",
+        "jobs": [
+          {
+            "id": 110953237744,
+            "name": "scan",
+            "status": "completed",
+            "conclusion": "success"
+          }
+        ]
+      }
+    ]
+  },
+  "scope_note": "Readiness expands original hook-only globs into41exact production paths. Retain facade contracts and old-link mocks if cache requirements permit. T0192 owns prop restructuring; T0191 owns responsive presentation repairs. No implementation before independent oracle freeze/redcommit.",
+  "invariants": [
+    "Delayed creation, send, approval, Stop and stream reconciliation cannot overwrite a newer selection, draft, transcript or approval. Current-generation completion, blank-chat reuse and clicked-row export still work.",
+    "Missions share canonical raw-envelope cache keys with Dashboard; list/detail/template/category errors stay scoped and visible, with banner-only mission read feedback. Preserve injected fetchers,15-second polling/focus behaviour,200-row list/older-link retention and optimistic rollback without erasing unrelated updates.",
+    "Independent mission and template drafts and dispatch acknowledgement survive. Use canonical dispatch modes; malformed template mode retains last valid mode with visible feedback and cannot submit the malformed value.",
+    "Story storage failure never destroys current input or turns successful server creation into failure. Keep stored keys, POST-read identities,unknown-spend semantics,explicit write intent,abort signals and Stop/write-latch contracts.",
+    "Hindsight failures differ from successful emptiness; errors support explicit retry. Preserve active-tab reads,health/count/stale semantics,CRUD draft/pending states,model identity,tags/priority and explicit-only reflection. No automatic provider-work retry.",
+    "Shared preference writes preserve Sidebar initial server value,local optimistic quiet failure and no extra preference read; operator preferences retain pending/error feedback and canonical invalidation.",
+    "Keep Select/Picker distinction,theme tokens,legacy storage migration,standalone toast fallback,provider ownership,elapsed deadlines,read-only/auth boundaries and all historical test identities. Only independently authorised provider-wrapper amendments may change existing suites."
+  ],
+  "rollback": "Revert each Chat, Mission, Story/Hindsight or preference cohort independently with its shared interfaces and oracles. Keep every prior receipt/checkpoint; no database migration or stored-key rewrite.",
+  "verify_line": "Freeze independent public-action behavioural oracles and historical identities before changes. Prove controlled async ownership/cache/error/storage/explicit-action cases, real page browser journeys at1440x900/390x844 and measured stats observer trace. Run app/test types,fullJest,unchangedten-stagegate; cleancommittedmutation controls/restoration; independentR2; all implementation/closure-head hosted jobs. Disposition all48ownershipitems without overstating provider/integration proof.",
+  "oracle_status": "169 integrated client oracle cases pass, with original red commits and independently accepted amendments preserved.",
+  "oracle_design": "tmp/t0190-oracle-design-20261002.md",
+  "readiness": "tmp/t0190-full-readiness-review-20261002.md",
+  "claim_review": "tmp/t0190-claims-and-controls-20261002.md",
+  "historical_cohort": [
+    "tests/unit/b14-story-reader-writes-on-request.test.tsx",
+    "tests/unit/story-stop-and-the-write-latch.test.tsx",
+    "tests/unit/story-stop-holds-every-call.test.tsx",
+    "tests/unit/story-cost-is-on-screen.test.tsx",
+    "tests/unit/hindsight-browser-render.test.tsx",
+    "tests/unit/b7-memory-empty-states.test.tsx",
+    "tests/unit/chat-failure-truth-streams.test.tsx",
+    "tests/unit/chat-failure-truth.test.ts",
+    "tests/unit/b13-chat-export-and-load-errors.test.tsx",
+    "tests/unit/chat-page-toast.test.tsx",
+    "tests/unit/b1-fast-chat-carries-the-key.test.ts",
+    "tests/unit/mission-old-link-retention.test.tsx",
+    "tests/unit/mission-old-link-restoration-boundary.test.tsx",
+    "tests/unit/mission-old-link-overlap.test.tsx",
+    "tests/unit/b10-category-write-failures.test.tsx",
+    "tests/unit/b10-category-modal-keeps-a-refusal.test.tsx",
+    "tests/unit/b10-template-editor-has-its-own-draft.test.tsx",
+    "tests/unit/mission-composer-finishes.test.tsx",
+    "tests/unit/mission-composer-actions.test.tsx",
+    "tests/unit/mission-dispatch-gate.test.tsx",
+    "tests/unit/mission-dispatch-edge-contract.test.ts",
+    "tests/unit/dispatch-mode.test.ts",
+    "tests/unit/dispatch-mode-is-validated.test.ts",
+    "tests/unit/mission-editor-panel-run-state.test.tsx",
+    "tests/unit/b10-mission-panel-schedule-and-sessions.test.tsx",
+    "tests/unit/b14-story-create-library-and-model.test.tsx",
+    "tests/unit/story-reader-error-banner.test.tsx",
+    "tests/unit/story-stop-is-not-a-provider-timeout.test.ts",
+    "tests/unit/hindsight-unreachable-banner.test.tsx",
+    "tests/unit/load-hindsight-list.test.ts",
+    "tests/unit/u11-models-memory-and-the-eyebrows.test.tsx",
+    "tests/unit/b3-operator-prefs.test.ts",
+    "tests/unit/use-api-resource.test.tsx",
+    "tests/unit/api-resource-keeps-the-failed-body.test.tsx",
+    "tests/unit/u15-reads-go-through-the-hook.test.tsx",
+    "tests/unit/api-write.test.ts",
+    "tests/unit/api-fetch-deadline-reach.test.ts",
+    "tests/unit/run-deadline.test.ts",
+    "tests/unit/b1-deploy-footer-tells-the-truth.test.tsx",
+    "tests/unit/b2-toasts-stack.test.tsx",
+    "tests/unit/b2-confirm-button.test.tsx",
+    "tests/unit/c3-one-way-to-write.test.ts",
+    "tests/unit/c6-the-page-layer.test.ts",
+    "tests/unit/u15-nothing-lives-only-for-its-test.test.ts",
+    "tests/unit/u6-colour-that-is-there.test.ts",
+    "tests/unit/u8-the-focus-ring.test.ts",
+    "tests/unit/b2-focus-is-visible.test.ts",
+    "tests/unit/lockbook-tokens.test.ts",
+    "tests/unit/api-auth.test.ts",
+    "tests/unit/b1-host-writes-need-a-token.test.ts",
+    "tests/unit/failed-auth-costs-something.test.ts",
+    "tests/unit/proxy-auth.test.ts",
+    "tests/unit/read-only-actually-reads.test.ts",
+    "tests/unit/read-only-is-testable.test.ts",
+    "tests/unit/t0158-held-response-revocation.test.ts",
+    "tests/unit/t0158-direct-held-response.test.ts",
+    "tests/unit/t0158-mixed-held-response.test.ts",
+    "tests/unit/api-schemas-narrowing.test.ts",
+    "tests/unit/api-response.test.ts",
+    "tests/unit/api-response-server-error-from-helper-result.test.ts",
+    "tests/e2e/mission-old-link-boundary.spec.ts",
+    "tests/e2e/missions-compose.spec.ts",
+    "tests/e2e/missions-flows.spec.ts",
+    "tests/e2e/missions-stats-strip.spec.ts",
+    "tests/e2e/requests.spec.ts",
+    "tests/e2e/story-weaver.spec.ts",
+    "tests/e2e/story-weaver-save-failure.spec.ts",
+    "tests/e2e/story-weaver-save-boundaries.spec.ts"
+  ],
+  "independent_amendments": {
+    "scope": [
+      "tests/unit/b14-story-reader-writes-on-request.test.tsx",
+      "tests/unit/story-stop-and-the-write-latch.test.tsx",
+      "tests/unit/story-stop-holds-every-call.test.tsx",
+      "tests/unit/story-cost-is-on-screen.test.tsx",
+      "tests/unit/hindsight-browser-render.test.tsx",
+      "tests/unit/b7-memory-empty-states.test.tsx"
+    ],
+    "rule": "Different author changes only necessary QueryClient render wrappers, preserving names/assertions/fixtures/action sequences. Capture original controls and exact emitted identities before amendment. No other historical amendment authorised."
+  },
+  "preflight": [
+    {
+      "receipt": "tmp/t0190-chat-browser-preflight-20261002.md",
+      "result": "Controlled production UI atbothwidths: delayed NewChat clears newlytypedinput; selectingBwhilepending also replacedbyNewChat. Coordinator reproduction, notindependentoracle orproviderproof."
+    },
+    {
+      "receipt": "tmp/t0189-green-validation/tmp/t0188-chat-viewport-1790964744875/walk.json",
+      "result": "Controlled production UI at 1440x900 and390x844: directives and mental-model collections return503, but show successful-empty claims and no collection failure. Four image hashes recorded; desktop models and phone directives personally inspected. No provider calls. Phone New Directive label wraps beyond its compact button; queued T0191 presentation repair."
+    }
+  ],
+  "oracle_author": "Carver 01a0fd33-6991-7a93-be6b-9285743b5ccc, independent of T0190implementation",
+  "oracle_session": "2026-10-02-t0190-oracle-carver",
+  "oracle_claims": [
+    "tests/unit/chat-response-ownership.test.tsx",
+    "tests/unit/mission-query-ownership.test.tsx",
+    "tests/unit/story-client-boundaries.test.tsx",
+    "tests/unit/hindsight-query-feedback.test.tsx",
+    "tests/unit/preference-write-contract.test.tsx",
+    "tests/unit/client-query-observers.test.tsx",
+    "tests/e2e/client-read-ownership.spec.ts",
+    "tests/unit/b14-story-reader-writes-on-request.test.tsx",
+    "tests/unit/story-stop-and-the-write-latch.test.tsx",
+    "tests/unit/story-stop-holds-every-call.test.tsx",
+    "tests/unit/story-cost-is-on-screen.test.tsx",
+    "tests/unit/hindsight-browser-render.test.tsx",
+    "tests/unit/b7-memory-empty-states.test.tsx"
+  ],
+  "historical_control": {
+    "receipt": "tmp/t0190-historical-controls/1790963747932/summary.json",
+    "head": "39571be6ba35027b21531a36f1549dc93e4e7ef1",
+    "suites": 60,
+    "passed": 602,
+    "skipped": 0,
+    "tree": "5ccbd52c603b70c43c9e09bd306ab6040053600027979889ca61f70fddf5740b",
+    "unchanged": true,
+    "preservation": "tmp/t0190-preservation-baseline-20261002.json",
+    "preservedPaths": 1208,
+    "allowedAmendments": [
+      "tests/unit/b14-story-reader-writes-on-request.test.tsx",
+      "tests/unit/story-stop-and-the-write-latch.test.tsx",
+      "tests/unit/story-stop-holds-every-call.test.tsx",
+      "tests/unit/story-cost-is-on-screen.test.tsx",
+      "tests/unit/hindsight-browser-render.test.tsx",
+      "tests/unit/b7-memory-empty-states.test.tsx"
+    ],
+    "limits": "Preimplementation controls, not acceptance of new behaviour or provider integration."
+  },
+  "oracle_freeze": {
+    "receipt": "tmp/t0190-oracle/freeze-manifest.json",
+    "sha256": "79533b7c969bbe75f4a79b819d331cc850819ee9051ec0a32da92d6145615af8",
+    "criteriaHead": "25b6aa7fb42a21f89bd9313de63cd96c3a6f7d57",
+    "validationHead": "39571be6ba35027b21531a36f1549dc93e4e7ef1",
+    "author": "Carver / independent ORACLE",
+    "independence": "Separate author before any production implementation. Real composed hooks/pages with controlled HTTP/EventSource/storage/timer boundaries. Non-default methods: arrival-order permutations and table-driven write-intent/response-validation invariants. Constant Story identity fails the two-ID shared-client contract; no source-shape oracle. Human UX sampling and mutation adequacy remain coordinator/reviewer gates.",
+    "unit": {
+      "receipt": "tmp/t0190-oracle/unit-freeze-1790965745051",
+      "passed": 53,
+      "failed": 42,
+      "pending": 0,
+      "suites": 6,
+      "runtimeErrorSuites": 0
+    },
+    "browser": {
+      "receipt": "tmp/t0190-browser-oracle-1790965354099",
+      "hash": "9cea3bb813dbbb99862660361de3b65ce092e886dce651a75096f4b1d59fbd81",
+      "passed": 2,
+      "behaviouralReds": 8,
+      "skipped": 0,
+      "ownedProcessStopped": true,
+      "independentAuthor": "Carver",
+      "runner": "coordinator on isolated prebuilt production app"
+    },
+    "typing": "tmp/t0190-oracle/types-1790965935901",
+    "lint": "tmp/t0190-oracle/lint-1790965967869",
+    "suites": {
+      "tests/unit/chat-response-ownership.test.tsx": "e46fbed07b018175510a2e80fa552eeeca847e15fec96d846cf93e347227ff27",
+      "tests/unit/mission-query-ownership.test.tsx": "303c3c9db8a01b3fde25b9f41f8005d35c2a9e522f7a95cfd8f4b2471a96f6f8",
+      "tests/unit/story-client-boundaries.test.tsx": "9b70ef6709088cd497ae01a9b99776e0f72b235c515a83ef8cc48c159f70b4c7",
+      "tests/unit/hindsight-query-feedback.test.tsx": "e9732c9bb50829ee550639ec15ba7f0d44f31f6b0d78db52f9824cd4f0a908d7",
+      "tests/unit/preference-write-contract.test.tsx": "fcaaeb892f9ad94fabb2b6ec5df40ed1c8f0a62547b952d88114fec064858a6e",
+      "tests/unit/client-query-observers.test.tsx": "a773c698555c85aa73b021685402c2edcf8f1c777c0f70d1c566997f1c746b04",
+      "tests/e2e/client-read-ownership.spec.ts": "9cea3bb813dbbb99862660361de3b65ce092e886dce651a75096f4b1d59fbd81",
+      "tests/unit/b14-story-reader-writes-on-request.test.tsx": "c3307aec82d6da4c3d33719ff556abd939033b4e811560d172221e44b4755277",
+      "tests/unit/story-stop-and-the-write-latch.test.tsx": "945fe2bb371ae096e34a3f6840ff87dccbfbfb5e72c5f19bcb3cccb5ab67b15b",
+      "tests/unit/story-stop-holds-every-call.test.tsx": "6c43de88091cae9231fb9ae7360fb0595973c6f82353673f2a2d73a60b762b35",
+      "tests/unit/story-cost-is-on-screen.test.tsx": "f210fe43a8f7b40e8b55abf0a521e48329d737d8578b60865f0d501c3cc3235e",
+      "tests/unit/hindsight-browser-render.test.tsx": "22a22b8cb6702438173b10258890b24394d08de304f93fb56af21fc4c4671c8e",
+      "tests/unit/b7-memory-empty-states.test.tsx": "8e75de4a10294ac8e92ed42cb4016d9211caf39dd569371f85a2037bccb0804f"
+    },
+    "historicalIdentity": {
+      "before": 48,
+      "after": 48,
+      "nameDifferences": 0,
+      "skipped": 0,
+      "proof": [
+        {
+          "file": "tests/unit/b14-story-reader-writes-on-request.test.tsx",
+          "original": {
+            "file": "tests/unit/b14-story-reader-writes-on-request.test.tsx",
+            "rawSha256": "915a8e0517340ed93230ee74a8e4b195da4e695e9c409f766a11db3e73cef7bf",
+            "lfSha256": "915a8e0517340ed93230ee74a8e4b195da4e695e9c409f766a11db3e73cef7bf"
+          },
+          "amended": {
+            "rawSha256": "c3307aec82d6da4c3d33719ff556abd939033b4e811560d172221e44b4755277",
+            "lfSha256": "c3307aec82d6da4c3d33719ff556abd939033b4e811560d172221e44b4755277"
+          },
+          "wrapperOnlyExactTransform": true,
+          "stableClientAcrossRerenders": "existing renderWithQuery closure; helper unchanged"
+        },
+        {
+          "file": "tests/unit/story-stop-and-the-write-latch.test.tsx",
+          "original": {
+            "file": "tests/unit/story-stop-and-the-write-latch.test.tsx",
+            "rawSha256": "aa1cfd43c58e25250ad2bf6c63dfd33452522464f69369ae09e691f73972d52a",
+            "lfSha256": "aa1cfd43c58e25250ad2bf6c63dfd33452522464f69369ae09e691f73972d52a"
+          },
+          "amended": {
+            "rawSha256": "945fe2bb371ae096e34a3f6840ff87dccbfbfb5e72c5f19bcb3cccb5ab67b15b",
+            "lfSha256": "945fe2bb371ae096e34a3f6840ff87dccbfbfb5e72c5f19bcb3cccb5ab67b15b"
+          },
+          "wrapperOnlyExactTransform": true,
+          "stableClientAcrossRerenders": "existing renderWithQuery closure; helper unchanged"
+        },
+        {
+          "file": "tests/unit/story-stop-holds-every-call.test.tsx",
+          "original": {
+            "file": "tests/unit/story-stop-holds-every-call.test.tsx",
+            "rawSha256": "e0b5051d85aca4b3ebaae1a454eee4c5ea9a0989945d3714cc2817c0a890693b",
+            "lfSha256": "e0b5051d85aca4b3ebaae1a454eee4c5ea9a0989945d3714cc2817c0a890693b"
+          },
+          "amended": {
+            "rawSha256": "6c43de88091cae9231fb9ae7360fb0595973c6f82353673f2a2d73a60b762b35",
+            "lfSha256": "6c43de88091cae9231fb9ae7360fb0595973c6f82353673f2a2d73a60b762b35"
+          },
+          "wrapperOnlyExactTransform": true,
+          "stableClientAcrossRerenders": "existing renderWithQuery closure; helper unchanged"
+        },
+        {
+          "file": "tests/unit/story-cost-is-on-screen.test.tsx",
+          "original": {
+            "file": "tests/unit/story-cost-is-on-screen.test.tsx",
+            "rawSha256": "812cb36f8414bfa3982bed3d4447aec0132709b4031b06bb19820b57df75e1c7",
+            "lfSha256": "812cb36f8414bfa3982bed3d4447aec0132709b4031b06bb19820b57df75e1c7"
+          },
+          "amended": {
+            "rawSha256": "f210fe43a8f7b40e8b55abf0a521e48329d737d8578b60865f0d501c3cc3235e",
+            "lfSha256": "f210fe43a8f7b40e8b55abf0a521e48329d737d8578b60865f0d501c3cc3235e"
+          },
+          "wrapperOnlyExactTransform": true,
+          "stableClientAcrossRerenders": "existing renderWithQuery closure; helper unchanged"
+        },
+        {
+          "file": "tests/unit/hindsight-browser-render.test.tsx",
+          "original": {
+            "file": "tests/unit/hindsight-browser-render.test.tsx",
+            "rawSha256": "21743225b3a187ba44fe0c3e2943f4c2d3551faaccb0636a8a1005b1cc96299a",
+            "lfSha256": "21743225b3a187ba44fe0c3e2943f4c2d3551faaccb0636a8a1005b1cc96299a"
+          },
+          "amended": {
+            "rawSha256": "22a22b8cb6702438173b10258890b24394d08de304f93fb56af21fc4c4671c8e",
+            "lfSha256": "22a22b8cb6702438173b10258890b24394d08de304f93fb56af21fc4c4671c8e"
+          },
+          "wrapperOnlyExactTransform": true,
+          "stableClientAcrossRerenders": "existing renderWithQuery closure; helper unchanged"
+        },
+        {
+          "file": "tests/unit/b7-memory-empty-states.test.tsx",
+          "original": {
+            "file": "tests/unit/b7-memory-empty-states.test.tsx",
+            "rawSha256": "34bef1af19090473c6dad15ea3dc603b694a9ac97f9cf10e6a7a793273d823f8",
+            "lfSha256": "34bef1af19090473c6dad15ea3dc603b694a9ac97f9cf10e6a7a793273d823f8"
+          },
+          "amended": {
+            "rawSha256": "8e75de4a10294ac8e92ed42cb4016d9211caf39dd569371f85a2037bccb0804f",
+            "lfSha256": "8e75de4a10294ac8e92ed42cb4016d9211caf39dd569371f85a2037bccb0804f"
+          },
+          "wrapperOnlyExactTransform": true,
+          "stableClientAcrossRerenders": "existing renderWithQuery closure; helper unchanged"
+        }
+      ]
+    },
+    "mappedObligations": 48,
+    "review": {
+      "verdict": "PASS",
+      "reviewer": "Schrodinger 01a0f7b7-f68a-79b2-ba74-81cdddf2f3ef, independent read-only REVIEWER",
+      "manifestSha256": "79533b7c969bbe75f4a79b819d331cc850819ee9051ec0a32da92d6145615af8",
+      "evidence": "All13hashes and current receipts match.95unitcases53pass42behaviouralred0skips/runtimeerrors;48historical before/after pass and identity match; all48ownership mappings qualified. Full test typing/lint exit0. Browser2pass8behaviouralred,originalfixture failures excluded. First-chat race and strengthened Retry/latency/payload/identity witnesses verified. Source diff from39571be6 empty.",
+      "scope": "Preimplementation oracle freeze and red-commit readiness only. Implementation, whole gate, mutation, completed browser journeys and hosted acceptance remain required. Reviewer performed no writes or test execution."
+    },
+    "firstChatHypothesis": "Reproduced: releasing earlier empty detail erases optimistic user turn and live assistant output while activeId=N and streaming=true. Added focused controlled-boundary regression; not labelled refuted or green.",
+    "unexecuted": [
+      "Browser Hindsight retry/data recovery after missing-error assertion: both widths blocked by the earlier intended red.",
+      "Browser Story reader update after denied cleanup: both widths blocked by the earlier intended red.",
+      "Browser Chat selected-B post-completion assertion and final page-error/unexpected-write assertions are after the failed draft assertion; do not count those later assertions as executed.",
+      "All assertions following each unit case first failure remain unexecuted on baseline; exact failure locations are preserved in identities.json.",
+      "No production implementation, post-implementation acceptance, new build, complete gate, mutation sweep, human UX sample or hosted acceptance was performed by this oracle writer."
+    ],
+    "limits": "Red oracle freeze, not implementation acceptance. Original fixture/type failures retained; no production change or provider work."
+  },
+  "oracle_commit": "0471baf018652ad6367f9e16b34b964caff5755d",
+  "implementation_lanes": {
+    "coordinator": "2026-10-02-t0190-coordinator",
+    "client": "2026-10-02-t0190-client-averroes",
+    "client_paths": [
+      "src/hooks/useOperatorPrefs.ts",
+      "src/hooks/usePreferenceWrite.ts",
+      "src/components/layout/Sidebar.tsx",
+      "src/app/recroom/story-weaver/[id]/page.tsx",
+      "src/app/recroom/story-weaver/create/page.tsx",
+      "src/components/memory/HindsightBrowser.tsx",
+      "src/components/memory/hindsight/useHindsightCrudTab.ts",
+      "src/components/memory/hindsight/useHindsightMemories.ts",
+      "src/components/memory/hindsight/useHindsightModels.ts",
+      "src/components/memory/hindsight/useHindsightDirectives.ts",
+      "src/lib/memory/hindsight-client.ts",
+      "src/hooks/useModels.ts",
+      "src/hooks/useModelsPage.ts",
+      "src/hooks/useModelActions.ts",
+      "src/hooks/useModelFallbackConfig.ts",
+      "src/hooks/useModelFallbackChain.ts",
+      "src/components/providers/FeedbackProvider.tsx",
+      "src/lib/ui/theme.ts",
+      "src/components/ui/Input.tsx",
+      "src/components/ui/Select.tsx"
+    ],
+    "brief": "org/briefs/T-0190-client-implementation.md",
+    "oracle_writer_stopped": true,
+    "client_stopped_receipt": "tmp/t0190-client/receipt.json"
+  },
+  "supplementary_oracle": {
+    "author": "Schrodinger 01a0f7b7-f68a-79b2-ba74-81cdddf2f3ef",
+    "file": "tests/unit/client-late-ownership.test.tsx",
+    "brief": "org/briefs/T-0190-supplementary-oracle.md",
+    "status": "Frozen and independently accepted for red commit; implementation acceptance pending",
+    "manifest": "tmp/t0190-supplementary-oracle/freeze.json",
+    "manifestSha256": "c9db8b9b3d5302318bff035f5351a79f5b833f8071e86c981e48f723e8dc561f",
+    "sha256": "81020a839abcc4003181551b56aea920ca81aaba8d98598e17d834c427998459",
+    "independence": "Source-informed controlled-order/metamorphic invariants with valid controls. NOT clean-context: author previously reviewed source. Fresh independent reviewer required.",
+    "counts": {
+      "total": 33,
+      "passed": 17,
+      "structuredMatcherFailed": 16,
+      "skipped": 0,
+      "runtimeErrors": 0
+    },
+    "receipts": [
+      "tmp/t0190-supplementary-oracle/final-red-1790968838862/receipt.json",
+      "tmp/t0190-supplementary-oracle/types-1790968860384/receipt.json",
+      "tmp/t0190-supplementary-oracle/lint-1790968883552/receipt.json"
+    ],
+    "typesExit": 0,
+    "lintExit": 0,
+    "retainedRowSubcase": "Bounded reasoned refutation of a standalone visible-row regression, not a forced red: useMissionsData.ts155-157 can assign the retained ref before checking refreshVersion, but matches only the currently retained ID on resumption. The version guard at185 prevents publishing that stale list, and this ref assignment itself sets no reactive state. The next refresh replaces the row from its own list or obtains current by-ID detail with version/ID guards before publishing. Ordinary reads share a query flight and after-write reads cancel it. Independent mocked stale list promises would bypass that actual bridge. No separate user-visible retained-row corruption is established; this is not proof against every possible future interleaving. Six initial deep-link reds exercise another branch and must not be cited as proof of this subcase.",
+    "snapshotHash": "e6f847c451a813bf138473b70114c9e7e2f85e23e46e052e08073c6d263f664f",
+    "driftQualification": "Coordinator api-write type-only ShowToastFn alias/import and comment changed during final handoff. Runtime behaviour unchanged by inspection, but final typing receipt binds tested snapshot only; integrated typing remains coordinator responsibility. All seven ownership surfaces and frozen13 unchanged.",
+    "limits": "Assertions after first failure remain unexecuted. Original13frozen files unchanged. Integrated types, full gate, mutation, final independent review and hosted acceptance remain.",
+    "review": {
+      "reviewer": "Sagan 01a0fe05-a6c0-7d22-ae2f-ba3716eded80",
+      "verdict": "PASS",
+      "scope": "Supplementary freeze and red-commit readiness only",
+      "evidence": "33identities unchanged;17pass16structuredmatcherfailures0skip/runtime. Final2nullassertions additive. Types/lint0,54snapshot/receipt hashes match,original13frozen unchanged. Source-informed metamorphic independence recorded; retained-row bounded refutation accepted. api-write drift type/commentonly; integratedtyping remains required."
+    },
+    "commit": "d0e48d9d93cb51d1554095cc92fb5d3be3a47992"
+  },
+  "final_reviewer": {
+    "session": "01a0fe05-a6c0-7d22-ae2f-ba3716eded80",
+    "name": "Sagan",
+    "independence": "Authored neither source implementation nor original/supplementary oracles. Schrodinger moved from original freeze reviewer to supplementary oracle author and cannot accept final implementation."
+  },
+  "client_repair": {
+    "paths": [
+      "src/app/recroom/story-weaver/[id]/page.tsx",
+      "src/components/memory/hindsight/useHindsightCrudTab.ts",
+      "src/components/memory/hindsight/useHindsightMemories.ts",
+      "src/hooks/usePreferenceWrite.ts"
+    ],
+    "brief": "org/briefs/T-0190-client-repair.md",
+    "session": "2026-10-02-t0190-client-repair-averroes",
+    "stopped_receipt": "tmp/t0190-client/repair/receipt.json"
+  },
+  "poll_oracle": {
+    "author": "Carver",
+    "file": "tests/unit/mission-link-poll-ownership.test.tsx",
+    "brief": "org/briefs/T-0190-poll-oracle.md",
+    "status": "Frozen and independently accepted for red commit; implementation acceptance pending",
+    "manifest": "tmp\\t0190-poll-oracle\\freeze.json",
+    "manifestSha256": "9d97a1b9438b1fe450ec2a13e23e7617b46557da0a4fa86d9c04b7c5f7975f54",
+    "sha256": "c45232bbe3a24bfe38d3ecd1a4fe2733d186478be7c9d867ee3092ff22537fc8",
+    "counts": {
+      "total": 14,
+      "passed": 10,
+      "failed": 4,
+      "skipped": 0,
+      "runtimeErrors": 0
+    },
+    "results": [
+      {
+        "stage": "lint",
+        "exit": 0,
+        "receipt": "tmp/t0190-poll-oracle/lint-1790970319241/receipt.json"
+      },
+      {
+        "stage": "red",
+        "exit": 1,
+        "counts": {
+          "passed": 10,
+          "failed": 4,
+          "skipped": 0,
+          "runtimeErrorSuites": 0
+        },
+        "receipt": "tmp/t0190-poll-oracle/red-1790970270966/receipt.json"
+      },
+      {
+        "stage": "types",
+        "exit": 0,
+        "receipt": "tmp/t0190-poll-oracle/types-1790970294301/receipt.json"
+      }
+    ],
+    "independence": "Source-informed controlled ordering, actual query bridge and polling hook; not clean-context authorship.",
+    "interpretation": "Bounded reproduction: delayed original success remains unopened after one or two 15-second polls and a further post-settlement poll. This demonstrates lost completion in these schedules, not an infinite-time runtime proof. Current 404/503 outcomes are also suppressed after polling. Newer selection, unmount, original success, refreshed detail, collapse and unpolled errors pass.",
+    "limits": [
+      "Successful-open assertions after expandedId failure in both polling-success cases: deepLinkedMissionId, detail, row uniqueness, load error, URL and feedback.",
+      "404 polled case assertions after missing feedback count: feedback content, URL consumption, selected ID and rows.",
+      "503 polled case assertions after missing inline error: retained URL, feedback, retry request and recovered opening.",
+      "No production fix, full historical rerun, full application gate, browser run, mutation sweep, independent freeze approval or hosted acceptance."
+    ],
+    "review": {
+      "reviewer": "Sagan 01a0fe05-a6c0-7d22-ae2f-ba3716eded80",
+      "verdict": "PASS",
+      "scope": "Polling oracle freeze and red commit only",
+      "evidence": "14cases10pass4structuredmatcherred0skip/runtime; types/lint0.17evidencehashes866sourcesnapshotfiles match,previous14frozenfiles unchanged. Actual query bridge/polling, selection/unmount/collapse controls; source-informed method and unreached assertions recorded."
+    },
+    "commit": "54d592acf96437b526191785cc25af9cb7642a7d"
+  },
+  "integrated_repairs": {
+    "oracle": "tmp/t0190-coordinator-jest-1790970024249/summary.json",
+    "historical": "tmp/t0190-coordinator-jest-1790970221869/summary.json",
+    "identity": "tmp/t0190-repaired-historical-identities.json",
+    "types": "tmp/t0190-coordinator-types-1790970072317/summary.json",
+    "lint": "tmp/t0190-coordinator-lint-1790970131198/summary.json",
+    "limitation": "Polling hypothesis unresolved; not full-gate or final acceptance."
+  },
+  "story_cache_oracle": {
+    "author": "Carver",
+    "file": "tests/unit/story-cache-settlement.test.tsx",
+    "brief": "org/briefs/T-0190-story-cache-oracle.md",
+    "status": "Frozen and independently accepted for red commit; implementation pending",
+    "manifest": "tmp\\t0190-story-cache-oracle\\freeze.json",
+    "manifestSha256": "b4feff552f592fc0cd55d0360b0f05eb4630ef37314983e75622a5785d1d0651",
+    "sha256": "1e5f526a21207ac5168f3964c98ac0315e589085130e9c9ed5cd47f5718c0b89",
+    "counts": {
+      "total": 9,
+      "passed": 6,
+      "failed": 3,
+      "skipped": 0,
+      "runtimeErrors": 0
+    },
+    "results": [
+      {
+        "stage": "lint",
+        "exit": 0,
+        "receipt": "tmp/t0190-story-cache-oracle/lint-1790970991944/receipt.json"
+      },
+      {
+        "stage": "red",
+        "exit": 1,
+        "counts": {
+          "passed": 6,
+          "failed": 3,
+          "skipped": 0,
+          "runtimeErrorSuites": 0
+        },
+        "receipt": "tmp/t0190-story-cache-oracle/red-1790970942931/receipt.json"
+      },
+      {
+        "stage": "types",
+        "exit": 0,
+        "receipt": "tmp/t0190-story-cache-oracle/types-1790970968564/receipt.json"
+      }
+    ],
+    "interpretation": "No provider calls: three bounded unchanged-placeholder/advancing-updatedAt responses trigger four automatic sync-titles requests from one load. Both concurrent partial-confirmation arrival orders lose the earlier flag in the visible reader and actual query observer. Six controls pass, including successful/nonfatal title repair, single/sequential/refused updates and explicit generation/Stop.",
+    "independence": "Source-informed controlled ordering; no implementation changes by author. Not clean-context authorship.",
+    "review": {
+      "reviewer": "Sagan 01a0fe05-a6c0-7d22-ae2f-ba3716eded80",
+      "verdict": "PASS",
+      "scope": "Story oracle freeze/redcommit only",
+      "evidence": "9cases6pass3behaviouralreds0skip/runtime,types/lint0.17evidencehashes866sourcefiles match;previous15frozenfiles unchanged. Validcontrols/source-informed method and retainedlauncherfailure/unreachedassertions qualified."
+    },
+    "commit": "31743133",
+    "repairFocused": "tmp/t0190-coordinator-jest-1790971369310/summary.json"
+  },
+  "handoff_oracle": {
+    "author": "Carver",
+    "file": "tests/unit/mission-link-handoff.test.tsx",
+    "status": "Frozen, author explicitly stopped, independently accepted for red commit",
+    "manifest": "tmp\\t0190-mission-handoff-oracle\\freeze.json",
+    "manifestSha256": "a4c5fa59a99034c8c73f9f80a76159cbb8c98515aa1ca38027850b5972097feb",
+    "sha256": "b61185934f0b581a88f60feda16e5d7a948e671f6ff68b353aadb85a925c9797",
+    "counts": {
+      "total": 6,
+      "passed": 3,
+      "failed": 3,
+      "skipped": 0,
+      "runtimeErrors": 0
+    },
+    "results": [
+      {
+        "stage": "lint",
+        "exit": 0,
+        "receipt": "tmp/t0190-mission-handoff-oracle/lint-1790971185890/receipt.json"
+      },
+      {
+        "stage": "red",
+        "exit": 1,
+        "counts": {
+          "passed": 3,
+          "failed": 3,
+          "skipped": 0,
+          "runtimeErrorSuites": 0
+        },
+        "receipt": "tmp/t0190-mission-handoff-oracle/red-1790971150811/receipt.json"
+      },
+      {
+        "stage": "types",
+        "exit": 0,
+        "receipt": "tmp/t0190-mission-handoff-oracle/types-1790971166431/receipt.json"
+      }
+    ],
+    "interpretation": "Initial older-ID transport remains pending while a refreshed list gains that ID. React selection effect runs before the original response settles. A fresh detail response is available through the real query bridge. Structured failures identify stale detail/error publication, separately from list state.",
+    "independence": "Source-informed actual query bridge/selection effect; not clean-context authorship.",
+    "review": {
+      "reviewer": "Sagan 01a0fe05-a6c0-7d22-ae2f-ba3716eded80",
+      "verdict": "PASS",
+      "scope": "Handoff oracle freeze/redcommit only",
+      "evidence": "Actual6cases3pass3behaviouralred0skip/runtime;types/lint0 on capturedsnapshot. Missions and readApiResource/apiReadOptions unchanged. SubsequentStoryrepair and publishApiResource-only drift qualified; fullintegratedtyping remains required."
+    },
+    "authorStopped": "Carver explicitly confirmed both hashes unchanged, no further tests/edits, writing remains stopped."
+  },
+  "oracle_amendment": {
+    "author": "Schrodinger",
+    "originalAuthor": "Carver",
+    "files": [
+      "tests/unit/mission-link-poll-ownership.test.tsx",
+      "tests/unit/mission-link-handoff.test.tsx",
+      "tests/unit/story-cache-settlement.test.tsx",
+      "tests/helpers/mission-link-query-fixture.tsx"
+    ],
+    "brief": "org/briefs/T-0190-oracle-amendment.md",
+    "authority": "R2 different-author frozen-oracle procedure and existing Q015 amendment discipline; preserve every existing assertion/name. No C4 ceiling or detector changes.",
+    "status": "Frozen; author explicitly STOPPED; independent acceptance recorded before red commit",
+    "manifest": "tmp\\t0190-oracle-amendment\\freeze.json",
+    "manifestSha256": "f0776f2ea43a2d52040f9f7a793aa13ad8c9d3fb4703d5087d2baf4c86c87c77",
+    "hashes": {
+      "tests/unit/mission-link-poll-ownership.test.tsx": "05969eb52e729e164834a1429247609a0ab12a02ba6d135d328d1aab62820a2c",
+      "tests/unit/mission-link-handoff.test.tsx": "2a9267a5346f1932f63dce9bfc8b7e6b178841ff77189a90c25b82f8a87de89f",
+      "tests/unit/story-cache-settlement.test.tsx": "6cb5c4b290a2997ba71f308e26d617671b615b60276f8427823ea0a8b4b4ed6d",
+      "tests/helpers/mission-link-query-fixture.tsx": "c59aa2c23dd396d4995d3ac391c570f2d3f018f1355325548021954a270b4373"
+    },
+    "counts": {
+      "existingPreserved": 29,
+      "added": 2,
+      "amendedPassed": 30,
+      "amendedFailed": 1,
+      "c4Passed": 24,
+      "skipped": 0,
+      "runtimeErrors": 0
+    },
+    "measurement": {
+      "repeatedTestWindows": 4796,
+      "fixedCeiling": 4800,
+      "missionFixtureExtractionNetPhysicalLines": 4,
+      "wholeAmendmentNetPhysicalLines": 43
+    },
+    "review": {
+      "reviewer": "Sagan 01a0fe05-a6c0-7d22-ae2f-ba3716eded80",
+      "verdict": "PASS",
+      "scope": "Freeze and red commit only; final implementation acceptance pending"
+    },
+    "commit": "ac33173e3c680f4065c8a8c328c27fb05823c46d"
+  },
+  "first_full_gate": {
+    "receipt": "tmp/t0190-full-gate-1790971757353/summary.json",
+    "result": "FAIL",
+    "observedExits": {
+      "lint": 0,
+      "tsc": 0,
+      "jest": 1
+    },
+    "counts": {
+      "passed": 8261,
+      "failed": 2,
+      "existingSkipped": 9
+    },
+    "failures": [
+      "b7-memory-one-card: disconnected Memory list hidden",
+      "c4-the-test-harnesses: repeated test windows4842 exceed fixed4800"
+    ],
+    "unexecuted": [
+      "knip",
+      "canary",
+      "build",
+      "build-purity",
+      "e2e",
+      "census",
+      "census-lines"
+    ]
+  },
+  "toast_removal_probe": {
+    "receipt": "tmp/t0190-toast-removal-1790972311879/summary.json",
+    "selection": "12suites selected by original gap065.1 rg expression; not universal suite count",
+    "before": 134,
+    "withoutFallback": {
+      "passed": 123,
+      "failed": 11,
+      "brokenSuites": 4,
+      "runtimeErrors": 0
+    },
+    "restored": 134,
+    "restoration": "Exact bytes and mode restored in isolated copy; primary Toast untouched",
+    "disposition": "Retain supported standalone fallback; experiment obligation remains owned/discharged byT0190, no waiver/transfer."
+  },
+  "memory_gate_repair": {
+    "historicalFailure": "b7-memory-one-card.test.tsx disconnected state hidden by collectionError guard",
+    "repair": "Render the established disconnected MemoryTab when health.available is false, while retaining error banner and retry. No false empty-state on an unreadable bank.",
+    "receipt": "tmp/t0190-coordinator-jest-1790972209306/summary.json",
+    "passed": 95,
+    "failed": 0,
+    "skipped": 0
+  },
+  "continuation_oracle": {
+    "author": "Carver",
+    "file": "tests/unit/mission-write-continuation.test.tsx",
+    "brief": "org/briefs/T-0190-continuation-oracle.md",
+    "status": "Frozen; author explicitly STOPPED; independent freeze accepted before red commit",
+    "sha256": "b3741acf811cb9e812a614343840e91b10dfbd5589655eda4387f7fa825b11b6",
+    "manifest": "tmp\\t0190-continuation-oracle\\freeze.json",
+    "manifestSha256": "8b39e9603dcd9170d7592630962340c373150b014589e776bf1f0c9fc886b9e1",
+    "counts": {
+      "passed": 4,
+      "failed": 3,
+      "skipped": 0,
+      "runtimeErrors": 0
+    },
+    "results": "tmp/t0190-continuation-oracle/red-1790974895788/receipt.json",
+    "census": "Fixed C4 passes24cases at4796; current line ratchet exits1 for169newtestlines. Growth needs explicit recorded reason.",
+    "independence": "Source-informed separate oracle author; actual useMissionsPage/composer/dispatch/data/read/write helpers and QueryClient. Only navigation and HTTP arrival order controlled; bounded fake time stays below the 15-second polling recovery.",
+    "review": {
+      "reviewer": "Sagan 01a0fe05-a6c0-7d22-ae2f-ba3716eded80",
+      "verdict": "PASS",
+      "scope": "Freeze/redcommit only; no final implementation acceptance."
+    },
+    "commit": "a0051405ca8515ee4d7e38ed9cd3752602ea5310"
+  },
+  "second_full_gate": {
+    "receipt": "tmp/t0190-full-gate-1790973879719/summary.json",
+    "result": "FAIL",
+    "treeUnchanged": true,
+    "passedSteps": [
+      "lint",
+      "tsc",
+      "jest",
+      "knip",
+      "canary",
+      "build",
+      "build-purity"
+    ],
+    "jest": {
+      "passed": 8265,
+      "existingSkipped": 9
+    },
+    "browser": {
+      "passed": 364,
+      "failed": 1,
+      "existingSkipped": 24
+    },
+    "failure": "Phone Story storage-denial journey stayed on create URL after5s. Preserve trace and rerun frozen spec alone; no timeout change.",
+    "unexecuted": [
+      "census",
+      "census-lines"
+    ],
+    "isolatedRepeat": {
+      "receipt": "tmp/t0190-browser-oracle-1790974592401/summary.json",
+      "exit": 0,
+      "passed": 10,
+      "skipped": 0,
+      "specUnchanged": true,
+      "port": 3998,
+      "ownedProcessesStopped": true,
+      "qualification": "Original load failure retained. No timeout/assertion change; source cause not established. Final complete gate still required."
+    },
+    "trace": "tmp/t0190-full-gate-1790973879719/phone-story-failure/trace.zip",
+    "traceTiming": "tmp/t0190-full-gate-1790973879719/phone-story-failure/redacted-timings.json"
+  },
+  "story_title_repair": {
+    "oracleCommit": "ac33173e3c680f4065c8a8c328c27fb05823c46d",
+    "integrated": "tmp/t0190-coordinator-jest-1790973698993/summary.json",
+    "passed": 159,
+    "types": "tmp/t0190-coordinator-types-1790973657251/summary.json",
+    "behaviour": "Owner lifetime follows story selection/mount, not query publication. Title-only functional merge retains current read flags and changed titles; arc merge requires unchanged starting arc.",
+    "review": "Sagan found no blocker in this repair. Cancellation-boundary hypothesis withdrawn as unconfirmed against actual scheduling."
+  },
+  "personal_walks_latest": [
+    {
+      "receipt": "tmp/t0190-green-validation/tmp/t0190-personal-1790972646965/walk.json",
+      "scope": "Memory disconnected state, collection failures/recovery and create/cancel dialogs",
+      "viewports": [
+        "1440x900",
+        "390x844"
+      ],
+      "images": 16,
+      "result": "PASS",
+      "qualification": "Controlled Hindsight HTTP responses; expected401/503/service diagnostics retained. No external backend acceptance."
+    },
+    {
+      "receipt": "tmp/t0190-green-validation/tmp/t0190-personal-1790974850848/walk.json",
+      "scope": "Held title reply after confirmed read flag; chapter drawer dismissal/focus return",
+      "viewports": [
+        "1440x900",
+        "390x844"
+      ],
+      "images": 5,
+      "result": "PASS",
+      "qualification": "Actual production UI/sign-in; all Story requests controlled. Oneh1/nohorizontaloverflow/no page exceptions; expected presignin401 retained. Screenshots personally inspected. Earlier1790974746789phone probe incorrectly looked for badge while drawerclosed; preserved as harness failure."
+    },
+    {
+      "receipt": "tmp/t0190-green-validation/tmp/t0190-personal-1790976017477/walk.json",
+      "scope": "Held cancel of A followed by selected B detail and A write continuation",
+      "viewports": [
+        "1440x900",
+        "390x844"
+      ],
+      "images": 2,
+      "result": "PASS",
+      "qualification": "Actual production UI and sign-in; controlled HTTP. One h1, no horizontal overflow or page exceptions. Screenshots inspected. Earlier private probe wrongly required a success toast to have role alert; preserved as a harness error. Progress/completion toast overlap is a T0191 review candidate."
+    }
+  ],
+  "continuation_repair": {
+    "change": "Reject a detail request for any ID other than the current selection before it increments the detail version or changes loading.",
+    "receipt": "tmp/t0190-coordinator-jest-1790975254044/summary.json",
+    "passed": 166,
+    "failed": 0,
+    "skipped": 0,
+    "runtimeErrors": 0,
+    "mutation": "m30 is caught in the complete committed30-mutant sweep at08bd39cf."
+  },
+  "current_candidate": {
+    "baseline": {
+      "srcLines": 102378,
+      "testLines": 145150,
+      "scriptsLines": 13667,
+      "srcRepeatedWindowLines": 895,
+      "testRepeatedWindowLines": 4796,
+      "routesWithTryCatch": 18,
+      "handRolledReadHooks": 2,
+      "writeHooksWithoutMutation": 0,
+      "repeatedTypeShapeFiles": 2,
+      "oneImporterComponents": 104,
+      "libRootFiles": 6,
+      "commentEssays": 9,
+      "suitesMockingDbInline": 15
+    },
+    "remaining": "Local and implementation-head hosted acceptance complete; observe closure-head hosted jobs before T0191."
+  },
+  "first_committed_sweep": {
+    "head": "f583d2de7e1f568f9936f3810c694547299d2765",
+    "receipt": "tmp/t0190-sweep-f583d2de/summary.json",
+    "result": "FAIL",
+    "counts": {
+      "killed": 26,
+      "survived": 2,
+      "error": 2
+    },
+    "controls": {
+      "before": 164,
+      "after": 164,
+      "restored": true
+    },
+    "details": "m05/m10 survived. m07/m08 produce TestingLibraryElementError before a structured Jest matcher, so the unchanged classifier correctly reports ERROR; these are not accepted kills."
+  },
+  "mutation_test_amendment": {
+    "author": "Schrodinger",
+    "originalAuthor": "Carver",
+    "files": [
+      "tests/unit/mission-query-ownership.test.tsx",
+      "tests/unit/hindsight-query-feedback.test.tsx"
+    ],
+    "brief": "org/briefs/T-0190-mutation-tests.md",
+    "status": "Frozen, author STOPPED; independently accepted for mutation-test commit only",
+    "manifest": "tmp/t0190-mutation-tests/freeze.json",
+    "manifestSha256": "2fef6ae7d46f7f0824910399c8b2a0e6a4820c94d638e1d3f8b06eec29090b42",
+    "hashes": {
+      "tests/unit/mission-query-ownership.test.tsx": "645d7bcf373803a83a7b3e0e674d767f71f8c8a848730de9cde27443e6ce1b5a",
+      "tests/unit/hindsight-query-feedback.test.tsx": "f125c192876063affa561e1041ab145dc6160f0e856278254419dec5eecfd6f0"
+    },
+    "identities": {
+      "originalMission": 24,
+      "originalHindsight": 26,
+      "originalTotalPreserved": 50,
+      "addedHindsight": 3,
+      "finalTotal": 53,
+      "allOriginalNamesOrderPreserved": true,
+      "allSubstantiveAssertionsPreserved": true,
+      "proof": "preservation.json: reversing only enumerated authorised changes restores entire original suite texts; original files also match committed f583d2de after LF normalisation."
+    },
+    "calibration": "tmp/t0190-mutation-tests/qualification.json",
+    "controls": {
+      "before": 53,
+      "after": 53,
+      "restored": true
+    },
+    "result": "m07/m08 each two intended structured failures; m10 six. Unchanged classifier. Earlier first calibration infrastructure result remains preserved.",
+    "limits": "Source-informed and mutation-informed different-author strengthening. Not a full committed sweep or final acceptance.",
+    "review": {
+      "reviewer": "Sagan 01a0fe05-a6c0-7d22-ae2f-ba3716eded80",
+      "verdict": "PASS",
+      "receipt": "tmp/t0190-mutation-tests-independent.md",
+      "sha256": "94298ed8ec4a1dbd966c7109ab0d51c4dbf6c6ca8125ccb28f9b04c2933b4b4d",
+      "scope": "Freeze and test-strengthening commit only; complete gate, committed sweep and hosted acceptance remain separate."
+    },
+    "coordinator": "tmp/t0190-coordinator-jest-1790977696786/summary.json",
+    "commit": "08bd39cfc4d95bd8b8a5c4367ddfdacdab8f1a4d"
+  },
+  "third_full_gate": {
+    "receipt": "tmp/t0190-full-gate-1790975360957/summary.json",
+    "result": "PASS",
+    "treeUnchanged": true,
+    "jest": {
+      "passed": 8272,
+      "existingSkipped": 9
+    },
+    "browser": {
+      "passed": 365,
+      "existingSkipped": 24
+    },
+    "qualification": "Implementation candidate before mutation-driven test strengthening. Earlier failures remain recorded; amended tree requires another full gate."
+  },
+  "implementation_commit": "f583d2de7e1f568f9936f3810c694547299d2765",
+  "implementation_preservation": "tmp/t0190-implementation-landing.json",
+  "line_ending_preservation": "tmp/t0190-preservation-line-endings.json",
+  "m05_selection_probe": {
+    "receipt": "tmp/t0190-sweep-m05-coverage-probe/summary.json",
+    "before": 30,
+    "mutatedPassed": 27,
+    "mutatedFailed": 3,
+    "after": 30,
+    "restored": true,
+    "reviewer": "Sagan",
+    "verdict": "PASS",
+    "scope": "Existing frozen handoff suite detects stale success,404,503 query reuse. Add its selection to m05; this is not independent proof of a new post-write scenario."
+  },
+  "final_full_gate": {
+    "head": "08bd39cfc4d95bd8b8a5c4367ddfdacdab8f1a4d",
+    "receipt": "tmp/t0190-full-gate-1790978188485/summary.json",
+    "sha256": "ad3a444df809140e852bff4e669ed13266abe5d39dc00b8513e4150ca21054a3",
+    "steps": 10,
+    "treeStamp": "24a27e6edcc2642730e8f4e824a1ed378705ea838fadd598462af328ec975a55",
+    "unchanged": true,
+    "jest": {
+      "passed": 8275,
+      "existingSkipped": 9
+    },
+    "browser": {
+      "passed": 365,
+      "existingSkipped": 24
+    },
+    "buildPurity": 2
+  },
+  "sandbox_gate_failure": {
+    "receipt": "tmp/t0190-full-gate-1790978145533/summary.json",
+    "result": "FAIL before lint execution, nine later stages unexecuted",
+    "causeEvidence": "tsx calls Node os.userInfo; the same pinned Node minimal probe fails uv_os_get_passwd in the sandbox and succeeds outside it without printing account data.",
+    "resolution": "Run unchanged complete gate with required permission, owned isolated environment and processes. No check or source change."
+  },
+  "verification": "Independent R2 acceptance at08bd39cf: all10 unchanged-tree gate stages,8275Jest/365browser/2build-purity checks,169integrated oracle cases;30intended committed mutation kills,167controls before/after and restoration. All19latest frozen files preserved,50amended names/assertions and602historical identities retained. All48owned dispositions accounted for:36done8ruledout4deferred. Every required exact-head hosted job passes. NineJest/24browser pre-existing skips remain explicit.",
+  "mutation": {
+    "receipt": "tmp/t0190-final-sweep-qualification.json",
+    "sha256": "518ae5949cb85c3eb92ab3370812360ee66956de788937b10289cedda737185c",
+    "killed": 30,
+    "controls": 167,
+    "restored": true,
+    "qualification": "m05 is proved through existing fresh-read handoff cases, not a new independently executed post-write scenario. m28 has an additional DOM lookup exception which is excluded; its mounted aggregate supplies the qualifying structured failure. Original26KILLED/2SURVIVED/2ERROR sweep remains recorded."
+  },
+  "deviation": "Retain both failed product gates, isolated phone repeat and traces, first failed sweep, intermediate calibration infrastructure result and sandbox prelint failure. No source changed after f583 during mutation strengthening. Independent test amendments preserve identities and add three cases; 21 test lines admitted with a reason. Targets, the 4800 C4 ceiling, coverage floors, mutation classifier and protected/history files are unchanged. Forty-five cross-checkout LF/CRLF differences have unchanged Git blob proof. Personal walks use controlled HTTP, not provider execution. The authorised dev push reports a configured PR-rule bypass; repository settings remain unchanged.",
+  "final_acceptance": {
+    "head": "08bd39cfc4d95bd8b8a5c4367ddfdacdab8f1a4d",
+    "review": "org/reviews/2026-10-t0190-final-acceptance.md",
+    "reviewer": "Sagan, independent R2",
+    "verdictSHA256": "2c898c720893c749d9101eb84100e61e625327d36a6f6eaec09b67c9d0a11db5",
+    "local": "tmp/t0190-independent-local-verdict.md",
+    "hosted": {
+      "receipt": "tmp\\t0190-hosted-implementation\\snapshot-1790980658914.json",
+      "sha256": "fa62f504bcefa7a5642b0f09c997b92bb6c0d94c8b3ddf57071a178aff29cf07",
+      "runs": [
+        {
+          "databaseId": 37072135148,
+          "event": "pull_request",
+          "workflowName": "Gitleaks",
+          "headSha": "08bd39cfc4d95bd8b8a5c4367ddfdacdab8f1a4d",
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/Daniel-Parke/PatterStage/actions/runs/37072135148"
+        },
+        {
+          "databaseId": 37072135145,
+          "event": "pull_request",
+          "workflowName": "CI",
+          "headSha": "08bd39cfc4d95bd8b8a5c4367ddfdacdab8f1a4d",
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/Daniel-Parke/PatterStage/actions/runs/37072135145"
+        },
+        {
+          "databaseId": 37072130632,
+          "event": "push",
+          "workflowName": "Gitleaks",
+          "headSha": "08bd39cfc4d95bd8b8a5c4367ddfdacdab8f1a4d",
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/Daniel-Parke/PatterStage/actions/runs/37072130632"
+        },
+        {
+          "databaseId": 37072130598,
+          "event": "push",
+          "workflowName": "CI",
+          "headSha": "08bd39cfc4d95bd8b8a5c4367ddfdacdab8f1a4d",
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/Daniel-Parke/PatterStage/actions/runs/37072130598"
+        }
+      ]
+    },
+    "limits": "Bounded local and hosted integration proof. No real-provider, foreign-database, general online-update, physical-phone-keyboard or release acceptance. Closure-head hosted jobs remain required."
+  },
+  "closure_next": "Observe all closure-head hosted jobs. Then open T0191, explicitly reconcile the review ownership handoffs and freeze independent responsive/feedback oracles. Q033 still defers T0200 until afterv1.0;T0201 depends on it.",
+  "additional_reader_review": {
+    "reachability": "tmp/t0190-green-validation/tmp/t0190-personal-1790980121526/walk.json",
+    "reachabilityResult": "Four short/long desktop/phone cases pass ordinary wheel, pointer and keyboard navigation. The broad unreachable-footer hypothesis is refuted within these fixtures.",
+    "harnessFailure": "Earlier1790980007675 incorrectly expected Next to mark the arriving chapter read. Source and captured requests correctly mark the departing chapter; no product assertion was changed.",
+    "currentFailure": "tmp/t0190-green-validation/tmp/t0190-personal-1790980296275/walk.json",
+    "baselineFailure": "tmp/t0189-green-validation/tmp/t0190-personal-1790980426201/walk.json",
+    "finding": "Two long chapters reproduce Next retaining MAIN scrollTop2162/3202 and leaving chapter2 heading at-2013/-3012px after5seconds, identically at08bd39cf and01040a43.",
+    "remainingOwner": "T-0191",
+    "scope": "Pre-existing layout/scroll repair with exact ReaderBody/ChapterReader claims and independent browser oracle. No source or frozen-test edits; owned servers stopped, stamps unchanged. Not a T0190 regression or whole-platform acceptance."
+  },
+  "additional_story_refusal_review": {
+    "current": "tmp/t0190-green-validation/tmp/t0190-personal-1790980892020/walk.json",
+    "baseline": "tmp/t0189-green-validation/tmp/t0190-personal-1790980945735/walk.json",
+    "finding": "All four edit/continue desktop/phone cases show Your story is ready and100% after an intercepted503, before the retained error appears. Both08bd39cf and01040a43 reproduce it, with unchanged chapter content, one write and no page exceptions.",
+    "remainingOwner": "T-0191",
+    "scope": "Confirmed pre-existing feedback defect. Independent red oracle and narrow Reader caller/GenerateOverlay claims precede repair. No provider calls or source changes; owned servers stopped and stamps held.",
+    "independentQualification": {
+      "reviewer": "Sagan",
+      "receipt": "tmp/t0190-independent-overlay-qualification.md",
+      "sha256": "b2f5e0a140b874eff1397f0454b257a751465b56048da0890c2d41ffb912377a",
+      "scope": "Pre-existing T0191 follow-up; T0190 R2 verdict unchanged."
+    }
+  }
+}

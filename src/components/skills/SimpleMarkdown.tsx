@@ -30,6 +30,27 @@
 // ═══════════════════════════════════════════════════════════════
 
 import React from "react";
+import Button from "@/components/ui/Button";
+import { useCopyToClipboard } from "@/hooks/useCopyToClipboard";
+
+function CodeBlock({ text, language }: { text: string; language: string }) {
+  const [copied, copy, feedback] = useCopyToClipboard();
+  return (
+    <div className="my-3 rounded-ps-md bg-ps-surface-inset overflow-hidden">
+      {feedback}
+      <div className="flex items-center justify-between gap-2 px-3 py-1.5 border-b border-ps-edge-hairline text-micro font-mono text-ps-text-muted">
+        <span>{language}</span>
+        <Button variant="ghost" size="sm" onClick={() => copy(text)}>{copied ? "Copied" : "Copy"}</Button>
+      </div>
+      <pre className="p-3 text-body font-mono text-ps-text-secondary overflow-x-auto">{text}</pre>
+    </div>
+  );
+}
+
+function safeLink(href: string): boolean {
+  if (/[\u0000-\u0020]|&#|\\/.test(href)) return false;
+  return /^(?:https?:|mailto:)/i.test(href) || !/^[^/?#]*:/.test(href);
+}
 
 interface TableState {
   header: string[];
@@ -85,7 +106,7 @@ function renderInline(text: string): React.ReactNode {
     if (match.index > lastIndex) {
       parts.push(renderInlineNonLink(remaining.slice(lastIndex, match.index), key++));
     }
-    parts.push(
+    parts.push(safeLink(match[2]) ? (
       <a
         key={`link-${key++}`}
         href={match[2]}
@@ -94,8 +115,8 @@ function renderInline(text: string): React.ReactNode {
         className="text-neon-cyan hover:underline"
       >
         {match[1]}
-      </a>,
-    );
+      </a>
+    ) : <React.Fragment key={`link-${key++}`}>{match[1]}</React.Fragment>);
     lastIndex = match.index + match[0].length;
   }
   if (lastIndex < remaining.length) {
@@ -113,7 +134,7 @@ function renderInlineNonLink(text: string, keyBase: number): React.ReactNode {
       return (
         <code
           key={`code-${keyBase}-${i}`}
-          className="bg-dark-800/80 text-neon-green px-1.5 py-0.5 rounded text-xs font-mono"
+          className="bg-ps-surface-inset text-neon-green px-1.5 py-0.5 rounded-ps-sm text-micro font-mono"
         >
           {part.slice(1, -1)}
         </code>
@@ -123,7 +144,7 @@ function renderInlineNonLink(text: string, keyBase: number): React.ReactNode {
     return boldParts.map((bp, j) => {
       if (bp.startsWith("**") && bp.endsWith("**")) {
         return (
-          <strong key={`bold-${keyBase}-${i}-${j}`} className="font-semibold text-white">
+          <strong key={`bold-${keyBase}-${i}-${j}`} className="font-semibold text-ps-text-primary">
             {bp.slice(2, -2)}
           </strong>
         );
@@ -132,7 +153,7 @@ function renderInlineNonLink(text: string, keyBase: number): React.ReactNode {
       return italicParts.map((ip, k) => {
         if (ip.startsWith("*") && ip.endsWith("*") && !ip.startsWith("**")) {
           return (
-            <em key={`em-${keyBase}-${i}-${j}-${k}`} className="italic text-white/80">
+            <em key={`em-${keyBase}-${i}-${j}-${k}`} className="italic text-ps-text-primary">
               {ip.slice(1, -1)}
             </em>
           );
@@ -158,15 +179,15 @@ export function SimpleMarkdown({ content }: { content: string }) {
     elements.push(
       <div
         key={`table-${keyBase}`}
-        className="my-3 overflow-x-auto rounded-lg border border-white/10"
+        className="my-3 overflow-x-auto rounded-ps-md border border-ps-edge-hairline"
       >
-        <table className="min-w-full text-sm">
-          <thead className="bg-dark-800/80">
+        <table className="min-w-full text-body">
+          <thead className="bg-ps-surface-raised">
             <tr>
               {header.map((cell, idx) => (
                 <th
                   key={idx}
-                  className="text-left text-white/80 font-mono font-semibold px-3 py-2 border-b border-white/10"
+                  className="text-left text-ps-text-primary font-mono font-semibold px-3 py-2 border-b border-ps-edge-hairline"
                   style={{ textAlign: alignments[idx] || "left" }}
                 >
                   {renderInline(cell)}
@@ -176,11 +197,11 @@ export function SimpleMarkdown({ content }: { content: string }) {
           </thead>
           <tbody>
             {rows.map((row, rIdx) => (
-              <tr key={rIdx} className="border-b border-white/5 last:border-0">
+              <tr key={rIdx} className="border-b border-ps-edge-hairline last:border-0">
                 {row.map((cell, cIdx) => (
                   <td
                     key={cIdx}
-                    className="text-white/70 px-3 py-2 align-top"
+                    className="text-ps-text-secondary px-3 py-2 align-top"
                     style={{ textAlign: alignments[cIdx] || "left" }}
                   >
                     {renderInline(cell)}
@@ -210,21 +231,7 @@ export function SimpleMarkdown({ content }: { content: string }) {
         codeBlockLines = [];
       } else {
         inCodeBlock = false;
-        elements.push(
-          <div
-            key={`code-${i}`}
-            className="my-3 rounded-lg border border-white/10 bg-dark-800/80 overflow-hidden"
-          >
-            {codeBlockLang && (
-              <div className="px-3 py-1.5 border-b border-white/5 text-[10px] font-mono text-white/30 uppercase">
-                {codeBlockLang}
-              </div>
-            )}
-            <pre className="p-3 text-sm font-mono text-white/70 overflow-x-auto">
-              {codeBlockLines.join("\n")}
-            </pre>
-          </div>,
-        );
+        elements.push(<CodeBlock key={`code-${i}`} language={codeBlockLang} text={codeBlockLines.length ? codeBlockLines.join("\n") + "\n" : ""} />);
       }
       continue;
     }
@@ -278,7 +285,7 @@ export function SimpleMarkdown({ content }: { content: string }) {
       elements.push(
         <h1
           key={i}
-          className="text-xl font-bold text-white mt-6 mb-3 pb-2 border-b border-white/10"
+          className="text-title font-bold text-ps-text-primary mt-6 mb-3 pb-2 border-b border-ps-edge-hairline"
         >
           {renderInline(trimmed.slice(2))}
         </h1>,
@@ -289,7 +296,7 @@ export function SimpleMarkdown({ content }: { content: string }) {
       elements.push(
         <h2
           key={i}
-          className="text-lg font-bold text-white mt-5 mb-2 pb-1 border-b border-white/5"
+          className="text-title font-bold text-ps-text-primary mt-5 mb-2 pb-1 border-b border-ps-edge-hairline"
         >
           {renderInline(trimmed.slice(3))}
         </h2>,
@@ -298,7 +305,7 @@ export function SimpleMarkdown({ content }: { content: string }) {
     }
     if (trimmed.startsWith("### ")) {
       elements.push(
-        <h3 key={i} className="text-base font-bold text-white mt-4 mb-2">
+        <h3 key={i} className="text-lead font-bold text-ps-text-primary mt-4 mb-2">
           {renderInline(trimmed.slice(4))}
         </h3>,
       );
@@ -307,7 +314,7 @@ export function SimpleMarkdown({ content }: { content: string }) {
 
     // Horizontal rule
     if (trimmed === "---" || trimmed === "***") {
-      elements.push(<hr key={i} className="my-4 border-white/10" />);
+      elements.push(<hr key={i} className="my-4 border-ps-edge-hairline" />);
       continue;
     }
 
@@ -316,7 +323,7 @@ export function SimpleMarkdown({ content }: { content: string }) {
       elements.push(
         <div key={i} className="flex items-start gap-2 my-1 ml-4">
           <span className="text-neon-cyan mt-1.5 flex-shrink-0">•</span>
-          <span className="text-sm text-white/70">
+          <span className="text-body text-ps-text-secondary">
             {renderInline(trimmed.slice(2))}
           </span>
         </div>,
@@ -329,10 +336,10 @@ export function SimpleMarkdown({ content }: { content: string }) {
     if (numMatch) {
       elements.push(
         <div key={i} className="flex items-start gap-2 my-1 ml-4">
-          <span className="text-neon-cyan font-mono text-sm mt-0.5 flex-shrink-0">
+          <span className="text-neon-cyan font-mono text-body mt-0.5 flex-shrink-0">
             {numMatch[1]}.
           </span>
-          <span className="text-sm text-white/70">
+          <span className="text-body text-ps-text-secondary">
             {renderInline(trimmed.slice(numMatch[0].length))}
           </span>
         </div>,
@@ -348,7 +355,7 @@ export function SimpleMarkdown({ content }: { content: string }) {
 
     // Regular paragraph
     elements.push(
-      <p key={i} className="text-sm text-white/70 my-1 leading-relaxed">
+      <p key={i} className="text-body text-ps-text-secondary my-1 leading-relaxed">
         {renderInline(trimmed)}
       </p>,
     );
@@ -357,6 +364,10 @@ export function SimpleMarkdown({ content }: { content: string }) {
   // Flush any in-progress table at EOF.
   if (inTable && currentTable) {
     flushTable(lines.length);
+  }
+
+  if (inCodeBlock) {
+    elements.push(<CodeBlock key="streaming-code" language={codeBlockLang} text={codeBlockLines.join("\n")} />);
   }
 
   return <div className="space-y-1">{elements}</div>;

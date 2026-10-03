@@ -1,29 +1,59 @@
 // ═══════════════════════════════════════════════════════════════
-// Chat Types — Shared between chat page and chat-related components
+// Chat Types — server-persisted agent conversations.
+//
+// The chat surface is backed by the server (chat-repository, 013_chat.sql),
+// not localStorage. These shapes mirror the JSON the /api/chat routes return
+// (camelCase). An assistant turn streams its reply from the run-event SSE
+// (/api/runs/[runId]/events) in "agent" mode, or from the raw gateway in
+// "fast" mode.
 // ═══════════════════════════════════════════════════════════════
+
+type ChatRole = "user" | "assistant" | "system";
+
+/** pending → streaming → complete | failed | cancelled. */
+type ChatMessageStatus = "pending" | "streaming" | "complete" | "failed" | "cancelled";
+
+/** "agent" = real run (tools + memory); "fast" = raw model completion. */
+export type ChatMode = "agent" | "fast";
+
+export interface ToolCall {
+  name: string;
+  status: "invoked" | "completed" | "failed" | "approval_required";
+  arguments?: unknown;
+  result?: unknown;
+}
 
 export interface ChatMessage {
   id: string;
-  role: "user" | "assistant";
+  conversationId: string;
+  role: ChatRole;
   content: string;
-  timestamp: number;
+  reasoning?: string | null;
+  toolCalls?: ToolCall[] | null;
+  /** PatterStage run id backing an assistant turn (agent mode); null in fast mode. */
+  runId?: string | null;
+  status: ChatMessageStatus;
+  error?: string | null;
+  createdAt: string;
+  updatedAt: string;
 }
 
-export interface ChatSession {
+export interface ChatConversation {
   id: string;
   title: string;
-  messages: ChatMessage[];
-  model: string;
-  created_at: number;
-  updated_at: number;
+  sessionId: string | null;
+  profileName: string | null;
+  model: string | null;
+  previousResponseId: string | null;
+  createdAt: string;
+  updatedAt: string;
 }
 
-/** Message shape accepted by the /api/orchestration/chat endpoint */
+/** Message shape accepted by the raw /api/orchestration/chat endpoint (fast mode). */
 export interface ApiMessage {
-  role: "user" | "assistant";
+  role: ChatRole;
   content: string;
 }
 
-export const CHAT_STORAGE_KEY = "ch_sessions";
 export const CHAT_DEFAULT_MODEL = "hermes-agent";
-export const CHAT_MAX_SESSIONS = 50;
+export const CHAT_DEFAULT_MODE: ChatMode = "agent";

@@ -1,0 +1,30 @@
+{
+  "task": "T-0177",
+  "why": "The Knip version, exact finding identity and published generated schema must remain observable after PR #227 retires.",
+  "mutants": [
+    {
+      "id": "m1-revert-knip-range",
+      "file": "package.json",
+      "anchor": "\"knip\": \"^6.34.0\"",
+      "replacement": "\"knip\": \"^6.16.1\"",
+      "tests": ["tests/unit/t0177-knip-proposal.test.ts"],
+      "why": "The version proposal and root lockfile must remain coherent."
+    },
+    {
+      "id": "m2-lose-new-knip-finding",
+      "file": "scripts/tooling/knip-baseline.json",
+      "anchor": "\"name\": \"LedgerRowPadding\"",
+      "replacement": "\"name\": \"LedgerRowPaddingMissing\"",
+      "tests": ["tests/unit/t0177-knip-proposal.test.ts"],
+      "why": "The strict JSON identity oracle must reject a baseline that omits the newly surfaced pre-existing type."
+    },
+    {
+      "id": "m3-change-published-mission-version",
+      "file": "src/lib/schema/json/mission-v1.schema.json",
+      "anchor": "\"const\": \"1.0.0\"",
+      "replacement": "\"const\": \"1.0.1\"",
+      "tests": ["tests/unit/schema-json-drift.test.ts", "tests/unit/output-canary.test.ts"],
+      "why": "Generated schema drift and its held output digest must reject an unreviewed contract change."
+    }
+  ]
+}

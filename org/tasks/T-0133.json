@@ -1,0 +1,63 @@
+{
+  "id": "T-0133",
+  "intent": "U19, the review's P3 batch: seven things that cost a click or a screen. The missions board started 500px below the templates; two empty pages kept their one action in a header; Settings' section list ran off a phone's edge; the sessions strip took a phone screen; Logs' header actions wrapped onto three rows; Composer shipped its canvas on the Run tab; and Composer's launch control read 'Review…'. Six are done here. The seventh is an operator ruling of 2026-08-26 and stays as ruled.",
+  "declared": {
+    "capabilities": [
+      "edit-source",
+      "edit-tests",
+      "edit-docs"
+    ],
+    "side_effects": []
+  },
+  "mode": "standard",
+  "tier_proposed": "R1",
+  "tier_ruled": "R1",
+  "reasons": [
+    {
+      "factor": "size-threshold",
+      "tier_floor": "R1",
+      "source": "derived:diff-size",
+      "evidence": "one primitive given a controlled mode, one list restructured around it, two empty states moved onto the primitive, one nav given a select, one strip given a phone row, one toolbar moved between two components, one page's mount guarded, one dead keyframe removed; no route, no schema, no protected path; six oracle suites new, three suites amended at the changed line, seven guides and the CHANGELOG"
+    }
+  ],
+  "status": "done",
+  "owner_session": "t0133-u19-p3-2026-09-10",
+  "claims": [
+    "src/components/ui/CollapsibleSection.tsx",
+    "src/components/missions/MissionsList.tsx",
+    "src/components/automation/AutomationList.tsx",
+    "src/app/results/artifacts/page.tsx",
+    "src/components/config/SettingsNav.tsx",
+    "src/components/viz/StatStrip.tsx",
+    "src/components/logs/LogTerminal.tsx",
+    "src/components/logs/LogsHeaderActions.tsx",
+    "src/app/results/logs/page.tsx",
+    "src/app/work/composer/page.tsx",
+    "src/app/globals.css",
+    "scripts/tooling/design-lint.baseline.json",
+    "tests/e2e/phone.spec.ts",
+    "tests/unit/",
+    "docs/guides/",
+    "docs/contributing/design-tokens.md",
+    "CHANGELOG.md"
+  ],
+  "programme": "U19, the review's P3 batch; follows U18 (T-0132). U20 (P4) follows.",
+  "timestamps": {
+    "opened": "2026-09-10T00:10:00Z",
+    "updated": "2026-09-10T02:00:00Z",
+    "closed": "2026-09-10T02:00:00Z"
+  },
+  "invariants": [
+    "I1 THE BOARD COMES FIRST. Missions' templates are a collapsed CollapsibleSection that says its count; the board is under the filters; an empty board's EmptyState carries New Mission and Load a template, and the latter opens the disclosure.",
+    "I2 AN EMPTY PAGE OFFERS ITS ACTION, ON THE PRIMITIVE. Automation's and Artifacts' empty states are EmptyState with an action; no page draws its own dashed box.",
+    "I3 A PHONE JUMPS BY A SELECT. Below lg Settings' nav is the ui InlineSelect 'Jump to section', which sets the hash; the link list is hidden below lg and the pages stay reachable as links.",
+    "I4 A STRIP IS ONE ROW ON A PHONE. StatStrip renders strip-phone-row (sm:hidden) from the same props and hides its donut, tiles and ring below sm.",
+    "I5 THE TERMINAL OWNS ITS BAR. LogTerminal carries the Auto-refresh switch (InlineToggle) and Lines to show (InlineSelect); LogsHeaderActions keeps Refresh and Delete All; no decoration dots.",
+    "I6 THE CANVAS WAITS FOR BUILD. WorkflowCanvas mounts once Build has been opened and stays mounted after."
+  ],
+  "commits": "5fc4b2a8 the U19 oracles, red at 18 of 18; 5c1d9c35 the implementation; the chore commit that carries this record and the derived views.",
+  "verification": "Gate by exit code on the finished tree: lint 0, tsc 0, jest 0 (6856 tests, 674 suites), knip 0, canary 0, build 0, Playwright 1 (37 passed, 0 skipped, two projects), census 0; design-lint 350 baselined violations, re-cut from 355. The walk on the isolated instance, seven routes at 1440x900 and 390x844 with a screenshot of each: Missions' templates disclosure is collapsed (aria-expanded false) and its empty state offers New Mission and Load a template; Automation's empty state offers Schedule a mission and Artifacts' Run Deep Research and Open Composer; Settings at 390 shows the Jump to section select and hides the section links (select True, link False), and at 1440 the reverse (select False, link True); the sessions strip at 390 is one 21px row reading \"48 sessions1.3k messages0 active\" with the ring hidden, and at 1440 the ring shows and the row does not; the terminal's bar carries the switch and the line count (True, True) and draws 0 dots. Composer loads 293 KB of route JavaScript against 524 before the batch, and 507 KB once Build is opened. Screenshots regenerated. The gate's first runs: Playwright 270 passed, 24 skipped, 2 failed, both the Manage categories specs, which now open the templates disclosure first; the rerun of the three amended files passed 37 of 38 with the composer spec racing the flows spec in the same database, and that spec passed 2 of 2 on its own. jest failed the settings nav suite, which counted the three page links once where the phone row now doubles them; the whole suite was re-run green after the amendment. The census first rose two control borders (the select's edge on the raised strip, a secondary link button, a duplicated primary button); the strip took the panel's fill, the link is ghost, the header stops repeating the empty state's button, and the census passed with the count unchanged.",
+  "mutation": "Fifteen mutants against the committed tree (5c1d9c35), each aimed at one decision: the disclosure's default, Load a template opening it, its count, the controlled mode honouring its caller, the automation action opening the form, the artifacts link's destination, the select moving the page, the list hidden below lg, the phone row hidden from sm, the ring hidden below sm, the compact figure, the line-count clamp, the switch's name, the canvas guard, and Build opening it. Fifteen of fifteen killed on the first pass. The phone spec's three measures and the composer's bytes are live-only and were not swept.",
+  "deferred": "Composer's launch control reads 'Review…' by the operator's ruling of 2026-08-26 (tests/unit/composer-review-control.test.tsx): the ellipsis is the convention for a control that opens a further step, and the review that follows is the second step. The review of 2026-09-08 proposed 'Run workflow'; that is the operator's to revise, not this batch's. Composer's route JavaScript is 293 KB on the Run tab against the programme's 160 KB target: the canvas is off the route now, and what remains is the run form, the run list and the live pipeline view, which the Run tab is for.",
+  "deviation": "The review said 'needs the Disclosure primitive the records have owed since T-0126'. CollapsibleSection already was that primitive with two callers in ui/ below the three-caller rule; it gained a controlled mode and a third caller rather than a second name. Its headerRight slot moved out of the disclosure button, where it had been nested interactive content. The terminal's three dots, a P4 line, went with the toolbar move because the bar was open."
+}

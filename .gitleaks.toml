@@ -1,7 +1,4 @@
-title = "Control Hub gitleaks config"
+title = "PatterStage full-history secret scan"
 
-[allowlist]
-description = "Synthetic API key strings in unit/integration tests"
-paths = [
-  '''tests/''',
-]
+[extend]
+useDefault = true

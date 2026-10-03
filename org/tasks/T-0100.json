@@ -1,0 +1,89 @@
+{
+  "id": "T-0100",
+  "intent": "B6 of the final-release programme: Models, credentials, restore and config. Migration 039 models.origin plus last-imported columns; no write on page load; edits survive re-import (D10); explicit re-import; per-line Pull/Push on the drift banner. Cleared defaults stay cleared (D9). A real diff and an Export modal that cannot silently do nothing (D12, D13). PATCH /api/credentials/[id] to rotate a key; keyless providers need no key (D14, D15). The Seed page becomes Restore, counting the shipped pack and showing results (D16, D17). GET/POST /api/backup and a Backups card on Settings > System, destructive restores snapshot first (D113). PUT /api/config refreshes agent_root.config_yaml when it wrote the root file so a Push cannot revert a Save (D76, blocker); the Settings index shows a parse error (D75); min/max enforced both ends (D77); an explicit unset state whose Clear deletes the key (D78).",
+  "declared": {
+    "capabilities": [
+      "edit-code",
+      "database",
+      "filesystem"
+    ],
+    "side_effects": [
+      "migrates-schema"
+    ]
+  },
+  "mode": "standard",
+  "tier_proposed": "R2",
+  "tier_ruled": "R2",
+  "reasons": [
+    {
+      "factor": "schema-change",
+      "tier_floor": "R2",
+      "source": "declared",
+      "evidence": "migration 039 adds columns to models; no data loss"
+    },
+    {
+      "factor": "key-material",
+      "tier_floor": "R3",
+      "source": "derived:secret-patterns",
+      "evidence": "NOT triggered: the rotate route stores through the existing credential path and no secret appears in the diff; recorded so the router sees it was considered"
+    }
+  ],
+  "status": "done",
+  "owner_session": "t0100-models-config-restore-backups-2026-09-05",
+  "claims": [
+    "src/lib/models-repository.ts",
+    "src/lib/db/",
+    "src/lib/seed/",
+    "src/lib/config-schema.ts",
+    "src/lib/config-sections.ts",
+    "src/lib/api-schemas.ts",
+    "src/lib/analytics/event-types.ts",
+    "src/modules/hermes/lib/",
+    "src/app/api/config/",
+    "src/app/api/credentials/",
+    "src/app/api/backup/",
+    "src/app/api/models/",
+    "src/app/api/seed/",
+    "src/app/agent/models/",
+    "src/app/agent/settings/",
+    "src/components/config/",
+    "src/components/models/",
+    "src/components/ui/Input.tsx",
+    "src/hooks/",
+    "scripts/tooling/hermes-registry-import.mjs",
+    "scripts/tooling/output-canary.golden.json",
+    "data/seed/README.md",
+    "docs/",
+    "ops/runbooks/deploy.md",
+    "org/PLAYBOOKS.md",
+    "tests/"
+  ],
+  "claims_note": "Widened from the proposal before any edit (EXECUTOR: touch only claimed paths): the maps showed the batch reaching the models components and hooks, the api schemas, the providers catalogue, the seed library, the prebuild import script, the canary golden, the seed pack README, the docs and the runbook.",
+  "programme": "B6, depends on B3 (T-0097) and B4 (T-0098). Reserved: migration 039. Mutation sweep on models-repository and config-sync; browser walk of Models and Settings.",
+  "timestamps": {
+    "opened": "2026-09-05T10:30:00Z",
+    "updated": "2026-09-05T13:30:00Z",
+    "closed": "2026-09-05T13:30:00Z"
+  },
+  "invariants": [
+    "I1 Nothing imports on a page load. The models registry is read on mount and written only when the operator asks: one explicit Re-import from config, one POST per click.",
+    "I2 An import never overwrites an operator's own edit. A row keeps its name and base URL when either differs from what was last imported, or when it was never imported at all; the import route says which fields it kept.",
+    "I3 A diff is a comparison. Every row the sync dialog shows is a field where the registry and config.yaml actually differ, on the side the sync would touch, and an answer with no differing field disables Confirm rather than counting rows.",
+    "I4 No control that does nothing. The exclude X appears only where the endpoint honours it, and a drift line offers the one direction that resolves it or says why it offers none.",
+    "I5 A save survives a push. The one config.yaml writer refreshes agent_root.config_yaml when it wrote the default root, the semantic compare counts preserved sections, and the non-managed children of skills survive a rebuild.",
+    "I6 The declared shape is enforced where it is written. Types, option lists and min/max are checked on the server as well as in the browser, and a section save sends only the fields it changed.",
+    "I7 Unset is a state, not a coercion. A null on the wire deletes the key and empties the section when it was the last one; the UI says Not set, explains that Hermes uses its own default, and offers a Clear that produces exactly that null.",
+    "I8 An unreadable config.yaml never reads as an empty one. The index says so above the grid and shows no configured pill while it stands.",
+    "I9 A key can be replaced without losing the models that point at it, and a provider that needs no key is never asked for one.",
+    "I10 Restore describes the box, not its contents: every count on the page is read from the shipped pack on disk.",
+    "I11 Anything that overwrites or deletes takes a database snapshot first, and refuses to run if it cannot take one.",
+    "I12 Work that ran says what it did, once under the section that ran it and once as a toast, and a failure says so in the same place."
+  ],
+  "commits": "cb14a635 the claims widened before any edit; 71836316 the oracle alone (18 files, 327 tests, measured red: 274 failing, 53 green controls); c53540a1 sections 7 and 1 (the backup library and route, the Backups card, migration 039, the keep-rule, no import on load); 34e9703e sections 2 to 6 (cleared defaults, the real diff and the shared model-diff, the modal, the drift lines, the writer's row refresh and the stricter compare, validateSectionValues, the unset wire and its two controls, selectMeta and the index alert, the rotate route and its panel, keyless providers, the pack counts, the snapshots and the Restore page, the docs, one canary bless); 6b98f226 eight sharper oracles the sweep asked for; 54a5fa37 two findings from the proof walk.",
+  "verification": "Gate b6 on the implementation tree by exit code: lint 0 (agent-files, doc-links, derived views, read-only guards, icon-button names, form-control names, design-lint 0 baselined, contrast, coverage floors, eslint, typecheck:tests), tsc 0, jest 0 (503 suites, 4725 tests), knip 0, canary 0 after one bless, build 0, Playwright 128 passed 8 skipped. The canary golden moved on exactly the three surfaces the contract predicted and was diffed against a worktree of the tree it was last blessed at before rewriting: generatedArtefacts gains migration 039, httpSurface gains /api/backup [GET,POST] and PATCH on /api/credentials/[id], seedPack carries the new data/seed/README.md; appConfig did not move.",
+  "mutation": "87 mutants against the committed tree, 73 killed on the first pass and 82 after eight sharper oracles (6b98f226). The eight gaps were real: the never-imported disjunct in the keep-rule, which only bites when base_url and last_imported_base_url are both NULL; a Hermes section with no base_url, which diffModelAgainstHermes answers as an empty string and only the formatter turns into (none); a model reference split on the last slash rather than the first, which real ids of the form a/b would have broken; skills.enabled and skills.platform_disabled riding along as extras, where skills.disabled was safe only because the builder assigns it after the spread; a numeric string that is also out of range reported twice; a toggle rendering as on beside a line saying its value is not a boolean; a configured pill suppressed only in fixtures whose payload was empty; and a merge branch with its own untested copy of the push clause. Five survivors are recorded as equivalent: inSync is computed before the credential row is appended, so counting either array is the same read; skillsExtras never holds disabled, so the spread's position cannot change the object; a type=number input sanitises non-numeric text to empty before React sees it, so the non-finite branch is unreachable under jsdom (the oracle's own header records this); the field-kit Select renders its placeholder for any value matching no option, so a foreign value and an empty one produce identical DOM; and a missing manifest key throws inside the try that already answers 0.",
+  "proof": "Isolated instance (production build of 54a5fa37, e2e-b1 data dir, mock-hermes 8747, mock-hindsight 9277), five scenes, 46 checks, all PASS: (1) Models issues no POST /api/models/import on load and exactly one per click of Re-import from config; the row buttons are titled Pull from Hermes and Push to Hermes and the dialog heading matches; the push dialog showed two real rows (Model ID, Provider) with no exclude X on either and a live Confirm; the drift banner's two registry-only lines carry no button and say what would make one available. (2) The Agent section states the range 1 to 500, marks 9999 aria-invalid, disables Save with the message in its title, clamps to 500 on blur and offers Clear on the one set field, with Not set and the default sentence under every unset one. (3) With a duplicated mapping key written into the instance's config.yaml, the Settings index renders the alert naming the parse error and zero configured pills, and the file is restored afterwards. (4) Settings > System lists the backups with the restore command, and Back up now writes patterstage.manual.<ts>.db. (5) Restore reads the starter-set sentence with the pack's own figures and 'Installed now: 7 of 7 agents, 12 of 12 templates', with no em dash, no HERMES_HOME literal and none of the operator vocabulary outside the disclosure; Restore everything armed on the first click and on the second wrote patterstage.pre-restore.<ts>.db before the restore and printed the result line naming every count, the eight agents pushed and the backup it took.",
+  "deviation": "(1) The diff route reads the config path through getAgentWorkspace() rather than getActiveHermesPaths(): the oracle's double mocks agent-runtime and the workspace port resolves through it, so the assertions hold while design-lint's hermes-outside-adapter rule stays satisfied without a pragma. (2) jsdom is listed in knip's ignoreDependencies rather than in devDependencies: b6-cleared-defaults requires it directly, it arrives with jest-environment-jsdom, and regenerating package-lock.json to add it rewrote 13,443 lines of unrelated formatting. Same class as the @jest/globals entry already there. (3) ConfigModelSection is no longer exported: the diff route was its one outside consumer and now compares field by field. (4) Two proof-walk findings were fixed in the batch rather than deferred: a drift line with no safe remedy said nothing, and the unset pill rendered above its own control so it read as the previous field's. Both are now pinned by the oracles.",
+  "harness_amendments": "b3-operator-prefs no longer pins MIGRATION_HEAD to 38, which 039 moved; it asserts 038 is a rung the head counts to, and the head itself stays pinned to the newest applier by run-migrations-upgrade.integration. b3-system-page-and-rail stubs /api/backup (unstubbed it answered 404 and the Backups card's own banner became a second role=alert) and asserts the B3 placeholder line is gone rather than present. seed-api gains requireNotReadOnly, serverErrorFromCatch, the audit log, the backup module and readShippedPackCounts; models-api gains finalizeRootConfigOnDisk in both config-sync mocks and getModelDefaults in both DELETE fixtures; read-only-actually-reads and b4-taxonomy were amended in c53540a1. The e2e seed-catalog spec looks for the Restore everything heading.",
+  "deferred": "A push whose only row is the credential is refused along with the rest, because the fields are in sync and Confirm is disabled on inSync: writing a key alone is the Credentials panel's job, and the rotate door added here does it. The semantic compare does not count skills extras, so a hand edit that adds skills.creation_nudge_interval to disk alone wakes no drift; the save path is closed because the writer refreshes the row with the bytes it wrote. A profile's own config.yaml under a profile HERMES_HOME is still not mirrored anywhere. The Restore page's screenshots for the docs are B18's, with the seeded demo data."
+}

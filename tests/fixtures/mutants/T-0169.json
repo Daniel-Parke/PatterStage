@@ -1,0 +1,14 @@
+{
+  "task": "T-0169",
+  "why": "The Settings hash jump must wait for layout-affecting file reads, not merely for the config sections to mount.",
+  "mutants": [
+    {
+      "id": "m1-jump-before-file-layout",
+      "file": "src/app/agent/settings/page.tsx",
+      "anchor": "if (!loaded || !editor.fileLayoutReady) return;",
+      "replacement": "if (!loaded) return;",
+      "tests": ["tests/unit/t0169-settings-hash-jump.test.tsx"],
+      "why": "The behavioural unit oracle must observe that an early hash jump happens before file layout is ready."
+    }
+  ]
+}

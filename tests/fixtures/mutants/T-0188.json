@@ -1,0 +1,109 @@
+{
+  "task": "T-0188",
+  "mutants": [
+    {
+      "id": "m1-fresh-baseline-returns-early",
+      "file": "src/lib/db/index.ts",
+      "anchor": "setSchemaVersion(database, BASELINE_SCHEMA_VERSION);",
+      "replacement": "setSchemaVersion(database, BASELINE_SCHEMA_VERSION); return;",
+      "why": "A fresh database must reach the head in one call.",
+      "tests": ["tests/unit/migration-t0188-behaviour.test.ts"]
+    },
+    {
+      "id": "m2-missing-pending-file-completes",
+      "file": "src/lib/db/apply-sql.ts",
+      "anchor": "execIdempotent(database, readFileSync(path, \"utf-8\"));",
+      "replacement": "try { execIdempotent(database, readFileSync(path, \"utf-8\")); } catch (error) { if (String(error).includes(\"ENOENT\")) return; throw error; }",
+      "why": "Missing pending SQL must fail before version completion.",
+      "tests": ["tests/unit/migration-t0188-wrappers.test.ts", "tests/unit/migration-t0188-behaviour.test.ts"]
+    },
+    {
+      "id": "m3-v15-hides-missing-table",
+      "file": "src/lib/db/apply-sql.ts",
+      "anchor": "if (!String(error).toLowerCase().includes(\"duplicate column name\")) throw error;",
+      "replacement": "void error;",
+      "why": "Only duplicate columns are tolerated in the partial additive migration.",
+      "tests": ["tests/unit/migration-t0188-behaviour.test.ts"]
+    },
+    {
+      "id": "m4-v15-skips-remaining-columns",
+      "file": "src/lib/db/apply-sql.ts",
+      "anchor": "if (!String(error).toLowerCase().includes(\"duplicate column name\")) throw error;",
+      "replacement": "if (!String(error).toLowerCase().includes(\"duplicate column name\")) throw error; return;",
+      "why": "An existing additive column cannot skip subsequent additions.",
+      "tests": ["tests/unit/migration-t0188-behaviour.test.ts"]
+    },
+    {
+      "id": "m5-style-repair-overwrites-user-choice",
+      "file": "src/lib/db/sql-migrations.ts",
+      "anchor": "ELSE 'openai' END WHERE api_style IS NULL",
+      "replacement": "ELSE 'openai' END WHERE 1 = 1",
+      "why": "Inference repairs only NULL styles.",
+      "tests": ["tests/unit/migration-t0188-behaviour.test.ts"]
+    },
+    {
+      "id": "m6-empty-registries-not-seeded",
+      "file": "src/lib/db/sql-migrations.ts",
+      "anchor": "if (count === 0) {",
+      "replacement": "if (count < 0) {",
+      "why": "Both empty registries receive their required default exactly once.",
+      "tests": ["tests/unit/migration-t0188-behaviour.test.ts"]
+    },
+    {
+      "id": "m7-rebuild-forces-fk-on",
+      "file": "src/lib/db/apply-table-rebuild.ts",
+      "anchor": "database.pragma(`foreign_keys = ${foreignKeys}`);",
+      "replacement": "database.pragma(\"foreign_keys = ON\");",
+      "why": "Successful and failed rebuilds must restore the caller's incoming setting.",
+      "tests": ["tests/unit/migration-t0188-behaviour.test.ts"]
+    },
+    {
+      "id": "m8-rebuild-discards-extra-column",
+      "file": "src/lib/db/apply-table-rebuild.ts",
+      "anchor": "if (missing.length || extra.length) {",
+      "replacement": "if (missing.length) {",
+      "why": "An unlisted extra column must be refused before destructive work.",
+      "tests": ["tests/unit/migration-t0188-behaviour.test.ts"]
+    },
+    {
+      "id": "m9-rebuild-not-atomic",
+      "file": "src/lib/db/apply-table-rebuild.ts",
+      "anchor": "database.transaction(() => {",
+      "replacement": "(() => {",
+      "why": "A real SQL failure after DROP must roll the entire rebuild back.",
+      "tests": ["tests/unit/migration-t0188-behaviour.test.ts"]
+    },
+    {
+      "id": "m10-rebuild-wipes-error-text",
+      "file": "src/lib/db/apply-table-rebuild.ts",
+      "anchor": "database.exec(sql);",
+      "replacement": "database.exec(sql); database.exec(\"UPDATE composer_runs SET error = NULL; UPDATE composer_node_runs SET error = NULL\");",
+      "why": "NULL and non-NULL error values must both survive copying.",
+      "tests": ["tests/unit/migration-t0188-behaviour.test.ts"]
+    },
+    {
+      "id": "m11-rebuild-wipes-parent-link",
+      "file": "src/lib/db/apply-table-rebuild.ts",
+      "anchor": "database.exec(sql);",
+      "replacement": "database.exec(sql); database.exec(\"UPDATE composer_runs SET parent_node_run_id = NULL\");",
+      "why": "A non-NULL nested Composer parent link must survive copying.",
+      "tests": ["tests/unit/migration-t0188-behaviour.test.ts"]
+    },
+    {
+      "id": "m12-head-auth-storage-unvalidated",
+      "file": "src/lib/db/index.ts",
+      "anchor": "applyAuthSessionsMigration(database, migrationsDir);",
+      "replacement": "void migrationsDir;",
+      "why": "Recorded head cannot substitute for mandatory actual Auth43 shape validation.",
+      "tests": ["tests/unit/migration-t0188-behaviour.test.ts"]
+    },
+    {
+      "id": "m13-driver-records-wrong-version",
+      "file": "src/lib/db/sql-migrations.ts",
+      "anchor": "setSchemaVersion(database, version);",
+      "replacement": "setSchemaVersion(database, version - 1);",
+      "why": "Each public wrapper must publish its exact completed version.",
+      "tests": ["tests/unit/migration-t0188-wrappers.test.ts"]
+    }
+  ]
+}

@@ -1,15 +1,43 @@
 // ═══════════════════════════════════════════════════════════════
 // AgentRuntimeDefaultsCard — Agent profile, scope, timeout, model, skills
-// Extracted from missions/page.tsx for modularity.
+//
+// The four pickers here were four Selectors, each with its own menu and its
+// own click-outside effect and none of them a listbox. They are the one
+// Picker now (T-0125); the two preset lists live here, because this card is
+// the only thing that offers them.
 // ═══════════════════════════════════════════════════════════════
 
 "use client";
 
-import ProfileSelector from "@/components/ui/ProfileSelector";
-import MissionTimeSelector from "@/components/ui/MissionTimeSelector";
-import TimeoutSelector from "@/components/ui/TimeoutSelector";
+import { Clock, Timer } from "lucide-react";
+
+import { sectionHeadingClasses } from "@/lib/ui/theme";
+import Card from "@/components/ui/Card";
+import Picker from "@/components/ui/Picker";
+import ProfilePicker from "@/components/ui/ProfilePicker";
 import ModelPicker from "@/components/missions/ModelPicker";
-import SkillSelector from "@/components/ui/SkillSelector";
+import SkillsPicker from "@/components/missions/SkillsPicker";
+
+/** How long a mission may run, with the developer-hours it stands in for. */
+const MISSION_TIME_PRESETS = [
+  { minutes: 10, label: "Quick Pass", devHours: "2-3h" },
+  { minutes: 15, label: "Half Day", devHours: "4h" },
+  { minutes: 20, label: "Most of a Day", devHours: "5-6h" },
+  { minutes: 30, label: "Full Day", devHours: "8h" },
+  { minutes: 45, label: "Deep Dive", devHours: "12h" },
+  { minutes: 60, label: "Sprint", devHours: "16h" },
+];
+
+/** The inactivity kill switch. 0 is unlimited. */
+const TIMEOUT_PRESETS = [
+  { minutes: 5, label: "5m" },
+  { minutes: 10, label: "10m (recommended)" },
+  { minutes: 15, label: "15m" },
+  { minutes: 20, label: "20m" },
+  { minutes: 30, label: "30m" },
+  { minutes: 60, label: "60m" },
+  { minutes: 0, label: "∞ (unlimited)" },
+];
 
 export interface AgentRuntimeDefaultsCardProps {
   profileId: string;
@@ -28,6 +56,8 @@ export interface AgentRuntimeDefaultsCardProps {
   onSkillsChange?: (skills: string[]) => void;
   variant?: "card" | "embedded";
 }
+
+const LABEL = "text-micro text-ps-text-muted font-mono block mb-1.5";
 
 export default function AgentRuntimeDefaultsCard({
   profileId,
@@ -49,20 +79,23 @@ export default function AgentRuntimeDefaultsCard({
   const showSkills =
     typeof skills !== "undefined" && onSkillsChange && !embedded;
 
-  return (
-    <div
-      className={
-        embedded
-          ? "space-y-4"
-          : "rounded-xl border border-white/10 bg-dark-800/30 p-3 sm:p-4 space-y-4"
-      }
-    >
+  // A value outside the presets is shown as its own minutes rather than
+  // silently snapped to the recommended one.
+  const missionTimeOptions = MISSION_TIME_PRESETS.some((p) => p.minutes === missionTimeMinutes)
+    ? MISSION_TIME_PRESETS
+    : [...MISSION_TIME_PRESETS, { minutes: missionTimeMinutes, label: `${missionTimeMinutes}m`, devHours: "" }];
+  const timeoutOptions = TIMEOUT_PRESETS.some((p) => p.minutes === timeoutMinutes)
+    ? TIMEOUT_PRESETS
+    : [...TIMEOUT_PRESETS, { minutes: timeoutMinutes, label: `${timeoutMinutes}m` }];
+
+  const fields = (
+    <>
       {!embedded && (
         <div className="space-y-1">
-          <h3 className="text-[11px] font-mono text-white/50 uppercase tracking-wider">
+          <h3 className={sectionHeadingClasses}>
             Agent & runtime defaults
           </h3>
-          <p className="text-[10px] text-white/25 font-mono leading-relaxed">
+          <p className="text-micro text-ps-text-faint font-mono leading-relaxed">
             These fields feed the mission prompt and dispatch configuration.
           </p>
         </div>
@@ -70,9 +103,7 @@ export default function AgentRuntimeDefaultsCard({
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div className="space-y-1.5">
-          <label className="text-xs text-white/40 font-mono block mb-1.5">
-            Model
-          </label>
+          <span className={LABEL}>Model</span>
           <ModelPicker
             id={modelPickerId}
             modelId={modelId}
@@ -82,53 +113,52 @@ export default function AgentRuntimeDefaultsCard({
           />
         </div>
         <div className="space-y-1.5">
-          <label className="text-xs text-white/40 font-mono block mb-1.5">
-            Agent profile
-          </label>
-          <ProfileSelector
-            value={profileId}
-            onChange={onProfileChange}
-            subtitle="tooltip"
-          />
+          <span className={LABEL}>Agent profile</span>
+          <ProfilePicker value={profileId} onChange={onProfileChange} size="lg" className="w-full" />
         </div>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 items-stretch">
-        <div className="flex flex-col gap-1.5 min-h-[3.25rem]">
-          <label className="text-xs text-white/40 font-mono block mb-1.5">
-            Mission scope
-          </label>
-          <div className="flex-1 flex flex-col justify-center">
-            <MissionTimeSelector
-              value={missionTimeMinutes}
-              onChange={onMissionTimeChange}
-            />
-          </div>
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div className="space-y-1.5">
+          <span className={LABEL}>Mission scope</span>
+          <Picker
+            label="Mission scope"
+            icon={Clock}
+            size="lg"
+            options={missionTimeOptions.map((p) => ({
+              value: String(p.minutes),
+              label: `${p.label} (${p.minutes}m)`,
+              hint: p.devHours ? `≈ ${p.devHours} dev work` : undefined,
+            }))}
+            value={String(missionTimeMinutes)}
+            onChange={(v) => onMissionTimeChange(Number(v))}
+          />
         </div>
-        <div className="flex flex-col gap-1.5 min-h-[3.25rem]">
-          <label className="text-xs text-white/40 font-mono block mb-1.5">
+        <div className="space-y-1.5">
+          <span className={LABEL}>
             {timeoutHeading}{" "}
-            <span className="text-white/25 font-normal normal-case">
+            <span className="text-ps-text-faint font-normal normal-case">
               — Inactivity kill switch
             </span>
-          </label>
-          <div className="flex-1 flex flex-col justify-center">
-            <TimeoutSelector
-              value={timeoutMinutes}
-              onChange={onTimeoutChange}
-              showSubtitle={false}
-            />
-          </div>
+          </span>
+          <Picker
+            label={timeoutHeading}
+            icon={Timer}
+            size="lg"
+            options={timeoutOptions.map((p) => ({ value: String(p.minutes), label: p.label }))}
+            value={String(timeoutMinutes)}
+            onChange={(v) => onTimeoutChange(Number(v))}
+          />
         </div>
       </div>
 
       {showSkills && (
         <div className="space-y-1.5">
-          <label className="text-xs text-white/40 font-mono block mb-1.5">
+          <span className={LABEL}>
             Attached Skills{" "}
-            <span className="text-white/20">(optional, max 10)</span>
-          </label>
-          <SkillSelector
+            <span className="text-ps-text-faint">(optional, max 10)</span>
+          </span>
+          <SkillsPicker
             value={skills}
             onChange={onSkillsChange}
             profileId={profileId}
@@ -136,12 +166,15 @@ export default function AgentRuntimeDefaultsCard({
           />
         </div>
       )}
+    </>
+  );
 
-      {embedded && (
-        <p className="text-xs text-white/25 font-mono leading-relaxed">
-          Profile defines agent role via SOUL/AGENTS under your Hermes home.
-        </p>
-      )}
-    </div>
+  // Embedded, the composer's accordion is the surface; on its own (the
+  // template editor) it is a card nested in a modal, so the raised rung.
+  if (embedded) return <div className="space-y-4">{fields}</div>;
+  return (
+    <Card variant="raised" padding="sm" className="sm:p-4 space-y-4">
+      {fields}
+    </Card>
   );
 }

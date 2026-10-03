@@ -1,0 +1,39 @@
+{
+  "id": "T-0046",
+  "intent": "The SSE event-name collision T-0040 fixed for chat, on the two streams T-0040 did not reach. src/lib/sse/event-stream.ts emitted an event literally named 'error' when snapshot() throws; EventSource reserves that name for its own transport failure and dispatches it with no data, so the frame arrived indistinguishable from a dropped socket. The only consumer, useEventStream, had nowhere to put a server diagnosis at all - es.onerror setting connected false was the whole of its failure handling - so a failed authoritative read was reported to the operator as a disconnection, on the composer and laboratory research views. Source: batch-B review of T-0040, 2026-08-26. Closed 2026-08-26. The frame is renamed stream.error and carries the real message rather than a fixed literal; useEventStream gains an error field; both pages render it through the LoadErrorBanner they already import.",
+  "declared": {
+    "capabilities": [
+      "edit-source"
+    ],
+    "side_effects": []
+  },
+  "mode": "standard",
+  "tier_proposed": "R1",
+  "tier_ruled": "R2",
+  "reasons": [],
+  "status": "done",
+  "owner_session": "t0046-stream-error-truth-2026-08-26",
+  "invariants": [
+    "I1 A dropped socket must NOT set error. This is the bug inverted, and the mutation that reintroduces it - making onerror set a message - turns the guard red. Transport failure is routine and self-healing; claiming a server diagnosis that never arrived is the exact harm this task removes.",
+    "I2 The last good snapshot stays on screen when a later read fails. It is the truth as of the last successful read, and blanking it would lose more than the error explains.",
+    "I3 The other frame names (state, end/gone, end/terminal) are untouched. Pinned by three no-regression guards in the producer oracle."
+  ],
+  "oracle_provenance": "Authored BEFORE any production file was opened for edit and committed on its own at 4cb6f5ba, ahead of the implementation at 7f667d54. Two files. The producer half is a NODE-environment file on purpose: under jsdom it went red with 'ReadableStream is not defined', red for a harness reason rather than for the defect, which would have proved nothing about either. The consumer half stays jsdom. Measured against dev@67c6b112: producer 1 red / 3 green, consumer 4 red / 0 green. All five reds behavioural. The three producer greens are deliberate no-regression guards over the frame names this task does not touch.",
+  "verification": "Five mutations, each run against the COMMITTED implementation with the tree restored afterwards and git status --porcelain confirmed empty: reverting the producer rename, replacing the real diagnosis with the old fixed literal, making onerror fabricate a diagnosis, and (for T-0047) dropping timeoutMs in apiFetch and in runSyncAction. Each turns exactly the expected tests red and nothing else. Committing first was the lesson of an earlier attempt in this session, where mutating an UNCOMMITTED implementation and then restoring with git checkout destroyed the work being tested.",
+  "rollback": "Revert 7f667d54. The oracle at 4cb6f5ba then goes red again, which is the point.",
+  "claims": [
+    "src/lib/sse/event-stream.ts",
+    "src/hooks/useEventStream.ts",
+    "src/app/orchestration/composer/page.tsx",
+    "src/app/laboratory/research/page.tsx",
+    "tests/"
+  ],
+  "deferred": [
+    "The end frame with reason 'gone' - the resource vanished mid-stream - is still swallowed silently by the consumer, which just closes and sets connected false. Arguably the same class of discarded server fact, but it is a different fact with a different remedy: the row is gone, so the right response is probably to clear the selection rather than to show a banner. Needs its own ruling rather than being folded in here."
+  ],
+  "timestamps": {
+    "opened": "2026-08-26T18:00:00Z",
+    "updated": "2026-08-26T18:40:00Z",
+    "closed": "2026-08-26T18:40:00Z"
+  }
+}

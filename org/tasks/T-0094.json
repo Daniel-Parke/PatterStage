@@ -1,0 +1,30 @@
+{
+  "id": "T-0094",
+  "intent": "B0 of the final-release programme (org/plans/2026-09-final-release.md, approved 2026-09-05): the scaffolding every later batch stands on. ADR-0010 for decision 15 (the governance corpus moves under org/) as the programme's first commit, written after the operator's ruling and before any file moves. The approved plan copied into org/plans/ so sessions read it from disk. The baseline gate and Playwright recorded on the round-6 head 43382822. The before-set of screenshots taken on the review instance. Migration numbers reserved by name. T-0095 to T-0113 opened as proposed, one per batch B1 to B19. The three refuted defects recorded as dropped.",
+  "declared": {
+    "capabilities": ["edit-docs", "filesystem"],
+    "side_effects": []
+  },
+  "mode": "high-assurance",
+  "tier_proposed": "R3",
+  "tier_ruled": "R3",
+  "reasons": [
+    {"factor": "protected-set-contact", "tier_floor": "R3", "source": "paths:protected", "evidence": "org/decisions/ADR-0010-governance-corpus-lives-under-org.md is added; no other protected file is touched"}
+  ],
+  "status": "done",
+  "owner_session": "t0094-b0-scaffolding-2026-09-05",
+  "claims": ["org/decisions/", "org/plans/", "org/tasks/", "org/TASKS.md"],
+  "approval": "The protected-set contact is the ADR itself. The operator ruled the decision directly when asked in the planning round ('Move it under org/, with an ADR') and approved the programme naming it as decision 15; the ADR records both and the session wrote its text after the ruling. Per ADR-0009's correction, the session does not grant acceptance: it records the operator's.",
+  "oracle_provenance": "B0 changes no product code, so its oracle is the existing gate run on the committed head and recorded here as the number every later batch is measured against. Nothing was written to make it pass.",
+  "rollback": "git revert of the single commit. Nothing outside the tree changed; the review instance on 3939 was stopped because the build rewrites the .next it served from, and the mocks on 8747 and 9277 were left running for the next batch.",
+  "baseline": "Head 43382822 on dev, judged by exit code: lint 0 (doc-links every link resolves; derived views 93 records; icon-button names 77 named, 0 unnamed; form-control names 100 named, 0 unnamed; design-lint 0 baselined, 0 allowed; coverage floors 3 bands held), tsc 0, jest 0 (3907 tests, 444 suites, 29.5s), knip 0, canary OK (appConfig, generatedArtefacts, httpSurface, seedPack), build 0, Playwright 91 passed, 0 failed, 8 skipped (33.0s).",
+  "before_set": "29 routes captured at 1280x720 full-page on the review instance (production build, isolated e2e-b1 data dir, mock-hermes, mock-hindsight) into the session scratchpad with a record of status, document.title and first h1 per route. Facts worth carrying into B3: 19 of the 29 routes render a bare 'PatterStage' as document.title; nav labels and h1 disagree on Sessions ('Session History'), Memory ('Hindsight Memory'), Logs ('System Logs'), Tools ('Hermes Toolsets'), Skills ('Skills Manager'), Agents ('Agent Profiles') and the Dashboard ('HermesAgent Framework'). /operations/agents never reached network idle in 30 seconds and issued 5 /api/ requests in the 4 seconds after load, which is D21's refetch loop seen from the outside.",
+  "reserved_migrations": "038 operator_prefs (B3, T-0097); 039 models.origin and last-imported columns (B6, T-0100); 040 runs.story_id and runs.spend_source (B14, T-0108); 041 schedules.kind and script_name (B13, T-0107). MIGRATION_HEAD_SCHEMA_VERSION moves 37 to 41 in that order and nowhere else; a batch that needs a migration takes its reserved number and no other.",
+  "dropped": "Three claims the adversarial verification refuted are not in any batch: D4 (Composer read-only gaps: the proxy refuses every unsafe method, so the route-level gaps were not gaps), D50 (chat silently degrading to a raw reply with no runId: the type forces the guard), D83 (no way to re-import the skills catalogue once non-empty: the control exists, it was only hidden at non-zero totals, which B9 moves to the header). D86 (profile-scoped skill edits change the global catalogue) stayed uncertain and is carried as a minor in B9.",
+  "verification": "The gate above at the committed head; check-derived-views green against 113 records after the EOS view render; check-doc-links green (docs/ links are untouched by this batch); design-lint green (org/ is outside its scan by design, and the ADR carries no em-dash regardless).",
+  "timestamps": {
+    "opened": "2026-09-05T10:00:00Z",
+    "updated": "2026-09-05T11:20:00Z",
+    "closed": "2026-09-05T11:20:00Z"
+  }
+}

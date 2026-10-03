@@ -1,0 +1,747 @@
+{
+  "revision": "aeb80725a6d3a0501a7289c0f47377f4cc2515de",
+  "buildId": "JYj3DQuuWCYPxpCHxYlgA",
+  "port": 3805,
+  "dataDir": "<isolated temporary directory>",
+  "fixtures": {
+    "missions": 3,
+    "scripts": 2,
+    "characters": 2,
+    "themes": 2
+  },
+  "staticRoutes": 22,
+  "dynamicFilesExcluded": [
+    "src/app/agent/settings/[section]/page.tsx",
+    "src/app/agent/skills/[...path]/page.tsx",
+    "src/app/help/[[...slug]]/page.tsx",
+    "src/app/recroom/story-weaver/[id]/page.tsx",
+    "src/app/results/sessions/[id]/page.tsx"
+  ],
+  "states": [
+    {
+      "route": "/",
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "status": 200,
+      "h1": [
+        "Dashboard"
+      ],
+      "scrollWidth": 1440,
+      "viewportWidth": 1440,
+      "screenshotSha256": "94e6c3b5df2b3bba6e9530823840f4fb65ab2fca23672dabb86b0291a4b8381c",
+      "pageErrors": [],
+      "failedRequests": []
+    },
+    {
+      "route": "/agent/memory",
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "status": 200,
+      "h1": [
+        "Memory"
+      ],
+      "scrollWidth": 1440,
+      "viewportWidth": 1440,
+      "screenshotSha256": "ee823964ca0932d97c56b16efdf9143e33cf77e29d1869b8fc91ae827834a940",
+      "pageErrors": [],
+      "failedRequests": [
+        {
+          "status": 503,
+          "path": "/api/memory/hindsight?action=list&limit=50"
+        }
+      ]
+    },
+    {
+      "route": "/agent/models",
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "status": 200,
+      "h1": [
+        "Models"
+      ],
+      "scrollWidth": 1440,
+      "viewportWidth": 1440,
+      "screenshotSha256": "6f924f6fcd962fd9048dba5b5e5a35a54801eca415e62630b79156d757b5f618",
+      "pageErrors": [],
+      "failedRequests": []
+    },
+    {
+      "route": "/agent/profiles",
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "status": 200,
+      "h1": [
+        "Agents"
+      ],
+      "scrollWidth": 1440,
+      "viewportWidth": 1440,
+      "screenshotSha256": "f53a879b265395682857b43a8ccfdf7c07b0fd2b69c957887693867d2846bded",
+      "pageErrors": [],
+      "failedRequests": []
+    },
+    {
+      "route": "/agent/settings",
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "status": 200,
+      "h1": [
+        "Settings"
+      ],
+      "scrollWidth": 1440,
+      "viewportWidth": 1440,
+      "screenshotSha256": "b8ec0c93407505c03f9f3e4cfc88af73639351ec667f65f6ce6fcca191c59997",
+      "pageErrors": [],
+      "failedRequests": []
+    },
+    {
+      "route": "/agent/settings/restore",
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "status": 200,
+      "h1": [
+        "Restore"
+      ],
+      "scrollWidth": 1440,
+      "viewportWidth": 1440,
+      "screenshotSha256": "f05ff60c2213cf3e02b3326f66ffa7b4b641457594a1c5586d5924582dfc40cd",
+      "pageErrors": [],
+      "failedRequests": []
+    },
+    {
+      "route": "/agent/settings/system",
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "status": 200,
+      "h1": [
+        "System"
+      ],
+      "scrollWidth": 1440,
+      "viewportWidth": 1440,
+      "screenshotSha256": "176018673e2f318b0e2eca55bf679524824193e219befa261be5b04c0741dd9d",
+      "pageErrors": [],
+      "failedRequests": []
+    },
+    {
+      "route": "/agent/skills",
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "status": 200,
+      "h1": [
+        "Skills"
+      ],
+      "scrollWidth": 1440,
+      "viewportWidth": 1440,
+      "screenshotSha256": "27787afd4a2d0230479a8a27c3cea4b5bf033343e10446e15c1f2f0fdb92eab0",
+      "pageErrors": [],
+      "failedRequests": []
+    },
+    {
+      "route": "/agent/tools",
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "status": 200,
+      "h1": [
+        "Tools"
+      ],
+      "scrollWidth": 1440,
+      "viewportWidth": 1440,
+      "screenshotSha256": "0bffa199ff861f78094ec177616a4bab7105fb95071245f9183f56701fb3b950",
+      "pageErrors": [],
+      "failedRequests": []
+    },
+    {
+      "route": "/quests",
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "status": 200,
+      "h1": [
+        "Quests"
+      ],
+      "scrollWidth": 1440,
+      "viewportWidth": 1440,
+      "screenshotSha256": "68fe3783aa0c5d0c5c602bd3e148565a51d699d7677c05574e9ecb4eb436bcf7",
+      "pageErrors": [],
+      "failedRequests": []
+    },
+    {
+      "route": "/recroom/story-weaver",
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "status": 200,
+      "h1": [
+        "Story Weaver"
+      ],
+      "scrollWidth": 1440,
+      "viewportWidth": 1440,
+      "screenshotSha256": "445bd52fd874157304a563f28e587f7112c7ad4aa963a430fda843f11502ca09",
+      "pageErrors": [],
+      "failedRequests": []
+    },
+    {
+      "route": "/recroom/story-weaver/create",
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "status": 200,
+      "h1": [
+        "Create"
+      ],
+      "scrollWidth": 1440,
+      "viewportWidth": 1440,
+      "screenshotSha256": "617ba5cb87d95ad1791e90420e8379f3693bcbbe0a53b73873cf448610ce48b9",
+      "pageErrors": [],
+      "failedRequests": []
+    },
+    {
+      "route": "/results/artifacts",
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "status": 200,
+      "h1": [
+        "Artifacts"
+      ],
+      "scrollWidth": 1440,
+      "viewportWidth": 1440,
+      "screenshotSha256": "8f8d9d4044a79e286085f5acf5b8fcb1504facd23681cb1a8535b8ae8fb9582c",
+      "pageErrors": [],
+      "failedRequests": []
+    },
+    {
+      "route": "/results/insights",
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "status": 200,
+      "h1": [
+        "Insights"
+      ],
+      "scrollWidth": 1440,
+      "viewportWidth": 1440,
+      "screenshotSha256": "ca95d228236e3d45757e29ebcf0e6ecf9c165411df6a9d87a84487486399d947",
+      "pageErrors": [],
+      "failedRequests": []
+    },
+    {
+      "route": "/results/logs",
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "status": 200,
+      "h1": [
+        "Logs"
+      ],
+      "scrollWidth": 1440,
+      "viewportWidth": 1440,
+      "screenshotSha256": "c463f016c761b76018f3a20a6143366937efca38f4b56efab56637317cac7a5f",
+      "pageErrors": [],
+      "failedRequests": [
+        {
+          "status": 404,
+          "path": "/api/logs?name=agent&lines=200"
+        }
+      ]
+    },
+    {
+      "route": "/results/sessions",
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "status": 200,
+      "h1": [
+        "Sessions"
+      ],
+      "scrollWidth": 1440,
+      "viewportWidth": 1440,
+      "screenshotSha256": "887326c8dc376d5a6a23f4f543c49799e41dbc03e579851923e1ccbd85f3c858",
+      "pageErrors": [],
+      "failedRequests": []
+    },
+    {
+      "route": "/work/automation",
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "status": 200,
+      "h1": [
+        "Automation"
+      ],
+      "scrollWidth": 1440,
+      "viewportWidth": 1440,
+      "screenshotSha256": "b0faa3dd1f0458d8243d86ac4bc55842383dea0f1b77658637cd310b9344099e",
+      "pageErrors": [],
+      "failedRequests": []
+    },
+    {
+      "route": "/work/chat",
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "status": 200,
+      "h1": [
+        "Chat"
+      ],
+      "scrollWidth": 1440,
+      "viewportWidth": 1440,
+      "screenshotSha256": "5981972932d10f97190c710c0abce4dfab6b85069c03642ffd527d4760c865ca",
+      "pageErrors": [],
+      "failedRequests": []
+    },
+    {
+      "route": "/work/composer",
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "status": 200,
+      "h1": [
+        "Composer"
+      ],
+      "scrollWidth": 1440,
+      "viewportWidth": 1440,
+      "screenshotSha256": "d8b4ce761c704b61f83de61485fe34da80604b6b685033046735142b115727a3",
+      "pageErrors": [],
+      "failedRequests": []
+    },
+    {
+      "route": "/work/missions",
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "status": 200,
+      "h1": [
+        "Missions"
+      ],
+      "scrollWidth": 1440,
+      "viewportWidth": 1440,
+      "screenshotSha256": "c7369f4c51f25c324d41281f65db9eeb7b9d933da8f451cab6dd23744cce7aab",
+      "pageErrors": [],
+      "failedRequests": []
+    },
+    {
+      "route": "/work/research",
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "status": 200,
+      "h1": [
+        "Research"
+      ],
+      "scrollWidth": 1440,
+      "viewportWidth": 1440,
+      "screenshotSha256": "1a462ae71b6b7a1b2d9396e72f5c71367763117e1a4f6b53df78875105d2f478",
+      "pageErrors": [],
+      "failedRequests": []
+    },
+    {
+      "route": "/work/scripts",
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "status": 200,
+      "h1": [
+        "Scripts"
+      ],
+      "scrollWidth": 1440,
+      "viewportWidth": 1440,
+      "screenshotSha256": "535523fe4e7049501bf6803ad1092bd9e1431d2aa8916ab589c9d5053dd65989",
+      "pageErrors": [],
+      "failedRequests": []
+    },
+    {
+      "route": "/",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "status": 200,
+      "h1": [
+        "Dashboard"
+      ],
+      "scrollWidth": 390,
+      "viewportWidth": 390,
+      "screenshotSha256": "170686c6d67a9fcc8cab1ad08e9fd24c349c0420e6041f3d20f9977dd2148635",
+      "pageErrors": [],
+      "failedRequests": []
+    },
+    {
+      "route": "/agent/memory",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "status": 200,
+      "h1": [
+        "Memory"
+      ],
+      "scrollWidth": 390,
+      "viewportWidth": 390,
+      "screenshotSha256": "852349cea8e3f1ad50a41ad3bd9f7463c0d38c04589888dd4dbfcab5c655e1b7",
+      "pageErrors": [],
+      "failedRequests": [
+        {
+          "status": 503,
+          "path": "/api/memory/hindsight?action=list&limit=50"
+        }
+      ]
+    },
+    {
+      "route": "/agent/models",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "status": 200,
+      "h1": [
+        "Models"
+      ],
+      "scrollWidth": 390,
+      "viewportWidth": 390,
+      "screenshotSha256": "1a0bff2749be4014d7ac6e1cc149272322de31f65ccc561ac9ea143e365bab36",
+      "pageErrors": [],
+      "failedRequests": []
+    },
+    {
+      "route": "/agent/profiles",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "status": 200,
+      "h1": [
+        "Agents"
+      ],
+      "scrollWidth": 390,
+      "viewportWidth": 390,
+      "screenshotSha256": "d73871e52e5df86e8c1fbbdbbfd8628b9d4badcf9fac705f12456cac1141bd76",
+      "pageErrors": [],
+      "failedRequests": []
+    },
+    {
+      "route": "/agent/settings",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "status": 200,
+      "h1": [
+        "Settings"
+      ],
+      "scrollWidth": 390,
+      "viewportWidth": 390,
+      "screenshotSha256": "bd1a7c6358b40d8a28e4da5d5628e9f56651b07d1f492df5a9fe98c9aa99f4af",
+      "pageErrors": [],
+      "failedRequests": []
+    },
+    {
+      "route": "/agent/settings/restore",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "status": 200,
+      "h1": [
+        "Restore"
+      ],
+      "scrollWidth": 390,
+      "viewportWidth": 390,
+      "screenshotSha256": "947f6a076a260782e0276af96c37829ae7e4410c8271a457541fbb85c71ea45b",
+      "pageErrors": [],
+      "failedRequests": []
+    },
+    {
+      "route": "/agent/settings/system",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "status": 200,
+      "h1": [
+        "System"
+      ],
+      "scrollWidth": 390,
+      "viewportWidth": 390,
+      "screenshotSha256": "a09023dc7bcfbc698a211394bfb07fb0606e89510d26dc13e1e51a3bcba87b93",
+      "pageErrors": [],
+      "failedRequests": []
+    },
+    {
+      "route": "/agent/skills",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "status": 200,
+      "h1": [
+        "Skills"
+      ],
+      "scrollWidth": 390,
+      "viewportWidth": 390,
+      "screenshotSha256": "a5ca559724c1df5d4faea1b5575267515e34e5cdac4cccdb408d80ac80c11897",
+      "pageErrors": [],
+      "failedRequests": []
+    },
+    {
+      "route": "/agent/tools",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "status": 200,
+      "h1": [
+        "Tools"
+      ],
+      "scrollWidth": 390,
+      "viewportWidth": 390,
+      "screenshotSha256": "df9419a5b75d556acf5e88a3983b6c1bc2b9c45568e071083d6a73fb0f7dc1c2",
+      "pageErrors": [],
+      "failedRequests": []
+    },
+    {
+      "route": "/quests",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "status": 200,
+      "h1": [
+        "Quests"
+      ],
+      "scrollWidth": 390,
+      "viewportWidth": 390,
+      "screenshotSha256": "71ffec7f5e40d98cc08fbe04110ebcae616f283d823cf10ae4aad8245048a8eb",
+      "pageErrors": [],
+      "failedRequests": []
+    },
+    {
+      "route": "/recroom/story-weaver",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "status": 200,
+      "h1": [
+        "Story Weaver"
+      ],
+      "scrollWidth": 390,
+      "viewportWidth": 390,
+      "screenshotSha256": "c64beefcf9d842ef928823f9426541144d8ad3242481e8c75cefff77218537ba",
+      "pageErrors": [],
+      "failedRequests": []
+    },
+    {
+      "route": "/recroom/story-weaver/create",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "status": 200,
+      "h1": [
+        "Create"
+      ],
+      "scrollWidth": 390,
+      "viewportWidth": 390,
+      "screenshotSha256": "cafe2aac1773290df5d1f4a23b5cf625d1286f7ec9c20e4b25964581e96a48e1",
+      "pageErrors": [],
+      "failedRequests": []
+    },
+    {
+      "route": "/results/artifacts",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "status": 200,
+      "h1": [
+        "Artifacts"
+      ],
+      "scrollWidth": 390,
+      "viewportWidth": 390,
+      "screenshotSha256": "97565b557a1326e33760c386d8899d913609a81afffbd0946087e09cf97b724e",
+      "pageErrors": [],
+      "failedRequests": []
+    },
+    {
+      "route": "/results/insights",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "status": 200,
+      "h1": [
+        "Insights"
+      ],
+      "scrollWidth": 390,
+      "viewportWidth": 390,
+      "screenshotSha256": "5b0200a12db888e328fba358699999d09469b120cfff9859725702b879c9efc6",
+      "pageErrors": [],
+      "failedRequests": []
+    },
+    {
+      "route": "/results/logs",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "status": 200,
+      "h1": [
+        "Logs"
+      ],
+      "scrollWidth": 390,
+      "viewportWidth": 390,
+      "screenshotSha256": "976e05af35f290eda4c504b04058e08a0169f44d5761c9f17c7a3c109725ff31",
+      "pageErrors": [],
+      "failedRequests": [
+        {
+          "status": 404,
+          "path": "/api/logs?name=agent&lines=200"
+        }
+      ]
+    },
+    {
+      "route": "/results/sessions",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "status": 200,
+      "h1": [
+        "Sessions"
+      ],
+      "scrollWidth": 390,
+      "viewportWidth": 390,
+      "screenshotSha256": "f211bc6b4efe4ef7850069490667c225a12cd367cf0804ef3a241158e7f3044a",
+      "pageErrors": [],
+      "failedRequests": []
+    },
+    {
+      "route": "/work/automation",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "status": 200,
+      "h1": [
+        "Automation"
+      ],
+      "scrollWidth": 390,
+      "viewportWidth": 390,
+      "screenshotSha256": "72c6f585a5b239f0901bdb31315e4c9627a3352b455d7cd7b06bf7e47b4c0ab8",
+      "pageErrors": [],
+      "failedRequests": []
+    },
+    {
+      "route": "/work/chat",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "status": 200,
+      "h1": [
+        "Chat"
+      ],
+      "scrollWidth": 390,
+      "viewportWidth": 390,
+      "screenshotSha256": "bfea1be8c3a2276f6b5a9a02765aa0d11af2d5c1efb5600466f0876ab39ec80d",
+      "pageErrors": [],
+      "failedRequests": []
+    },
+    {
+      "route": "/work/composer",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "status": 200,
+      "h1": [
+        "Composer"
+      ],
+      "scrollWidth": 390,
+      "viewportWidth": 390,
+      "screenshotSha256": "42bed472dea170135b1e9f46116a49c21de60bbe883134e68a5cf37703746d21",
+      "pageErrors": [],
+      "failedRequests": []
+    },
+    {
+      "route": "/work/missions",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "status": 200,
+      "h1": [
+        "Missions"
+      ],
+      "scrollWidth": 390,
+      "viewportWidth": 390,
+      "screenshotSha256": "83a335fbe536af9eb4c4158f2effe7825468e9db3d5a095fb34e3c4c33e7ca23",
+      "pageErrors": [],
+      "failedRequests": []
+    },
+    {
+      "route": "/work/research",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "status": 200,
+      "h1": [
+        "Research"
+      ],
+      "scrollWidth": 390,
+      "viewportWidth": 390,
+      "screenshotSha256": "04dcf157d84907c7b41269a4486188030757149ca707b59aa6e259770aea9a2c",
+      "pageErrors": [],
+      "failedRequests": []
+    },
+    {
+      "route": "/work/scripts",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "status": 200,
+      "h1": [
+        "Scripts"
+      ],
+      "scrollWidth": 390,
+      "viewportWidth": 390,
+      "screenshotSha256": "4831f019990f0db28ab06524cdac8156d9434ce40fc2c862f1d5739a1ecdb59d",
+      "pageErrors": [],
+      "failedRequests": []
+    }
+  ],
+  "failures": []
+}

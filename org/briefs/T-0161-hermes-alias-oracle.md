@@ -1,0 +1,7 @@
+# T-0161 Hermes import alias oracle
+
+Independent review of the hosted CI repair found a second direct-invocation check at `scripts/tooling/hermes-registry-import.mjs`. It compares `process.argv[1]` literally with `fileURLToPath(import.meta.url)`. A directory symlink or platform path alias can give two spellings of the same file, making the import CLI exit 0 without reading the database. `scripts/bootstrap/setup.sh` then reports that the registry import succeeded. The batch promises explicit required imports cannot succeed silently.
+
+The independent ORACLE lane owns only `tests/unit/t0161-hermes-import-alias.test.ts`. Write a behavioural test that creates a disposable path alias, proves Node reports different `argv[1]` and module path spellings for the same real file, then invokes the Hermes CLI through the alias with an intentionally absent database argument. The CLI must exit non-zero with a safe database-not-found message; a zero exit is the red defect. Do not touch operator data or print credential contents. A symlink/junction or process launch failure is infrastructure, never a passing test. Preserve all existing test names. Prove red against current source, report exact result and LF SHA-256, and commit only the test in the separate checkout. Do not edit implementation, baselines, claims, records or protected files, and do not push.
+
+The coordinator owns the CLI repair, mutant and full validation after integrating the red oracle. This is a follow-up to the reviewer finding, not a change to the two hosted CI oracles that already passed.

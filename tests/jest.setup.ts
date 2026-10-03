@@ -1,4 +1,15 @@
 import "@testing-library/jest-dom";
+import { TextEncoder as NodeTextEncoder, TextDecoder as NodeTextDecoder } from "node:util";
+
+// jsdom does not provide TextEncoder/TextDecoder, but server-side stream
+// parsing (e.g. the runtime SSE reader) relies on them. Pull Node's
+// implementations into the test global so that code runs under jsdom.
+if (typeof globalThis.TextEncoder === "undefined") {
+  (globalThis as Record<string, unknown>).TextEncoder = NodeTextEncoder;
+}
+if (typeof globalThis.TextDecoder === "undefined") {
+  (globalThis as Record<string, unknown>).TextDecoder = NodeTextDecoder;
+}
 
 // Polyfill globals required by Next.js 14 server route imports.
 // These are referenced during module evaluation in next/dist/server/web/spec-extension/
@@ -103,7 +114,6 @@ jest.mock("better-sqlite3", () => ({
 }));
 
 jest.mock("@/lib/db", () => ({
-  db: jest.fn(() => mockDbMethods),
   getDb: jest.fn(() => mockDbMethods),
   ensureDb: jest.fn(),
   getSchemaHealth: jest.fn(() => ({

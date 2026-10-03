@@ -1,0 +1,39 @@
+{
+  "id": "T-0016",
+  "intent": "Phase 7, third: write the per-Body progression snapshot, so an agent's recorded growth survives the deletion of the events it was derived from. Warrant WG-ARCH-003 (C for the per-Body progression record) and ADR-0004. Progression is currently recomputed from raw history, so pruning that history would silently change past levels. Source row WO-0010. Ordered strictly BEFORE T-0017, and the operator merges this task because it is data safety. Acceptance: (1) one immutable row per agent profile carrying level, achievements, the inputs digest and versions; (2) corrections land as new rows, never edits; (3) it lands BEFORE T-0017's prune. Done when an agent's recorded growth survives the deletion of the events it was derived from. Tier proposal R2, matching the declared facts: migrates-schema is declared because a new table and a numbered migration are added. Per the plan's section 12, the acceptance oracle is authored before implementation by a session that has not seen the implementation. Closed 2026-08-23 in 9a454a57. Migration 031 creates agent_progression_snapshots, gated at v31 and appended to the hand-wired chain; immutability is enforced by two BEFORE triggers that RAISE(ABORT) on UPDATE and DELETE, so it is a property of the schema rather than of callers who never read the file. Review mutation-proved it: stripping the triggers turns the immutability tests red, and the correction test drives a real growth event and asserts the ORIGINAL row is byte-identical afterwards, which an in-place update could not survive. ADR-0004's deferred benchmark axis was not resurrected. RECORDING GAPS, noted rather than hidden: (1) claims widened above to the paths actually touched, which exceeded the original two; (2) this shipped a NEW public HTTP contract (GET /api/agents/progression) and a NEW schema element without its own ADR, which the durable band asks for. The decision itself is pre-taken by ADR-0004 decision 2 and the RUL-ARCH-003 corrective, so the provenance is cited here rather than a fresh ADR written for a decision nobody re-took; (3) the record declared only migrates-schema while GET /api/stats now writes rows on a read path. That write is intrinsic to the task's intent and its failure is logged and swallowed so the dashboard cannot go dark, but it is stated here so the next reader is not left to discover it. NOT DONE, stated plainly: the UI still shows the live recomputation rather than the recorded row, so after a prune it will display the lower live number while the record preserves the higher one. Making the UI read the record is a behaviour change no row asked for.",
+  "declared": {
+    "capabilities": [
+      "database",
+      "filesystem"
+    ],
+    "side_effects": [
+      "migrates-schema"
+    ]
+  },
+  "mode": "high-assurance",
+  "tier_proposed": "R2",
+  "tier_ruled": "R2",
+  "reasons": [
+    {
+      "factor": "schema-change",
+      "tier_floor": "R2",
+      "source": "declared",
+      "evidence": "declared side effect: migrates-schema"
+    }
+  ],
+  "status": "done",
+  "owner_session": "phase7-progression-2026-08-23",
+  "claims": [
+    "src/lib/",
+    "src/app/api/agents/progression/",
+    "src/app/api/stats/",
+    "docs/",
+    "tests/unit/",
+    "scripts/tooling/output-canary.golden.json"
+  ],
+  "timestamps": {
+    "opened": "2026-07-25T00:00:00Z",
+    "updated": "2026-08-23T04:00:00Z",
+    "closed": "2026-08-23T04:00:00Z"
+  }
+}

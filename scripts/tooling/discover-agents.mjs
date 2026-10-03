@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Detect the local Hermes install and write CH_DATA_DIR/hermes-detection.json.
+ * Detect the local Hermes install and write PS_DATA_DIR/hermes-detection.json.
  * Canonical layout: HERMES_HOME (default ~/.hermes) + HERMES_HOME/hermes-agent/
  */
 import { existsSync, mkdirSync, readdirSync } from "fs";
@@ -11,8 +11,8 @@ function normalizeDir(d) {
   return String(d || "").replace(/[/\\]+$/, "");
 }
 
-function getChDataDir() {
-  const raw = process.env.CH_DATA_DIR || process.env.CONTROL_HUB_DATA_DIR;
+function getPsDataDir() {
+  const raw = process.env.PS_DATA_DIR || process.env.CH_DATA_DIR || process.env.CONTROL_HUB_DATA_DIR;
   if (raw && String(raw).trim()) return normalizeDir(String(raw).trim());
   return normalizeDir(join(homedir(), "control-hub", "data"));
 }
@@ -82,7 +82,7 @@ if (existsSync(profilesDir)) {
   }
 }
 
-const outDir = getChDataDir();
+const outDir = getPsDataDir();
 mkdirSync(outDir, { recursive: true });
 const outPath = join(outDir, "hermes-detection.json");
 const doc = {
@@ -104,7 +104,7 @@ const { writeFileSync } = await import("fs");
 writeFileSync(outPath, JSON.stringify(doc, null, 2), "utf8");
 
 console.log(
-  `Control Hub uses Hermes at: ${home} (defaultRoot: ${defaultRoot}, valid: ${isValidHermesRoot})`
+  `PatterStage uses Hermes at: ${home} (defaultRoot: ${defaultRoot}, valid: ${isValidHermesRoot})`
 );
 console.log(`Agent package: ${canonicalAgentPackage}`);
 if (hermesAgentPath) {

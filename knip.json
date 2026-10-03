@@ -1,0 +1,44 @@
+{
+  "$schema": "https://unpkg.com/knip@5/schema.json",
+  "entry": [
+    "src/instrumentation.ts",
+    "scripts/**/*.{ts,mjs}",
+    "mock-hermes/server.mjs",
+    "mock-hindsight/server.mjs",
+    "mock-llm/server.mjs",
+    "tests/integration/runtime/*.mjs",
+    "test-harness/baseline-fix-verify.mjs",
+    "test-harness/bench-gateway-e2e.mjs",
+    "tests/e2e/prepare-data-dir.mjs",
+    "tests/helpers/secret-scan-canary-preload.mjs"
+  ],
+  "project": [
+    "src/**/*.{ts,tsx}",
+    "scripts/**/*.{ts,mjs}",
+    "mock-hermes/**/*.mjs",
+    "mock-hindsight/**/*.mjs",
+    "mock-llm/**/*.mjs",
+    "tests/**/*.{ts,tsx,mjs,cjs}",
+    "test-harness/**/*.{mjs,cjs}"
+  ],
+  "ignoreDependencies": [
+    "ts-jest",
+    "tailwindcss",
+    "@jest/globals",
+    "jsdom"
+  ],
+  "ignoreBinaries": [
+    "python",
+    "crontab",
+    "systemctl",
+    "which",
+    "ps",
+    "sqlite3",
+    "tasklist",
+    "taskkill",
+    "netstat",
+    "ss",
+    "lsof",
+    "where"
+  ]
+}

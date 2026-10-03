@@ -1,0 +1,20 @@
+{
+  "id": "T-0027",
+  "intent": "Amend org/roles/WORK.md's branch-from-main instruction and org/OPERATING_MODEL.md section 4 to match practised doctrine, through Part III change control rather than as an ordinary doc fix. Warrant: ADR-0006, dev is the integration trunk, proposed at plan approval; a protected-set change never travels as a doc fix. Source row WO-0029, which was blocked on ADR-0006's signature. Acceptance as filed: (1) org/roles/WORK.md:21 and org/OPERATING_MODEL.md section 4 reworded to branch-from-dev and done-means-green-dev per the signed ADR-0006; (2) the operating model's definition of done, merged to a green main, gains the ADR's release-time qualification; (3) the operator approves the diff itself. Discarded by the operator's ruling R-B in the plan's section 12, 2026-08-22, and by ADR-0008: the recompile replaces org/roles/WORK.md and org/OPERATING_MODEL.md wholesale, both deleted with no successor, so there is no text left to amend. What must not be lost with the row: ADR-0006 itself survives unchanged and is orthogonal to the kernel version, so branch-from-dev, done-means-green-dev and releases through gated dev to main pull requests remain the venture's doctrine, and the v2 charters and playbooks must not silently reintroduce branch-from-main. Checking that is part of T-0005's recompile acceptance, not a task of its own. Tier proposal R3 as filed, anticipated factor protected-set-contact from derived signal paths:protected, evidence the role charters and the operating model are in the protected set; nothing merges under this record now, so the creation ruling from empty declared facts is a clean R0.",
+  "declared": {
+    "capabilities": [],
+    "side_effects": []
+  },
+  "mode": "standard",
+  "tier_proposed": "R3",
+  "tier_ruled": "R0",
+  "reasons": [],
+  "status": "discarded",
+  "owner_session": "unassigned",
+  "claims": [],
+  "timestamps": {
+    "opened": "2026-08-22T00:00:00Z",
+    "updated": "2026-08-22T00:00:00Z",
+    "closed": "2026-08-22T00:00:00Z"
+  }
+}

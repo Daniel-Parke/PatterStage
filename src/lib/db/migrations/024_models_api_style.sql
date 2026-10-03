@@ -1,0 +1,9 @@
+-- 024_models_api_style.sql — direct-provider wire protocol per model (v24)
+--
+-- Adds models.api_style ("openai" | "anthropic") so the direct-provider LLM
+-- path picks the right endpoint + request shape instead of blindly appending
+-- /chat/completions (which 404'd Anthropic-style bases like MiniMax's
+-- https://api.minimax.io/anthropic). The column + an idempotent repair that
+-- infers the style for existing rows are applied via the guarded ALTER in
+-- apply-models-api-style-migration.ts (so this file is intentionally a no-op
+-- marker — there is no new table to create).

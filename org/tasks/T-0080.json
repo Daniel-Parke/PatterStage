@@ -1,0 +1,50 @@
+{
+  "id": "T-0080",
+  "intent": "A chat turn against a stopped gateway stored, and rendered, \"fetch failed: connect ECONNREFUSED 127.0.0.1:8652\" -- undici talking to itself, in seven columns across six tables. Reported as finding 6 by the 2026-08-30 fresh-agent QA pass and confirmed worse than reported; sharpened by a browser pass that found the banner meant to explain it naming the wrong port and unreachable from the place it was needed.",
+  "declared": {
+    "capabilities": [
+      "edit-source"
+    ],
+    "side_effects": []
+  },
+  "mode": "standard",
+  "tier_proposed": "R1",
+  "tier_ruled": "R1",
+  "reasons": [],
+  "status": "done",
+  "owner_session": "t0080-gateway-error-2026-08-31",
+  "claims": [
+    "src/lib/runtime/gateway-error.ts",
+    "src/lib/runtime/HermesRuntime.ts",
+    "src/app/api/orchestration/chat/route.ts",
+    "src/app/api/gateway/health/route.ts",
+    "src/hooks/useGatewayHealth.ts",
+    "src/hooks/useChatPage.ts",
+    "src/components/chat/GatewayBanner.tsx",
+    "src/components/chat/gateway-banner-states.ts",
+    "src/app/orchestration/chat/page.tsx",
+    "tests/"
+  ],
+  "invariants": [
+    "I1 A gateway failure names the address PatterStage actually tried, says what to do, and names the variable that moves it. It never hands the operator undici's own words.",
+    "I2 The message survives messageFromError's chain walk. No cause is attached, because the walker would re-append the exact noise this removes.",
+    "I3 A diagnosis is not noise: the transport CODE is carried, because ECONNREFUSED and ENOTFOUND are different problems with different fixes.",
+    "I4 A CANCEL is never reported as an outage. The aborted signal alone decides it, whatever shape the rejected fetch took.",
+    "I5 A live signal does not excuse a real failure from translation -- every mission dispatch carries one, and those are the errors that land in missions.result.",
+    "I6 An error carrying no transport evidence is returned untouched. Rewriting it would replace a true message with a guess.",
+    "I7 The mapped status is 503/504: never 404 (reconcile would fail every in-flight run, undoing T-0078) and never 429 (submitRun would retry a dead gateway four times).",
+    "I8 The banner names the gateway the health route actually probed, and omits the address rather than inventing one before the first probe answers.",
+    "I9 Banners that BLOCK the send show wherever the operator is; advisory ones stay on the empty chat."
+  ],
+  "the_seam": "All seven storage sites read errors through messageFromError, so the fix belonged at the places a raw fetch to the gateway actually happens rather than seven times over. Two were known -- HermesRuntime.fetchJson and streamRunEvents, the only scopes that hold ep.baseUrl. A THIRD was found by driving the product: the fast-mode chat proxy in api/orchestration/chat, which has getAgentGateway() in scope and did nothing with it.",
+  "found_while_proving_it": "The sharpest defect in the batch was not in the report and not in the plan. With the gateway stopped, POST /api/orchestration/chat answered status=500 size=0 -- not a bad message, NO message, which apiFetch renders as \"API returned invalid JSON (HTTP 500)\", telling the operator their own server sent garbage. The cause is one keyword: the handler ends its try with `return fetchGateway(...)`, and a bare return of a promise inside try settles it after the block has exited, so the catch below -- already written, already calling serverErrorFromCatch -- never ran. Fixed with `return await`, and the now-reachable catch maps the failure like the other two sites. This is the argument for driving a batch end to end: three read-only investigations and a green suite had all missed it.",
+  "mutation_finding": "Twenty mutations, seventeen caught, three survivors -- and one of them is this programme's recurring shape for the THIRD time. The BANNER COPY was unasserted: the decision was tested (gateway-banner-states), the route supplying the address was tested (gateway-health-route), and the component joining them was tested by nobody, because the one chat-page test that touches GatewayBanner replaces it with an empty div. The hardcoded \"port 8642\" could have stayed and every suite would have been green. Also caught: naming OUR 30s budget for a deadline the CALLER set, and claiming the gateway rejected our key before it had answered at all. An earlier sweep found the cancel guard was decorative -- its own test passed with the guard deleted -- and one mutation proved nothing (a syntax error, so only the suite that does not import the module ran) and was re-expressed rather than counted. 20/20 after.",
+  "what_mutation_proved_about_the_guard": "The cancel guard started as a name check -- AbortError or TimeoutError -- and mutation showed the test for it passing with the guard removed entirely, because \"This operation was aborted\" carries no transport code and fell out the same null. The case the guard exists for was the one neither covered: aborting a fetch already on the wire rejects with a RESET SOCKET, so cancelling a mission reported \"not responding (ECONNRESET)\" -- a deliberate act rendered as an outage, exactly what T-0069 removed. The guard now reads the signal and nothing else.",
+  "consolidation": "transportCode had quietly become a THIRD copy of the cause-walking loop, which would have made api-fetch.ts's own comment -- \"This is the ONE cause walker\" -- false. Folded onto errorChain. The second copy in the memory module is still outstanding and still recorded there.",
+  "verification": "Proved live on an isolated instance with a real gateway stopped mid-session. missions.result and runs.error -- the exact columns QA named -- now read \"Hermes gateway at http://127.0.0.1:8652 is not responding (ECONNREFUSED). Start it with: hermes gateway start - or set HERMES_GATEWAY_URL if it listens elsewhere.\" The chat proxy went from status=500 size=0 to 503 with that same sentence. In the browser, the offline banner rendered MID-CONVERSATION for the first time, named 8652 rather than 8642, and kept its accent on the command rather than the address -- directly above the pre-fix message still stored from the Phase-0 pass, the two visible in one frame. Restarting the gateway cleared the banner with no console errors. Gate: lint 0, tsc 0, 3570 tests / 405 suites, knip 0, canary OK, build 0.",
+  "timestamps": {
+    "opened": "2026-08-31T17:45:00Z",
+    "updated": "2026-08-31T19:05:00Z",
+    "closed": "2026-08-31T19:05:00Z"
+  }
+}

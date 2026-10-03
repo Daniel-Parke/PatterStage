@@ -7,30 +7,12 @@
 
 import { access, constants } from "fs/promises";
 import { readFile } from "fs/promises";
-import { getActiveHermesPaths } from "@/lib/hermes-agent-runtime";
-import { db } from "@/lib/db";
-import { logApiError } from "@/lib/api-logger";
+import { getAgentWorkspace } from "@/lib/runtime/workspace";
+import { upsertGatewayPlatforms } from "@/lib/sync/sync-repository";
+import { hasToken, readEnvTokenPresence } from "@/lib/sync/env-token-presence";
+import { logApiError } from "@/lib/api/api-logger";
 import type { SyncSource, SyncResult } from "@/lib/sync/types";
-
-/** Parse .env content into a key-value map. */
-function parseEnvVars(content: string): Record<string, string> {
-  const vars: Record<string, string> = {};
-  for (const line of content.split("\n")) {
-    const eqIdx = line.indexOf("=");
-    if (eqIdx > 0 && !line.startsWith("#")) {
-      const key = line.slice(0, eqIdx).trim();
-      let val = line.slice(eqIdx + 1).trim();
-      val = val.replace(/^["']|["']$/g, "");
-      if (val && val !== "changeme") vars[key] = val;
-    }
-  }
-  return vars;
-}
-
-/** Check if a platform has a valid token configured. */
-function hasToken(vars: Record<string, string>, ...keys: string[]): boolean {
-  return keys.some((k) => !!vars[k]);
-}
+import { syncFailure, syncSuccess } from "@/lib/sync/types";
 
 export class EnvSync implements SyncSource {
   readonly name = "env";
@@ -38,7 +20,7 @@ export class EnvSync implements SyncSource {
   async sync(): Promise<SyncResult> {
     const start = performance.now();
     try {
-      const envPath = getActiveHermesPaths().env;
+      const envPath = getAgentWorkspace().env;
       let envExists = false;
       try {
         await access(envPath, constants.F_OK);
@@ -47,16 +29,11 @@ export class EnvSync implements SyncSource {
         envExists = false;
       }
       if (!envExists) {
-        return {
-          sourceName: this.name,
-          success: true,
-          syncedCount: 0,
-          durationMs: Math.round(performance.now() - start),
-        };
+        return syncSuccess(this.name, 0, start);
       }
 
       const content = await readFile(envPath, "utf-8");
-      const vars = parseEnvVars(content);
+      const vars = readEnvTokenPresence(content);
 
       const platforms: Array<{
         platform: string;
@@ -94,33 +71,12 @@ export class EnvSync implements SyncSource {
       ];
 
       const now = new Date().toISOString();
-      const database = db();
-      const upsert = database.prepare(
-        `INSERT OR REPLACE INTO gateway_platforms (platform, enabled, bot_token_present, last_synced_at)
-         VALUES (?, ?, ?, ?)`
-      );
-      const tx = database.transaction(() => {
-        for (const p of platforms) {
-          upsert.run(p.platform, p.enabled, p.bot_token_present, now);
-        }
-      });
-      tx();
+      upsertGatewayPlatforms(platforms, now);
 
-      return {
-        sourceName: this.name,
-        success: true,
-        syncedCount: platforms.length,
-        durationMs: Math.round(performance.now() - start),
-      };
+      return syncSuccess(this.name, platforms.length, start);
     } catch (err) {
       logApiError("EnvSync", "syncing env", err);
-      return {
-        sourceName: this.name,
-        success: false,
-        syncedCount: 0,
-        error: String(err),
-        durationMs: Math.round(performance.now() - start),
-      };
+      return syncFailure(this.name, err, start);
     }
   }
 }

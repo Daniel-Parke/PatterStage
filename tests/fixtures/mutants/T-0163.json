@@ -1,0 +1,78 @@
+{
+  "task": "T-0163",
+  "why": "The independent Linux oracle must detect a public first creation, an unsecured existing Hermes dotenv, and a public plaintext backup.",
+  "mutants": [
+    {
+      "id": "m1-public-bootstrap-creation",
+      "file": "scripts/bootstrap/env-local.mjs",
+      "anchor": "const fd = openSync(file, \"a\", 0o600);",
+      "replacement": "const fd = openSync(file, \"a\", 0o666);",
+      "tests": ["tests/unit/t0163-bootstrap-credentials.test.ts"],
+      "why": "The Node setup fixture records the mode at the first creation, before the later chmod."
+    },
+    {
+      "id": "m2-public-existing-hermes-env",
+      "file": "src/modules/hermes/lib/hermes-env-sync.ts",
+      "anchor": "secureExistingEnv(envPath);",
+      "replacement": "void envPath;",
+      "tests": ["tests/unit/t0163-hermes-env-permissions.test.ts"],
+      "why": "A public existing Hermes dotenv must be narrowed before backup or read."
+    },
+    {
+      "id": "m3-public-plaintext-backup",
+      "file": "src/lib/fs/fs-helpers.ts",
+      "anchor": "flag: \"wx\", mode: OWNER_ONLY_FILE",
+      "replacement": "flag: \"wx\", mode: 0o666",
+      "tests": ["tests/unit/t0163-hermes-env-permissions.test.ts"],
+      "why": "The plaintext backup must have owner-only mode from its first byte."
+    },
+    {
+      "id": "m4-public-runtime-stage",
+      "file": "src/modules/hermes/lib/hermes-env-sync.ts",
+      "anchor": "atomicWriteFile(envPath, serializeEnvFile(prior, next, original), { mode: OWNER_ONLY_FILE });",
+      "replacement": "atomicWriteFile(envPath, serializeEnvFile(prior, next, original), { mode: 0o666 });",
+      "tests": ["tests/unit/t0163-hermes-env-permissions.test.ts"],
+      "why": "The staged replacement must be private before its rename onto .env."
+    },
+    {
+      "id": "m5-unprotected-bootstrap-home",
+      "file": "scripts/bootstrap/setup.mjs",
+      "anchor": "ensurePrivateEnvDirectory(HERMES_HOME);",
+      "replacement": "mkdirSync(HERMES_HOME, { recursive: true });",
+      "tests": ["tests/unit/t0163-review-regressions.test.ts"],
+      "why": "Bootstrap must narrow an existing permissive Hermes home before credential I/O."
+    },
+    {
+      "id": "m6-unprotected-runtime-home",
+      "file": "src/modules/hermes/lib/hermes-env-sync.ts",
+      "anchor": "ensureOwnerOnlyDir(paths.root);\n  secureExistingEnv(envPath);",
+      "replacement": "void paths.root;\n  secureExistingEnv(envPath);",
+      "tests": ["tests/unit/t0163-review-regressions.test.ts"],
+      "why": "Runtime replacement must narrow Hermes home before reading or writing .env."
+    },
+    {
+      "id": "m7-nonexclusive-runtime-stage",
+      "file": "src/modules/hermes/lib/hermes-config-write.ts",
+      "anchor": "flag: \"wx\", ...options",
+      "replacement": "flag: \"w\", ...options",
+      "tests": ["tests/unit/t0163-review-regressions.test.ts"],
+      "why": "An attacker-planted file or symlink at the staging path must never receive credential bytes."
+    },
+    {
+      "id": "m8-overwritten-backup-collision",
+      "file": "src/lib/fs/fs-helpers.ts",
+      "anchor": "flag: \"wx\", mode: OWNER_ONLY_FILE",
+      "replacement": "flag: \"w\", mode: OWNER_ONLY_FILE",
+      "tests": ["tests/unit/t0163-review-regressions.test.ts"],
+      "why": "Two backups in one millisecond must have different paths and retain both versions."
+    },
+    {
+      "id": "m9-public-backup-directory",
+      "file": "src/lib/fs/fs-helpers.ts",
+      "anchor": "if (base === \".env\") ensureOwnerOnlyDir(backupsDir);\n  else ensureDir(backupsDir);",
+      "replacement": "ensureDir(backupsDir);",
+      "tests": ["tests/unit/t0163-review-regressions.test.ts"],
+      "why": "A private backup file still needs an owner-only parent to prevent another user replacing or deleting it."
+    }
+  ]
+}

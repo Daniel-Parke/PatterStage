@@ -1,0 +1,181 @@
+{
+  "revision": "b54701bbfb2a5a8564ab3a5ced654eeb87216059",
+  "buildId": "Rmvs93IEKtQe7UDthcYX_",
+  "method": "Unique entryJSFiles and clientModules chunks per page; raw and per-chunk gzip bytes. Upper bound, not measured network transfer.",
+  "routes": [
+    {
+      "route": "/work/composer",
+      "chunks": 8,
+      "bytes": 560579,
+      "gzipBytes": 147925
+    },
+    {
+      "route": "/work/missions",
+      "chunks": 8,
+      "bytes": 293661,
+      "gzipBytes": 91552
+    },
+    {
+      "route": "/",
+      "chunks": 8,
+      "bytes": 205622,
+      "gzipBytes": 69287
+    },
+    {
+      "route": "/agent/models",
+      "chunks": 8,
+      "bytes": 212842,
+      "gzipBytes": 67346
+    },
+    {
+      "route": "/agent/profiles",
+      "chunks": 8,
+      "bytes": 194198,
+      "gzipBytes": 64796
+    },
+    {
+      "route": "/recroom/story-weaver/create",
+      "chunks": 8,
+      "bytes": 181581,
+      "gzipBytes": 62417
+    },
+    {
+      "route": "/results/insights",
+      "chunks": 8,
+      "bytes": 182795,
+      "gzipBytes": 60967
+    },
+    {
+      "route": "/agent/memory",
+      "chunks": 8,
+      "bytes": 181435,
+      "gzipBytes": 59456
+    },
+    {
+      "route": "/agent/settings",
+      "chunks": 7,
+      "bytes": 174332,
+      "gzipBytes": 57985
+    },
+    {
+      "route": "/work/chat",
+      "chunks": 8,
+      "bytes": 167618,
+      "gzipBytes": 57262
+    },
+    {
+      "route": "/results/logs",
+      "chunks": 7,
+      "bytes": 168788,
+      "gzipBytes": 56937
+    },
+    {
+      "route": "/work/scripts",
+      "chunks": 7,
+      "bytes": 166634,
+      "gzipBytes": 55856
+    },
+    {
+      "route": "/agent/skills",
+      "chunks": 7,
+      "bytes": 163913,
+      "gzipBytes": 54681
+    },
+    {
+      "route": "/results/sessions",
+      "chunks": 7,
+      "bytes": 163300,
+      "gzipBytes": 54140
+    },
+    {
+      "route": "/recroom/story-weaver/[id]",
+      "chunks": 8,
+      "bytes": 164026,
+      "gzipBytes": 54139
+    },
+    {
+      "route": "/quests",
+      "chunks": 7,
+      "bytes": 158088,
+      "gzipBytes": 53594
+    },
+    {
+      "route": "/work/research",
+      "chunks": 7,
+      "bytes": 157953,
+      "gzipBytes": 53442
+    },
+    {
+      "route": "/agent/tools",
+      "chunks": 7,
+      "bytes": 149798,
+      "gzipBytes": 50719
+    },
+    {
+      "route": "/results/artifacts",
+      "chunks": 7,
+      "bytes": 146758,
+      "gzipBytes": 50479
+    },
+    {
+      "route": "/agent/settings/system",
+      "chunks": 7,
+      "bytes": 149581,
+      "gzipBytes": 50294
+    },
+    {
+      "route": "/results/sessions/[id]",
+      "chunks": 7,
+      "bytes": 145976,
+      "gzipBytes": 49270
+    },
+    {
+      "route": "/work/automation",
+      "chunks": 6,
+      "bytes": 143950,
+      "gzipBytes": 48017
+    },
+    {
+      "route": "/agent/settings/restore",
+      "chunks": 6,
+      "bytes": 139121,
+      "gzipBytes": 46638
+    },
+    {
+      "route": "/agent/settings/[section]",
+      "chunks": 6,
+      "bytes": 134494,
+      "gzipBytes": 45161
+    },
+    {
+      "route": "/recroom/story-weaver",
+      "chunks": 6,
+      "bytes": 131436,
+      "gzipBytes": 44758
+    },
+    {
+      "route": "/help/[[...slug]]",
+      "chunks": 7,
+      "bytes": 123784,
+      "gzipBytes": 42575
+    },
+    {
+      "route": "/agent/skills/[...path]",
+      "chunks": 6,
+      "bytes": 125634,
+      "gzipBytes": 42318
+    },
+    {
+      "route": "/_not-found",
+      "chunks": 5,
+      "bytes": 111223,
+      "gzipBytes": 37322
+    },
+    {
+      "route": "/_global-error",
+      "chunks": 1,
+      "bytes": 14377,
+      "gzipBytes": 3661
+    }
+  ]
+}

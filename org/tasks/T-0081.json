@@ -1,0 +1,59 @@
+{
+  "id": "T-0081",
+  "intent": "Findings 3 and 12 of the 2026-08-30 fresh-agent QA pass are the same complaint twice: a figure the product displays with confidence that nothing computes. skillsCount was 0 on an install with skills; runsCompleted was 0 for an agent that had just completed runs.",
+  "declared": {
+    "capabilities": [
+      "edit-source"
+    ],
+    "side_effects": []
+  },
+  "mode": "standard",
+  "tier_proposed": "R1",
+  "tier_ruled": "R1",
+  "reasons": [],
+  "status": "done",
+  "owner_session": "t0081-numbers-2026-08-31",
+  "claims": [
+    "src/app/api/status/route.ts",
+    "src/modules/hermes/sync/ConfigSync.ts",
+    "src/lib/sync/sources/MemorySync.ts",
+    "src/lib/stats/agent-stats.ts",
+    "src/lib/stats/agent-stats-repository.ts",
+    "src/lib/stats/agent-experience.ts",
+    "src/lib/stats/agent-progression.ts",
+    "src/app/api/agents/experience/route.ts",
+    "src/app/api/agents/progression/route.ts",
+    "src/components/composer/profile-options.ts",
+    "src/app/orchestration/composer/page.tsx",
+    "src/lib/system-repository.ts",
+    "tests/"
+  ],
+  "invariants": [
+    "I1 Every meta key has both a writer and a reader. A key with only one is either a default presented as a measurement, or work done for nobody.",
+    "I2 A count the product displays is measured on the read, not echoed from a synced key.",
+    "I3 A comment does not claim work the file does not do.",
+    "I4 A run with a NULL profile belongs to the root agent, in EVERY aggregate. The defect was two aggregates disagreeing about whether the same run happened.",
+    "I5 runsCompleted counts runs that completed.",
+    "I6 Changing what a stored progression signal MEASURES bumps the computation version, because that number is the only thing separating 'the agent grew' from 'we changed the maths'.",
+    "I7 The picker sends an identifier; the operator reads a name.",
+    "I8 Progression is captured by any reader of it, before the read, and a capture failure never takes the read down with it."
+  ],
+  "finding_3_precisely": "TWO keys READ and written by nobody -- skills.count and sessions.total, so /api/status returned the getSystemStatNumber default forever. THREE keys WRITTEN and read by nobody -- config.memory_provider, config.default_model, memory.available -- recomputed on every 15s sync tick and stored for no one. And ConfigSync's header claimed it extracted a 'skills count' it has never written, which sends the next reader hunting for a writer that was never there. Both config values survive where they are actually read (the provider from the DB via getActiveMemoryConfig since T-0077; the model live off /api/config), and memory.available was derivable from memory.provider, which IS read.",
+  "why_finding_3_survived": "api-routes-simple.test.ts mocked getSystemStatNumber to answer 12 and 42 and asserted the route echoed them. The plumbing was proved while the tap was dry -- the vacuous-sweep class T-0075 named. That test now mocks the repositories the route asks, and carries the reason in place.",
+  "finding_12_four_causes": [
+    "RC-A capture happened only inside GET /api/stats, so an install driven over HTTP never captured and the reader answered with rows nobody had written -- while the spend figures beside them read live. The reader now captures BEFORE reading, guarded and logged exactly as /api/stats guards its own.",
+    "RC-B the Composer picker sent the DISPLAY name where a slug belongs, so a run launched under 'Bob (local default)' matched no aggregate and was dropped from every number about that agent.",
+    "RC-C countAgentActiveDays matched profile_name = ?, but a root-agent run stores NULL. The same run earned XP through the coalescing aggregate and contributed no active day.",
+    "RC-D the experience board listed profiles only. It took a slug, so its caller had to produce a list of slugs, and the list it reached for excluded the root agent -- the one a default install runs. It now maps getAgentPerformance(), which has always included it."
+  ],
+  "the_version_bump": "runsCompleted changing from all-runs to completed-runs, and activeDays beginning to coalesce, both change the stored answer for unchanged history. AGENT_PROGRESSION_COMPUTATION_VERSION goes 1 -> 2 with the reason recorded in a version-history block, which is the entire purpose of that field. Rows written at version 1 stay true about what version 1 measured; they are not comparable to version 2.",
+  "one_rule_not_two": "captureAgentProgressionFromLiveStats first swallowed its own failures. That would have been a second rule for the same thing and a quieter one -- the error would vanish rather than reach the log, and a capture that had stopped working would look identical to one with nothing to write. The swallow moved to the routes, matching what GET /api/stats has always done.",
+  "mutation_finding": "Twenty-two mutations, sixteen caught, six survivors. THE AGGREGATE THAT PRODUCES runsCompleted WAS MEASURED BY NOBODY: every test handed the field in on a fixture, so deleting runsByProfile's status check entirely changed no result -- the consumer tested, the producer not, the same seam-blindness this programme keeps finding. The active-days control also proved nothing: it used a run with no completed_at, and COUNT(DISTINCT date(NULL)) is 0 with or without the status filter, so a FAILED run with a real completed_at is the row it uses now. Nothing pinned the version bump, and nothing pinned the root agent appearing exactly once. Two of my own mutations proved nothing and were re-expressed rather than counted -- one moved the capture past the SLUG read rather than the snapshot read, so the ordering never changed. 22/22 after.",
+  "knip_found_the_tail": "Two exports fell out as orphans once their callers changed: setSystemStatBoolean, whose only caller was the dead memory.available write and which never had a getSystemStatBoolean to pair with, and agentExperienceForProfile, whose slug-taking signature was the reason the board listed profiles only.",
+  "verification": "Proved live on an isolated instance. /api/status reports skillsCount 4 and sessionsCount 8 where it reported 0. /api/agents/progression returns real snapshots WITHOUT /api/stats ever being called, all at computationVersion 2. The experience board now ranks 'Bob (local default)' first with runsCompleted 24 and activeDays 1 -- the agent was previously absent from that endpoint entirely, and its active days would have been 0 regardless. The Composer picker's options read value 'default' / label 'Bob (local default)', which is exactly the pair that was broken. Gate: lint 0, tsc 0, 3607 tests / 407 suites, knip 0, canary OK, build 0.",
+  "timestamps": {
+    "opened": "2026-08-31T19:10:00Z",
+    "updated": "2026-08-31T21:05:00Z",
+    "closed": "2026-08-31T21:05:00Z"
+  }
+}
