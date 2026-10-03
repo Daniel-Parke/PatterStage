@@ -1,4 +1,5 @@
 /** @jest-environment jsdom */
+import { within } from "@testing-library/react";
 import { act, render } from "@testing-library/react";
 import GenerateOverlay from "@/modules/rec-room/components/GenerateOverlay";
 
@@ -127,6 +128,27 @@ describe("T0191 actual Reader edit and continue lifecycle", () => {
     expect(document.body.textContent).not.toMatch(/your story is ready|ready to read|muse is visiting/i);
     expect(storyCalls(action)).toHaveLength(1);
     expect(storyCalls("generate-chapter")).toHaveLength(0);
+  });
+  it("reselecting the current chapter resets the reading container to the top", async () => {
+    await mountReader(halfWritten());
+    await screen.findByText("Text of chapter 1.");
+    const chapter = within(screen.getAllByRole("group", { name: "Chapters" })[0]).getByRole("button", { name: "Chapter 1: The Departure (complete)" });
+    expect(chapter).toBeEnabled();
+    expect(chapter).toHaveAttribute("aria-current", "true");
+    const heading = screen.getByRole("heading", { level: 2, name: /The Departure/ });
+    const readingContainer = heading.closest<HTMLElement>(".overflow-y-auto");
+    expect(readingContainer).not.toBeNull();
+    if (!readingContainer) throw new Error("The chapter heading must belong to the actual reading container");
+    expect(readingContainer).toHaveTextContent("Text of chapter 1.");
+    readingContainer.scrollTop = 240;
+    expect(readingContainer.scrollTop).toBe(240);
+    fireEvent.click(chapter);
+    expect(readingContainer.isConnected).toBe(true);
+    expect(screen.getByRole("heading", { level: 2, name: /The Departure/ }).closest(".overflow-y-auto")).toBe(readingContainer);
+    expect(readingContainer.scrollTop).toBe(0);
+    expect(chapter).toHaveAttribute("aria-current", "true");
+    expect(readingContainer).toHaveTextContent("Text of chapter 1.");
+    for (const action of ["generate-chapter", "retry-chapter", "edit-chapter", "continue"]) expect(storyCalls(action)).toHaveLength(0);
   });
   it("generate plus edit retains Stop when one settles and suppresses late reactivation after Stop", async () => {
     const generation = pendingLookup<Response>(), edit = pendingLookup<Response>();
