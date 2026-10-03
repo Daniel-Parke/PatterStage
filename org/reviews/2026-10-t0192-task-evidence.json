@@ -641,12 +641,20 @@
       "src/app/api/schedules/[id]/route.ts",
       "src/lib/missions/mission-promote-handler.ts",
       "src/lib/missions/mission-handlers/dispatch.ts",
-      "src/lib/schedule/schedule-problem.ts"
+      "src/lib/schedule/schedule-problem.ts",
+      "tests/e2e/schedule-validation-contract.spec.ts"
     ],
     "baselineReceipt": "tmp/t0192-defects-schedule-1791067674095",
     "baseline": "51/51 cases in five unchanged suites, exit0 before cohort implementation.",
     "invariants": "Syntax before impossible date before interval bounds; exact refusal strings and pre-write locations. Promotion preserves parsed display. Compute-next and dispatch ordering unchanged.",
-    "status": "Claimed; independent coverage review pending before implementation."
+    "status": "Pre-consolidation contracts frozen, production schedule code unchanged.",
+    "oracle": "tests/e2e/schedule-validation-contract.spec.ts",
+    "sha256": "516a93fe938fb06124c8752974c4327b3b585ad9d08e4b8ee5532cb470542fea",
+    "baselineBrowserReceipt": "tmp/t0192-defects-schedule-browser-1791068081146",
+    "baselineBrowser": "16/16 pass, six workers, zero retries. Characterisation controls, not claimed causal reds.",
+    "review": "Halley found no blocking defect in16case draft; coordinator strengthened omitted-expression assertion to require the renamed value before freeze and reran16/16. Existing task red-first defect oracles remain separate.",
+    "qualifications": "Leap-day acceptance is calendar-dependent for next-run nullness; past one-shot pins null. Persisted snapshots do not prove absence of all transient side effects.",
+    "types": "tmp/t0192-defects-types-1791068040648 exit0; focused ESLint exit0 before added name field assertion."
   },
   "scriptWriteOracle": {
     "author": "Sartre",
@@ -661,5 +669,12 @@
     "workers": 6,
     "retries": 0,
     "scope": "Real owned PUT/DELETE completion versus replacement editor, desktop and phone; normal controls preserve disk outcome. No script execution. Relevant built source maps match; unrelated candidate edits not claimed built."
+  },
+  "scriptWriteRepair": {
+    "buildReceipt": "tmp/t0192-defects-build-1791067854897",
+    "browserReceipt": "tmp/t0192-defects-browser-1791067943392",
+    "result": "50/50 pass, six workers, zero retries; includes all8 Script write cases and42 prior browser cases.",
+    "implementation": "Capture editor epoch before write; close only matching current editor on success; always refresh persisted list.",
+    "remaining": "Final full gate, mutation, hosted jobs and overall Script lifecycle review remain open."
   }
 }
