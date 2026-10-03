@@ -203,6 +203,47 @@ describe("T0191 actual Reader edit and continue lifecycle", () => {
       await act(async () => { edit.complete(jsonResponse({ data: { story: currentStory } })); generation.complete(jsonResponse({ data: { story: currentStory } })); await jest.advanceTimersByTimeAsync(0); });
     }
   });
+  it("aborted generation after a confirmed edit restores the Reader immediately without transient ready feedback", async () => {
+    const generation = pendingLookup<Response>(), edit = pendingLookup<Response>();
+    reply = operation => operation === "generate-chapter" ? generation.promise : operation === "edit-chapter" ? edit.promise : undefined;
+    await mountReader(halfWritten());
+    const observer = renderHook(() => useApiResource<StoryState>("/api/stories", { body: { action: "load", storyId: "S-1" }, enabled: false, select: data => data as StoryState }), { wrapper: ReaderQuery });
+    jest.useFakeTimers();
+    try {
+      fireEvent.click(screen.getByRole("button", { name: "Write chapter 3" }));
+      requestStoryAction("edit-chapter");
+      await act(async () => { await jest.advanceTimersByTimeAsync(0); });
+      expect(storyCalls("generate-chapter")).toHaveLength(1);
+      expect(storyCalls("edit-chapter")).toHaveLength(1);
+      currentStory = { ...currentStory, chapterContents: { ...currentStory.chapterContents, "1": "Confirmed edit survives generation cancellation." } };
+      await act(async () => { edit.complete(jsonResponse({ data: { story: currentStory } })); await jest.advanceTimersByTimeAsync(0); });
+      expect(observer.result.current.data?.chapterContents?.["1"]).toBe("Confirmed edit survives generation cancellation.");
+      const signal = storyCalls("generate-chapter")[0].init?.signal;
+      expect(signal?.aborted).toBe(false);
+      const stop = screen.getByRole("button", { name: /^Stop$/i });
+      expect(stop).toBeEnabled();
+      fireEvent.click(stop);
+      expect(signal?.aborted).toBe(true);
+      await act(async () => { generation.fail(new DOMException("Owned generation cancellation", "AbortError")); await jest.advanceTimersByTimeAsync(0); });
+      // Observe immediately, then at 1000ms and 1999ms: never skip the transient interval.
+      for (const advance of [0, 1000, 999]) {
+        if (advance) await act(async () => { await jest.advanceTimersByTimeAsync(advance); });
+        expect(observer.result.current.data?.chapterContents?.["1"]).toBe("Confirmed edit survives generation cancellation.");
+        expect(document.body.textContent).not.toMatch(/your story is ready|ready to read|muse is visiting/i);
+        const content = screen.getByText("Confirmed edit survives generation cancellation.");
+        expect(content).toBeVisible();
+        expect(content.closest('[inert], [aria-hidden="true"], [hidden]')).toBeNull();
+        expect(screen.getByRole("heading", { level: 1, name: currentStory.title })).toBeVisible();
+        expect(screen.getByRole("button", { name: "Write chapter 3" })).toBeEnabled();
+        expect(screen.queryByRole("alert")).not.toBeInTheDocument();
+        expect(storyCalls("generate-chapter")).toHaveLength(1);
+        expect(storyCalls("edit-chapter")).toHaveLength(1);
+        for (const action of ["retry-chapter", "continue"]) expect(storyCalls(action)).toHaveLength(0);
+      }
+    } finally {
+      await act(async () => { edit.complete(jsonResponse({ data: { story: currentStory } })); generation.complete(jsonResponse({ data: { story: currentStory } })); await jest.advanceTimersByTimeAsync(0); });
+    }
+  });
   it.each(["edit-chapter", "continue"] as const)("successful %s publishes confirmed data and completes its overlay", async action => {
     const held = pendingLookup<Response>();
     reply = operation => operation === action ? held.promise : undefined;
