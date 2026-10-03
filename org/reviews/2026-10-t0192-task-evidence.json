@@ -703,6 +703,20 @@
       "src/app/api/sessions/[id]/route.ts",
       "src/app/api/models/fallbacks/route.ts"
     ],
-    "qualification": "Pins terminal contexts, selected inner failures and response-time revocation; unexercised JSONL recovery remains outside new proof."
+    "qualification": "Pins terminal contexts, selected inner failures and response-time revocation; unexercised JSONL recovery remains outside new proof.",
+    "postFoldUnitReceipt": "tmp/t0192-defects-unit-1791068703110",
+    "postFoldResult": "621/621 cases in45suites passed, including76new catch contracts and public URL/method inventory; exit0.",
+    "sourceDelta": -42
+  },
+  "templateIdentifierOracle": {
+    "authority": "Accepted cross-cutting-16, decision register line3105: new UUID IDs only; preserve existing IDs.",
+    "file": "tests/unit/template-create-identifiers.test.ts",
+    "sha256": "457f19df38ecf10011e32224dc9e638586678f9ca3a8fee722071733558dac71",
+    "author": "coordinator",
+    "reviewer": "Halley",
+    "receipt": "tmp/t0192-defects-template-1791068870506",
+    "result": "2 causal reds,27 historical controls pass, no runtime errors.",
+    "review": "Suitable for source-informed freeze conditional on observed expected reds; both confirmed by structured Jest output.",
+    "limits": "Mocked persistence/events/enrichment; not real-file collision, legacy-ID loading or import-pack proof. House-helper adoption needs source review."
   }
 }

@@ -119,7 +119,9 @@
         "src/app/api/models/sync/push/route.ts",
         "src/app/api/agent/files/[key]/route.ts",
         "src/app/api/sessions/[id]/route.ts",
-        "src/app/api/models/fallbacks/route.ts"
+        "src/app/api/models/fallbacks/route.ts",
+        "src/lib/templates-handlers/create.ts",
+        "tests/unit/template-create-identifiers.test.ts"
       ],
       "acquired": "2026-10-03T21:24:24.476320+00:00",
       "expires": "2026-10-04T21:24:24.476320+00:00"
