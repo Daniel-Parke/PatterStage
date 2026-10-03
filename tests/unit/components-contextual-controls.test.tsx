@@ -1,5 +1,6 @@
 /** @jest-environment jsdom */
 import { fireEvent, render, screen } from "@testing-library/react";
+import ModelEditor from "@/components/models/ModelEditor";
 import ComposerRunForm from "@/components/composer/ComposerRunForm";
 import CategoryAccordion from "@/components/ui/CategoryAccordion";
 import { Field } from "@/components/ui/field/Field";
@@ -31,6 +32,27 @@ describe("T0191 contextual controls", () => {
     expect(screen.queryByRole("listbox")).not.toBeInTheDocument();
     expect(trigger).toHaveFocus();
     expect(change).not.toHaveBeenCalled();
+  });
+  it.each(["Name", "API Key"])("ModelEditor %s label activates its associated control", name => {
+    render(<ModelEditor model={null} credentials={[]} providers={["anthropic", "openrouter", "openai"]} onClose={jest.fn()} onSaved={jest.fn()} />);
+    const control = screen.getByLabelText(name);
+    const label = screen.getByText(name, { selector: "label" }) as HTMLLabelElement;
+    expect(label).toBeVisible();
+    expect(control).toBeEnabled();
+    const activated = jest.fn();
+    control.addEventListener("click", activated);
+    try {
+      fireEvent.click(label);
+      expect({ associatedControl: label.control, activationCount: activated.mock.calls.length }).toEqual({ associatedControl: control, activationCount: 1 });
+    } finally { control.removeEventListener("click", activated); }
+  });
+  it.each([
+    { name: "Name", description: "Display name only — does not need to match the model identifier" },
+    { name: "API Key", description: "Stored plain text in the registry and synced to ~/.hermes/.env so Hermes can read it." },
+  ])("ModelEditor $name exposes its visible description", ({ name, description }) => {
+    render(<ModelEditor model={null} credentials={[]} providers={["anthropic", "openrouter", "openai"]} onClose={jest.fn()} onSaved={jest.fn()} />);
+    expect(screen.getByText(description)).toBeVisible();
+    expect(screen.getByLabelText(name)).toHaveAccessibleDescription(description);
   });
   it("Picker keeps its separately named selection and Escape contract", () => {
     const change = jest.fn();
