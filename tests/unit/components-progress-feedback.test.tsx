@@ -144,6 +144,43 @@ describe("T0191 actual Reader edit and continue lifecycle", () => {
     expect(storyCalls("edit-chapter")).toHaveLength(1);
     expect(document.body.textContent).not.toMatch(/your story is ready|ready to read|muse is visiting/i);
   });
+  it("edit-first settlement retains operable Stop while generation remains outstanding", async () => {
+    const generation = pendingLookup<Response>(), edit = pendingLookup<Response>();
+    reply = operation => operation === "generate-chapter" ? generation.promise : operation === "edit-chapter" ? edit.promise : undefined;
+    await mountReader(halfWritten());
+    const observer = renderHook(() => useApiResource<StoryState>("/api/stories", { body: { action: "load", storyId: "S-1" }, enabled: false, select: data => data as StoryState }), { wrapper: ReaderQuery });
+    jest.useFakeTimers();
+    try {
+      fireEvent.click(screen.getByRole("button", { name: "Write chapter 3" }));
+      requestStoryAction("edit-chapter");
+      await act(async () => { await jest.advanceTimersByTimeAsync(0); });
+      expect(storyCalls("generate-chapter")).toHaveLength(1);
+      expect(storyCalls("edit-chapter")).toHaveLength(1);
+      const signal = storyCalls("generate-chapter")[0].init?.signal;
+      expect(signal).toBeDefined();
+      currentStory = { ...currentStory, chapterContents: { ...currentStory.chapterContents, "1": "Confirmed reverse-settlement edit." } };
+      await act(async () => { edit.complete(jsonResponse({ data: { story: currentStory } })); await jest.advanceTimersByTimeAsync(0); });
+      expect(observer.result.current.data?.chapterContents?.["1"]).toBe("Confirmed reverse-settlement edit.");
+      expect(signal?.aborted).toBe(false);
+      expect(screen.getByRole("button", { name: /^Stop$/i })).toBeVisible();
+      expect(screen.getByRole("button", { name: /^Stop$/i })).toBeEnabled();
+      await act(async () => { await jest.advanceTimersByTimeAsync(1000); });
+      const stop = screen.getByRole("button", { name: /^Stop$/i });
+      expect(stop).toBeVisible();
+      expect(stop).toBeEnabled();
+      expect(signal?.aborted).toBe(false);
+      fireEvent.click(stop);
+      expect(signal?.aborted).toBe(true);
+      await act(async () => { generation.complete(jsonResponse({ data: { story: currentStory } })); await jest.advanceTimersByTimeAsync(2500); });
+      expect(storyCalls("generate-chapter")).toHaveLength(1);
+      expect(storyCalls("edit-chapter")).toHaveLength(1);
+      expect(storyCalls("continue")).toHaveLength(0);
+      expect(document.body.textContent).not.toMatch(/your story is ready|ready to read|muse is visiting/i);
+      expect(screen.queryByRole("alert")).not.toBeInTheDocument();
+    } finally {
+      await act(async () => { edit.complete(jsonResponse({ data: { story: currentStory } })); generation.complete(jsonResponse({ data: { story: currentStory } })); await jest.advanceTimersByTimeAsync(0); });
+    }
+  });
   it.each(["edit-chapter", "continue"] as const)("successful %s publishes confirmed data and completes its overlay", async action => {
     const held = pendingLookup<Response>();
     reply = operation => operation === action ? held.promise : undefined;
