@@ -50,3 +50,11 @@ Faraday independent review identified cached-row reselect and stale-description
 reopen risks. Franklin independently added two controls under Q015, retaining
 17existing cases. Red19cases:17pass2fail0runtime errors,
 `tmp/t0193-profile-cache-red.json`; amended LF SHA256:`9f6003bb94a453ea3c33495e8f37488e2700b9c10987b439dcf412b8ff46a977`.
+
+Banach independently selected existing Missions unit/browser contracts before
+binding-only consolidation. Existing unit control: 30cases passing,
+`tmp/t0193-missions-before.json`; no new assertions or test retirements.
+The existing page hook and interface stay; only repeated bindings/aliases go.
+This cohort uses behaviour parity controls; it is not a newly red behavioural
+defect. The batch red-first defects remain separately recorded above.
+Frozen existing-test LF hashes: {"tests/unit/mission-query-ownership.test.tsx": "645d7bcf373803a83a7b3e0e674d767f71f8c8a848730de9cde27443e6ce1b5a", "tests/unit/mission-template-editor-wiring.test.tsx": "5970075307193edafa251aaa93db6ffaf27c6021b63d1a593052a654944f64ef", "tests/e2e/missions-flows.spec.ts": "0b6b72b33bd9f717b4feaba08b78ce3cfa36ba23e65f2561429fd1683ff4170c", "tests/e2e/missions-compose.spec.ts": "b03c3daa0ead65eeaa49538f6f8ae1fc96c0e30fdc9b7f8bccae7d3a044e5caa"}

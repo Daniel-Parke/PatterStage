@@ -60,7 +60,8 @@
     "org/briefs/T-0193-followup-oracle.md",
     "tests/unit/page-read-failure-truth.test.tsx",
     "tests/unit/page-state-followups.test.tsx",
-    "tests/e2e/page-state-reader-motion.spec.ts"
+    "tests/e2e/page-state-reader-motion.spec.ts",
+    "src/app/work/missions/page.tsx"
   ],
   "timestamps": {
     "opened": "2026-10-04T10:03:25.397971+00:00",
@@ -87,13 +88,21 @@
       "tests/unit/profile-draft-ownership.test.tsx",
       "tests/e2e/page-state-profile-ownership.spec.ts",
       "tests/unit/page-read-failure-truth.test.tsx",
-      "tests/unit/page-state-followups.test.tsx"
+      "tests/unit/page-state-followups.test.tsx",
+      "tests/unit/mission-query-ownership.test.tsx",
+      "tests/unit/mission-template-editor-wiring.test.tsx",
+      "tests/e2e/missions-flows.spec.ts",
+      "tests/e2e/missions-compose.spec.ts"
     ],
     "hashes": {
       "tests/unit/profile-draft-ownership.test.tsx": "9f6003bb94a453ea3c33495e8f37488e2700b9c10987b439dcf412b8ff46a977",
       "tests/e2e/page-state-profile-ownership.spec.ts": "acf9c71fa7450adb062d6e451a68cb7db740c7d3de66aef3e8d2df1c144a7886",
       "tests/unit/page-read-failure-truth.test.tsx": "ceba024fdee96317882e56fcff6bfaad2f04debce3ff61b4a3b728e42abef97b",
-      "tests/unit/page-state-followups.test.tsx": "16f1e4377c3581b2cabe650573727052a32acd794dc2bb1abd6c9bf305658856"
+      "tests/unit/page-state-followups.test.tsx": "16f1e4377c3581b2cabe650573727052a32acd794dc2bb1abd6c9bf305658856",
+      "tests/unit/mission-query-ownership.test.tsx": "645d7bcf373803a83a7b3e0e674d767f71f8c8a848730de9cde27443e6ce1b5a",
+      "tests/unit/mission-template-editor-wiring.test.tsx": "5970075307193edafa251aaa93db6ffaf27c6021b63d1a593052a654944f64ef",
+      "tests/e2e/missions-flows.spec.ts": "0b6b72b33bd9f717b4feaba08b78ce3cfa36ba23e65f2561429fd1683ff4170c",
+      "tests/e2e/missions-compose.spec.ts": "b03c3daa0ead65eeaa49538f6f8ae1fc96c0e30fdc9b7f8bccae7d3a044e5caa"
     },
     "author_session": "Faraday 01a1062b-0f36-7702-885b-476fd150d9bf; independent real-form and held-transport oracle; Q015 amendment by Franklin 01a1062c-ad31-77c2-8ff2-71c41ee9b5d6, preserving all16 original controls; read truth by Franklin 01a1062c-ad31-77c2-8ff2-71c41ee9b5d6",
     "independence_method": "metamorphic"

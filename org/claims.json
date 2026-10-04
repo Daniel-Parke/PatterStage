@@ -43,7 +43,8 @@
         "src/modules/rec-room/components/ReaderSettings.tsx",
         "src/app/globals.css",
         "org/briefs/T-0193-followup-oracle.md",
-        "tests/e2e/page-state-profile-ownership.spec.ts"
+        "tests/e2e/page-state-profile-ownership.spec.ts",
+        "src/app/work/missions/page.tsx"
       ],
       "acquired": "2026-10-04T10:03:25.397971+00:00",
       "expires": "2026-10-05T10:03:25.397971+00:00"
