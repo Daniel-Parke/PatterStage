@@ -45,3 +45,8 @@ Includes held Composer ownership, keyboard navigation/indent/save controls,
 clipboard refusal/success, exports/labels, search context, daily chart values
 and collection state. These source hypotheses now have runnable controls.
 Read truth/profile combined31/31 and existing five-page suites38/38 pass.
+
+Faraday independent review identified cached-row reselect and stale-description
+reopen risks. Franklin independently added two controls under Q015, retaining
+17existing cases. Red19cases:17pass2fail0runtime errors,
+`tmp/t0193-profile-cache-red.json`; amended LF SHA256:`9f6003bb94a453ea3c33495e8f37488e2700b9c10987b439dcf412b8ff46a977`.

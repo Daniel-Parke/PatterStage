@@ -231,4 +231,29 @@ describe("T-0193 profile draft ownership", () => {
       expect(getSelectedProfile()).toBe("later-b");
     } finally { selection.mockRestore(); }
   });
+
+  // Q015 follow-up amendment: the original 17 controls remain unchanged.
+  it("edit confirmed rename with failed refresh keeps canonical identity when reselecting the cached row after Bob", async () => {
+    const h = await mount("edit", false, true, true); await h.submit(); await h.complete();
+    await waitFor(() => expect(h.reads()).toBe(2)); await waitFor(() => expect(screen.queryByRole("dialog")).toBeNull());
+    expect(h.rows().map(row => row.id)).toEqual(["default", "submitted-a"]);
+    fireEvent.click(screen.getByRole("button", { name: "Bob" })); expect(getSelectedProfile()).toBe("default");
+    fireEvent.click(screen.getByRole("button", { name: "QA Engineer" }));
+    expect(getSelectedProfile()).toBe("submitted-a");
+    h.open(); fill("Later B"); fireEvent.click(button("Save"));
+    await waitFor(() => expect(h.writes).toHaveLength(2));
+    expect(h.writes[1].url).toBe("/api/agent/profiles/submitted-a");
+  });
+
+  it("edit confirmed rename with failed refresh explicitly reopens the confirmed description for a name-only second save", async () => {
+    const h = await mount("edit", false, true, true); await h.submit(); await h.complete();
+    await waitFor(() => expect(h.reads()).toBe(2)); await waitFor(() => expect(screen.queryByRole("dialog")).toBeNull());
+    expect(h.rows().find(row => row.id === "submitted-a")?.description).toBe("Submitted description");
+    h.open();
+    expect(within(dialog()).getByRole("textbox", { name: "Description" })).toHaveValue("Submitted description");
+    fireEvent.change(within(dialog()).getByRole("textbox", { name: "Name" }), { target: { value: "Later B" } });
+    fireEvent.click(button("Save")); await waitFor(() => expect(h.writes).toHaveLength(2));
+    expect(h.writes[1]).toEqual({ url: "/api/agent/profiles/submitted-a", body: { name: "Later B", description: "Submitted description" } });
+    expect(h.rows().find(row => row.id === "later-b")?.description).toBe("Submitted description");
+  });
 });
