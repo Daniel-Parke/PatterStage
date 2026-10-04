@@ -7,7 +7,33 @@ updated: 2026-10-04
 
 # Handover · PatterStage, 2026-10-02
 
-## Active batch, 2026-10-04
+## Current programme, 2026-10-04
+
+T-0192 is independently accepted by Laplace at 926a13d3be8b14b6214025ff32755350b0039d0b.
+All required implementation-head hosted jobs are green. See the
+[final acceptance](reviews/2026-10-t0192-final-acceptance.md) for the exact
+hosted snapshot, reviewer verdict and preserved evidence hashes.
+
+The final local gate passed all ten unchanged-tree stages: 8,819 unit tests
+and 499 browser tests, with the existing nine unit and 24 browser skips.
+The loaded Credentials heading now measures 3.076:1 at both widths against
+the unchanged 1.55 floor. The independent Node 20/24 fixture amendment and
+three exact T-0192 non-secret scan exceptions preserve all existing checks.
+
+Committed census: source 102,062; tests 150,681;
+tooling 13,597; repeated source/test windows
+705/4,787;
+one-importer components 103. Fixed targets remain.
+
+Thirteen of 22 main batches are done. T-0193 remains pending until every
+required closure-head hosted job is green. No T-0193 opening is performed.
+The 82 itemised dispositions are 61 done, 13 ruled out and eight deferred.
+Named T-0193 repairs and comment follow-ups remain unresolved under their
+owners. Investigation completion does not mean all defects were repaired.
+
+Bounded T-0192 acceptance only, not whole-product, release or paid-provider acceptance. Preserve all failed gates, four outer-boundary hypothesis probes, historical skips and original mutation receipts. Original browser b01 remains analyser ERROR because ANSI colours were not stripped; separately qualified causal SQL/API failure does not relabel that receipt. Preserve all row evidence, uncertainty, follow-ups and latency limits. T-0193 remains unopened until every required closure-head hosted job is green.
+
+## Pre-acceptance checkpoint, 2026-10-04 (historical)
 
 T-0192 has local technical R2 readiness at `a21b4ee8`. The task remains active
 until its exact-head hosted checks and final independent acceptance complete.

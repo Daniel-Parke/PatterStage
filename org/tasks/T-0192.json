@@ -1,6 +1,6 @@
 {
   "id": "T-0192",
-  "intent": "Repair independently reproduced route and application-state defects, preserve public API and compatibility contracts, and converge only measured equivalent route/type/prop cohorts; account for all82assigned review obligations and linked follow-ups.\nEvidence: org/reviews/2026-10-t0192-task-evidence.json.\nInvariants: Every shipped route URL/method, auth/read-only boundary, response-time session check and guard order survives. Preserve optional-body handling, exact error text, specialised Hindsight/stream/auth and HTTP200partial-success contracts. Story genuine read failure is the narrow approved exception to false-success empty data. Preserve all historical identities; only independently reviewed valid-loaded-graph fixture amendment is contemplated, with allthree Composer assertions/names intact. Never touch operator data; isolated built instances and synthetic keyless data only. No paid provider calls or script execution. No fixed target, ceiling, coverage floor, timeout, retry or concurrency weakening. T0191 oracles and all prior invariants remain frozen. Runtime-status fixture: preserve all four test bodies, assertions and identities.\nRollback: Revert each coherent defect or route/type/prop cohort with its callers. Retain regression tests; no schema or stored-key migration. Public contracts remain pinned.\nCandidate verification2026-10-04: a21b4ee8, all10 unchanged-tree gate stages,8819unit/497browser passes, existing9unit/24browser skips.22controlledstatewalks,2rebuilt sign-in walks and2Next fallback observations completed. Preserve4failed outer-boundary hypothesis probes.20Jest causal kills with297controls before/after;2separate browser persistence kills with4controls before/after each, originalb01analyserERROR retained.82reasoned proposals61done13ruledout8deferred; explicitT0193 follow-ups remain. LocalR2 technical readiness confirmed; exact-head hosted and finalbatch acceptance pending. Full evidence/deviations: org/reviews/2026-10-t0192-task-evidence.json. No whole-product or paid-provider acceptance.\nHosted prerequisite defect: fully rendered Credentials heading uses a hairline on a raised surface, observed 1.11:1 against existing 1.55 floor. Claim a focused independently authored loaded-state oracle and local existing-token repair; no threshold, palette, route or interaction change. Preserve original failed hosted trace.\nLoaded Credentials contrast oracle authored by Nash before repair; exact freeze accepted by Laplace after two causal reds at1.106237703 versus unchanged1.55 floor. Receipt tmp/t0192-credentials-boundary-1791090647545/receipt.json; initial scratch launch failure preserved separately.",
+  "intent": "Repair independently reproduced route and application-state defects, preserve public API and compatibility contracts, and converge only measured equivalent route/type/prop cohorts; account for all82assigned review obligations and linked follow-ups.\nEvidence: org/reviews/2026-10-t0192-task-evidence.json.\nInvariants: Every shipped route URL/method, auth/read-only boundary, response-time session check and guard order survives. Preserve optional-body handling, exact error text, specialised Hindsight/stream/auth and HTTP200partial-success contracts. Story genuine read failure is the narrow approved exception to false-success empty data. Preserve all historical identities; only independently reviewed valid-loaded-graph fixture amendment is contemplated, with allthree Composer assertions/names intact. Never touch operator data; isolated built instances and synthetic keyless data only. No paid provider calls or script execution. No fixed target, ceiling, coverage floor, timeout, retry or concurrency weakening. T0191 oracles and all prior invariants remain frozen. Runtime-status fixture: preserve all four test bodies, assertions and identities.\nRollback: Revert each coherent defect or route/type/prop cohort with its callers. Retain regression tests; no schema or stored-key migration. Public contracts remain pinned.\nCandidate verification2026-10-04: a21b4ee8, all10 unchanged-tree gate stages,8819unit/497browser passes, existing9unit/24browser skips.22controlledstatewalks,2rebuilt sign-in walks and2Next fallback observations completed. Preserve4failed outer-boundary hypothesis probes.20Jest causal kills with297controls before/after;2separate browser persistence kills with4controls before/after each, originalb01analyserERROR retained.82reasoned proposals61done13ruledout8deferred; explicitT0193 follow-ups remain. LocalR2 technical readiness confirmed; exact-head hosted and finalbatch acceptance pending. Full evidence/deviations: org/reviews/2026-10-t0192-task-evidence.json. No whole-product or paid-provider acceptance.\nHosted prerequisite defect: fully rendered Credentials heading uses a hairline on a raised surface, observed 1.11:1 against existing 1.55 floor. Claim a focused independently authored loaded-state oracle and local existing-token repair; no threshold, palette, route or interaction change. Preserve original failed hosted trace.\nLoaded Credentials contrast oracle authored by Nash before repair; exact freeze accepted by Laplace after two causal reds at1.106237703 versus unchanged1.55 floor. Receipt tmp/t0192-credentials-boundary-1791090647545/receipt.json; initial scratch launch failure preserved separately.\nFinal bounded acceptance: Laplace FINAL R2 PASS at 926a13d3be8b14b6214025ff32755350b0039d0b; exact-head required hosted jobs green. Review: org/reviews/2026-10-t0192-final-acceptance.md. 82 final dispositions:61done13ruled-out8deferred. Bounded T-0192 acceptance only, not whole-product, release or paid-provider acceptance. Preserve all failed gates, four outer-boundary hypothesis probes, historical skips and original mutation receipts. Original browser b01 remains analyser ERROR because ANSI colours were not stripped; separately qualified causal SQL/API failure does not relabel that receipt. Preserve all row evidence, uncertainty, follow-ups and latency limits. T-0193 remains unopened until every required closure-head hosted job is green.",
   "declared": {
     "capabilities": [
       "edit-code",
@@ -18,7 +18,7 @@
   },
   "mode": "high-assurance",
   "tier_proposed": "R2",
-  "status": "active",
+  "status": "done",
   "owner_session": "2026-10-03-t0192-coordinator",
   "claims": [
     "src/lib/api/api-fetch.ts",
@@ -499,11 +499,13 @@
     "tests/unit/t0180-secret-scan-config.test.ts",
     "org/reviews/2026-10-t0192-secret-scan.md",
     "src/components/models/CredentialsPanel.tsx",
-    "tests/e2e/models-credential-boundary.spec.ts"
+    "tests/e2e/models-credential-boundary.spec.ts",
+    "org/reviews/2026-10-t0192-final-acceptance.md"
   ],
   "timestamps": {
     "opened": "2026-10-03T20:37:32.586979+00:00",
-    "updated": "2026-10-04T06:07:53.797380+00:00"
+    "updated": "2026-10-04T06:47:16.753179+00:00",
+    "closed": "2026-10-04T06:47:16.753179+00:00"
   },
   "tier_ruled": "R2",
   "reasons": [
@@ -3414,6 +3416,13 @@
       "verdict": "pass",
       "date": "2026-10-04T05:14:38.520783+00:00",
       "notes": "Exact red-freeze only: loaded Credentials two-width oracle 9641baef1b0d2161e8e6586b75ee5d0e43373880d10e893de7d2fbbf6de6303b. No repair or final acceptance yet."
+    },
+    {
+      "role": "REVIEWER",
+      "session": "01a1019a-65c6-7ae2-aafe-5b79b166c745",
+      "verdict": "pass",
+      "date": "2026-10-04T06:47:16.753179+00:00",
+      "notes": "Laplace FINAL R2 PASS at 926a13d3be8b14b6214025ff32755350b0039d0b. See org/reviews/2026-10-t0192-final-acceptance.md; verdict SHA256 e815d22b85f9683f9d5baa6e6a4c6043a2e69034298864d59126244487eb5dcf; hosted SHA256 f99423cdcd0a228dba54fe9cb91a7440161e1a1f5485c73559e912ed6328d899. Bounded T-0192 acceptance only, not whole-product, release or paid-provider acceptance. Preserve all failed gates, four outer-boundary hypothesis probes, historical skips and original mutation receipts. Original browser b01 remains analyser ERROR because ANSI colours were not stripped; separately qualified causal SQL/API failure does not relabel that receipt. Preserve all row evidence, uncertainty, follow-ups and latency limits. T-0193 remains unopened until every required closure-head hosted job is green."
     }
   ]
 }
