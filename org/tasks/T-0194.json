@@ -168,68 +168,77 @@
     "org/reviews/2026-10-t0194-queue-oracle-type-amendment-proposal.md",
     "tests/helpers/composer-legacy-fixture.ts",
     "org/briefs/T-0194-composer-fixture-fold.md",
-    "org/reviews/2026-10-t0194-additional-body-review.md"
+    "org/reviews/2026-10-t0194-additional-body-review.md",
+    "tests/unit/lib-domain-sweep-regressions.test.ts",
+    "org/briefs/T-0194-sweep-regressions.md"
   ],
   "timestamps": {
-    "opened": "2026-10-04T15:51:49.263200+00:00",
-    "updated": "2026-10-04T19:43:23.702800+00:00"
+    "opened": "2026-10-04T16:51:49.2632+01:00",
+    "updated": "2026-10-04T22:50:07.809028+01:00"
   },
   "verdicts": [
     {
       "role": "REVIEWER",
       "session": "01a10610-cd11-7cd1-a83c-bbed065d1f98",
       "verdict": "pass",
-      "date": "2026-10-04T16:12:04.687458+00:00",
+      "date": "2026-10-04T17:12:04.687458+01:00",
       "notes": "Bounded first-cohort RED freeze only:31cases17pass14causal matcherfail,0runtimeerrors/skips;17existingcontrols green. Four gateway Stop waits and linked-listener leak red; Q027 precedence/zero/submission/grace/guidance qualification.11originalroundtripnames held; exact obsolete wording amendment reconstructs originalbytes and Q027 supplies operatorauthority. Source/currentcontrols unchangedfrom93e425. Hashes/proof in verification. No implementation/fullbatchacceptance."
     },
     {
       "role": "operator",
       "session": "Daniel Parke",
       "verdict": "pass",
-      "date": "2026-10-04T17:37:49.722234+00:00",
+      "date": "2026-10-04T18:37:49.722234+01:00",
       "notes": "Recorded accepted ADR0019 exact drafted Composer-only design on2026-10-04, via interactive reply; proposal org/reviews/2026-10-t0194-composer-queue-adr-proposal.md. Acceptance is design authority only, not implementation or batch acceptance."
     },
     {
       "role": "ORACLE",
       "session": "01a10610-cd11-7cd1-a83c-bbed065d1f98",
       "verdict": "pass",
-      "date": "2026-10-04T19:07:26.432438+00:00",
+      "date": "2026-10-04T20:07:26.432438+01:00",
       "notes": "Independent one-case invalid-receipt cancellation regression frozen red: 1 causal matcher failure, no infrastructure errors or skips; source repair follows red commit."
     },
     {
       "role": "operator",
       "session": "Daniel Parke",
       "verdict": "pass",
-      "date": "2026-10-04T19:23:24.140939+00:00",
+      "date": "2026-10-04T20:23:24.140939+01:00",
       "notes": "Approve one joint gated implementation landing for T0194/T0207 as proposed. Separate task records, independent oracles, both committed causal sweeps, independent R3 review and every required hosted job remain. No check or target weakened."
     },
     {
       "role": "operator",
       "session": "Daniel Parke",
       "verdict": "pass",
-      "date": "2026-10-04T20:15:36.943382+00:00",
+      "date": "2026-10-04T21:15:36.943382+01:00",
       "notes": "Authorise narrow independent gate amendments as proposed in org/reviews/2026-10-t0194-t0207-gate-amendment-proposal.md. Existing names/behaviour assertions/timeouts/coverage floors held; full gate reruns. This is amendment authority, not implementation acceptance."
     },
     {
       "role": "operator",
       "session": "Daniel Parke",
       "verdict": "pass",
-      "date": "2026-10-04T20:23:59.225429+00:00",
+      "date": "2026-10-04T21:23:59.225429+01:00",
       "notes": "Authorise the exact independent typing-only lib-domain-queue-admission.test.ts amendment described in org/reviews/2026-10-t0194-queue-oracle-type-amendment-proposal.md. All 30 names, assertions, deadlines, fixtures and emitted JavaScript remain identical. This is amendment authority, not implementation acceptance."
     },
     {
       "role": "REVIEWER",
       "session": "01a107e1-5ba0-7703-ab13-e23e640dc10b",
       "verdict": "pass",
-      "date": "2026-10-04T20:33:21.824958+00:00",
+      "date": "2026-10-04T21:33:21.824958+01:00",
       "notes": "Bounded independent PASS for the 12 retained-fixture gate amendments under explicit operator authority. Originals/inverse proofs, names, assertions, deadlines and queue emitted-JavaScript identity verified; focused 44 and 90 passes, one existing skip; typing/lint/Knip 0. Evidence: org/reviews/2026-10-t0194-t0207-gate-amendments.md. No full-gate, sweep, hosted, overall R3 or release acceptance."
     },
     {
       "role": "REVIEWER",
       "session": "01a107e1-5ba0-7703-ab13-e23e640dc10b",
       "verdict": "pass",
-      "date": "2026-10-04T20:52:59.512847+00:00",
+      "date": "2026-10-04T21:52:59.512847+01:00",
       "notes": "Scope conformity only: exact unchanged transport/running-node/terminal-settlement helper extraction across the two already authorised Human/artifact fixtures fits existing operator R3 approval. All 15 names, 36 assertions and deadlines held; no broader consumers or production change. Actual candidate checks/review/full gate still required."
+    },
+    {
+      "role": "REVIEWER",
+      "session": "01a107e1-5ba0-7703-ab13-e23e640dc10b",
+      "verdict": "pass",
+      "date": "2026-10-04T22:51:20.790083+01:00",
+      "notes": "Parfit bounded source/authority PASS for joint implementation8daba398; full unchanged gate4 passed10steps,9051unit/513browser/2purity. Independent causal review confirms T0207 eight kills with32 original/restored controls and T0194 sixteen kills with96 controls. T0194 one survivor and one ERROR remain honestly open pending independent supplemental tests. Both records remain active; no joint batch closure or hosted/product/release acceptance. Exact evidence and limits: org/reviews/2026-10-t0194-verification.md."
     }
   ],
   "tier_ruled": "R3",
@@ -272,7 +281,8 @@
       "tests/unit/lib-domain-audit-regressions.test.ts",
       "tests/unit/lib-domain-queue-confirmation.test.ts",
       "tests/unit/lib-domain-queue-invalid-cancel.test.ts",
-      "tests/unit/lib-domain-remaining-rulings.test.ts"
+      "tests/unit/lib-domain-remaining-rulings.test.ts",
+      "tests/unit/lib-domain-sweep-regressions.test.ts"
     ],
     "hashes": {
       "tests/unit/lib-domain-retry-stop.test.ts": "98c4f37356f0130b8499e5ae7863ddaeaf6c6f11e3b6d3f65edfbf8694993574",
@@ -286,9 +296,10 @@
       "tests/unit/lib-domain-audit-regressions.test.ts": "5a98bb45d27e3ca01d7f2d3997548bfcdf1ec10a2e4aab0c52f19cd0649f95fe",
       "tests/unit/lib-domain-queue-confirmation.test.ts": "33e09c78ad7f2f5386fceb5e4ff3d8c9e7ec61fb10582c7d330b9e96038e69cc",
       "tests/unit/lib-domain-queue-invalid-cancel.test.ts": "e0d3c6b0e0b65d693b8b85d1fac1027b0c22905f843b4edf61ee9f8070c824d1",
-      "tests/unit/lib-domain-remaining-rulings.test.ts": "ebd5e037a14b2596859fc4bc9085ae5b3c971d8e935415d1c6c048c287488286"
+      "tests/unit/lib-domain-remaining-rulings.test.ts": "ebd5e037a14b2596859fc4bc9085ae5b3c971d8e935415d1c6c048c287488286",
+      "tests/unit/lib-domain-sweep-regressions.test.ts": "5975c736e21f4ba073397b9511d9baa35f7617c05803af7222fbfcadd09167d5"
     },
-    "author_session": "01a1062b-0f36-7702-885b-476fd150d9bf",
+    "author_session": "01a1062b-0f36-7702-885b-476fd150d9bf; Faraday independent two-test committed-sweep follow-up, 01a1062b-0f36-7702-885b-476fd150d9bf",
     "independence_method": "metamorphic"
   }
 }

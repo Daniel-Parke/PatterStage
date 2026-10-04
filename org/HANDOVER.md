@@ -9,38 +9,27 @@ updated: 2026-10-04
 
 ## T0194/T0207 implementation checkpoint, 2026-10-04
 
-The first full candidate gate is recorded red: lint/typecheck passed, then
-Jest failed 12 suites/42 tests (9009 passes, nine existing skips). No later
-step ran; before/after tree hashes match. Operator-authorised independent
-fixture amendments now pass 44 Composer and 90 other focused controls
-(one existing skip). Typing/lint/Knip pass. Exact identities, original/new
-hashes and review bounds are in
-[gate amendments](reviews/2026-10-t0194-t0207-gate-amendments.md).
-The second full gate, joint landing, sweeps, R3 acceptance and hosted checks
-remain pending. These focused results do not close either batch.
+Joint implementation landed locally as `8daba398` after the complete unchanged
+gate passed all10steps:9051 unit cases,513 browser cases and2 build-purity checks.
+Existing skips are recorded. Both censuses passed; repeated test windows4768
+remain below the unchanged4800 oracle ceiling. Three earlier red gate attempts
+and their actual repairs are retained in the verification files.
 
-The second attempt passed9050 unit cases but retained one C4 failure: repeated
-test windows4826 exceeded its fixed4800 cap. The exact shared Composer fixture
-now measures4768 and saves nine total test lines; all39 focused controls pass.
-The cap and coverage floors stay unchanged. Independent final fold review and
-a third complete gate are required. A serial112-case open-handle diagnostic is
-clean but does not explain the parallel worker warning; T0195 retains it.
-Additional complete repository/path-caller reads are filed in
-[body review](reviews/2026-10-t0194-additional-body-review.md), with source-only
-fallback/traversal hypotheses and explicit runtime limits.
+T0207 committed sweep passes8/8mutants with32-case original/restored controls.
+T0194 first sweep records16kills, one survivor and one infrastructure-classified
+Promise assertion failure, with96-case original/restored controls passing.
+Independent supplemental tests must close those gaps before final acceptance.
+Independent R3 acceptance, task closure and hosted acceptance remain pending.
 
-The third gate passes9051 unit cases, Knip and canary, then Turbopack rejects
-the isolated checkout's shared dependency junction. This is retained as red.
-The owned junction was archived without traversing its target; real packages
-were copied and four dependency/native hashes match. The isolated build-only
-probe then passes in45.1s. Full gate4 is still required; the partial probe
-cannot replace it. Production configuration and operator data stay unchanged.
+The parallel Jest worker warning remains unexplained under T0195. The clean
+serial112-case diagnostic does not explain it. T0206 historical macOS timing
+cause remains open/red. Additional complete repository/path-caller reads are
+filed in [body review](reviews/2026-10-t0194-additional-body-review.md), including
+source-only fallback/traversal hypotheses and explicit runtime limits.
 
-The last hosted acceptance remains dev93e425d556f384663fe5715c983d8b0c0c47fd07:
-11 PR jobs, 9 required push jobs and both Gitleaks scans pass. Later commits
-are independent red oracles. No joint implementation/full-gate acceptance yet.
-The operator approved one joint implementation landing for T0194/T0207;
-separate records, sweeps, independent R3 review and all hosted checks remain.
+Last observed hosted head is93e425d556f384663fe5715c983d8b0c0c47fd07:
+all11 PR jobs,9 required push jobs and both Gitleaks scans pass. No new-head
+hosted result, whole-product or release acceptance is claimed.
 
 Implemented T0194 cohorts: abortable gateway waits and linked-listener cleanup;
 elapsed mission-deadline wording; Hermes root/parser ownership under ADR0018;

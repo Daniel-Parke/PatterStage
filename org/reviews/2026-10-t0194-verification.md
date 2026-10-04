@@ -273,3 +273,16 @@ Eight explicitly claimed comment files correct obsolete paths/descriptions and
 misattached repository prose. No protected/history/derived bulk rewrite occurs.
 T0207 has separate verification and independent frozen security controls.
 Full unchanged gate, committed sweeps and hosted acceptance remain pending.
+
+
+## Committed implementation and complete gate
+
+Joint operator-authorised implementation commit: `8daba39805eec79f2a32043a946ec17b1c9a748c`. All183 overlay paths matched the isolated gate candidate byte for byte before staging; protected changes were limited to accepted ADR0018/0019/0020. Historical task records were excluded.
+
+Full gate4 `tmp/t0194-final-gate-1791149030291/gate/summary.json` exited0 with all10 steps green and identical before/after stamp `974c88039e0d6a00b204f35b6dd7bcbd6483b1c2c06d111a8231e32e6ae0ee84`. Lint, typecheck, Jest coverage, Knip, canary, Turbopack build, database-free build checks, browser acceptance and both censuses passed. Jest:865 suites/9051 tests passed,2 existing skipped suites/9 existing skipped cases. Browser:513 passed/24 existing skipped, configured retries0. Build-purity:2/2 passed. No operator repository data was used.
+
+Earlier failed gates remain evidence: gate1 had42 failing unit cases; gate2 exceeded the unchanged C4 repeated-window ceiling; gate3 rejected an isolated dependency junction. Independent fixture repair and a net-saving helper fold resolved the first two. Real owned dependency materialisation resolved the third without production configuration changes. The build-only probe was partial and never replaced the full gate.
+
+The full parallel Jest run still warns that a worker required forceful shutdown. The separate112-case serial open-handle diagnostic is clean and does not explain that warning. T0195 owns the uncertainty. Build-purity emits Node DEP0190. Route census observes offline owned Hindsight/gateway services, so it does not establish service availability. No whole-product or release acceptance.
+
+First committed T0194 sweep `tmp/t0194-committed-sweeps-1791150322759/summary.json` exits2:16 causal kills, `hindsight-query-key` survives and `queue-stop-receipt-validation` is ERROR/infrastructure. Both96-case original/restored controls pass; tree restores clean. The latter failed an executed Promise rejection assertion without matcherResult, which the strict runner correctly refuses to count. The Hindsight handler overrides the table entry, masking that mutation. Independent supplemental behaviour controls are required; neither outcome is relabelled killed.

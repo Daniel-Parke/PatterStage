@@ -4508,7 +4508,7 @@
       }
     },
     "sourceManifestSha256": "afd19c903e1854efc024a1df81506adba240a29aae50b411a398b44bcd5ef7b2",
-    "gateStatus": "not-run-by-this-writer",
+    "gateStatus": "Full unchanged gate4 passed all10steps; earlier3failed attempts retained. Implementation committed8daba398. Mutation follow-up and independent/hosted acceptance pending; coverage obligations remain itemised and unresolved where stated.",
     "acceptance": "No whole-batch/full-gate/mutation-sweep/R3/hosted or release acceptance.",
     "scopeLimit": "Coverage inspection can be complete for named bodies without proof of every branch. Broad corpus obligations remain explicit unresolved reviews.",
     "classificationLimit": "Original classify-only scope historical; 137 candidate classification requires independent sceptic, 86 broader named-reader candidates unclassified.",
@@ -4606,6 +4606,147 @@
         "passedTests": 9009,
         "existingSkippedTests": 9,
         "laterStepsExecuted": false
+      },
+      {
+        "receipt": "tmp/t0194-final-gate-1791146026762/gate/summary.json",
+        "complete": false,
+        "treeBefore": "5423ebe42b5ec8e27f94ceb54313fe4f2498c788a7ab6bb60d1536d921aee8a7",
+        "treeAfter": "5423ebe42b5ec8e27f94ceb54313fe4f2498c788a7ab6bb60d1536d921aee8a7",
+        "treeMoved": false,
+        "steps": [
+          {
+            "step": "lint",
+            "code": 0,
+            "seconds": 60.2,
+            "log": "C:\\Users\\Daniel\\Documents\\Coding\\Github\\PatterStage\\tmp\\t0194-final-gate-1791146026762\\gate\\lint.log"
+          },
+          {
+            "step": "tsc",
+            "code": 0,
+            "seconds": 5.5,
+            "log": "C:\\Users\\Daniel\\Documents\\Coding\\Github\\PatterStage\\tmp\\t0194-final-gate-1791146026762\\gate\\tsc.log"
+          },
+          {
+            "step": "jest",
+            "code": 1,
+            "seconds": 310.5,
+            "log": "C:\\Users\\Daniel\\Documents\\Coding\\Github\\PatterStage\\tmp\\t0194-final-gate-1791146026762\\gate\\jest.log"
+          }
+        ]
+      },
+      {
+        "receipt": "tmp/t0194-final-gate-1791148104217/gate/summary.json",
+        "complete": false,
+        "treeBefore": "6b171dad0846101607eaa67784e921c65af78b5f74b63b8b7b7afc868b89f74b",
+        "treeAfter": "6b171dad0846101607eaa67784e921c65af78b5f74b63b8b7b7afc868b89f74b",
+        "treeMoved": false,
+        "steps": [
+          {
+            "step": "lint",
+            "code": 0,
+            "seconds": 57.4,
+            "log": "C:\\Users\\Daniel\\Documents\\Coding\\Github\\PatterStage\\tmp\\t0194-final-gate-1791148104217\\gate\\lint.log"
+          },
+          {
+            "step": "tsc",
+            "code": 0,
+            "seconds": 2.7,
+            "log": "C:\\Users\\Daniel\\Documents\\Coding\\Github\\PatterStage\\tmp\\t0194-final-gate-1791148104217\\gate\\tsc.log"
+          },
+          {
+            "step": "jest",
+            "code": 0,
+            "seconds": 298.5,
+            "log": "C:\\Users\\Daniel\\Documents\\Coding\\Github\\PatterStage\\tmp\\t0194-final-gate-1791148104217\\gate\\jest.log"
+          },
+          {
+            "step": "knip",
+            "code": 0,
+            "seconds": 2.8,
+            "log": "C:\\Users\\Daniel\\Documents\\Coding\\Github\\PatterStage\\tmp\\t0194-final-gate-1791148104217\\gate\\knip.log"
+          },
+          {
+            "step": "canary",
+            "code": 0,
+            "seconds": 0.6,
+            "log": "C:\\Users\\Daniel\\Documents\\Coding\\Github\\PatterStage\\tmp\\t0194-final-gate-1791148104217\\gate\\canary.log"
+          },
+          {
+            "step": "build",
+            "code": 1,
+            "seconds": 4.1,
+            "log": "C:\\Users\\Daniel\\Documents\\Coding\\Github\\PatterStage\\tmp\\t0194-final-gate-1791148104217\\gate\\build.log"
+          }
+        ]
+      },
+      {
+        "receipt": "tmp/t0194-final-gate-1791149030291/gate/summary.json",
+        "complete": true,
+        "treeBefore": "974c88039e0d6a00b204f35b6dd7bcbd6483b1c2c06d111a8231e32e6ae0ee84",
+        "treeAfter": "974c88039e0d6a00b204f35b6dd7bcbd6483b1c2c06d111a8231e32e6ae0ee84",
+        "treeMoved": false,
+        "steps": [
+          {
+            "step": "lint",
+            "code": 0,
+            "seconds": 94.1,
+            "log": "C:\\Users\\Daniel\\Documents\\Coding\\Github\\PatterStage\\tmp\\t0194-final-gate-1791149030291\\gate\\lint.log"
+          },
+          {
+            "step": "tsc",
+            "code": 0,
+            "seconds": 9.9,
+            "log": "C:\\Users\\Daniel\\Documents\\Coding\\Github\\PatterStage\\tmp\\t0194-final-gate-1791149030291\\gate\\tsc.log"
+          },
+          {
+            "step": "jest",
+            "code": 0,
+            "seconds": 311.4,
+            "log": "C:\\Users\\Daniel\\Documents\\Coding\\Github\\PatterStage\\tmp\\t0194-final-gate-1791149030291\\gate\\jest.log"
+          },
+          {
+            "step": "knip",
+            "code": 0,
+            "seconds": 2.7,
+            "log": "C:\\Users\\Daniel\\Documents\\Coding\\Github\\PatterStage\\tmp\\t0194-final-gate-1791149030291\\gate\\knip.log"
+          },
+          {
+            "step": "canary",
+            "code": 0,
+            "seconds": 0.7,
+            "log": "C:\\Users\\Daniel\\Documents\\Coding\\Github\\PatterStage\\tmp\\t0194-final-gate-1791149030291\\gate\\canary.log"
+          },
+          {
+            "step": "build",
+            "code": 0,
+            "seconds": 10.5,
+            "log": "C:\\Users\\Daniel\\Documents\\Coding\\Github\\PatterStage\\tmp\\t0194-final-gate-1791149030291\\gate\\build.log"
+          },
+          {
+            "step": "build-purity",
+            "code": 0,
+            "seconds": 19.8,
+            "log": "C:\\Users\\Daniel\\Documents\\Coding\\Github\\PatterStage\\tmp\\t0194-final-gate-1791149030291\\gate\\build-purity.log"
+          },
+          {
+            "step": "e2e",
+            "code": 0,
+            "seconds": 300.4,
+            "log": "C:\\Users\\Daniel\\Documents\\Coding\\Github\\PatterStage\\tmp\\t0194-final-gate-1791149030291\\gate\\e2e.log"
+          },
+          {
+            "step": "census",
+            "code": 0,
+            "seconds": 49,
+            "log": "C:\\Users\\Daniel\\Documents\\Coding\\Github\\PatterStage\\tmp\\t0194-final-gate-1791149030291\\gate\\census.log"
+          },
+          {
+            "step": "census-lines",
+            "code": 0,
+            "seconds": 2.2,
+            "log": "C:\\Users\\Daniel\\Documents\\Coding\\Github\\PatterStage\\tmp\\t0194-final-gate-1791149030291\\gate\\census-lines.log"
+          }
+        ]
       }
     ]
   },
@@ -4793,5 +4934,11 @@
     "owner": "T-0194 coordinator and independent REVIEWER",
     "acceptance": "Bounded metadata eligibility only; no filesystem exemption, predicate change, baseline exemption, broader Settings exception or full-gate acceptance.",
     "reviewer": "Parfit, independent REVIEWER"
+  },
+  "localLanding": {
+    "implementationCommit": "8daba39805eec79f2a32043a946ec17b1c9a748c",
+    "fullGateReceipt": "tmp/t0194-final-gate-1791149030291/gate/summary.json",
+    "treeSha256": "974c88039e0d6a00b204f35b6dd7bcbd6483b1c2c06d111a8231e32e6ae0ee84",
+    "newBodyReview": "org/reviews/2026-10-t0194-additional-body-review.md"
   }
 }
