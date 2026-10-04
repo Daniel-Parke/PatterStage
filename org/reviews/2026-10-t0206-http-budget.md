@@ -94,3 +94,12 @@ including the classified original-workflow red, matching 42-case identities
 and all preserved old assertions. This permits measurement only. The complete
 gate, committed negative controls and hosted diagnostic remain outstanding;
 T-0206 stays active and T-0193 stays unopened.
+
+Oracle commit `81600d9d` normalises the observer's mixed CRLF endings to LF.
+Its reviewed Windows digest is
+`5df60fd8f6c59216107b9634eea615d7b86311871cccfb36a510c2704110364f`;
+the committed LF digest is
+`31d4a11ec9785c6e68d4d6a372f7e1c8f6c77c23ea0094aed686e1eb82cc7100`.
+Replacing CRLF with LF in the reviewed bytes exactly reproduces the committed
+blob. The native Windows receipt remains bound to its original raw digest;
+hosted execution uses the LF form. No Python source token changes.

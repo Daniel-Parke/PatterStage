@@ -170,10 +170,38 @@ jobs:
         run: npx tsc --noEmit -p tsconfig.json
       - name: Unit tests with coverage
         id: unit_coverage
-        run: npm run test:coverage
+        shell: bash
+        run: |
+          receipt="$RUNNER_TEMP/t0206-http-phases.json"
+          "${PYTHON:-python}" tests/helpers/release-http-phase-observer.py "$receipt" --workload coverage-concurrent &
+          observer_pid=$!
+          trap 'wait "$observer_pid" || true' EXIT
+          trap 'exit 130' INT
+          trap 'exit 143' TERM
+          started=$("${PYTHON:-python}" -c 'import time; print(time.monotonic())')
+          if npm run test:coverage; then coverage_status=0; else coverage_status=$?; fi
+          diagnostic_status=0
+          finished=$("${PYTHON:-python}" -c 'import time; print(time.monotonic())') || diagnostic_status=90
+          if wait "$observer_pid"; then observer_status=0; else observer_status=$?; fi
+          trap - EXIT INT TERM
+          printf 'coverage_status=%s\nobserver_status=%s\n' "$coverage_status" "$observer_status" >> "$GITHUB_OUTPUT" || diagnostic_status=90
+          "${PYTHON:-python}" -c 'import json,sys; from pathlib import Path; report={"diagnosticOnly": True, "coverageStartMonotonic": float(sys.argv[1]), "coverageEndMonotonic": float(sys.argv[2]) if sys.argv[2] else None, "coverageExit": int(sys.argv[3]), "observerExit": int(sys.argv[4]), "conditions": "additional observer alongside unchanged coverage; adds contention"}; text=json.dumps(report); Path(sys.argv[5]).write_text(text + "\n", encoding="utf-8"); print(text)' "$started" "$finished" "$coverage_status" "$observer_status" "$RUNNER_TEMP/t0206-coverage-interval.json" || diagnostic_status=90
+          if [[ -f "$receipt" ]]; then cat "$receipt" || diagnostic_status=90; else diagnostic_status=90; fi
+          if ((coverage_status != 0)); then exit "$coverage_status"; fi
+          if ((observer_status != 0)); then exit "$observer_status"; fi
+          exit "$diagnostic_status"
         env:
           PS_DATA_DIR: ${{ runner.temp }}/patterstage-ci-data
           HERMES_HOME: ${{ runner.temp }}/patterstage-ci-hermes
+      - name: Preserve T-0206 diagnostic receipt
+        if: ${{ always() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: t0206-http-phases-${{ github.run_id }}
+          path: |
+            ${{ runner.temp }}/t0206-http-phases.json
+            ${{ runner.temp }}/t0206-coverage-interval.json
+          if-no-files-found: warn
       - name: T-0205 native timing diagnostic (not acceptance)
         if: ${{ !cancelled() && (steps.unit_coverage.outcome == 'success' || steps.unit_coverage.outcome == 'failure') }}
         timeout-minutes: 3

@@ -2,7 +2,7 @@
   "measuredAt": "2026-10-04",
   "counts": {
     "srcLines": 102062,
-    "testLines": 150681,
+    "testLines": 150772,
     "scriptsLines": 13597,
     "srcRepeatedWindowLines": 705,
     "testRepeatedWindowLines": 4787,
@@ -1250,6 +1250,11 @@
       "measuredAt": "2026-10-04",
       "rise": "testLines rose from 150680 to 150681",
       "reason": "T-0192: one exact non-secret fingerprint membership assertion added by an independent author; all three existing identities and scanner controls retained."
+    },
+    {
+      "measuredAt": "2026-10-04",
+      "rise": "testLines rose from 150681 to 150772",
+      "reason": "T-0206: independent W01 amendment adds fourteen negative-command and owned-shell exit-preservation controls for the macOS diagnostic; product counts and fixed targets unchanged."
     }
   ]
 }
