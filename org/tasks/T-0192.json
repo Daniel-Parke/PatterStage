@@ -550,7 +550,7 @@
       "tests/unit/sign-in-document-metadata.test.ts"
     ],
     "hashes": {
-      "tests/unit/api-fetch-error-envelope.test.ts": "f19bdd09a27ac0e4204ed36fe873cfc81adc7946f8b0ffab644a6bfe6135db51",
+      "tests/unit/api-fetch-error-envelope.test.ts": "b5b70b1a437c6894d24bbf53c13e50cbccca6b48390d293a4b5592e553fa5b01",
       "tests/unit/settings-save-draft-ownership.test.tsx": "bcfe417bce67d68bfe6de8725e47f53eb4836d2b8c72755301a8396a1fcd025a",
       "tests/unit/model-bulk-default-feedback.test.tsx": "f91bd70cebfe92b56a5c3182f99d072a090abbe543b15963156761de8b0d9a50",
       "tests/unit/story-list-failure-contract.test.ts": "c2340000aa772cdadc3317424e26798d866845dccfe30f362736233f2068a7db",
@@ -3347,6 +3347,15 @@
         "author_session": "01a10198-6b4f-7593-aa19-e0b3c8facad8",
         "authorised_by": "Laplace independent Q015 review relayed by coordinator",
         "date": "2026-10-04T01:34:52.826401+00:00"
+      },
+      {
+        "reason": "Preserve explicit rejection and identical HTTP diagnosis assertions using a structured normal matcher understood by the unchanged mutation runner. All16 identities and inputs retained; error-shaped fulfilment is rejected.",
+        "change": "tests/unit/api-fetch-error-envelope.test.ts",
+        "old_hash": "f19bdd09a27ac0e4204ed36fe873cfc81adc7946f8b0ffab644a6bfe6135db51",
+        "new_hash": "b5b70b1a437c6894d24bbf53c13e50cbccca6b48390d293a4b5592e553fa5b01",
+        "author_session": "01a10198-6b4f-7593-aa19-e0b3c8facad8",
+        "authorised_by": "Laplace independent Q015 review; original author Galileo did not amend",
+        "date": "2026-10-04T02:56:02.231635+00:00"
       }
     ]
   },

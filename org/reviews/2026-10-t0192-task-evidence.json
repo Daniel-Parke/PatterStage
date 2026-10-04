@@ -1263,6 +1263,24 @@
     "receipt": "tmp/t0191-green-validation/tmp/t0192-sign-in-metadata-1791081788977/manifest.json",
     "red": "2 causal metadata failures, 2 passing preservation controls; types/lint0.",
     "builtReproduction": "tmp/t0192-remaining-walk-1791081554941/sign-in-390.json: 390px mobile layout is980px, language empty; form sign-in remainsfunctional.",
-    "scope": "Document language and viewport only; authentication responses and policy unchanged. Failed native-form presentation question remains pending."
+    "scope": "Document language and viewport only; authentication responses and policy unchanged. Failed native-form presentation question remains pending.",
+    "focusedGreen": "tmp/t0191-green-validation/tmp/t0192-sign-in-document-green.json:25/25pass including4newcases; browser geometry awaits rebuilt candidate."
+  },
+  "firstCommittedSweep": {
+    "head": "31fa54413427e2bde5351f7e17ce48bd1710e1c8",
+    "receipt": "tmp/t0192-sweep-1791080830354",
+    "exit": 2,
+    "officialResult": "17 KILLED,1ERROR; original/restored293pass.",
+    "independentReview": "Laplace accepted16causal behavioural kills; m16 was mapping-only, not saved-payload proof. m01 intended failure observed but unsupported promise matcher remainedERROR.",
+    "followUp": "Nash independent fetch assertion amendment; m16 now targets actual input event, preserving hook mapping. A fresh committed sweep remainsrequired."
+  },
+  "fetchAssertionAmendment": {
+    "author": "Nash",
+    "reviewer": "Laplace",
+    "sha256": "b5b70b1a437c6894d24bbf53c13e50cbccca6b48390d293a4b5592e553fa5b01",
+    "receipt": "tmp/t0192-fetch-assertion-receipts/receipt.json",
+    "scopeProof": "tmp/t0192-fetch-assertion-receipts/scope-proof.json",
+    "fulfilmentProof": "tmp/t0192-fetch-assertion-receipts/fulfilment-proof.json",
+    "result": "Before/amended/restored16pass; mutant15pass1causal normalmatcher; allnine amended cases refuse error-shaped fulfilment. Original16names/inputs retained. Runner unchanged."
   }
 }

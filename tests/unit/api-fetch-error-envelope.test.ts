@@ -11,7 +11,12 @@ describe("T-0192 failed HTTP envelopes", () => {
     ["nested array", { data: [] }], ["non-string error", { error: 17 }],
   ])("retains HTTP diagnosis for %s", async (_name, body) => {
     global.fetch = jest.fn().mockResolvedValue(Response.json(body, { status: 503 }));
-    await expect(apiFetch("/api/oracle")).rejects.toMatchObject({ message: "HTTP 503", status: 503, body });
+    const outcome = await apiFetch("/api/oracle").then(
+      value => ({ status: "fulfilled" as const, value }),
+      reason => ({ status: "rejected" as const, value: reason }),
+    );
+    expect(outcome.status).toBe("rejected");
+    expect(outcome.value).toMatchObject({ message: "HTTP 503", status: 503, body });
   });
 
   it.each([

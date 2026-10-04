@@ -183,20 +183,12 @@
         "src/app/api/tools/route.ts",
         "src/app/api/cron/hardware/route.ts",
         "src/app/api/config/route.ts",
-        "tests/unit/sign-in-document-metadata.test.ts"
+        "tests/unit/sign-in-document-metadata.test.ts",
+        "tests/unit/api-fetch-error-envelope.test.ts"
       ],
       "acquired": "2026-10-03T21:24:24.476320+00:00",
       "expires": "2026-10-04T21:24:24.476320+00:00"
-    },
-    {
-      "lane_id": "T-0192-fetch-amendment",
-      "task_id": "T-0192",
-      "session_id": "01a10198-6b4f-7593-aa19-e0b3c8facad8",
-      "host": "local",
-      "path_claims": [
-        "tests/unit/api-fetch-error-envelope.test.ts"
-      ]
     }
   ],
-  "note": "Galileo and Sartre stopped. Coordinator and Nash only. Nash owns the existing fetch oracle amendment because Galileo was its original author. The new metadata oracle is frozen pending review and commit."
+  "note": "All independent authors stopped. Coordinator only. Preserve oracle hashes; final full gate and committed sweep remain required."
 }
