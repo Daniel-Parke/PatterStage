@@ -483,7 +483,18 @@
     "tests/unit/type-owner-equivalence.test.ts",
     "org/briefs/T-0192-type-owner-oracle.md",
     "src/lib/api/response-route.ts",
-    "src/app/results/insights/page.tsx"
+    "src/app/results/insights/page.tsx",
+    "org/reviews/2026-10-t0192-catch-consequences.json",
+    "org/reviews/2026-10-t0192-client-errors.md",
+    "org/reviews/2026-10-t0192-sentence-contracts.md",
+    "tests/unit/sign-in-document-metadata.test.ts",
+    "org/briefs/T-0192-sign-in-document-oracle.md",
+    "src/proxy.ts",
+    "src/app/api/gateway/health/route.ts",
+    "src/app/api/memory/route.ts",
+    "src/app/api/tools/route.ts",
+    "src/app/api/cron/hardware/route.ts",
+    "src/app/api/config/route.ts"
   ],
   "timestamps": {
     "opened": "2026-10-03T20:37:32.586979+00:00",
@@ -535,7 +546,8 @@
       "tests/unit/server-log-boot-contract.test.ts",
       "tests/unit/test-require-policy.test.ts",
       "tests/unit/dependency-hygiene-contract.test.ts",
-      "tests/unit/type-owner-equivalence.test.ts"
+      "tests/unit/type-owner-equivalence.test.ts",
+      "tests/unit/sign-in-document-metadata.test.ts"
     ],
     "hashes": {
       "tests/unit/api-fetch-error-envelope.test.ts": "f19bdd09a27ac0e4204ed36fe873cfc81adc7946f8b0ffab644a6bfe6135db51",
@@ -567,7 +579,8 @@
       "tests/unit/server-log-boot-contract.test.ts": "2f6e0ad627ab99075866224564484b62a9c1ba3d45911c2923aa497a20bda5ca",
       "tests/unit/test-require-policy.test.ts": "b1bcb12f5adee1bbc13a71ee312a7e2a5aa023d58a109f5941222509746247b2",
       "tests/unit/dependency-hygiene-contract.test.ts": "100e0bbcd70bee2799b1c29df2b0a4836662c98aa5b6a02f0579e9dcfdb56874",
-      "tests/unit/type-owner-equivalence.test.ts": "99fc48f9a962e64b2ec3f22f514d174addf2731ac14ee70df71017c6c39f59c6"
+      "tests/unit/type-owner-equivalence.test.ts": "99fc48f9a962e64b2ec3f22f514d174addf2731ac14ee70df71017c6c39f59c6",
+      "tests/unit/sign-in-document-metadata.test.ts": "5d9fa42fecb4245d5fac875442f27bd071236126800ee5500aaa314b17570a3a"
     },
     "author_session": "Galileo and Sartre original authors; Halley and Sartre independent amendments; full attribution in org/reviews/2026-10-t0192-task-evidence.json; Nash independently corrected diagnostic candidate and authored ConfigSync replacement oracle; coordinator authored schedule persistence characterisation before consolidation; coordinator authored template identifier oracle before correction; Galileo tooling environment oracle independently reviewed by Laplace; Galileo Missions wiring characterisation reviewed by Laplace; coordinator server logging oracles reviewed by Laplace; Nash scoped test require-policy oracle reviewed by Laplace; Sartre dependency hygiene oracle reviewed by Laplace; Galileo bounded type-owner metamorphic oracle reviewed by Laplace",
     "independence_method": "metamorphic",

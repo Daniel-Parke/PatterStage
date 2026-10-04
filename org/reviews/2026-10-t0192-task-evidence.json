@@ -1254,5 +1254,15 @@
     "buildPurity": "Both empty and populated data checks passed.",
     "designCensus": "One complete documented-route census passed.",
     "limits": "Candidate verification only. Mutation sweep, remaining evidence inventories, targeted visual review, final independent acceptance and hosted checks remain open."
+  },
+  "signInDocumentOracle": {
+    "file": "tests/unit/sign-in-document-metadata.test.ts",
+    "sha256": "5d9fa42fecb4245d5fac875442f27bd071236126800ee5500aaa314b17570a3a",
+    "author": "Galileo",
+    "reviewer": "Laplace",
+    "receipt": "tmp/t0191-green-validation/tmp/t0192-sign-in-metadata-1791081788977/manifest.json",
+    "red": "2 causal metadata failures, 2 passing preservation controls; types/lint0.",
+    "builtReproduction": "tmp/t0192-remaining-walk-1791081554941/sign-in-390.json: 390px mobile layout is980px, language empty; form sign-in remainsfunctional.",
+    "scope": "Document language and viewport only; authentication responses and policy unchanged. Failed native-form presentation question remains pending."
   }
 }
