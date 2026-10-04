@@ -1,0 +1,86 @@
+{
+  "version": 1,
+  "reason": "Initial tests-only lexical essay ratchet: preserve existing essays by exact path and line counts; no test retirement or rewrite authorised by T-0195.",
+  "essays": [
+    {
+      "path": "tests/e2e/b19-a-title-survives-a-phone.spec.ts",
+      "physicalLines": 68,
+      "commentLines": 35
+    },
+    {
+      "path": "tests/e2e/loading.spec.ts",
+      "physicalLines": 61,
+      "commentLines": 25
+    },
+    {
+      "path": "tests/e2e/screenshots.spec.ts",
+      "physicalLines": 163,
+      "commentLines": 78
+    },
+    {
+      "path": "tests/helpers/baseline-db.ts",
+      "physicalLines": 148,
+      "commentLines": 83
+    },
+    {
+      "path": "tests/unit/agent-file-store-is-managed-key.test.ts",
+      "physicalLines": 111,
+      "commentLines": 51
+    },
+    {
+      "path": "tests/unit/c8-the-programme-is-closed.test.ts",
+      "physicalLines": 400,
+      "commentLines": 177
+    },
+    {
+      "path": "tests/unit/category-label-is-deterministic.test.ts",
+      "physicalLines": 84,
+      "commentLines": 36
+    },
+    {
+      "path": "tests/unit/deploy-action-fallback.test.ts",
+      "physicalLines": 70,
+      "commentLines": 30
+    },
+    {
+      "path": "tests/unit/hermes-profile-sync-error-format.test.ts",
+      "physicalLines": 74,
+      "commentLines": 36
+    },
+    {
+      "path": "tests/unit/hindsight-message-from-error.test.ts",
+      "physicalLines": 129,
+      "commentLines": 54
+    },
+    {
+      "path": "tests/unit/join-crontab-lines.test.ts",
+      "physicalLines": 98,
+      "commentLines": 41
+    },
+    {
+      "path": "tests/unit/pluralise-helper.test.ts",
+      "physicalLines": 97,
+      "commentLines": 50
+    },
+    {
+      "path": "tests/unit/research-sources-href-scheme.test.ts",
+      "physicalLines": 66,
+      "commentLines": 27
+    },
+    {
+      "path": "tests/unit/the-numbers-stop-lying.test.ts",
+      "physicalLines": 139,
+      "commentLines": 56
+    },
+    {
+      "path": "tests/unit/u5-the-type-scale.test.ts",
+      "physicalLines": 159,
+      "commentLines": 66
+    },
+    {
+      "path": "tests/unit/u7-the-rail.test.tsx",
+      "physicalLines": 217,
+      "commentLines": 100
+    }
+  ]
+}
