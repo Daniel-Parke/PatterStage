@@ -210,4 +210,4 @@ The records under org/tasks/ are canonical.
 | T-0203 | high-assurance | R2 | done | 2026-09-30-hosted-prerequisite-repair |
 | T-0204 | high-assurance | R1 | done | 2026-10-01-deterministic-secret-canary |
 | T-0205 | high-assurance | R1 | done | 2026-10-02-refactor-resume |
-| T-0206 | high-assurance | R1 | active | 2026-10-04-t0206-coordinator |
+| T-0206 | high-assurance | R2 | active | 2026-10-04-t0206-coordinator |

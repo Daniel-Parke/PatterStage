@@ -32,8 +32,10 @@ Q036/T0206 remains explicitly red: the original macOS C02/C05 timing cause
 is unproved. Latest greens do not establish its repair. No whole-product,
 paid-provider or release acceptance is claimed. PR157 merge/tags/releases
 remain operator actions. Owned preview3999 is stopped; normal port3333 and
-operator data were untouched. The closure metadata head still needs all
-required hosted jobs observed before opening T0194.
+operator data were untouched. Closure4a9bc63e has10of11PRjobs passing; macOS C02/C05 failed again,
+while all9required push jobs and both secret scans pass. T0194 is unopened.
+T0206 resumes actual-invocation diagnostics; see its HTTP-budget review.
+No retry or check relaxation was used.
 
 ## Previous checkpoint, 2026-10-04
 

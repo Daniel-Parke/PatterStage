@@ -1,6 +1,6 @@
 {
   "id": "T-0206",
-  "intent": "Investigate the recurring macOS full-suite HTTP fixture deadline failure before T0193. Preserve every frozen bound and assertion; identify avoidable overhead by independent phase evidence before authoring a repair oracle or implementation. Adopt independent R2 verification even if the declaration router minimum is R1; invariants and rollback are in org/briefs/T-0206-oracle.md.\nQ-035 permits T-0193 to start after the current selector fix passes the full local gate and every required hosted job while T-0206 stays open; the original timing failures and frozen bounds remain.",
+  "intent": "Investigate the recurring macOS full-suite HTTP fixture deadline failure before T0193. Preserve every frozen bound and assertion; identify avoidable overhead by independent phase evidence before authoring a repair oracle or implementation. Adopt independent R2 verification even if the declaration router minimum is R1; invariants and rollback are in org/briefs/T-0206-oracle.md.\nQ-035 permits T-0193 to start after the current selector fix passes the full local gate and every required hosted job while T-0206 stays open; the original timing failures and frozen bounds remain.\nClosure4a9bc63e PR37206142400 repeats C02/C05:21 native statuses but20 shell completions and watchdog expiry. T0194 remains unopened. Instrument the actual failed invocation through an independent Q015 amendment before attempting an overhead repair; preserve every bound and normal coverage concurrency.",
   "declared": {
     "capabilities": [
       "edit-tests",
@@ -36,15 +36,26 @@
     "tests/e2e/features.spec.ts",
     "org/QUESTIONS.md",
     "org/plans/2026-09-refactor-programme.json",
-    "org/plans/2026-09-refactor-programme.md"
+    "org/plans/2026-09-refactor-programme.md",
+    "tests/helpers/release-http-actual-observer.py",
+    "tests/helpers/release-install-http-context-probe.py",
+    "tests/helpers/release-install-http-curl-bridge.py",
+    "tests/unit/release-http-actual-observer.test.ts",
+    "org/briefs/T-0206-actual-oracle.md"
   ],
   "timestamps": {
     "opened": "2026-10-04T07:07:12.340680+00:00",
-    "updated": "2026-10-04T09:38:19.736567+00:00"
+    "updated": "2026-10-04T13:56:03.491154+00:00"
   },
   "verdicts": [],
-  "tier_ruled": "R1",
+  "tier_ruled": "R2",
   "reasons": [
+    {
+      "factor": "ci-stateful-infra",
+      "tier_floor": "R2",
+      "source": "derived",
+      "evidence": "Planned existing .github/workflows/ci.yml actual-oracle diagnostic capture; stateful CI factor applies."
+    },
     {
       "factor": "boundary-contact",
       "tier_floor": "R1",

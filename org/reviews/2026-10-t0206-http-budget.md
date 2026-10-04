@@ -183,3 +183,31 @@ restoration. Receipt:tmp/t0206-diagnostic-sweep-1791106980809/summary.json.
 The executable workflow hash remainsbeb3dd48d3ec3631a08d9fc23216086d44dd46537a198f16ef65af983ba57cf2.
 Q-035 and this verification checkpoint add metadata only after the gate;
 the independently frozen selector and diagnostic executable bytes are unchanged.
+
+
+## Closure-head recurrence, 2026-10-04
+
+T0193 product/implementation070f24ea was independently accepted with every
+required hosted job passing. Closure4a9bc63e changes metadata only. Its PR
+CI37206142400 fails the existing macOS C02/C05 checks;10other required jobs
+pass, including full browser and install/update acceptance. PushCI37206138381
+has all9required jobs passing; both Gitleaks jobs pass. No retry was requested.
+Snapshot:tmp/t0191-hosted-t0193-closure/snapshot-1791121711408.json.
+Failure log:tmp/t0193-closure-macos-failure.log. T0194 remains unopened.
+
+C02 now reaches21native calls/statuses but only20shell completion records;
+the final28 is missing. C05 reads the same stalled observation and reports
+withinDeadline=false after its scratch predicates pass. These are two
+assertion symptoms of one watchdog expiry, not two proven cleanup defects.
+Native status is recorded before bridge transmission; eventual native
+completion does not establish completion before the watchdog.
+
+Downloaded separate observer artifact:
+tmp/t0206-closure-failed-phases/t0206-http-phases.json.
+All three samples have21matching completions andwithinDeadline=true.
+Observed native communication totals3.886s, outer communication5.470s;
+restored whole duration6.382s includes unsupervised preparation/cleanup.
+Banach independently finds the cause still unresolved. The smallest useful
+next probe captures the actual oracle invocation, not another separate sample.
+See org/briefs/T-0206-actual-oracle.md. No timer/concurrency/assertion change or
+performance repair is claimed. Old reds remain red.
