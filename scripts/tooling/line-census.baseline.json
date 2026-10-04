@@ -2,7 +2,7 @@
   "measuredAt": "2026-10-04",
   "counts": {
     "srcLines": 102068,
-    "testLines": 151770,
+    "testLines": 152071,
     "scriptsLines": 13597,
     "srcRepeatedWindowLines": 693,
     "testRepeatedWindowLines": 4787,
@@ -1275,6 +1275,11 @@
       "measuredAt": "2026-10-04",
       "rise": "testLines rose from 151760 to 151770",
       "reason": "T-0193 retains59newunit and12browser regressions plus independent closed-oracle amendments; ten fixture-readiness lines preserve58physical keyboard identities. Net source+6 protects draft/save ownership and truthful reads after measured consolidation."
+    },
+    {
+      "measuredAt": "2026-10-04",
+      "rise": "testLines rose from 151770 to 152071",
+      "reason": "T-0206 independent actual-invocation diagnostic oracle: 10 new controls and additive workflow assertions, +301 test lines; no product growth or target change"
     }
   ]
 }

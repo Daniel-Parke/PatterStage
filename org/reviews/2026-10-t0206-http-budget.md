@@ -241,3 +241,58 @@ Existing task-stored phase-observer hash is the prior raw CRLF digest; the
 current LF baseline above is its documented normalisation, not a source edit.
 The oracle commit is red by design. This is observability acceptance only;
 all original timing failures and T0206 final verification remain open.
+
+
+## Actual recording implementation, focused verification
+
+The frozen 52 names now pass: 42 existing tooling controls and 10 new
+actual-entrypoint controls. Existing HTTP context/default suites pass 27/27
+with recording enabled on an owned Windows instance. The receipt binds the
+current sources, preserves all 21 native/status/completion/returned counts,
+and reports object restoration and owned process cleanup. Standalone
+before/observed/restored controls remain separate from actual invocation.
+
+Native Linux disabled/enabled controls also agree on selected predicates,
+21 calls/statuses/completions/returned exits and the original deadline and
+cleanup. Repository is read-only in an owned container; /tmp is executable
+because the fixture launches temporary helper files. Linux receipt:
+tmp/t0206-linux-actual-exec.json, final JSON line, SHA256
+af079081938821b98651b74a18e76850f1e853598be0a40e9dad392c71abec35.
+Windows receipt: tmp/t0206-owned-actual-1791124154633/actual/
+stalled-21332-c5ad3b0297a84e71b3246f30d7a5c3b9.json, SHA256
+25d3d96964715cf998e756070942c8910a875b011ef6197dc0770377132505ad.
+
+Failed validation attempts are retained: first workflow integration added
+mkdir outside the hermetic PATH (10 launch errors, not mutation kills);
+the helper already owns directory creation, so the duplicate was removed.
+The final 42 tooling controls pass. Linux first used an invalid --cases
+argument, then non-executable tmpfs caused a one-request launch failure;
+tmp/t0206-linux-actual.json preserves that fully observed failed workload.
+These attempts establish no workload acceptance or causal timing result.
+
+Diagnostic measurementComplete means correlated evidence was captured. It
+does not require passing outcome flags or 21 requests. Workload acceptance
+remains in the unchanged HTTP tests. No timeout, retry, concurrency, bridge,
+shell, installer, frozen assertion or application source changed.
+
+The line-census test increase is 301 lines for the independently authored
+10-control oracle and additive workflow assertions. This is an explicit
+verification cost, not claimed product reduction. Historical targets stay
+unchanged. Full gate, clean committed mutation sweep and hosted capture
+remain required before this diagnostic checkpoint is accepted. T0206 stays
+active, the old macOS failures remain unexplained, and T0194 stays unopened.
+
+
+### Independent compile correction
+
+First full gate stopped at lint exit2: test-specific TypeScript TS2741
+required NODE_ENV in ProcessEnv. The previous app typecheck had not compiled
+this test configuration. Banach independently added NODE_ENV="test" to the
+isolated test harness. This is one runtime environment value; no control
+consumes it. Faraday independently removes that exact insertion and recovers
+the frozen bytes, preserving all52names and assertions. Actual test-specific
+typecheck passes on Node24.19;10new controls pass. The full gate uses pinned
+Node24.21 and must rerun all stages. No assertion or deadline was relaxed.
+Amended oracle LF SHA256:
+c5e80eb53dbb92a00f138618f9871e374b0a31e555bc454f7b281a4fde82bc73.
+The first red receipt remains tmp/t0206-coordinator-gate-1791124875497/gate/summary.json.

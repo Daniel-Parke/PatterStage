@@ -184,7 +184,7 @@ type Result = {
     endMonotonicNs: number; calls?: number; bytes?: number }[]; objectsRestored: boolean };
 };
 function run(mode: string): Result {
-  const env: NodeJS.ProcessEnv = { PYTHONDONTWRITEBYTECODE: "1", PYTHONIOENCODING: "utf-8" };
+  const env: NodeJS.ProcessEnv = { NODE_ENV: "test", PYTHONDONTWRITEBYTECODE: "1", PYTHONIOENCODING: "utf-8" };
   for (const [key, value] of Object.entries(process.env)) {
     if (/^(PATH|SYSTEMROOT|WINDIR|COMSPEC|PATHEXT|TMP|TEMP)$/i.test(key)) env[key] = value;
   }

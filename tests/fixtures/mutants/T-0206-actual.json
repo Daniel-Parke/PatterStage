@@ -1,0 +1,68 @@
+{
+  "task": "T-0206 actual diagnostic checkpoint",
+  "mutants": [
+    {
+      "id": "coverage-precedence",
+      "file": ".github/workflows/ci.yml",
+      "anchor": "if ((coverage_status != 0)); then exit \"$coverage_status\"; fi",
+      "replacement": ":",
+      "tests": [
+        "tests/unit/release-test-tools.test.ts"
+      ]
+    },
+    {
+      "id": "observer-wait",
+      "file": ".github/workflows/ci.yml",
+      "anchor": "if wait \"$observer_pid\"; then observer_status=0; else observer_status=$?; fi",
+      "replacement": "observer_status=0",
+      "tests": [
+        "tests/unit/release-test-tools.test.ts"
+      ]
+    },
+    {
+      "id": "diagnostic-exit",
+      "file": ".github/workflows/ci.yml",
+      "anchor": "exit \"$diagnostic_status\"",
+      "replacement": "exit 0",
+      "tests": [
+        "tests/unit/release-test-tools.test.ts"
+      ]
+    },
+    {
+      "id": "actual-entrypoint",
+      "file": "tests/helpers/release-install-http-context-probe.py",
+      "anchor": "if directory and case == \"stalled\":",
+      "replacement": "if False and directory and case == \"stalled\":",
+      "tests": [
+        "tests/unit/release-http-actual-observer.test.ts"
+      ]
+    },
+    {
+      "id": "request-correlation",
+      "file": "tests/helpers/release-http-phase-observer.py",
+      "anchor": "local.request_id = request_number",
+      "replacement": "local.request_id = 1",
+      "tests": [
+        "tests/unit/release-http-actual-observer.test.ts"
+      ]
+    },
+    {
+      "id": "invalid-receipt",
+      "file": "tests/helpers/release-http-phase-observer.py",
+      "anchor": "if not condition: raise RuntimeError(\"Invalid T0206 actual diagnostic evidence\")",
+      "replacement": "if not condition: return",
+      "tests": [
+        "tests/unit/release-http-actual-observer.test.ts"
+      ]
+    },
+    {
+      "id": "source-binding",
+      "file": "tests/helpers/release-http-phase-observer.py",
+      "anchor": "\"measurement\": {}, \"frozenHashes\": before, \"observerSHA256\": observer_hash,",
+      "replacement": "\"measurement\": {}, \"frozenHashes\": {name: \"0\" * 64 for name in before}, \"observerSHA256\": observer_hash,",
+      "tests": [
+        "tests/unit/release-http-actual-observer.test.ts"
+      ]
+    }
+  ]
+}

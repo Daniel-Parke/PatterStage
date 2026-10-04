@@ -172,6 +172,7 @@ jobs:
         id: unit_coverage
         shell: bash
         run: |
+          export T0206_ACTUAL_PHASE_DIR="$RUNNER_TEMP/t0206-actual-phases"
           receipt="$RUNNER_TEMP/t0206-http-phases.json"
           "${PYTHON:-python}" tests/helpers/release-http-phase-observer.py "$receipt" --workload coverage-concurrent &
           observer_pid=$!
@@ -201,6 +202,7 @@ jobs:
           path: |
             ${{ runner.temp }}/t0206-http-phases.json
             ${{ runner.temp }}/t0206-coverage-interval.json
+            ${{ runner.temp }}/t0206-actual-phases
           if-no-files-found: warn
       - name: T-0205 native timing diagnostic (not acceptance)
         if: ${{ !cancelled() && (steps.unit_coverage.outcome == 'success' || steps.unit_coverage.outcome == 'failure') }}

@@ -207,8 +207,22 @@ def main() -> None:
     if not bash:
         raise RuntimeError("Bash unavailable")
     subprocess.run([bash, "--noprofile", "--norc", "-c", "export PATH=/usr/bin:/bin:$PATH; command -v curl >/dev/null && command -v timeout >/dev/null && command -v mktemp >/dev/null && command -v stat >/dev/null"], check=True, capture_output=True, timeout=25)
-    results = {case: observe(case, bash, arguments.reference) for case in arguments.cases or CASES}
+    directory = os.environ.get("T0206_ACTUAL_PHASE_DIR")
+    diagnostic_errors, results = [], {}
+    for case in arguments.cases or CASES:
+        if directory and case == "stalled":
+            spec = importlib.util.spec_from_file_location("t0206_actual", HERE.with_name("release-http-phase-observer.py"))
+            if spec is None or spec.loader is None:
+                raise RuntimeError("Actual phase observer unavailable")
+            observer = importlib.util.module_from_spec(spec)
+            spec.loader.exec_module(observer)
+            results[case] = observer.observe_actual(observe, case, bash, arguments.reference,
+                native_path(directory), diagnostic_errors)
+        else:
+            results[case] = observe(case, bash, arguments.reference)
     print(json.dumps(results))
+    if diagnostic_errors:
+        raise RuntimeError("T0206 actual diagnostic infrastructure failure")
 
 
 if __name__ == "__main__":
