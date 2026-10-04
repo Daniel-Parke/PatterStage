@@ -2,7 +2,7 @@
   "measuredAt": "2026-10-04",
   "counts": {
     "srcLines": 102062,
-    "testLines": 150531,
+    "testLines": 150587,
     "scriptsLines": 13597,
     "srcRepeatedWindowLines": 705,
     "testRepeatedWindowLines": 4787,
@@ -1235,6 +1235,11 @@
       "measuredAt": "2026-10-04",
       "rise": "testLines rose from 150463 to 150531",
       "reason": "T-0192: four independent sign-in document metadata cases and causal rejection assertions preserving all16 fetch identities; no ceiling or historical target changes."
+    },
+    {
+      "measuredAt": "2026-10-04",
+      "rise": "testLines rose from 150531 to 150587",
+      "reason": "T-0192: preserve all 48 tooling oracle identities on Node 20 and 24 with isolated ESM/CJS execution barriers; add two exact non-secret evidence fingerprint assertions. No production growth or target change."
     }
   ]
 }

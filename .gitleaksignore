@@ -10,3 +10,6 @@ d5d5e52a8656af8707a8820f2ef45fb6070cc2b0:tests/unit/secret-mask.test.ts:generic-
 d5d5e52a8656af8707a8820f2ef45fb6070cc2b0:tests/unit/secret-mask.test.ts:generic-api-key:64
 6dfa455f0edf3e3bf0be8f11d9c30f66ea9fc61e:tests/unit/credentials-repository.test.ts:generic-api-key:119
 388d2596529bca865f2c22de8494dab0b8a2db66:tests/unit/credentials-repository.test.ts:generic-api-key:129
+# T-0192: two independently reproduced evidence digests, see org/reviews/2026-10-t0192-secret-scan.md.
+0705653877e89110ae1a01eb9ccd9d17d699bf53:org/reviews/2026-10-t0192-dispositions.json:generic-api-key:2056
+0705653877e89110ae1a01eb9ccd9d17d699bf53:org/reviews/2026-10-t0192-dispositions.json:generic-api-key:2080

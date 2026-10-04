@@ -494,11 +494,14 @@
     "src/app/api/memory/route.ts",
     "src/app/api/tools/route.ts",
     "src/app/api/cron/hardware/route.ts",
-    "src/app/api/config/route.ts"
+    "src/app/api/config/route.ts",
+    ".gitleaksignore",
+    "tests/unit/t0180-secret-scan-config.test.ts",
+    "org/reviews/2026-10-t0192-secret-scan.md"
   ],
   "timestamps": {
     "opened": "2026-10-03T20:37:32.586979+00:00",
-    "updated": "2026-10-04T04:00:52.461359+00:00"
+    "updated": "2026-10-04T04:30:00.452073+00:00"
   },
   "tier_ruled": "R2",
   "reasons": [
@@ -3356,6 +3359,24 @@
         "author_session": "01a10198-6b4f-7593-aa19-e0b3c8facad8",
         "authorised_by": "Laplace independent Q015 review; original author Galileo did not amend",
         "date": "2026-10-04T02:56:02.231635+00:00"
+      },
+      {
+        "reason": "Q015 independent exact count amendment for two proven non-secret evidence digests; all three identities and prior rule/canary assertions retained. Red commit4e991581, one failure of three; seven scanner contracts and unchanged planted-secret control pass. See org/reviews/2026-10-t0192-secret-scan.md.",
+        "change": "tests/unit/t0180-secret-scan-config.test.ts",
+        "old_hash": "f603b56bcee0301ba7140b54ba0f7b3c7123832740d6cdcd0bce40ebf3886fde",
+        "new_hash": "c72bdaf72c1f0e3200b6f4c3b2d688366e20a654476e727ee58fab83195369d4",
+        "author_session": "01a10198-6b4f-7593-aa19-e0b3c8facad8",
+        "authorised_by": "Laplace independent Q015 exact-byte review, transcribed by coordinator",
+        "date": "2026-10-04T04:21:12.312956+00:00"
+      },
+      {
+        "reason": "Q015 independent Node20/24 isolated ESM/CJS fixture portability amendment. All48 identities and test bodies retained; before/after Node24 and corrected Node20.20.2 pass48/48, six negative controls intact. Original23-failure hosted receipts retained. Proves application evaluation boundary, not ESM resolution. See org/reviews/2026-10-t0192-secret-scan.md.",
+        "change": "tests/unit/tooling-env-contract.test.ts",
+        "old_hash": "72f3769868dfc8e45e717b68963f092ed587940a803dcb9d1ce3bbe04da22b4e",
+        "new_hash": "305b347b4129de22c793d768fcb8b9e5ad83135eabacf9bbf0dc25ddd2024588",
+        "author_session": "01a10198-6b4f-7593-aa19-e0b3c8facad8",
+        "authorised_by": "Laplace independent Q015 exact-byte review, transcribed by coordinator",
+        "date": "2026-10-04T04:30:00.452073+00:00"
       }
     ]
   },

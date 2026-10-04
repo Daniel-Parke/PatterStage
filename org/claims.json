@@ -127,7 +127,6 @@
         "scripts/tooling/retention-prune.ts",
         "package.json",
         "tsconfig.scripts.json",
-        "tests/unit/tooling-env-contract.test.ts",
         "src/lib/logs/server-log.ts",
         "src/lib/composer/dispatch.ts",
         "src/lib/orchestration/scheduler/BackgroundScheduler.ts",
@@ -184,11 +183,14 @@
         "src/app/api/config/route.ts",
         "tests/unit/sign-in-document-metadata.test.ts",
         "tests/unit/api-fetch-error-envelope.test.ts",
-        "org/reviews/2026-10-t0192-dispositions.json"
+        "org/reviews/2026-10-t0192-dispositions.json",
+        ".gitleaksignore",
+        "org/reviews/2026-10-t0192-secret-scan.md",
+        "tests/unit/tooling-env-contract.test.ts"
       ],
       "acquired": "2026-10-03T21:24:24.476320+00:00",
       "expires": "2026-10-04T21:24:24.476320+00:00"
     }
   ],
-  "note": "All independent authors stopped. Coordinator only. Final browser mutation, outer-boundary review, exact-head hosted checks and independent final acceptance remain pending."
+  "note": "Independent authors stopped. Coordinator only; corrected full gate, committed sweep and fresh hosted acceptance pending."
 }
