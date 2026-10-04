@@ -32,3 +32,9 @@ authentication and persistence succeeded; these are not launch failures.
 LF SHA256:`acf9c71fa7450adb062d6e451a68cb7db740c7d3de66aef3e8d2df1c144a7886`. No source build was performed for this red control.
 The additional profile recovery control now passes17/17, zero runtime errors:
 `tmp/t0193-profile-amendment-green.json`. Browser green awaits the batch build.
+
+Independent read-truth oracle:14cases,8pass6causal failures,0runtime errors.
+Receipt:`tmp/t0193-read-truth-red.json`; LF SHA256:`ceba024fdee96317882e56fcff6bfaad2f04debce3ff61b4a3b728e42abef97b`.
+Models primary-read failures show false empty, Skill500/network says missing,
+and Growth failure asserts no completed work. The cached/disclosure control
+and genuine empty/missing/malformed/thin success controls already pass.
