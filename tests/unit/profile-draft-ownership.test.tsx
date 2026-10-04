@@ -43,7 +43,7 @@ function expectDraft(kind: Kind, name = "Later B") {
   expect(button(kind === "create" ? "Create" : "Save")).toBeEnabled();
 }
 
-async function mount(kind: Kind, root = false, holdRefresh = false) {
+async function mount(kind: Kind, root = false, holdRefresh = false, failFirstRefresh = false) {
   const held = pendingLookup<Response>(), refresh = pendingLookup<Response>(), feedback = jest.fn();
   let rows = [profile("default", "Bob (local default)"), profile("qa", "QA Engineer")];
   let reads = 0, completed = false;
@@ -65,7 +65,8 @@ async function mount(kind: Kind, root = false, holdRefresh = false) {
     }
     if (url === "/api/agent/profiles") {
       reads++;
-      return holdRefresh && reads > 1 ? refresh.promise : jsonResponse({ data: { profiles: rows.map(row => ({ ...row })) } });
+      if (failFirstRefresh && reads === 2) return jsonResponse({ error: "Owned refresh refusal" }, 500);
+      return holdRefresh && reads > (failFirstRefresh ? 2 : 1) ? refresh.promise : jsonResponse({ data: { profiles: rows.map(row => ({ ...row })) } });
     }
     if (url === "/api/monitor") return jsonResponse({ data: { framework: { available: true } } });
     throw new Error(`Unmatched owned request: ${url}`);
@@ -204,5 +205,30 @@ describe("T-0193 profile draft ownership", () => {
     h.rerender(<EditProfileModal {...props} profile={fresh} />);
     expect(within(dialog()).getByRole("textbox", { name: "Name" })).toHaveValue("Fresh server name");
     expect(within(dialog()).getByRole("textbox", { name: "Description" })).toHaveValue("Fresh server description");
+  });
+
+  // Q015 amendment, Franklin-01a1062c-ad31-77c2-8ff2-71c41ee9b5d6, 2026-10-04.
+  // A confirmed rename must keep its cached anchor through a failed read and a second rename.
+  it("edit confirmed rename then failed refresh retains cached identity and selection through a second save's held refresh", async () => {
+    const h = await mount("edit", false, true, true); await h.submit();
+    fireEvent.click(button("Close dialog")); h.open(); fill("Later B");
+    await h.complete(); await waitFor(() => expect(h.reads()).toBe(2));
+    await waitFor(() => expectDraft("edit"));
+    expect(getSelectedProfile()).toBe("submitted-a");
+    expect(screen.getByRole("button", { name: "QA Engineer" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { level: 2, name: "Submitted A" })).toBeInTheDocument();
+    const selection = jest.spyOn(Storage.prototype, "setItem");
+    try {
+      fireEvent.click(button("Save")); await waitFor(() => expect(h.reads()).toBe(3));
+      expect(h.writes).toHaveLength(2);
+      expect(h.writes[1]).toEqual({ url: "/api/agent/profiles/submitted-a", body: { name: "Later B", description: "Later description" } });
+      expect(h.rows().map(row => row.id)).toEqual(["default", "later-b"]);
+      expect(screen.getByRole("button", { name: "QA Engineer" })).toBeInTheDocument();
+      expect(getSelectedProfile()).toBe("later-b");
+      expect(selection.mock.calls.filter(([key]) => key === "patterstage.selected-profile").map(([, value]) => value)).not.toContain("default");
+      expect(screen.getByRole("heading", { level: 2, name: "Later B" })).toBeInTheDocument();
+      await h.releaseRefresh(); await screen.findByRole("button", { name: "Later B" });
+      expect(getSelectedProfile()).toBe("later-b");
+    } finally { selection.mockRestore(); }
   });
 });

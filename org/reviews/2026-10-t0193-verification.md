@@ -15,3 +15,10 @@ LF SHA256:`05cb67a1b91de7e4911bd11b03fc9012c11f4b692bbe93cf1255629aa601e4a0`.
 Source implementation was unchanged at this red checkpoint. Browser proof,
 full gate, causal mutations, independent acceptance and hosted checks follow.
 The other18supplemental rows remain pending; no batch closure is claimed.
+
+Q015 independent amendment by Franklin adds one recovery case. With the
+profile repair in progress, all16 original controls pass; the new case fails
+causally: second confirmed rename selects default after the first refresh
+refuses. Receipt: `tmp/t0193-profile-amendment-red.json`;17cases,16pass,
+1fail,0runtime errors. Original frozen hash remains recorded above and in
+commit e1eea671. Amendment LF SHA256: `77ab9c3c79be00642ef09cce4ac62f79b6597f42a6f8d7d40763bacabd43ee12`.

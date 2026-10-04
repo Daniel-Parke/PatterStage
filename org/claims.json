@@ -24,23 +24,44 @@
         "scripts/tooling/line-census.baseline.json",
         "tests/fixtures/mutants/T-0193.json",
         "org/QUESTIONS.md",
-        "org/plans/2026-09-refactor-programme.md"
+        "org/plans/2026-09-refactor-programme.md",
+        "src/app/agent/models/page.tsx",
+        "src/hooks/useModelsPage.ts",
+        "src/hooks/useModelsRegistry.ts",
+        "src/app/agent/skills/",
+        "src/components/agents/AgentGrowthPanel.tsx",
+        "src/components/composer/ComposerNodeRunDetail.tsx",
+        "src/components/scripts/ScriptEditorModal.tsx",
+        "src/components/research/ResearchReport.tsx",
+        "src/lib/laboratory/deep-research/report.ts",
+        "src/components/skills/SkillsSearchResults.tsx",
+        "src/components/viz/AreaTrend.tsx",
+        "src/components/viz/StackedAreaTrend.tsx",
+        "src/components/session/MissionGroupCard.tsx",
+        "src/components/logs/LogFilePicker.tsx",
+        "src/components/memory/HindsightBrowser.tsx",
+        "src/modules/rec-room/components/ReaderSettings.tsx",
+        "src/app/globals.css",
+        "org/briefs/T-0193-followup-oracle.md",
+        "tests/e2e/page-state-profile-ownership.spec.ts"
       ],
       "acquired": "2026-10-04T10:03:25.397971+00:00",
       "expires": "2026-10-05T10:03:25.397971+00:00"
     },
     {
-      "lane_id": "T-0193-oracle",
+      "lane_id": "T-0193-followup-oracle",
       "task_id": "T-0193",
-      "session_id": "Faraday-01a1062b-0f36-7702-885b-476fd150d9bf",
+      "session_id": "Franklin-01a1062c-ad31-77c2-8ff2-71c41ee9b5d6",
       "host": "local",
       "path_claims": [
         "tests/unit/profile-draft-ownership.test.tsx",
-        "tests/e2e/page-state-profile-ownership.spec.ts"
+        "tests/unit/page-read-failure-truth.test.tsx",
+        "tests/unit/page-state-followups.test.tsx",
+        "tests/e2e/page-state-reader-motion.spec.ts"
       ],
-      "acquired": "2026-10-04T10:04:07.008352+00:00",
-      "expires": "2026-10-05T10:04:07.008352+00:00"
+      "acquired": "2026-10-04T10:30:39.373668+00:00",
+      "expires": "2026-10-05T10:30:39.373668+00:00"
     }
   ],
-  "note": "Two disjoint writers: coordinator owns runtime and metadata; Faraday owns only independent profile oracles. T0206 remains active and red without an active writer lane."
+  "note": "Two disjoint writers. Faraday completed and froze16unit/fourbrowser profile cases. Franklin independently amends the untouched profile recovery control under Q015 and authors remaining followup oracles. Coordinator owns runtime/metadata. T0206 remains red and open."
 }
