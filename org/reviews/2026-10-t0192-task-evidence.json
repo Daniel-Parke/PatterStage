@@ -934,5 +934,107 @@
     "command": "pinned Node -e console.log(require('node:os').userInfo().username.length)",
     "result": "Default restricted shell exits 1 with uv_os_get_passwd ENOMEM; elevated shell exits 0. No account name logged. Isolated migration controls rerunning with required permissions; earlier failures retained.",
     "controls": "tmp/t0191-green-validation/tmp/t0192-migration-elevated-summary.json:15/15 across4suites, unchanged tests/production, original failed receipts retained."
+  },
+  "endpointTiming": {
+    "harness": "tmp/t0192-endpoint-timing.mjs",
+    "sha256": "56fa95f477e4984c2698ed129ced70ebe5cb23d114b6e24011d5779617cc39e7",
+    "reviewer": "Laplace",
+    "results": [
+      {
+        "platform": "windows",
+        "receipt": "tmp/t0192-endpoint-windows-20261004",
+        "build": "SvKgbMtbtCmKOBCNi3_R2",
+        "node": "v24.21.0",
+        "requests": 228,
+        "phases": {
+          "cold-concurrent": {
+            "count": 36,
+            "minimumMs": 457.7468000000008,
+            "maximumMs": 788.7599000000009,
+            "medianMs": 620.7536
+          },
+          "first": {
+            "count": 12,
+            "minimumMs": 430.9872000000014,
+            "maximumMs": 608.7495999999999,
+            "medianMs": 588.9982
+          },
+          "mixed-serial": {
+            "count": 72,
+            "minimumMs": 3.1549999999997453,
+            "maximumMs": 57.52000000000044,
+            "medianMs": 12.061999999999898
+          },
+          "warm-concurrent": {
+            "count": 36,
+            "minimumMs": 8.329600000000937,
+            "maximumMs": 82.78700000000026,
+            "medianMs": 45.00760000000082
+          },
+          "warm-repeat": {
+            "count": 72,
+            "minimumMs": 2.38169999999991,
+            "maximumMs": 31.516099999998914,
+            "medianMs": 4.85819999999876
+          }
+        },
+        "limitations": "Custom production listener measures request ingress-to-finish, not individual database/Git spans. Fresh-process means after Next preparation, not cold filesystem caches. ProcessLoop is one cumulative startup-and-trial histogram sampled after callbacks, with no concurrent resets; individual finish-time loop fields are preliminary cumulative observations, not per-request attribution. No artificial threshold or retries."
+      },
+      {
+        "platform": "linux",
+        "receipt": "tmp/t0192-endpoint-linux-20261004",
+        "build": "rOxqJtwfPZkvgeVAZogzO",
+        "node": "v24.21.0",
+        "requests": 228,
+        "phases": {
+          "cold-concurrent": {
+            "count": 36,
+            "minimumMs": 353.00102100000004,
+            "maximumMs": 508.9889599999997,
+            "medianMs": 451.72585099999924
+          },
+          "first": {
+            "count": 12,
+            "minimumMs": 287.88264100000015,
+            "maximumMs": 760.958989,
+            "medianMs": 416.2822020000003
+          },
+          "mixed-serial": {
+            "count": 72,
+            "minimumMs": 3.2784019999999146,
+            "maximumMs": 51.48540899999989,
+            "medianMs": 10.18996900000002
+          },
+          "warm-concurrent": {
+            "count": 36,
+            "minimumMs": 10.359145000000353,
+            "maximumMs": 38.97349000000031,
+            "medianMs": 27.3453499999996
+          },
+          "warm-repeat": {
+            "count": 72,
+            "minimumMs": 1.8751310000006924,
+            "maximumMs": 13.723682999998346,
+            "medianMs": 4.423587999999654
+          }
+        },
+        "limitations": "Custom production listener measures request ingress-to-finish, not individual database/Git spans. Fresh-process means after Next preparation, not cold filesystem caches. ProcessLoop is one cumulative startup-and-trial histogram sampled after callbacks, with no concurrent resets; individual finish-time loop fields are preliminary cumulative observations, not per-request attribution. No artificial threshold or retries."
+      }
+    ],
+    "scope": "Six endpoints,18 owned processes per OS, synthetic empty/initialised data, first-endpoint rotation and three concurrent cohorts, complete matching client/server IDs, no retries.",
+    "causality": "First process requests cost more than repeats in this fixture. No individual database/Git attribution or production workload claim. Prior long-delay observation not reproduced here; retain uncertainty.",
+    "cleanup": "All trial children stopped by harness; Linux container ps-t0188-linux-install stopped after receipt copy. No deployed listener retained.",
+    "sourceBinding": "Windows built receipt tmp/t0192-defects-build-1791073939552; Linux source package tmp/t0192-linux-1791074008592217500 and its build-summary. Both contain candidate phone layout and runtime implementation; later changes are tests/configuration only."
+  },
+  "dependencyHygieneOracle": {
+    "file": "tests/unit/dependency-hygiene-contract.test.ts",
+    "sha256": "100e0bbcd70bee2799b1c29df2b0a4836662c98aa5b6a02f0579e9dcfdb56874",
+    "author": "Sartre",
+    "reviewer": "Laplace",
+    "receipt": "tmp/t0191-green-validation/tmp/t0192-dependency-oracle",
+    "result": "6 pass,6 structural contract reds; types/lint0. Before implementation.",
+    "historicalBaseline": "46 pass,1 Knip failure for unused exported WireResponse; preserve receipt, independently remove only export keyword.",
+    "authority": "cross22 approved fixes except next.config.ts; Q015 independent amendments. Coordinator relays reviewer verdict, not a new operator ruling.",
+    "limits": "Implementation and historical amendments pending; installed dependency availability and full gate unproved."
   }
 }

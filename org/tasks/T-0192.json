@@ -447,7 +447,15 @@
     "tests/unit/u19-the-phone-jumps-to-a-section.test.tsx",
     "tests/unit/u19-the-strip-fits-a-phone.test.tsx",
     "tests/unit/u19-the-terminal-owns-its-toolbar.test.tsx",
-    "tests/unit/u20-polish.test.tsx"
+    "tests/unit/u20-polish.test.tsx",
+    "tests/unit/t0175-dependency-proposals.test.ts",
+    "tests/unit/t0176-visual-dependency-proposals.test.ts",
+    "tests/unit/t0177-knip-proposal.test.ts",
+    "tests/unit/dashboard-helpers-unit.test.ts",
+    "tests/unit/dependency-hygiene-contract.test.ts",
+    "package-lock.json",
+    "knip.json",
+    "org/briefs/T-0192-dependency-oracle.md"
   ],
   "timestamps": {
     "opened": "2026-10-03T20:37:32.586979+00:00",
@@ -497,7 +505,8 @@
       "tests/unit/composer-advance-diagnostics.test.ts",
       "tests/unit/server-log-contract.test.ts",
       "tests/unit/server-log-boot-contract.test.ts",
-      "tests/unit/test-require-policy.test.ts"
+      "tests/unit/test-require-policy.test.ts",
+      "tests/unit/dependency-hygiene-contract.test.ts"
     ],
     "hashes": {
       "tests/unit/api-fetch-error-envelope.test.ts": "f19bdd09a27ac0e4204ed36fe873cfc81adc7946f8b0ffab644a6bfe6135db51",
@@ -527,9 +536,10 @@
       "tests/unit/composer-advance-diagnostics.test.ts": "e6d6c68eb8cd383cf27121bd05f62127b575e53137b7ff5145b3f73c4e9b91cf",
       "tests/unit/server-log-contract.test.ts": "771fa19b7f496e165c465e33b9609d7af028f908450fd47680fe379b4dbbf6ac",
       "tests/unit/server-log-boot-contract.test.ts": "2f6e0ad627ab99075866224564484b62a9c1ba3d45911c2923aa497a20bda5ca",
-      "tests/unit/test-require-policy.test.ts": "b1bcb12f5adee1bbc13a71ee312a7e2a5aa023d58a109f5941222509746247b2"
+      "tests/unit/test-require-policy.test.ts": "b1bcb12f5adee1bbc13a71ee312a7e2a5aa023d58a109f5941222509746247b2",
+      "tests/unit/dependency-hygiene-contract.test.ts": "100e0bbcd70bee2799b1c29df2b0a4836662c98aa5b6a02f0579e9dcfdb56874"
     },
-    "author_session": "Galileo and Sartre original authors; Halley and Sartre independent amendments; full attribution in org/reviews/2026-10-t0192-task-evidence.json; Nash independently corrected diagnostic candidate and authored ConfigSync replacement oracle; coordinator authored schedule persistence characterisation before consolidation; coordinator authored template identifier oracle before correction; Galileo tooling environment oracle independently reviewed by Laplace; Galileo Missions wiring characterisation reviewed by Laplace; coordinator server logging oracles reviewed by Laplace; Nash scoped test require-policy oracle reviewed by Laplace",
+    "author_session": "Galileo and Sartre original authors; Halley and Sartre independent amendments; full attribution in org/reviews/2026-10-t0192-task-evidence.json; Nash independently corrected diagnostic candidate and authored ConfigSync replacement oracle; coordinator authored schedule persistence characterisation before consolidation; coordinator authored template identifier oracle before correction; Galileo tooling environment oracle independently reviewed by Laplace; Galileo Missions wiring characterisation reviewed by Laplace; coordinator server logging oracles reviewed by Laplace; Nash scoped test require-policy oracle reviewed by Laplace; Sartre dependency hygiene oracle reviewed by Laplace",
     "independence_method": "metamorphic",
     "amendments": [
       {
