@@ -27,11 +27,13 @@
     "org/TASKS.md",
     "org/STATE.md",
     "docs/manifest.json",
-    "tests/helpers/release-http-phase-observer.py"
+    "tests/helpers/release-http-phase-observer.py",
+    ".github/workflows/ci.yml",
+    "tests/unit/release-test-tools.test.ts"
   ],
   "timestamps": {
     "opened": "2026-10-04T07:07:12.340680+00:00",
-    "updated": "2026-10-04T07:07:12.340680+00:00"
+    "updated": "2026-10-04T07:31:47.907790+00:00"
   },
   "verdicts": [],
   "tier_ruled": "R1",

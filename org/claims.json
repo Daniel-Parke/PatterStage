@@ -15,7 +15,8 @@
         "org/HANDOVER.md",
         "org/TASKS.md",
         "org/STATE.md",
-        "docs/manifest.json"
+        "docs/manifest.json",
+        ".github/workflows/ci.yml"
       ],
       "acquired": "2026-10-04T07:07:12.340680+00:00",
       "expires": "2026-10-05T07:07:12.340680+00:00"
@@ -26,7 +27,8 @@
       "session_id": "01a10198-6b4f-7593-aa19-e0b3c8facad8",
       "host": "local",
       "path_claims": [
-        "tests/helpers/release-http-phase-observer.py"
+        "tests/helpers/release-http-phase-observer.py",
+        "tests/unit/release-test-tools.test.ts"
       ],
       "acquired": "2026-10-04T07:08:23.490348+00:00",
       "expires": "2026-10-04T15:08:23.490348+00:00"
