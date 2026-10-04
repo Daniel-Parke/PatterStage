@@ -16,9 +16,7 @@
         "org/TASKS.md",
         "org/STATE.md",
         "docs/manifest.json",
-        "tests/helpers/release-http-phase-observer.py",
         ".github/workflows/ci.yml",
-        "tests/unit/release-test-tools.test.ts",
         "scripts/tooling/line-census.baseline.json",
         "tests/e2e/features.spec.ts",
         "org/QUESTIONS.md",
@@ -35,10 +33,10 @@
       "session_id": "01a1062b-0f36-7702-885b-476fd150d9bf",
       "host": "local",
       "path_claims": [
-        "tests/helpers/release-http-actual-observer.py",
+        "tests/helpers/release-http-phase-observer.py",
         "tests/helpers/release-install-http-context-probe.py",
-        "tests/helpers/release-install-http-curl-bridge.py",
-        "tests/unit/release-http-actual-observer.test.ts"
+        "tests/unit/release-http-actual-observer.test.ts",
+        "tests/unit/release-test-tools.test.ts"
       ],
       "acquired": "2026-10-04T13:56:03.491154+00:00",
       "expires": "2026-10-05T13:56:03.491154+00:00"

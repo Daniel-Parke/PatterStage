@@ -33,3 +33,17 @@ actual event order/count controls, rejected/missing/malformed report controls,
 redaction and restoration. Exact reviewed hashes precede integration. No
 diagnostic pass is timing repair or final T0206 acceptance. Preserve the failed
 hosted log/artifact and expose failure exit ahead of diagnostic exit.
+
+
+Implementation scope refinement: reuse existing release-http-phase-observer.py
+decoration and add call-correlated monotonic intervals; do not introduce a twin
+observer or edit the native curl bridge. Context main observes its actual
+stalled case exactly once and writes a separate owned diagnostic receipt in
+finally, preserving original stdout and failure behaviour. Disabled mode is
+unchanged. Partial/malformed/failed reports remain infrastructure failures.
+Coordinator owns workflow; author owns the exact release-test-tools controls
+for optional actual-receipt environment and artifact integration. All original
+control identities remain; different-author Q015 baseline hashes are the
+current LF bytes, not older task-stored diagnostic hashes. New red controls
+must freeze before the author implements the diagnostic extension. Receipt
+events are inclusive/overlapping; outer execution is still not watchdog time.
