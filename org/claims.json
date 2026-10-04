@@ -17,11 +17,14 @@
         "org/STATE.md",
         "docs/manifest.json",
         ".github/workflows/ci.yml",
-        "scripts/tooling/line-census.baseline.json"
+        "scripts/tooling/line-census.baseline.json",
+        "org/QUESTIONS.md",
+        "org/plans/2026-09-refactor-programme.json",
+        "org/plans/2026-09-refactor-programme.md"
       ],
       "acquired": "2026-10-04T07:07:12.340680+00:00",
       "expires": "2026-10-05T07:07:12.340680+00:00"
     }
   ],
-  "note": "One coordinator writing lane. Independent author Nash stopped with frozen files; bounded final review is read-only. Diagnostic stage verified; macOS cause and repair remain open."
+  "note": "One coordinator writer. Faraday completed the independently authored Q-015 exact header selector amendment; Franklin reviewed phase evidence read-only. Timing investigation remains open."
 }

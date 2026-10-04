@@ -21,14 +21,9 @@ test.describe("Missions page", () => {
   test("can open create mission form", async ({ page }) => {
     await page.goto("/work/missions");
 
-    // EXACT name, not /Create|New Mission|Draft/i. That pattern also matched the
-    // "draft" status-filter chip, so once both had rendered the locator resolved
-    // to two elements and `isVisible()` threw a strict-mode violation. Under
-    // fullyParallel the chips sometimes rendered after the check and sometimes
-    // before, which is why it passed alone and failed in the full run. Retries
-    // are zero here by policy (WG-DEL-004, determinism first), so the fix is to
-    // remove the ambiguity rather than to paper over the race.
-    const createBtn = page.getByRole("button", { name: "New Mission", exact: true });
+    // Amended 2026-10-04 (T-0206), Q-015; independent author Faraday.
+    // Scope the exact name to the header; the empty state has the same action.
+    const createBtn = page.locator("header").getByRole("button", { name: "New Mission", exact: true });
 
     // Unconditional. This was `if (await createBtn.isVisible()) { ... }`, which
     // meant that whenever the button had not rendered yet the test passed having

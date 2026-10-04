@@ -134,3 +134,45 @@ values for all three mutants, source hashes, exact restoration and the full
 gate. This additive checkpoint changes prose, task timestamps and live claims
 only; executable candidate bytes remain unchanged. T-0206 remains active,
 with the macOS cause unresolved and T-0193 unopened.
+
+## Hosted measurement and independent selector correction, 2026-10-04
+
+At55e31ce4, both macOS full coverage jobs passed with unchanged settings.
+PR37189723576 still failed its full browser job:498passed,24skipped,1failed.
+The failing Missions create test selected both the header and empty-state
+New Mission actions. The acceptance aggregator correctly refused that run.
+Push37189719917 and both Gitleaks runs passed. Snapshot:
+tmp/t0191-hosted-t0206-resume/snapshot-1791104811461.json.
+
+Both Darwin phase reports completed before/observed/restored controls with
+21native calls, matching bounded predicates/counts and exact restoration.
+The measured native communicate intervals were4.048s(PR) and2.994s(push);
+outer communicate5.889s and4.278s. Neither is an exact watchdog measurement.
+Reports:tmp/t0206-hosted-pr-phases/t0206-http-phases.json and matching push
+directory. Independent sceptic Franklin01a1062c-ad31-77c2-8ff2-71c41ee9b5d6
+finds the cause unproved: parent wait includes native work and scheduling.
+Small recv/read/spawn totals do not justify buffering or hash-cache changes.
+The old full failures remain failed. No timing repair or closure is claimed.
+
+Under Q-015 and the operator's current prerequisite-fix authority, independent
+author Faraday01a1062b-0f36-7702-885b-476fd150d9bf amended only the exact
+New Mission locator in tests/e2e/features.spec.ts to scope it to header.
+All12test names, all assertions and unrelated executable bytes are unchanged.
+LF SHA256 original4aa8df098abe27041b6c69b792356a35ca583376fd2afd979ee137299162eefc;
+amendedb7268c96f470097b8e7769be854599666f275bd11b23334eabc415211355b9ee.
+Hosted strict-selector failure supplies the red. Isolated built-app controls
+at port3999 passed12/12, zero skips or retries:
+tmp/t0206-selector-check-1791105135032/runner.json and run.log.
+The full gate and hosted exact-head acceptance follow; task remains active.
+
+The corrected tree passed all ten full-gate stages with unchanged stamps
+b9325eb5a77f70388df0cad7eec317ac2a8f69ea242b1397b0c5f6a2a31db4d2. Receipt:tmp/t0206-coordinator-gate-1791105254756/gate/summary.json.
+8,833unit/499browser passes; nineunit/24browser historical skips remain.
+Q-035 now permits T-0193 after exact-head hosted green while this task stays
+active. Independent Franklin source review preserves all12identities and
+assertions; final qualification and committed sweep follow.
+
+Franklin independently qualified the selector correction for commit after
+observing the complete ten-stage gate and unchanged executable hashes.
+Post-commit mutation and exact-head hosted checks remain required. This is
+bounded amendment acceptance, not a timing repair or T-0206 closure.

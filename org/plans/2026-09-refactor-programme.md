@@ -71,6 +71,11 @@ The decisions binding this programme are:
    Pages deployment accepts only `main`. No batch silently changes these
    external settings.
 
+8. **Q-035:** Keep T-0206 open for the unexplained macOS fixture failure.
+   T-0193 may start once the selector correction passes the full local gate
+   and every required hosted job. Preserve failed runs and all frozen bounds;
+   carry the investigation into T-0195 without claiming a timing repair.
+
 No feature, route, URL, CLI command, config key, environment variable or
 documented behaviour is removed without its item ruling. The five dev-only
 `ch-*` hardware shims have a specific pre-1.0 deletion ruling; `ch-backup.sh`

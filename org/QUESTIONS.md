@@ -260,3 +260,11 @@ are recorded in `org/reviews/2026-09-refactor-addendum.md`.
   the removed declarations remain absent. T-0191 records the original identities
   and results; this adds four exact exceptions to its two Schedule retirements,
   not authority to weaken a failing check or retire other tests.
+
+- Q-035 (programme sequence): may product batches resume while the intermittent
+  macOS timing investigation remains open? Answer, from the operator on
+  2026-10-04: "Continue product batches; keep T-0206 open". T-0193 may open
+  after the current selector correction passes the full local gate and every
+  required hosted job. T-0206 remains active; its cause and repair are unproved.
+  Preserve the original failed runs, every timeout and assertion, and the
+  T-0195 follow-up. No failing check or other dependency is waived.
