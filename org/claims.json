@@ -21,19 +21,7 @@
       ],
       "acquired": "2026-10-04T07:07:12.340680+00:00",
       "expires": "2026-10-05T07:07:12.340680+00:00"
-    },
-    {
-      "lane_id": "T-0206-independent-observer",
-      "task_id": "T-0206",
-      "session_id": "01a10198-6b4f-7593-aa19-e0b3c8facad8",
-      "host": "local",
-      "path_claims": [
-        "tests/helpers/release-http-phase-observer.py",
-        "tests/unit/release-test-tools.test.ts"
-      ],
-      "acquired": "2026-10-04T07:08:23.490348+00:00",
-      "expires": "2026-10-04T15:08:23.490348+00:00"
     }
   ],
-  "note": "Coordinator and Nash independent phase-observer author, disjoint two-lane assignment. Measurement only; no repair or frozen fixture amendment."
+  "note": "One coordinator writing lane. Independent author Nash stopped with frozen files; bounded final review is read-only. Diagnostic stage verified; macOS cause and repair remain open."
 }

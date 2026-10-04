@@ -11,6 +11,16 @@ updated: 2026-10-04
 
 T-0206 investigates the macOS HTTP-fixture deadline failure on T-0192 closure head `0f14c77a`. The full run failed two checks; the existing isolated rerun passed all twenty. Neither result replaces the other. Deadlines and assertions remain frozen. T-0193 stays unopened. See [investigation](reviews/2026-10-t0206-http-budget.md).
 
+Diagnostic candidate `89e7f7b4` has a complete unchanged-tree gate: 8,833 unit
+and 499 browser passes, both database-purity controls and both censuses.
+Three committed workflow mutants were detected with 42 original/restored
+controls. The interrupted prior sweep is retained as incomplete. The macOS
+measurement, its cause and the repair remain open. Current test census is
+150,772 lines; the +91-line diagnostic-control growth has a written reason.
+Later-batch readiness is recorded in `tmp/t0195-t0199-readiness-20261004.md`;
+refresh its references before opening those tasks. Thirteen of 22 main
+batches are complete, with T-0200 deferred through v1.0.0.
+
 ## Accepted implementation checkpoint, 2026-10-04
 
 T-0192 is independently accepted by Laplace at 926a13d3be8b14b6214025ff32755350b0039d0b.

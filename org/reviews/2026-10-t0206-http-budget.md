@@ -103,3 +103,34 @@ the committed LF digest is
 Replacing CRLF with LF in the reviewed bytes exactly reproduces the committed
 blob. The native Windows receipt remains bound to its original raw digest;
 hosted execution uses the LF form. No Python source token changes.
+
+## Verified diagnostic checkpoint
+
+Diagnostic candidate `89e7f7b4` passed the full gate in
+`tmp/t0206-coordinator-gate-1791100095423/gate/summary.json`: all ten stages
+exited zero on one unchanged tree, with 8,833 unit passes, 499 browser passes,
+the existing nine unit and 24 browser skips, both build-purity controls and
+both censuses. This verifies the diagnostic integration; the original macOS
+deadline failure remains unresolved.
+
+The model switch interrupted sweep `1791101625705` after two mutant reports
+and while the third workflow mutation was applied. It has no completed sweep
+or restored-control verdict. The coordinator confirmed that its owned runner
+was absent, matched the remaining edit to the exact manifest replacement,
+and restored only that recognised mutant. Preserve the incomplete receipts.
+
+Fresh sweep `tmp/t0206-diagnostic-sweep-1791102883823/summary.json` completed
+against the committed candidate: all three workflow mutants were detected,
+42 controls passed before and after, identities matched, and the workflow
+was restored byte for byte with a clean final checkout. The intended failures
+were loss of coverage-exit precedence, loss of observer waiting/exit propagation,
+and ignored diagnostic-report errors. Independent final qualification and
+hosted measurement remain separate prerequisites; this task stays active.
+
+Independent reviewer Banach, session `01a10610-cd11-7cd1-a83c-bbed065d1f98`,
+qualified diagnostic push readiness on 2026-10-04 at `89e7f7b4`. It verified
+42 matching controls, zero runtime/setup failures, the actual wrong exit
+values for all three mutants, source hashes, exact restoration and the full
+gate. This additive checkpoint changes prose, task timestamps and live claims
+only; executable candidate bytes remain unchanged. T-0206 remains active,
+with the macOS cause unresolved and T-0193 unopened.
