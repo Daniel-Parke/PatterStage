@@ -12,11 +12,11 @@ import { join } from "path";
 // the same path + preferred the legacy basename — both false once a real
 // ps-deploy.status exists on the machine, which made this test flaky.)
 jest.mock("@/modules/hermes/lib/agent-runtime", () => {
-  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  
   const os = require("os");
-  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  
   const fs = require("fs");
-  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  
   const path = require("path");
   const logs = fs.mkdtempSync(path.join(os.tmpdir(), "ps-deploy-status-test-"));
   return { __TEST_LOGS_DIR: logs, getActiveHermesPaths: () => ({ logs }) };

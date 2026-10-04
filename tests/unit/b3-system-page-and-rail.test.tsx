@@ -1,5 +1,5 @@
 /** @jest-environment jsdom */
-/* eslint-disable @typescript-eslint/no-require-imports */
+
 /**
  * B3 (T-0097), decision 12 and D109: Update, Rebuild and Restart leave the
  * rail for Settings > System, which also says how this install is configured

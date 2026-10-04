@@ -1,7 +1,7 @@
 /**
  * @jest-environment node
  */
-/* eslint-disable @typescript-eslint/no-require-imports */
+
 
 /**
  * WO-0006 / WG-ARCH-003 (B for the config read).

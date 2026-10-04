@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/no-require-imports -- Jest hoists the isolated database mock. */
+/* Jest hoists the isolated database mock. */
 
 import { NextRequest } from "next/server";
 import { openBaselineDb } from "./baseline-db";

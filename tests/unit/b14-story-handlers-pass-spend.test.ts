@@ -1,5 +1,5 @@
 /** @jest-environment node */
-/* eslint-disable @typescript-eslint/no-require-imports */
+
 
 // ═══════════════════════════════════════════════════════════════
 // B14 oracle, group spend-plumbing, part four: the handlers ask for it

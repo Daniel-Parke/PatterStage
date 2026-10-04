@@ -14,7 +14,7 @@ const submitRun = jest.fn<Promise<RunHandle>, [RunSubmit]>();
 const stopRun = jest.fn<Promise<void>, [string, string?]>();
 const recordEvent = jest.fn();
 
-// eslint-disable-next-line @typescript-eslint/no-require-imports -- Jest mock factory is hoisted
+// Jest mock factory is hoisted
 jest.mock("@/lib/db", () => require("../helpers/baseline-db").dbSingletonMock(() => testDb));
 jest.mock("@/lib/runtime", () => ({
   runtime: {

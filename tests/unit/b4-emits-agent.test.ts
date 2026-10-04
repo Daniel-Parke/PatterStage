@@ -100,7 +100,7 @@ jest.mock("@/lib/host/paths", () => ({
   readEnv: () => undefined,
 }));
 
-// eslint-disable-next-line @typescript-eslint/no-require-imports -- jest.mock factories are hoisted above imports
+
 jest.mock("@/lib/db", () => require("../helpers/mocks").dbMock({ now: () => "2026-09-05T00:00:00Z", uuid: () => "b4-uuid" }));
 jest.mock("@/lib/api/api-auth", () => ({}));
 jest.mock("@/lib/api/audit-log", () => ({ appendAuditLine: jest.fn() }));

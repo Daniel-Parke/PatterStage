@@ -1,5 +1,5 @@
 /** @jest-environment node */
-/* eslint-disable @typescript-eslint/no-require-imports -- better-sqlite3's package root is not newable under the jest transform */
+/* better-sqlite3's package root is not newable under the jest transform */
 
 // ═══════════════════════════════════════════════════════════════
 // B14 sweep answer: three mutants the first pass left alive.

@@ -21,7 +21,7 @@ import { matchMediaMock } from "../helpers/mocks";
 
 // Icons leave the accessibility tree, so an icon-only button that names
 // itself with `title` or `aria-label` still resolves by its accessible name.
-// eslint-disable-next-line @typescript-eslint/no-require-imports -- jest.mock factories are hoisted above imports
+
 jest.mock("lucide-react", () => require("../helpers/story").lucideNullMock());
 
 jest.mock("@/lib/api/api-fetch", () => ({ safeApiCall: jest.fn(async () => ({ ok: true, data: {} })) }));

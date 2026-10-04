@@ -1,5 +1,5 @@
 /** @jest-environment jsdom */
-/* eslint-disable @typescript-eslint/no-require-imports */
+
 
 // ═══════════════════════════════════════════════════════════════
 // B13 oracle, group scripts-page (T-0107; D46, D48, D51 and decision 10).

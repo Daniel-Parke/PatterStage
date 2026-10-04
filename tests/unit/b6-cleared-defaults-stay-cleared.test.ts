@@ -1,5 +1,5 @@
 /** @jest-environment node */
-/* eslint-disable @typescript-eslint/no-require-imports -- better-sqlite3's package root is not newable under the jest transform, and the hook harness loads react-dom after the DOM globals exist */
+/* better-sqlite3's package root is not newable under the jest transform, and the hook harness loads react-dom after the DOM globals exist */
 
 // ═══════════════════════════════════════════════════════════════
 // B6 oracle, group defaults-and-diff, the D9 half (T-0100).

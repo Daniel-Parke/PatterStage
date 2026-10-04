@@ -1,5 +1,5 @@
 /** @jest-environment node */
-/* eslint-disable @typescript-eslint/no-require-imports */
+
 
 /**
  * PR 7 — callLLM resolves an `opts.modelId` against the registry:

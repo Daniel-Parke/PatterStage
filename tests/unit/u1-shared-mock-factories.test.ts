@@ -305,7 +305,7 @@ describe("a file that asks for a jest environment gets the one it asked for", ()
  */
 describe("the db singleton wraps a transaction body in a real transaction", () => {
   const openDb = () => {
-    // eslint-disable-next-line @typescript-eslint/no-require-imports -- better-sqlite3's package root is not newable under the jest transform
+    // better-sqlite3's package root is not newable under the jest transform
     const Database = require("better-sqlite3/lib/index.js") as typeof import("better-sqlite3");
     const db = new (Database as unknown as new (path: string) => import("better-sqlite3").Database)(
       ":memory:",

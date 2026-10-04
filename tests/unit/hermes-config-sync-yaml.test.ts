@@ -1,5 +1,5 @@
 /** @jest-environment node */
-/* eslint-disable @typescript-eslint/no-require-imports */
+
 
 /**
  * Tests for syncDefaultsToHermesConfig: rewrites ~/.hermes/config.yaml

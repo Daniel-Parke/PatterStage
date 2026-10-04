@@ -29,7 +29,7 @@ import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import type { ReactNode } from "react";
 import { matchMediaMock } from "../helpers/mocks";
 
-// eslint-disable-next-line @typescript-eslint/no-require-imports -- jest.mock factories are hoisted above imports
+
 jest.mock("lucide-react", () => require("../helpers/story").lucideNullMock());
 
 jest.mock("next/navigation", () => ({

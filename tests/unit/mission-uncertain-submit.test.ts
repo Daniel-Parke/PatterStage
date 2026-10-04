@@ -7,7 +7,7 @@ import type { RunSubmit, RunHandle } from "@/lib/runtime/types";
 let database: import("better-sqlite3").Database | null = null;
 const submit = jest.fn<Promise<RunHandle>, [RunSubmit]>();
 
-// eslint-disable-next-line @typescript-eslint/no-require-imports -- Jest hoists mock factories
+// Jest hoists mock factories
 jest.mock("@/lib/db", () => require("../helpers/baseline-db").dbSingletonMock(() => database));
 jest.mock("@/lib/runtime", () => ({ runtime: {
   submitRun: (input: RunSubmit) => submit(input),

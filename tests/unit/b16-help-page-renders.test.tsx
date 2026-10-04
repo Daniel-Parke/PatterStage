@@ -1,5 +1,5 @@
 /** @jest-environment jsdom */
-/* eslint-disable @typescript-eslint/no-require-imports -- the route and the
+/* the route and the
    loader under contract do not exist in the tree yet, so a static import would
    not compile. The requires sit inside helpers called from each test, so a
    missing file fails every test with the contract sentence rather than

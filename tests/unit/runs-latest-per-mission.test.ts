@@ -6,7 +6,7 @@
  * one query per row on a 15-second poll, which is how a board with fifty
  * missions turns a freshness feature into a load problem.
  */
-/* eslint-disable @typescript-eslint/no-require-imports */
+
 import type Database from "better-sqlite3";
 
 import { openBaselineDb } from "../helpers/baseline-db";

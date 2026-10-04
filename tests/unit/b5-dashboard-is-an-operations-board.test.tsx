@@ -34,7 +34,7 @@ jest.mock("next/navigation", () => ({
   usePathname: () => "/",
   useRouter: () => ({ push: jest.fn(), replace: jest.fn() }),
 }));
-// eslint-disable-next-line @typescript-eslint/no-require-imports -- jest.mock factories are hoisted above imports
+
 jest.mock("next/link", () => require("../helpers/mocks").nextLinkMock());
 // Entrance animations are not the subject; plain boxes keep jsdom out of
 // motion's way. Collapse still honours `open` so a collapsed grid stays hidden.

@@ -1,5 +1,5 @@
 /** @jest-environment node */
-/* eslint-disable @typescript-eslint/no-require-imports -- singleton and controlled external dependencies */
+/* singleton and controlled external dependencies */
 // T-0189: real SQLite; no OS process enumeration or operator filesystem reads.
 import { mkdtempSync, mkdirSync, writeFileSync } from "fs";
 import { join } from "path";

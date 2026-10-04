@@ -1,5 +1,5 @@
 /** @jest-environment node */
-/* eslint-disable @typescript-eslint/no-require-imports */
+
 
 // T-0077 acceptance oracle — the memory provider the database says is active is
 // the one the product talks to, and the one it names.

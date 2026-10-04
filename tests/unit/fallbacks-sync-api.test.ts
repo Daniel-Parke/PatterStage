@@ -1,7 +1,7 @@
 /** @jest-environment node */
 
 import type { NextRequest } from "next/server";
-// eslint-disable-next-line @typescript-eslint/no-require-imports -- jest.mock factories are hoisted above imports
+
 jest.mock("next/server", () => require("../helpers/mocks").nextServerMock());
 
 jest.mock("@/lib/api/api-logger", () => ({ logApiError: jest.fn() }));

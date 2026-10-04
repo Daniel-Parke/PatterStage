@@ -1,5 +1,5 @@
 /** @jest-environment node */
-/* eslint-disable @typescript-eslint/no-require-imports */
+
 
 jest.mock("@/lib/api/api-auth", () => ({ requireAuth: jest.fn(() => null) }));
 jest.mock("@/lib/api/api-logger", () => ({ logApiError: jest.fn() }));

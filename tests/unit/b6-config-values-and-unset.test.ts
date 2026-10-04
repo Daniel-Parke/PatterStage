@@ -1,5 +1,5 @@
 /** @jest-environment node */
-/* eslint-disable @typescript-eslint/no-require-imports */
+
 
 // ═══════════════════════════════════════════════════════════════
 // B6 oracle, group config-route-builder, half two (T-0100, D77 + D78).

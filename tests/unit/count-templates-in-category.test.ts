@@ -1,5 +1,5 @@
 /** @jest-environment node */
-/* eslint-disable @typescript-eslint/no-require-imports */
+
 // QA #3/#33: countTemplatesInCategory must count the built-in catalog templates
 // (DB) the same way /api/templates does — not only disk custom templates — so
 // the categories API agrees with the dashboard breakdown.

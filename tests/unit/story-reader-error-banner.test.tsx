@@ -2,7 +2,7 @@
 
 import { fireEvent, render, screen } from "@testing-library/react";
 
-// eslint-disable-next-line @typescript-eslint/no-require-imports -- Jest hoists mock factories above imports.
+// Jest hoists mock factories above imports.
 jest.mock("lucide-react", () => require("../helpers/story").lucideNullMock());
 
 import ReaderHeader, { type ReaderHeaderProps } from "@/modules/rec-room/components/ReaderHeader";

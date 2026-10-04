@@ -1,5 +1,5 @@
 /** @jest-environment node */
-/* eslint-disable @typescript-eslint/no-require-imports -- load the real SQLite driver outside Jest's database mock */
+/* load the real SQLite driver outside Jest's database mock */
 
 import { spawnSync } from "node:child_process";
 import { existsSync, mkdtempSync, mkdirSync, realpathSync, rmSync, writeFileSync } from "node:fs";

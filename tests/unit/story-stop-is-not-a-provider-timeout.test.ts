@@ -46,10 +46,10 @@ jest.mock("@/lib/api/api-logger", () => ({
   serverErrorFromCatch: jest.fn(() => ({ status: 500, body: { error: "boom" } })),
 }));
 
-// eslint-disable-next-line @typescript-eslint/no-require-imports
+
 jest.mock("next/server", () => require("../helpers/mocks").nextServerMock());
 
-// eslint-disable-next-line @typescript-eslint/no-require-imports
+
 const { handleGenerateChapter, handleRetryChapter } = require("@/modules/rec-room/handlers/generate") as
   typeof import("@/modules/rec-room/handlers/generate");
 

@@ -1,5 +1,5 @@
 /** @jest-environment node */
-/* eslint-disable @typescript-eslint/no-require-imports */
+
 // ═══════════════════════════════════════════════════════════════
 // A stage badged HIL asks the human, even when the reviewing model said FAIL.
 //

@@ -1,5 +1,5 @@
 /** @jest-environment jsdom */
-/* eslint-disable @typescript-eslint/no-require-imports */
+
 /**
  * U11 (T-0125), decision 7: Settings is one scrollable page.
  *

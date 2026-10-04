@@ -1,5 +1,5 @@
 /** @jest-environment node */
-/* eslint-disable @typescript-eslint/no-require-imports -- load the public runtime functions after the disposable root is set */
+/* load the public runtime functions after the disposable root is set */
 
 import { syncBuiltinESMExports } from "node:module";
 import { tmpdir } from "node:os";

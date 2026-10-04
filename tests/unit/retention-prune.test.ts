@@ -1,5 +1,5 @@
 /** @jest-environment node */
-/* eslint-disable @typescript-eslint/no-require-imports */
+
 // THE PROOF FOR THE RETENTION PRUNE (T-0017, WO-0009, ADR-0009).
 //
 // This is the only code path in PatterStage that deletes a user's rows, it runs

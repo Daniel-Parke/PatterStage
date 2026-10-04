@@ -1,5 +1,5 @@
 /** @jest-environment jsdom */
-/* eslint-disable @typescript-eslint/no-require-imports */
+
 /**
  * B2 (T-0096), the read contract: a list read that failed shows an error with
  * Retry, never an empty state. Nine pages rendered "no X yet" over a failed

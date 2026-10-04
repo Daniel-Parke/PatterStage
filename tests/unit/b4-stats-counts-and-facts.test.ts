@@ -1,5 +1,5 @@
 /** @jest-environment node */
-/* eslint-disable @typescript-eslint/no-require-imports -- better-sqlite3's package root is not newable under the jest transform; same construction as the-numbers-are-measured.test.ts */
+/* better-sqlite3's package root is not newable under the jest transform; same construction as the-numbers-are-measured.test.ts */
 
 // B4 (T-0098) oracle, the repository half: the stats reader measures a
 // per-type ledger over analytics_events and the store facts the quest

@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/no-require-imports */
+
 /**
  * U19 · The terminal owns its toolbar.
  *

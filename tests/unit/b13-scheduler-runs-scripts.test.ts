@@ -1,5 +1,5 @@
 /** @jest-environment node */
-/* eslint-disable @typescript-eslint/no-require-imports -- host-scheduler is re-required under two different platform stubs, which needs a runtime require rather than a hoisted import */
+/* host-scheduler is re-required under two different platform stubs, which needs a runtime require rather than a hoisted import */
 
 // ═══════════════════════════════════════════════════════════════
 // B13 oracle, group fallback-scheduler (T-0107, decision 10).

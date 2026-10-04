@@ -1,5 +1,5 @@
 /** @jest-environment node */
-/* eslint-disable @typescript-eslint/no-require-imports */
+
 
 /**
  * Tests for the `parseCategoryIdOrError` helper in

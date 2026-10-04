@@ -1,5 +1,5 @@
 /** @jest-environment node */
-/* eslint-disable @typescript-eslint/no-require-imports */
+
 // Walks the Composer graph engine through a PASS path + HIL gate + a FAIL
 // loop-back, against REAL SQLite with a mocked runtime.
 

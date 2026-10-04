@@ -9,7 +9,7 @@ import { openBaselineDb } from "../helpers/baseline-db";
 let testDb: import("better-sqlite3").Database | null = null;
 let templateDir = "";
 
-// eslint-disable-next-line @typescript-eslint/no-require-imports -- Jest hoists this mock.
+// Jest hoists this mock.
 jest.mock("@/lib/db", () => require("../helpers/baseline-db").dbSingletonMock(() => testDb));
 jest.mock("@/lib/host/paths", () => ({ PATHS: { get templates() { return templateDir; } } }));
 jest.mock("@/lib/analytics/record-event", () => ({ recordEvent: jest.fn() }));

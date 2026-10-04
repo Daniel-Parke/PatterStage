@@ -1,5 +1,5 @@
 /** @jest-environment node */
-/* eslint-disable @typescript-eslint/no-require-imports */
+
 // Phase 1.5-B3b — a Composer "group" node runs a referenced sub-workflow as a
 // nested ComposerRun; the engine settles the group stage when the child run
 // finishes, and recursion is blocked.

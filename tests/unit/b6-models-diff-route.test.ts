@@ -1,5 +1,5 @@
 /** @jest-environment node */
-/* eslint-disable @typescript-eslint/no-require-imports -- the new module is loaded inside the test that asks for it, so a missing file reds one test rather than the suite */
+/* the new module is loaded inside the test that asks for it, so a missing file reds one test rather than the suite */
 
 // ═══════════════════════════════════════════════════════════════
 // B6 oracle, group defaults-and-diff, the D13 half (T-0100).

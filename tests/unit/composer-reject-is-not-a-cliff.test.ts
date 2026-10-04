@@ -1,5 +1,5 @@
 /** @jest-environment node */
-/* eslint-disable @typescript-eslint/no-require-imports */
+
 
 // T-0069 acceptance oracle — a rejected Composer gate must say so, and must not
 // strand the operator.

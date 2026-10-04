@@ -16,7 +16,7 @@ import { render, screen } from "@testing-library/react";
 
 // The model banner carries the one action now, so the component renders a
 // Link.
-// eslint-disable-next-line @typescript-eslint/no-require-imports -- jest.mock factories are hoisted above imports
+
 jest.mock("next/link", () => require("../helpers/mocks").nextLinkMock());
 
 jest.mock("lucide-react", () => {

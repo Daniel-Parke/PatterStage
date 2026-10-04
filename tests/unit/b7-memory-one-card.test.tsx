@@ -1,5 +1,5 @@
 /** @jest-environment jsdom */
-/* eslint-disable @typescript-eslint/no-require-imports */
+
 // ═══════════════════════════════════════════════════════════════
 // B7 oracle, group provider-switch, the browser half (T-0101, D58, D65, and
 // the plan's "two stacked first-visit warnings collapse into one card").

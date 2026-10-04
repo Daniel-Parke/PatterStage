@@ -1,5 +1,5 @@
 /** @jest-environment node */
-/* eslint-disable @typescript-eslint/no-require-imports */
+
 // ═══════════════════════════════════════════════════════════════
 // T-0042 acceptance oracle, repository half.
 //

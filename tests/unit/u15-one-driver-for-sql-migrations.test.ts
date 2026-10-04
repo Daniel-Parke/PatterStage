@@ -1,5 +1,5 @@
 /** @jest-environment node */
-/* eslint-disable @typescript-eslint/no-require-imports */
+
 /**
  * U15 · One driver for the SQL migrations.
  *

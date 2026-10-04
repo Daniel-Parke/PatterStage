@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/no-require-imports */
+
 /**
  * U17 · The phone keeps its title.
  *

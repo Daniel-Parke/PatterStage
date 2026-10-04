@@ -1,5 +1,5 @@
 /** @jest-environment node */
-/* eslint-disable @typescript-eslint/no-require-imports -- independent oracle and singleton fixture */
+/* independent oracle and singleton fixture */
 // T-0189: authored from the ruled brief, public contracts and historical tests.
 // The absent proposed parser is infrastructure, never behavioural red evidence.
 import { existsSync } from "fs";

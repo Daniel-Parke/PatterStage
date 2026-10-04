@@ -1,5 +1,5 @@
 /** @jest-environment jsdom */
-/* eslint-disable @typescript-eslint/no-require-imports */
+
 
 // ═══════════════════════════════════════════════════════════════
 // One truth about the model: three screens, three answers (real-agent round).

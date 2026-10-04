@@ -1,5 +1,5 @@
 /** @jest-environment node */
-/* eslint-disable @typescript-eslint/no-require-imports */
+
 
 /**
  * Schema tests for the squashed baseline (replaces per-migration 006 checks).

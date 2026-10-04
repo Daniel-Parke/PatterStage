@@ -1,5 +1,5 @@
 /** @jest-environment jsdom */
-/* eslint-disable @typescript-eslint/no-require-imports -- the source reads are structural assertions, loaded where they are used rather than at the top of a jsdom file */
+/* the source reads are structural assertions, loaded where they are used rather than at the top of a jsdom file */
 // ═══════════════════════════════════════════════════════════════
 // B7 oracle, group memory-tab (T-0101, D60 to D63).
 //

@@ -43,7 +43,7 @@ jest.mock("@/modules/hermes/lib/agent-runtime", () => ({
   })),
 }));
 
-// eslint-disable-next-line @typescript-eslint/no-require-imports -- jest.mock factories are hoisted above imports
+
 jest.mock("@/lib/host/paths", () => require("../helpers/mocks").pathsMock({ getPsDataDir: () => "/tmp/ch-data" }));
 
 jest.mock("@/lib/api/api-logger", () => ({

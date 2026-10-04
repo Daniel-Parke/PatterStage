@@ -1,5 +1,5 @@
 /** @jest-environment node */
-/* eslint-disable @typescript-eslint/no-require-imports -- Jest hoists the database mock. */
+/* Jest hoists the database mock. */
 
 import { applyMissionQueueMigration } from "@/lib/db/apply-mission-queue-migration";
 import { openBaselineDb } from "../helpers/baseline-db";

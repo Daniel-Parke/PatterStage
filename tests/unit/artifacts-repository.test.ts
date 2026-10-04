@@ -1,5 +1,5 @@
 /** @jest-environment node */
-/* eslint-disable @typescript-eslint/no-require-imports */
+
 // CRUD + idempotent capture for the artifacts registry (real SQLite; the
 // @/lib/db singleton is mocked to a fresh in-memory DB per test).
 

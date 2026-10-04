@@ -1,5 +1,5 @@
 /** @jest-environment jsdom */
-/* eslint-disable @typescript-eslint/no-require-imports */
+
 
 // ═══════════════════════════════════════════════════════════════
 // "Active" has to be about the model it is drawn next to.

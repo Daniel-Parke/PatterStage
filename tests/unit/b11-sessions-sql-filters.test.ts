@@ -1,5 +1,5 @@
 /** @jest-environment node */
-/* eslint-disable @typescript-eslint/no-require-imports -- better-sqlite3 is loaded by its real path so the moduleNameMapper's stub is bypassed; the sessions repository is exercised against a real table, exactly as session-totals-whole-table.test.ts does */
+/* better-sqlite3 is loaded by its real path so the moduleNameMapper's stub is bypassed; the sessions repository is exercised against a real table, exactly as session-totals-whole-table.test.ts does */
 // ═══════════════════════════════════════════════════════════════
 // B11 oracle, the repository half (T-0105, contract §1 §2 §3 §4).
 //

@@ -1,5 +1,5 @@
 /** @jest-environment node */
-/* eslint-disable @typescript-eslint/no-require-imports -- the modules under contract do not exist yet; a static import would fail typecheck:tests instead of failing this test for the contract reason */
+/* the modules under contract do not exist yet; a static import would fail typecheck:tests instead of failing this test for the contract reason */
 
 // ═══════════════════════════════════════════════════════════════
 // B17 oracle, the derivation half: every quest's proof, one at a time.

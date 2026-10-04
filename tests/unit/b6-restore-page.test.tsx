@@ -1,5 +1,5 @@
 /** @jest-environment jsdom */
-/* eslint-disable @typescript-eslint/no-require-imports */
+
 // ═══════════════════════════════════════════════════════════════
 // B6 oracle, group restore (T-0100), the page half.
 //

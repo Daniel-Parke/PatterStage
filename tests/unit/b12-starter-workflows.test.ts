@@ -1,5 +1,5 @@
 /** @jest-environment node */
-/* eslint-disable @typescript-eslint/no-require-imports -- better-sqlite3 is resolution-mapped to a stub for the suite; the real CJS entry is required directly here, exactly as composer-builder.test.ts does, so the seed runs against real SQL */
+/* better-sqlite3 is resolution-mapped to a stub for the suite; the real CJS entry is required directly here, exactly as composer-builder.test.ts does, so the seed runs against real SQL */
 // ═══════════════════════════════════════════════════════════════
 // B12 oracle, group starters.
 //

@@ -1,5 +1,5 @@
 /** @jest-environment jsdom */
-/* eslint-disable @typescript-eslint/no-require-imports -- the source reads are structural assertions, loaded where they are used */
+/* the source reads are structural assertions, loaded where they are used */
 
 // ═══════════════════════════════════════════════════════════════
 // B8 oracle, the browser half (T-0102, D21, D23, D25, D27, and the copy).

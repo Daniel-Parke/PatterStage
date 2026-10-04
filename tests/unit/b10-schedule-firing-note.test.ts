@@ -1,5 +1,5 @@
 /** @jest-environment node */
-/* eslint-disable @typescript-eslint/no-require-imports -- the module under test does not exist yet; a static import would be a typecheck error rather than the runtime red this oracle is for */
+/* the module under test does not exist yet; a static import would be a typecheck error rather than the runtime red this oracle is for */
 // ═══════════════════════════════════════════════════════════════
 // B10 oracle, group missions (D68, the "why isn't it firing" line).
 //

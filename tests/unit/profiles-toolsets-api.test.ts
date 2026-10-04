@@ -4,7 +4,7 @@ jest.mock("@/lib/api/api-auth", () => ({
 }));
 
 jest.mock("@/lib/api/api-logger", () => ({ logApiError: jest.fn() }));
-// eslint-disable-next-line @typescript-eslint/no-require-imports -- jest.mock factories are hoisted above imports
+
 jest.mock("@/lib/db", () => require("../helpers/mocks").dbMock());
 
 const mockHydrate = jest.fn((..._a: unknown[]) => ({

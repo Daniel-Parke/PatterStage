@@ -1,5 +1,5 @@
 /** @jest-environment node */
-/* eslint-disable @typescript-eslint/no-require-imports -- real DB module with an owned in-memory constructor */
+/* real DB module with an owned in-memory constructor */
 import { openRealDb, type RealDb } from "../helpers/baseline-db";
 let testDb: RealDb | null = null;
 jest.mock("better-sqlite3", () => function OracleDatabase() {

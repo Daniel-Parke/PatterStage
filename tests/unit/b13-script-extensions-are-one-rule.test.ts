@@ -1,5 +1,5 @@
 /** @jest-environment node */
-/* eslint-disable @typescript-eslint/no-require-imports -- the shared module this contract creates does not exist yet, so it is required where it is used: a missing file must red the tests that need it rather than the whole file at import time */
+/* the shared module this contract creates does not exist yet, so it is required where it is used: a missing file must red the tests that need it rather than the whole file at import time */
 
 // ═══════════════════════════════════════════════════════════════
 // B13 oracle, group script-extensions (T-0107; D41 blocker, D46, D47, D48).

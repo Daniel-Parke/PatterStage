@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/no-require-imports */
+
 /**
  * U17 · A banner's sentence comes first; its action wraps under it.
  *

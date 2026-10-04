@@ -1,5 +1,5 @@
 /** @jest-environment jsdom */
-/* eslint-disable @typescript-eslint/no-require-imports */
+
 /**
  * B2 (T-0096), D119 and D120: the sidebar as a keyboard user meets it.
  *

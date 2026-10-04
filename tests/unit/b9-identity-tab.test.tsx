@@ -1,5 +1,5 @@
 /** @jest-environment jsdom */
-/* eslint-disable @typescript-eslint/no-require-imports */
+
 
 /**
  * B9 oracle, the Identity tab (T-0103, decision 11).

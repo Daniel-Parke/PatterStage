@@ -1,5 +1,5 @@
 /** @jest-environment jsdom */
-/* eslint-disable @typescript-eslint/no-require-imports -- ConceptHint,
+/* ConceptHint,
    HelpProvider and the attachment table do not exist in the tree yet, so a
    static import would not compile. Each require sits in a helper called from
    the test that needs it. */

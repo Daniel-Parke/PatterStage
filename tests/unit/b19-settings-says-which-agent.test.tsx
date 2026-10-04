@@ -1,5 +1,5 @@
 /** @jest-environment jsdom */
-/* eslint-disable @typescript-eslint/no-require-imports */
+
 
 /**
  * T-0113: Settings never said which agent it was editing, and it was not the

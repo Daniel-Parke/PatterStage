@@ -310,7 +310,7 @@ export function profilePickerMock(): {
  */
 export function agentRuntimeFakeRootMock() {
   const root = () => (global as { __FAKE_HERMES_ROOT__?: string }).__FAKE_HERMES_ROOT__!;
-  // eslint-disable-next-line @typescript-eslint/no-require-imports -- inside a jest.mock factory, where imports are not yet resolved
+  // inside a jest.mock factory, where imports are not yet resolved
   const { join } = require("path") as typeof import("path");
   return {
     getActiveHermesPaths: () => ({

@@ -1,5 +1,5 @@
 /** @jest-environment node */
-/* eslint-disable @typescript-eslint/no-require-imports */
+
 // Phase 1.5-C — a Composer "research" node drives a Deep Research run (not a
 // Hermes agent run); the engine settles the stage from the linked research run.
 

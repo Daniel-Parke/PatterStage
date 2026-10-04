@@ -5,11 +5,11 @@ import { execBaselineSchema } from "../helpers/baseline-db";
 let testDb: import("better-sqlite3").Database | null = null;
 
 function loadRealBetterSqlite3(): typeof import("better-sqlite3") {
-  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  
   return require("better-sqlite3/lib/index.js") as typeof import("better-sqlite3");
 }
 
-// eslint-disable-next-line @typescript-eslint/no-require-imports -- jest.mock factories are hoisted above imports; require is the hoisting-safe form
+
 jest.mock("@/lib/db", () => require("../helpers/baseline-db").dbSingletonMock(() => testDb, { now: () => "2026-01-01T00:00:00.000Z" }));
 
 import {

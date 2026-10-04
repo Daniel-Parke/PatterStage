@@ -13,7 +13,7 @@ const gateway = {
 };
 const errors = jest.fn();
 
-// eslint-disable-next-line @typescript-eslint/no-require-imports -- Jest hoists its mock factories
+// Jest hoists its mock factories
 jest.mock("@/lib/db", () => require("../helpers/baseline-db").dbSingletonMock(() => database));
 jest.mock("@/lib/runtime", () => ({ runtime: {
   submitRun: (request: RunSubmit) => gateway.submit(request),

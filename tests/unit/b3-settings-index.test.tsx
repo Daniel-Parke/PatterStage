@@ -1,5 +1,5 @@
 /** @jest-environment jsdom */
-/* eslint-disable @typescript-eslint/no-require-imports */
+
 /**
  * B3 (T-0097), D79: the Settings index derives its grid from the one section
  * catalogue (src/lib/config/config-sections.ts), so it can no longer print a count

@@ -1,5 +1,5 @@
 /** @jest-environment jsdom */
-/* eslint-disable @typescript-eslint/no-require-imports */
+
 // ═══════════════════════════════════════════════════════════════
 // B6 oracle, group config-ui, part 2 of 2 (T-0100, D77 + D78 UI halves).
 //

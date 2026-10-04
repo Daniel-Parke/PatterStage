@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/no-require-imports */
+
 /**
  * U17 · SplitPane, the one two-column shape.
  *

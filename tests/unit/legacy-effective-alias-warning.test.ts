@@ -11,7 +11,7 @@ jest.mock("@/lib/api/api-auth", () => ({
   requireAuthenticatedHostWrites: () => null,
 }));
 jest.mock("@/lib/api/api-logger", () => ({ logApiError: jest.fn(), serverErrorFromCatch: jest.fn() }));
-// eslint-disable-next-line @typescript-eslint/no-require-imports -- Jest mock factory runs before imports.
+// Jest mock factory runs before imports.
 jest.mock("@/lib/db", () => require("../helpers/mocks").dbMock());
 const mockPullProfile = jest.fn((..._args: unknown[]) => ({ success: true, slug: "qa", backupPath: null, error: null }));
 jest.mock("@/modules/hermes/lib/profile-pull", () => ({ pullProfileFromHermes: (...args: unknown[]) => mockPullProfile(...args) }));

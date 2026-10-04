@@ -1,5 +1,5 @@
 /** @jest-environment node */
-/* eslint-disable @typescript-eslint/no-require-imports -- the quest modules do not exist yet; a static import would fail typecheck:tests instead of failing this test for the contract reason */
+/* the quest modules do not exist yet; a static import would fail typecheck:tests instead of failing this test for the contract reason */
 
 // ═══════════════════════════════════════════════════════════════
 // B17 oracle, integrity: nothing in the quest content may point at a thing

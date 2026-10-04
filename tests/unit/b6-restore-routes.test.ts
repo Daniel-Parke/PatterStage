@@ -1,5 +1,5 @@
 /** @jest-environment node */
-/* eslint-disable @typescript-eslint/no-require-imports -- two modules the contract creates are read lazily so a missing one reds its tests, not the suite */
+/* two modules the contract creates are read lazily so a missing one reds its tests, not the suite */
 // ═══════════════════════════════════════════════════════════════
 // B6 oracle, group restore (T-0100), the server half.
 //

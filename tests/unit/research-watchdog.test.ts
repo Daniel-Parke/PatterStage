@@ -1,5 +1,5 @@
 /** @jest-environment node */
-/* eslint-disable @typescript-eslint/no-require-imports */
+
 // Watchdog: standalone research runs are fire-and-forget, so a crashed/restarted
 // process can leave a row 'running' forever. failStuckResearchRuns() (run on
 // boot) must fail the stuck ones without touching fresh or terminal runs.

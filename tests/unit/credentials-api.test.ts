@@ -1,5 +1,5 @@
 /** @jest-environment node */
-/* eslint-disable @typescript-eslint/no-require-imports */
+
 
 import type { NextRequest } from "next/server";
 // NextRequest must be a real class (not a plain object literal) so the

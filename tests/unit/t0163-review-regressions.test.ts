@@ -1,5 +1,5 @@
 /** @jest-environment node */
-/* eslint-disable @typescript-eslint/no-require-imports -- load runtime after setting the disposable Hermes root */
+/* load runtime after setting the disposable Hermes root */
 
 import { spawnSync } from "node:child_process";
 import { syncBuiltinESMExports } from "node:module";

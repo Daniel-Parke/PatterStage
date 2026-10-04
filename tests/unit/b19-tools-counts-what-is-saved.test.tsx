@@ -1,5 +1,5 @@
 /** @jest-environment jsdom */
-/* eslint-disable @typescript-eslint/no-require-imports */
+
 
 /**
  * T-0113: the Tools screen reported a state that was not stored.

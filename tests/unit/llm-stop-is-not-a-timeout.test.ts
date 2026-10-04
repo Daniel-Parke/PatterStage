@@ -76,7 +76,7 @@ describe("a caller abort is not a provider timeout", () => {
 
     const hanging = fetchThatHangsUntilAborted();
     global.fetch = hanging as unknown as typeof fetch;
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    
     const { callLLM } = require("@/lib/models/llm") as typeof import("@/lib/models/llm");
 
     const controller = new AbortController();
@@ -123,7 +123,7 @@ describe("a caller abort is not a provider timeout", () => {
       return hanging(url, init) as Promise<Response>;
     });
     global.fetch = fetchMock as unknown as typeof fetch;
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    
     const { callLLM } = require("@/lib/models/llm") as typeof import("@/lib/models/llm");
 
     const controller = new AbortController();
@@ -166,7 +166,7 @@ describe("GREEN CONTROL", () => {
     }));
 
     global.fetch = fetchThatHangsUntilAborted() as unknown as typeof fetch;
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    
     const { callLLM } = require("@/lib/models/llm") as typeof import("@/lib/models/llm");
 
     // No caller signal at all, and a timeout short enough to fire in a test.

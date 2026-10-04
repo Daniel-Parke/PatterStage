@@ -1,5 +1,5 @@
 /** @jest-environment jsdom */
-/* eslint-disable @typescript-eslint/no-require-imports */
+
 // ═══════════════════════════════════════════════════════════════
 // B7 oracle, group memory-tab (T-0101, the plan's "confirm on directive and
 // mental-model delete").

@@ -27,7 +27,7 @@ import { readFallbackAgentSettingsFromConfig } from "@/modules/hermes/lib/hermes
 
 let fakeRoot: string;
 
-// eslint-disable-next-line @typescript-eslint/no-require-imports -- jest.mock factories are hoisted above imports
+
 jest.mock("@/modules/hermes/lib/agent-runtime", () => require("../helpers/mocks").agentRuntimeFakeRootMock());
 
 beforeEach(() => {

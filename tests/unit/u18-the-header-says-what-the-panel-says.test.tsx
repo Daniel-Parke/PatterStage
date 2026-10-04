@@ -26,7 +26,7 @@ jest.mock("next/navigation", () => ({
   usePathname: () => "/",
   useRouter: () => ({ push: jest.fn(), replace: jest.fn() }),
 }));
-// eslint-disable-next-line @typescript-eslint/no-require-imports -- jest.mock factories are hoisted above imports
+
 jest.mock("next/link", () => require("../helpers/mocks").nextLinkMock());
 jest.mock("@/components/motion", () => ({
   FadeIn: ({ children }: { children: ReactNode }) => <div>{children}</div>,

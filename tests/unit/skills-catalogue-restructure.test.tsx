@@ -1,5 +1,5 @@
 /** @jest-environment jsdom */
-/* eslint-disable @typescript-eslint/no-require-imports */
+
 
 /**
  * ACCEPTANCE ORACLE for T-0032, the Skills Manager restructure (tier R2).

@@ -1,5 +1,5 @@
 /** @jest-environment jsdom */
-/* eslint-disable @typescript-eslint/no-require-imports */
+
 
 /**
  * T-0044 · The Skills page and its own stat tiles must agree.

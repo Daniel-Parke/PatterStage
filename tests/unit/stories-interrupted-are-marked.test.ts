@@ -1,5 +1,5 @@
 /** @jest-environment node */
-/* eslint-disable @typescript-eslint/no-require-imports */
+
 
 // T-0087, the lifecycle. Creation spends minutes inside an LLM call, and the
 // row's status during that window was "active" from birth: the UI has carried

@@ -27,7 +27,7 @@
 
 import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
 
-// eslint-disable-next-line @typescript-eslint/no-require-imports -- jest.mock factories are hoisted above imports
+
 jest.mock("lucide-react", () => require("../helpers/story").lucideNullMock());
 
 // ── the board ──────────────────────────────────────────────────
@@ -71,7 +71,7 @@ jest.mock("@/hooks/useComposer", () => ({
 const mockSafeApiCall = jest.fn();
 jest.mock("@/lib/api/api-fetch", () => ({
   ...jest.requireActual("@/lib/api/api-fetch"),
-  // eslint-disable-next-line @typescript-eslint/no-require-imports -- hoisting-safe inside jest.mock
+  
   apiFetch: require("../helpers/mocks").apiFetchOver((...a: unknown[]) => mockSafeApiCall(...a)),
 }));
 

@@ -220,7 +220,7 @@ describe("config-cache — List 4 extraction (session 187)", () => {
           transaction: (fn: () => unknown) => fn,
         }),
       }));
-      // eslint-disable-next-line @typescript-eslint/no-require-imports
+      
       const isolated = require("@/lib/config/config-cache");
       writeFileSync(fakeConfigPath, "from: disk-after-throw\n");
       const result = isolated.readCachedConfig();

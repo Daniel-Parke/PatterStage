@@ -6,7 +6,7 @@
 // 4 sites in /api/missions/route.ts and 5 sites in
 // mission-promote-handler.ts.
 
-// eslint-disable-next-line @typescript-eslint/no-require-imports -- hoisting-safe inside jest.mock
+
 jest.mock("next/server", () => require("../helpers/mocks").nextServerMock());
 const { __responses: responses } = jest.requireMock("next/server") as {
   __responses: Array<{ data: unknown; init?: ResponseInit }>;

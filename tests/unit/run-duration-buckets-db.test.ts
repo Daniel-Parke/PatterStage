@@ -1,5 +1,5 @@
 /** @jest-environment node */
-/* eslint-disable @typescript-eslint/no-require-imports */
+
 // Regression: getRunDurationBuckets must compute real durations from the
 // ISO-8601 (Z-suffixed) timestamps that now() writes. A prior version appended
 // a second 'Z' before Date.parse, yielding NaN → an all-zero histogram.

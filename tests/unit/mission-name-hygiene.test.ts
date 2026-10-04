@@ -7,7 +7,7 @@
 // row and every board card that renders it.
 
 jest.mock("@/lib/models/models-repository", () => ({ findModelByModelId: () => null }));
-// eslint-disable-next-line @typescript-eslint/no-require-imports -- jest.mock factories are hoisted above imports
+
 jest.mock("@/lib/db", () => require("../helpers/mocks").dbMock({ now: () => "t", uuid: () => "u" }));
 
 import type { Mission } from "@/lib/missions/mission-types";

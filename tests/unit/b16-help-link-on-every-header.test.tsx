@@ -1,5 +1,5 @@
 /** @jest-environment jsdom */
-/* eslint-disable @typescript-eslint/no-require-imports -- HelpLink and
+/* HelpLink and
    HelpProvider do not exist in the tree yet, so a static import would not
    compile. Each require sits in a helper called from the test that needs it,
    so a missing file fails that test with the contract sentence. */

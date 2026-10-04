@@ -1,5 +1,5 @@
 /** @jest-environment node */
-/* eslint-disable @typescript-eslint/no-require-imports -- better-sqlite3's package root is not newable under the jest transform, and the quest modules do not exist yet */
+/* better-sqlite3's package root is not newable under the jest transform, and the quest modules do not exist yet */
 
 // ═══════════════════════════════════════════════════════════════
 // B17 oracle, the latch: a completed quest never un-completes.

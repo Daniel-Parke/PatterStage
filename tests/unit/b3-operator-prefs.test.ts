@@ -1,5 +1,5 @@
 /** @jest-environment node */
-/* eslint-disable @typescript-eslint/no-require-imports */
+
 /**
  * B3 (T-0097): migration 038, operator_prefs. One small table for the things
  * the operator sets about the console itself (the rail collapsed, the dispatch

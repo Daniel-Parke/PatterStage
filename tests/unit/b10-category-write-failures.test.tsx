@@ -191,9 +191,9 @@ describe("the category manager keeps the editor open over a failure", () => {
     // Structural: CategoryManagerModal's onUpdate/onDelete props are
     // `Promise<boolean>` and the modal returns early on false. This assertion
     // is the type change's witness.
-    // eslint-disable-next-line @typescript-eslint/no-require-imports -- read at call time so a deleted export is a red, not a compile error
+    // read at call time so a deleted export is a red, not a compile error
     const { readFileSync } = require("node:fs") as typeof import("node:fs");
-    // eslint-disable-next-line @typescript-eslint/no-require-imports -- same
+    // same
     const { join } = require("node:path") as typeof import("node:path");
     const src = readFileSync(
       join(__dirname, "..", "..", "src/components/missions/CategoryManagerModal.tsx"),

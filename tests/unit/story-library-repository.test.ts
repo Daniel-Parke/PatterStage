@@ -1,5 +1,5 @@
 /** @jest-environment node */
-/* eslint-disable @typescript-eslint/no-require-imports */
+
 // Story Weaver's reusable character + theme library (real SQLite; the @/lib/db
 // singleton is mocked to a fresh in-memory DB per test).
 //

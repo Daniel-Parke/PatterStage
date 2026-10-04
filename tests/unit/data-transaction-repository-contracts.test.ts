@@ -1,5 +1,5 @@
 /** @jest-environment node */
-/* eslint-disable @typescript-eslint/no-require-imports -- hoisted singleton fixture */
+/* hoisted singleton fixture */
 // T-0189 focused gaps only. Existing retention, progression, credentials, chat,
 // research and stats controls are selected separately in the evidence manifest.
 import { readFileSync } from "fs";

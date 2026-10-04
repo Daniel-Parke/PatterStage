@@ -50,7 +50,7 @@ jest.mock("@/lib/models/models-repository", () => ({
   getModelDefaults: () => ({}),
 }));
 
-// eslint-disable-next-line @typescript-eslint/no-require-imports -- jest.mock factories are hoisted above imports
+
 jest.mock("@/lib/db", () => require("../helpers/mocks").dbMock({ now: () => "2026-09-01T00:00:00Z" }));
 
 import { pushRootToHermes } from "@/modules/hermes/lib/profile-push";

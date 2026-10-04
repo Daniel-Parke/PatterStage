@@ -1,5 +1,5 @@
 /** @jest-environment node */
-/* eslint-disable @typescript-eslint/no-require-imports -- the 040 applier is read through a loose require so this file loads before it exists */
+/* the 040 applier is read through a loose require so this file loads before it exists */
 
 // ═══════════════════════════════════════════════════════════════
 // B14 oracle, group spend-plumbing, part one: migration 040 (D87, blocker).

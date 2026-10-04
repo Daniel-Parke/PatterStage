@@ -1,5 +1,5 @@
 /** @jest-environment node */
-/* eslint-disable @typescript-eslint/no-require-imports */
+
 
 // T-0060 acceptance oracle — PUT /api/config must refuse to write over a
 // config.yaml it could not parse.

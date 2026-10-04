@@ -1,5 +1,5 @@
 /** @jest-environment jsdom */
-/* eslint-disable @typescript-eslint/no-require-imports -- the status-vocabulary claim is a structural one, read off the source where it is asserted rather than imported at the top of a jsdom file */
+/* the status-vocabulary claim is a structural one, read off the source where it is asserted rather than imported at the top of a jsdom file */
 // ═══════════════════════════════════════════════════════════════
 // B11 oracle, the row and the group (T-0105, contract §1 §2 §6 §12).
 //

@@ -20,7 +20,7 @@ const getDashboardStats = jest.fn();
 const captureAgentProgressionSnapshots = jest.fn();
 const captureAgentProgressionFromLiveStats = jest.fn();
 
-// eslint-disable-next-line @typescript-eslint/no-require-imports -- jest.mock factories are hoisted above imports
+
 jest.mock("@/lib/db", () => require("../helpers/mocks").dbMock());
 jest.mock("@/lib/stats/agent-progression-repository", () => ({
   readLatestAgentProgressionSnapshots: () => readLatestAgentProgressionSnapshots(),

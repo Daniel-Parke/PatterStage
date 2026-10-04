@@ -26,10 +26,10 @@ import { renderWithQuery } from "../helpers/render-with-query";
 
 // Icons leave the accessibility tree, so an icon-only button that names
 // itself with `title` still resolves by its accessible name.
-// eslint-disable-next-line @typescript-eslint/no-require-imports -- jest.mock factories are hoisted above imports
+
 jest.mock("lucide-react", () => require("../helpers/story").lucideNullMock());
 
-// eslint-disable-next-line @typescript-eslint/no-require-imports -- jest.mock factories are hoisted above imports
+
 jest.mock("next/navigation", () => require("../helpers/story").storyReaderNavigationMock(jest.fn()));
 
 import StoryReaderPage from "@/app/recroom/story-weaver/[id]/page";

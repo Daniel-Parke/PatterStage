@@ -1,5 +1,5 @@
 /** @jest-environment jsdom */
-/* eslint-disable @typescript-eslint/no-require-imports -- the reload case has to load the store module a second time, which a static import cannot do */
+/* the reload case has to load the store module a second time, which a static import cannot do */
 
 /**
  * T-0113: three profile pickers that did not talk to each other.

@@ -1,5 +1,5 @@
 /** @jest-environment node */
-/* eslint-disable @typescript-eslint/no-require-imports */
+
 
 // /api/tools only has GET and POST — PUT is tested via POST(action="configure").
 //

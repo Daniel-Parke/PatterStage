@@ -1,5 +1,5 @@
 /** @jest-environment node */
-/* eslint-disable @typescript-eslint/no-require-imports -- better-sqlite3's package root is not newable under the jest transform, and the module the contract creates is loaded lazily so a missing file reds its own tests */
+/* better-sqlite3's package root is not newable under the jest transform, and the module the contract creates is loaded lazily so a missing file reds its own tests */
 
 // ═══════════════════════════════════════════════════════════════
 // B7 oracle, group provider-switch, the server half (T-0101, D64).

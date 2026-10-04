@@ -1,7 +1,7 @@
 /**
  * @jest-environment jsdom
  */
-/* eslint-disable @typescript-eslint/no-require-imports */
+
 /**
  * A PatterStage install with no memory provider running is a supported state.
  * The regression this pins: the list endpoint answers 503 when nothing is

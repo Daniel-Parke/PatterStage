@@ -18,7 +18,7 @@
  * Real SQLite, because the mission name comes from a join and a double would
  * answer for it.
  */
-/* eslint-disable @typescript-eslint/no-require-imports -- better-sqlite3's package root is not newable under the jest transform */
+/* better-sqlite3's package root is not newable under the jest transform */
 
 import type DatabaseNs from "better-sqlite3";
 import type * as SchedulesRepo from "@/lib/schedule/schedules-repository";

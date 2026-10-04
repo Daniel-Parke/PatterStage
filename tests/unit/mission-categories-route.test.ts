@@ -33,7 +33,7 @@
 // The shared next/server double: a real NextResponse class, so the
 // `instanceof NextResponse` check in parseJsonBody works, and a recorder the
 // assertions read every answer out of.
-// eslint-disable-next-line @typescript-eslint/no-require-imports -- hoisting-safe inside jest.mock
+
 jest.mock("next/server", () => require("../helpers/mocks").nextServerMock());
 
 // Pull the responses array accessor out of the mock.

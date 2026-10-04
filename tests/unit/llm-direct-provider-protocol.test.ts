@@ -1,5 +1,5 @@
 /** @jest-environment node */
-/* eslint-disable @typescript-eslint/no-require-imports */
+
 
 /**
  * Phase 1.5-A — the direct-provider path is protocol-aware. An Anthropic-style

@@ -1,5 +1,5 @@
 /** @jest-environment node */
-/* eslint-disable @typescript-eslint/no-require-imports -- better-sqlite3's package root is not newable under the jest transform; same construction as the-numbers-are-measured.test.ts */
+/* better-sqlite3's package root is not newable under the jest transform; same construction as the-numbers-are-measured.test.ts */
 
 // B6 (T-0100) oracle, group backups, the helper half: `src/lib/db/backup.ts`
 // and its dependency-free twin `src/lib/db/backup-types.ts`.

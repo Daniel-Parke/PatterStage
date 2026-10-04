@@ -1,5 +1,5 @@
 /** @jest-environment node */
-/* eslint-disable @typescript-eslint/no-require-imports -- better-sqlite3's package root is not newable under the jest transform */
+/* better-sqlite3's package root is not newable under the jest transform */
 
 // ═══════════════════════════════════════════════════════════════
 // B13 sweep answer: the two places a schedule can live, and what the first

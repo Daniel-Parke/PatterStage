@@ -1,5 +1,5 @@
 /** @jest-environment node */
-/* eslint-disable @typescript-eslint/no-require-imports -- hoisted singleton fixture */
+/* hoisted singleton fixture */
 import { openBaselineDb, type RealDb } from "../helpers/baseline-db";
 let testDb: RealDb | null = null;
 jest.mock("@/lib/db", () => require("../helpers/baseline-db").dbSingletonMock(() => testDb));

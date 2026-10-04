@@ -28,7 +28,7 @@ import { openRealDb, type RealDb } from "../helpers/baseline-db";
 
 let testDb: RealDb | null = null;
 
-// eslint-disable-next-line @typescript-eslint/no-require-imports -- jest.mock factories are hoisted above imports; require is the hoisting-safe form
+
 jest.mock("@/lib/db", () => require("../helpers/baseline-db").dbSingletonMock(() => testDb));
 
 import { readRunUsageSince } from "@/lib/spend/spend-repository";

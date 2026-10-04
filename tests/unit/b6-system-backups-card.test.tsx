@@ -1,5 +1,5 @@
 /** @jest-environment jsdom */
-/* eslint-disable @typescript-eslint/no-require-imports */
+
 
 // B6 (T-0100) oracle, group backups, the page half: the Backups card on
 // Settings > System (`src/app/agent/settings/system/page.tsx`).

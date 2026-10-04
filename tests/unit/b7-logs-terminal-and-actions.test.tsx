@@ -1,5 +1,5 @@
 /** @jest-environment jsdom */
-/* eslint-disable @typescript-eslint/no-require-imports -- the source read is a structural assertion, loaded where it is used rather than at the top of a jsdom file */
+/* the source read is a structural assertion, loaded where it is used rather than at the top of a jsdom file */
 // ═══════════════════════════════════════════════════════════════
 // B7 oracle, group logs (T-0101, D59 and the three the plan names).
 //

@@ -14,7 +14,7 @@ import { readFileSync } from "fs";
 import { join } from "path";
 import { render, screen, within } from "@testing-library/react";
 
-// eslint-disable-next-line @typescript-eslint/no-require-imports -- jest.mock factories are hoisted above imports
+
 jest.mock("lucide-react", () => require("../helpers/story").lucideNullMock());
 
 import QuestChapter from "@/components/quests/QuestChapter";

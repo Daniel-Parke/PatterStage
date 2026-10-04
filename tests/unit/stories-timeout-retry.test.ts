@@ -4,7 +4,7 @@
 // Bug: AbortError handler threw immediately without checking remaining retries.
 // All other errors (network, 429, empty response) retried, but timeouts didn't.
 
-// eslint-disable-next-line @typescript-eslint/no-require-imports -- jest.mock factories are hoisted above imports
+
 jest.mock("next/server", () => require("../helpers/mocks").nextServerMock());
 
 jest.mock("@/lib/api/api-logger", () => ({
@@ -19,10 +19,10 @@ jest.mock("@/lib/api/api-auth", () => ({
 }));
 
 // Mock story-repository (NOT stories-repository - the file is story-repository.ts)
-// eslint-disable-next-line @typescript-eslint/no-require-imports -- jest.mock factories are hoisted above imports
+
 jest.mock("@/modules/rec-room/lib/story-repository", () => require("../helpers/story").storyRepositoryMock());
 
-// eslint-disable-next-line @typescript-eslint/no-require-imports
+
 const storyRepo = require("@/modules/rec-room/lib/story-repository") as Record<string, unknown>;
 const mockGetStory = storyRepo.__getStory as jest.Mock;
 const mockSaveStory = storyRepo.__saveStory as jest.Mock;

@@ -67,7 +67,7 @@ jest.mock("@/modules/hermes/lib/agent-runtime", () => ({
   })),
 }));
 
-// eslint-disable-next-line @typescript-eslint/no-require-imports -- jest.mock factories are hoisted above imports
+
 jest.mock("@/lib/host/paths", () => require("../helpers/mocks").pathsMock({
   getPsDataDir: () => "/tmp/ch-data",
   // The real reader, not a stub: GET /api/sessions now consults PS_READ_ONLY

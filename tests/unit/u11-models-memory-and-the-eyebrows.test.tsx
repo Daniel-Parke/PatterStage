@@ -1,5 +1,5 @@
 /** @jest-environment jsdom */
-/* eslint-disable @typescript-eslint/no-require-imports */
+
 /**
  * U11 (T-0125): the smaller repairs on Models, Memory, Tools, Restore and
  * System, each one measured.

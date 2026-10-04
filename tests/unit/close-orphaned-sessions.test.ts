@@ -19,7 +19,7 @@
  * the bridge tests mock `@/lib/db` to redirect calls to the
  * in-memory DB.
  */
-/* eslint-disable @typescript-eslint/no-require-imports */
+
 import Database from "better-sqlite3";
 import { readFileSync } from "fs";
 import { join } from "path";

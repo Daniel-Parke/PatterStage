@@ -22,7 +22,7 @@ jest.mock("@/lib/api/api-fetch", () => ({
   apiFetch: (...args: unknown[]) => mockApiFetch(...args),
   // The page reads through useApiResource, which calls safeApiCall; routed
   // through the same mock so "the API was not called" is still one count (C6, T-0143).
-  // eslint-disable-next-line @typescript-eslint/no-require-imports -- hoisting-safe inside jest.mock
+  
   safeApiCall: require("../helpers/mocks").safeApiCallOver((...a: unknown[]) => mockApiFetch(...a)),
 }));
 

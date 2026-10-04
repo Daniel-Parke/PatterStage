@@ -1,5 +1,5 @@
 /** @jest-environment jsdom */
-/* eslint-disable @typescript-eslint/no-require-imports */
+
 /**
  * B3 (T-0097), D55 and D56: page titles and nav labels disagreed in seven
  * places ("Session History" under a rail entry that says Sessions, "System

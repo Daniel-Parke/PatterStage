@@ -37,11 +37,11 @@ import type { ComponentType } from "react";
 // Icons leave the accessibility tree, so an icon-only button that names
 // itself with `title` still resolves by its accessible name. A mocked icon
 // that rendered text would become the name and hide the title (skeptic 4).
-// eslint-disable-next-line @typescript-eslint/no-require-imports -- jest.mock factories are hoisted above imports
+
 jest.mock("lucide-react", () => require("../helpers/story").lucideNullMock());
 
 // next/server, the way models-api.test.ts stands it in: a status and a body.
-// eslint-disable-next-line @typescript-eslint/no-require-imports -- hoisting-safe inside jest.mock
+
 jest.mock("next/server", () => require("../helpers/mocks").nextServerMock());
 
 // The registry and the config readers, as models-pull-context-length mocks

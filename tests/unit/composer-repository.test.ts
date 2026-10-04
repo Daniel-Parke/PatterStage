@@ -1,5 +1,5 @@
 /** @jest-environment node */
-/* eslint-disable @typescript-eslint/no-require-imports */
+
 // CRUD + graph-navigation coverage for the Composer repository (real SQLite;
 // the @/lib/db singleton is mocked to a fresh in-memory DB per test).
 

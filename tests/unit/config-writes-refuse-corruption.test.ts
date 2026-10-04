@@ -55,7 +55,7 @@ jest.mock("@/lib/models/models-repository", () => ({
   getModel: jest.fn(() => null),
 }));
 
-// eslint-disable-next-line @typescript-eslint/no-require-imports -- jest.mock factories are hoisted above imports
+
 jest.mock("@/lib/db", () => require("../helpers/mocks").dbMock({ now: () => "2026-09-01T00:00:00Z" }));
 
 import {

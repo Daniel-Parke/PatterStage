@@ -1,5 +1,5 @@
 /** @jest-environment node */
-/* eslint-disable @typescript-eslint/no-require-imports -- the modules under
+/* the modules under
    contract do not exist in the tree yet, so a static import would not compile
    and the oracle could not be committed alone. Each require sits inside the
    test that needs it, so a missing module fails THAT test with the contract

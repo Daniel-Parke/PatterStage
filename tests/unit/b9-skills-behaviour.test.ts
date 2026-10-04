@@ -1,5 +1,5 @@
 /** @jest-environment node */
-/* eslint-disable @typescript-eslint/no-require-imports -- better-sqlite3's package root is not newable under the jest transform */
+/* better-sqlite3's package root is not newable under the jest transform */
 
 /**
  * B9 oracle, the skills routes as they behave (T-0103, D81, D82).

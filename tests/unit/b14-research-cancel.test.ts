@@ -1,5 +1,5 @@
 /** @jest-environment node */
-/* eslint-disable @typescript-eslint/no-require-imports -- better-sqlite3's package root is not newable under the jest transform, and the cancel route is the file this contract creates, so it is read through a guarded require */
+/* better-sqlite3's package root is not newable under the jest transform, and the cancel route is the file this contract creates, so it is read through a guarded require */
 
 // ═══════════════════════════════════════════════════════════════
 // B14 oracle, group research-cancel (D98). Contract section 5.2.

@@ -34,7 +34,7 @@ jest.mock("@/lib/models/models-repository", () => ({
   setModelCredential: jest.fn(),
 }));
 jest.mock("@/lib/api/audit-log", () => ({ appendAuditLine: jest.fn() }));
-// eslint-disable-next-line @typescript-eslint/no-require-imports -- jest.mock factories are hoisted above imports
+
 jest.mock("@/lib/db", () => require("../helpers/mocks").dbMock());
 
 import { NextRequest } from "next/server";

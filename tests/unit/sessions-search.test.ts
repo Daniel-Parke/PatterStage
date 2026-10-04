@@ -1,5 +1,5 @@
 /** @jest-environment node */
-/* eslint-disable @typescript-eslint/no-require-imports */
+
 // Server-side session search (QA #12): the term must match across the FULL
 // table (title / id / profile / mission), not just a loaded page. Drives
 // listSessions against a real in-memory SQLite DB with the @/lib/db singleton

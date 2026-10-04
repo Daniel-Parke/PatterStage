@@ -1,5 +1,5 @@
 /** @jest-environment node */
-/* eslint-disable @typescript-eslint/no-require-imports -- spend-window.ts is the module this contract creates, so it is loaded through a guarded require and reds its own tests rather than failing the file to load */
+/* spend-window.ts is the module this contract creates, so it is loaded through a guarded require and reds its own tests rather than failing the file to load */
 
 // ═══════════════════════════════════════════════════════════════
 // B14 oracle, group spend-plumbing, part two: one window, four sources

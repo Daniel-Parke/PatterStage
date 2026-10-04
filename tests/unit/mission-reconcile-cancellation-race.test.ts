@@ -13,7 +13,7 @@ const getBackendRun = jest.fn<Promise<unknown>, [string, string?]>();
 const stopBackendRun = jest.fn<Promise<void>, [string, string?]>();
 const emit = jest.fn<void, [string, Record<string, unknown>]>();
 
-// eslint-disable-next-line @typescript-eslint/no-require-imports -- Jest hoists mock factories
+// Jest hoists mock factories
 jest.mock("@/lib/db", () => require("../helpers/baseline-db").dbSingletonMock(() => database));
 jest.mock("@/lib/runtime", () => ({ runtime: {
   getRun: (id: string, profile?: string) => getBackendRun(id, profile),

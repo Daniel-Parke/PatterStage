@@ -1,5 +1,5 @@
 /** @jest-environment node */
-/* eslint-disable @typescript-eslint/no-require-imports -- better-sqlite3 is resolution-mapped to a stub for the suite; the real CJS entry is required directly, exactly as b12-starter-workflows.test.ts does, so the seed runs against real SQL */
+/* better-sqlite3 is resolution-mapped to a stub for the suite; the real CJS entry is required directly, exactly as b12-starter-workflows.test.ts does, so the seed runs against real SQL */
 // ═══════════════════════════════════════════════════════════════
 // T-0113: an install that already booted keeps the broken workflow otherwise.
 //

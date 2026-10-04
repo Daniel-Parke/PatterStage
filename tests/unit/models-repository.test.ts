@@ -1,5 +1,5 @@
 /** @jest-environment node */
-/* eslint-disable @typescript-eslint/no-require-imports */
+
 
 /**
  * Unit tests for src/lib/models/models-repository.ts. Uses a real in-memory

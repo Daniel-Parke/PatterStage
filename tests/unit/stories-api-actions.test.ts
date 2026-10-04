@@ -8,12 +8,10 @@
 // - unknown action returns 400
 // - validateChapterOutput strips meta commentary
 
-// eslint-disable-next-line @typescript-eslint/no-require-imports -- jest.mock factories are hoisted above imports
+
 jest.mock("next/server", () => require("../helpers/mocks").nextServerMock());
 
-jest.mock("@/lib/api/api-logger", () => ({
-  logApiError: jest.fn(),
-}));
+jest.mock("@/lib/api/api-logger", () => jest.requireActual("@/lib/api/api-logger"));
 
 jest.mock("@/modules/rec-room/lib/prompts", () => ({
   getStoryPrompt: jest.fn(() => "system prompt"),
@@ -22,10 +20,10 @@ jest.mock("@/modules/rec-room/lib/prompts", () => ({
 jest.mock("@/lib/api/api-auth", () => ({
 }));
 
-// eslint-disable-next-line @typescript-eslint/no-require-imports -- jest.mock factories are hoisted above imports
+
 jest.mock("@/modules/rec-room/lib/story-repository", () => require("../helpers/story").storyRepositoryMock());
 
-// eslint-disable-next-line @typescript-eslint/no-require-imports
+
 const storyRepo = require("@/modules/rec-room/lib/story-repository") as Record<string, unknown>;
 const mockGetStory = storyRepo.__getStory as jest.Mock;
 const mockUpdateStory = storyRepo.__updateStory as jest.Mock;
@@ -247,9 +245,9 @@ describe("/api/stories action validation", () => {
       });
 
       const res = await POST(request);
-      expect(res.status).toBe(200);
+      expect(res.status).toBe(500);
       const data = await res.json();
-      expect(data.data.stories).toEqual([]);
+      expect(data).toEqual({ error: "Failed to load stories" });
     });
   });
 

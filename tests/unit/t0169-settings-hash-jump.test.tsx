@@ -1,5 +1,5 @@
 /** @jest-environment jsdom */
-/* eslint-disable @typescript-eslint/no-require-imports */
+
 import { render } from "@testing-library/react";
 
 import { CONFIG_SECTIONS } from "@/lib/config/config-schema";

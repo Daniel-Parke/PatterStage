@@ -1,5 +1,5 @@
 /** @jest-environment node */
-/* eslint-disable @typescript-eslint/no-require-imports -- Jest hoists the database mock. */
+/* Jest hoists the database mock. */
 
 import * as fs from "fs";
 import { tmpdir } from "os";

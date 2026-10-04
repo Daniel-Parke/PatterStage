@@ -14,7 +14,7 @@ jest.mock("fs", () => {
 
 let testDb: import("better-sqlite3").Database | null = null;
 
-// eslint-disable-next-line @typescript-eslint/no-require-imports -- jest.mock factories are hoisted above imports; require is the hoisting-safe form
+
 jest.mock("@/lib/db", () => require("../helpers/baseline-db").dbSingletonMock(() => testDb));
 
 jest.mock("@/modules/hermes/lib/profile-paths", () => ({
@@ -46,7 +46,7 @@ jest.mock("@/lib/agents/agent-root-repository", () => ({
 
 beforeEach(() => {
   mockExistsSync.mockImplementation((path: string) => path.endsWith("/config.yaml"));
-  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  
   const Database = require("better-sqlite3/lib/index.js") as typeof import("better-sqlite3");
   testDb = new Database(":memory:");
   execBaselineSchema(testDb);

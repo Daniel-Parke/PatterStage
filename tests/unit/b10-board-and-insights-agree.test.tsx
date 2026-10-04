@@ -274,7 +274,7 @@ describe("the third count set is gone", () => {
   it("mission-filters no longer exports a second way to count a board", () => {
     // Read at call time so the assertion is about the module's shape, not an
     // import that would become a typecheck error once the export is deleted.
-    // eslint-disable-next-line @typescript-eslint/no-require-imports -- see above
+    // see above
     const filters = require("@/lib/missions/mission-filters") as Record<string, unknown>;
     expect(filters.computeMissionCounts).toBeUndefined();
   });

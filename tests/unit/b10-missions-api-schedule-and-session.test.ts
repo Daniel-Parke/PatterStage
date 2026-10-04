@@ -1,5 +1,5 @@
 /** @jest-environment node */
-/* eslint-disable @typescript-eslint/no-require-imports -- the route is loaded after the per-test module registry reset, so it must be required rather than imported at the top */
+/* the route is loaded after the per-test module registry reset, so it must be required rather than imported at the top */
 // ═══════════════════════════════════════════════════════════════
 // B10 oracle, group missions (D68 and D69, the API half).
 //

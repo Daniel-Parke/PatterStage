@@ -39,7 +39,7 @@ jest.mock("@/lib/runs/artifacts-repository", () => ({
   deleteArtifact: jest.fn(),
 }));
 
-// eslint-disable-next-line @typescript-eslint/no-require-imports -- hoisting-safe inside jest.mock
+
 jest.mock("next/server", () => require("../helpers/mocks").nextServerMock());
 
 import { GET as getArtifactRoute } from "@/app/api/artifacts/[id]/route";

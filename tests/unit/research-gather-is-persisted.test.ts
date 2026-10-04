@@ -37,7 +37,7 @@ jest.mock("@/lib/laboratory/deep-research/search", () => ({
   resolveSearchProvider: () => ({ name: "fake", search: async () => [] }),
 }));
 jest.mock("@/lib/runs/artifacts-repository", () => ({ captureArtifactOnce: jest.fn() }));
-// eslint-disable-next-line @typescript-eslint/no-require-imports -- jest.mock factories are hoisted above imports
+
 jest.mock("@/lib/db", () => require("../helpers/mocks").dbMock({ now: () => "2026-08-31T12:00:00.000Z" }));
 jest.mock("@/lib/api/api-logger", () => ({ logApiError: jest.fn() }));
 

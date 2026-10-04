@@ -874,7 +874,39 @@
     "result": "9cases:4causal policy failures,5passing boundaries. RealESLint calculatedpolicy andlintText with inlineconfig disabled; types/lint0.",
     "amendmentScope": "285exactfiles assigned:284testfiles311directives+Jest. Remove140reasonless89exactboilerplate, preserve82specificreasons+Jest asplaincomments. Tokens/nontargetcomments/expandedidentities mustmatch.",
     "lineEndingBinding": "b14-spend-one-window.test.ts primary/validation rawbytes differ onlyLF/CRLF. Independent author must regenerate exactprimaryhash/spans or explicitly prove normalisation; driftcheck cannotbebypassed.",
-    "limits": "Commentamendment and scopedoverride notimplemented; before/after identity and fullgate pending."
+    "limits": "Integrated candidate; full gate, sweep, final R2 and hosted checks pending.",
+    "integration": {
+      "receipt": "tmp/t0192-comment-integration.json",
+      "independentAuthor": "Nash",
+      "reviewer": "Laplace",
+      "before": "282 suites,2954 identities,2941 pass13fail; preserved baseline.",
+      "after": "tmp/t0191-green-validation/tmp/t0192-require-after-1791075471030:282suites2954pass0fail0pending; full-name multisets identical.",
+      "policy": "tmp/t0191-green-validation/tmp/t0192-policy-green-1791075598100:9/9pass.",
+      "scope": "285 files,312 exact spans.82 specific reasons plus Jest reason retained. Override only tests TS/TSX and jest.config.js.",
+      "qualification": "Not green-before/green-after.12setupfailures disappear with required shell permissions, not caused by comments. Story separate real-logger and500 exacterror correction retains obsolete historical name.",
+      "story": {
+        "path": "tests/unit/stories-api-actions.test.ts",
+        "authority": "Laplace authorised exact proposal through operator; T-0192 genuine Story read failure exception",
+        "offsetUnits": "UTF-16 code units; exact primary post-comment input hash mandatory",
+        "beforeSha256": "b826dd537a8d01bf8756568926aab1cd10bc5a97179c96c158cc1c9b1656be81",
+        "afterSha256": "fdd14f7e0f4fa59f01cc9e36fbef478a868d1d998a9a6873f764a033ad798e22",
+        "validationCandidateSha256": "fdd14f7e0f4fa59f01cc9e36fbef478a868d1d998a9a6873f764a033ad798e22",
+        "spans": [
+          {
+            "start": 432,
+            "end": 505,
+            "raw": "jest.mock(\"@/lib/api/api-logger\", () => ({\n  logApiError: jest.fn(),\n}));",
+            "replacement": "jest.mock(\"@/lib/api/api-logger\", () => jest.requireActual(\"@/lib/api/api-logger\"));"
+          },
+          {
+            "start": 8366,
+            "end": 8477,
+            "raw": "expect(res.status).toBe(200);\n      const data = await res.json();\n      expect(data.data.stories).toEqual([]);",
+            "replacement": "expect(res.status).toBe(500);\n      const data = await res.json();\n      expect(data).toEqual({ error: \"Failed to load stories\" });"
+          }
+        ]
+      }
+    }
   },
   "nativeLinuxExpandedCandidate": {
     "receipt": "tmp/t0192-linux-1791074008592217500",
@@ -900,6 +932,7 @@
   },
   "migrationSandboxProbe": {
     "command": "pinned Node -e console.log(require('node:os').userInfo().username.length)",
-    "result": "Default restricted shell exits 1 with uv_os_get_passwd ENOMEM; elevated shell exits 0. No account name logged. Isolated migration controls rerunning with required permissions; earlier failures retained."
+    "result": "Default restricted shell exits 1 with uv_os_get_passwd ENOMEM; elevated shell exits 0. No account name logged. Isolated migration controls rerunning with required permissions; earlier failures retained.",
+    "controls": "tmp/t0191-green-validation/tmp/t0192-migration-elevated-summary.json:15/15 across4suites, unchanged tests/production, original failed receipts retained."
   }
 }

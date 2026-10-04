@@ -1,5 +1,5 @@
 /** @jest-environment node */
-/* eslint-disable @typescript-eslint/no-require-imports -- better-sqlite3's package root is not newable under the jest transform */
+/* better-sqlite3's package root is not newable under the jest transform */
 
 // ═══════════════════════════════════════════════════════════════
 // B6 oracle, group config-route-builder, half one (T-0100, D76).

@@ -5,7 +5,7 @@ import { execBaselineSchema } from "../helpers/baseline-db";
 import { applyMissionRepeatMigration } from "@/lib/db/apply-mission-repeat-migration";
 
 function loadRealBetterSqlite3(): typeof import("better-sqlite3") {
-  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  
   return require("better-sqlite3/lib/index.js") as typeof import("better-sqlite3");
 }
 

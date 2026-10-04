@@ -1,5 +1,5 @@
 /** @jest-environment node */
-/* eslint-disable @typescript-eslint/no-require-imports */
+
 
 // T-0076 acceptance oracle — a Composer run can be stopped, and stopping it is
 // recorded as a decision.

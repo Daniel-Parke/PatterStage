@@ -1,5 +1,5 @@
 /** @jest-environment node */
-/* eslint-disable @typescript-eslint/no-require-imports */
+
 // Phase 1.5-B — the workflow builder (whole-graph replace + guards) and the
 // conditional branch routing (OUTCOME → on_<outcome>), backward-compatible.
 

@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/no-require-imports -- Jest config is CommonJS */
+/* Jest config is CommonJS */
 const nextJest = require("next/jest.js");
 
 const createJestConfig = nextJest({ dir: "./" });

@@ -9,7 +9,7 @@ let scheduleDb: import("better-sqlite3").Database | null = null;
 const requestRun = jest.fn<Promise<RunHandle>, [RunSubmit]>();
 const sentEvent = jest.fn();
 
-// eslint-disable-next-line @typescript-eslint/no-require-imports -- Jest hoists its mock factories
+// Jest hoists its mock factories
 jest.mock("@/lib/db", () => require("../helpers/baseline-db").dbSingletonMock(() => scheduleDb));
 jest.mock("@/lib/runtime", () => ({ runtime: { submitRun: (request: RunSubmit) => requestRun(request) } }));
 jest.mock("@/lib/spend/spend-guard", () => ({ checkUnattendedSpend: () => ({ allowed: true }) }));

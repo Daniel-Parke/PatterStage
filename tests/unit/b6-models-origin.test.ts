@@ -1,5 +1,5 @@
 /** @jest-environment node */
-/* eslint-disable @typescript-eslint/no-require-imports -- better-sqlite3's package root is not newable under the jest transform, and the 039 applier is read through a loose require so this file loads before it exists */
+/* better-sqlite3's package root is not newable under the jest transform, and the 039 applier is read through a loose require so this file loads before it exists */
 
 // ═══════════════════════════════════════════════════════════════
 // B6 oracle, group models-origin (T-0100, D10). Section 1 of the contract,

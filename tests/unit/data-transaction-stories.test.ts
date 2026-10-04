@@ -1,5 +1,5 @@
 /** @jest-environment node */
-/* eslint-disable @typescript-eslint/no-require-imports -- hoisted singleton fixture */
+/* hoisted singleton fixture */
 // T-0189 independent oracle: display defaults are not stored-data repairs.
 import { openBaselineDb, type RealDb } from "../helpers/baseline-db";
 

@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/no-require-imports -- scripts/docs/lib.mjs is loaded by a COMPUTED path, for the reason the B15 oracle beside this one gives: a static import would be a typecheck error whenever the module was absent, and typecheck:tests runs inside npm run lint */
+/* scripts/docs/lib.mjs is loaded by a COMPUTED path, for the reason the B15 oracle beside this one gives: a static import would be a typecheck error whenever the module was absent, and typecheck:tests runs inside npm run lint */
 /**
  * T-0112: the two refusals that tell a written guide from a placeholder.
  *

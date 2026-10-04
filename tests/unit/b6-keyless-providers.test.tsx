@@ -32,7 +32,7 @@ import type { ComponentProps, ComponentType } from "react";
 import type { NextRequest } from "next/server";
 import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 
-// eslint-disable-next-line @typescript-eslint/no-require-imports -- jest.mock factories are hoisted above imports
+
 jest.mock("next/server", () => require("../helpers/mocks").nextServerMock());
 
 jest.mock("@/lib/api/api-logger", () => ({
@@ -69,9 +69,9 @@ import ModelEditor, { type ModelEditorRecord } from "@/components/models/ModelEd
 import type { CredentialOption } from "@/components/models/CredentialPicker";
 import { POST as postCredentials } from "@/app/api/credentials/route";
 
-// eslint-disable-next-line @typescript-eslint/no-require-imports -- the closed mock set is reached the way credentials-api.test.ts reaches it
+// the closed mock set is reached the way credentials-api.test.ts reaches it
 const repo = require("@/lib/models/credentials-repository") as Record<string, jest.Mock>;
-// eslint-disable-next-line @typescript-eslint/no-require-imports -- same
+// same
 const env = require("@/modules/hermes/lib/hermes-env-sync") as { syncCredentialToHermesEnv: jest.Mock };
 
 const ROOT = join(__dirname, "..", "..");

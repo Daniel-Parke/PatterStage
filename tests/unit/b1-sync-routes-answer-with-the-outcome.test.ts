@@ -14,7 +14,7 @@
  * One shape for every sync answer, and the helpers live in one place.
  */
 jest.mock("@/lib/api/api-logger", () => ({ logApiError: jest.fn(), serverErrorFromCatch: jest.fn() }));
-// eslint-disable-next-line @typescript-eslint/no-require-imports -- jest.mock factories are hoisted above imports
+
 jest.mock("@/lib/db", () => require("../helpers/mocks").dbMock());
 
 type R = { success: boolean; slug: string; backupPath: string | null; error: string | null };

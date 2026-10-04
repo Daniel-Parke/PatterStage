@@ -1,5 +1,5 @@
 /** @jest-environment node */
-/* eslint-disable @typescript-eslint/no-require-imports */
+
 
 // Regression: Config PUT must reject non-object `values`
 // Bug: passing values as string/array caused deepMerge to crash with Object.keys()

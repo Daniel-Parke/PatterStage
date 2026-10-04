@@ -25,7 +25,7 @@ jest.mock("@/lib/analytics/record-event", () => ({ recordEvent: jest.fn() }));
 
 // ── memory/config: the DB-owned provider table ─────────────────
 const mockUpdateMemoryProvider = jest.fn();
-// eslint-disable-next-line @typescript-eslint/no-require-imports -- jest.mock factories are hoisted above imports
+
 jest.mock("@/lib/db", () => require("../helpers/mocks").dbMock({ now: () => "2026-09-05T00:00:00.000Z" }));
 const DEFAULT_MEMORY_CONFIG = { host: "127.0.0.1", port: 9177, bank: "hermes" };
 jest.mock("@/lib/memory/memory-providers", () => {
@@ -59,7 +59,7 @@ jest.mock("fs", () => ({
   unlinkSync: jest.fn(),
   rmSync: jest.fn(),
 }));
-// eslint-disable-next-line @typescript-eslint/no-require-imports -- jest.mock factories are hoisted above imports
+
 jest.mock("@/lib/host/paths", () => require("../helpers/mocks").pathsMock({
   PATHS: { templates: "/tmp/test-templates" },
   getPsDataDir: () => "/tmp/ch-data",

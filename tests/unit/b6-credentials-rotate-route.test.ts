@@ -1,5 +1,5 @@
 /** @jest-environment node */
-/* eslint-disable @typescript-eslint/no-require-imports -- better-sqlite3's package root is not newable under the jest transform; same construction as credentials-repository.test.ts */
+/* better-sqlite3's package root is not newable under the jest transform; same construction as credentials-repository.test.ts */
 // ═══════════════════════════════════════════════════════════════
 // B6 oracle, group credentials, the server half (T-0100, D14).
 //

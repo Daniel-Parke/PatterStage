@@ -1,6 +1,6 @@
 /** @jest-environment node */
 
-/* eslint-disable @typescript-eslint/no-require-imports */
+
 
 // T-0088, ruling 4: bound everything. Round 6, findings 11 and 21: the
 // missions list ignored limit (61 rows for limit=5, verified live), models

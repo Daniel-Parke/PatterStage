@@ -1,5 +1,5 @@
 /** @jest-environment node */
-/* eslint-disable @typescript-eslint/no-require-imports */
+
 
 // Integration regression: PUT /api/config must deep-merge a nested
 // object patch into the existing section so sibling keys survive.

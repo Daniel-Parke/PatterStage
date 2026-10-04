@@ -1,5 +1,5 @@
 /** @jest-environment jsdom */
-/* eslint-disable @typescript-eslint/no-require-imports */
+
 
 /**
  * B9 oracle, the Tools page (T-0103, D80, D82-adv, D84).

@@ -25,7 +25,7 @@ const mockLogApiError = jest.fn();
 jest.mock("@/lib/api/api-logger", () => ({
   serverErrorFromCatch: (routeName: string, doing: string, error: unknown, message: string) => {
     mockLogApiError(routeName, doing, error);
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    
     const { NextResponse: NR } = require("next/server") as typeof import("next/server");
     return NR.json({ error: message }, { status: 500 });
   },
@@ -114,7 +114,7 @@ describe("C1 · one route body", () => {
     // The gate reads handlers by regex and refuses a walk that finds too few;
     // a regex that knew only `export async function GET` would count the
     // wrapped handlers as nothing.
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    
     const { execFileSync } = require("node:child_process") as typeof import("node:child_process");
     const out = execFileSync(process.execPath, [join(ROOT, "scripts", "tooling", "check-read-only-guards.mjs")], { encoding: "utf8" });
     const m = /(\d+) handlers across (\d+) route files/.exec(out);

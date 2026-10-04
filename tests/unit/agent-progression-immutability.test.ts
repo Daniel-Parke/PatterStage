@@ -1,5 +1,5 @@
 /** @jest-environment node */
-/* eslint-disable @typescript-eslint/no-require-imports */
+
 // THE IMMUTABILITY PROOF for the per-Body progression record (WG-ARCH-003).
 //
 // The acceptance is that one row per agent profile is immutable, and that a

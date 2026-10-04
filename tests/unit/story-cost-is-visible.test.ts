@@ -1,5 +1,5 @@
 /** @jest-environment node */
-/* eslint-disable @typescript-eslint/no-require-imports -- better-sqlite3's package root is not newable under the jest transform, and the modules under test do not all exist yet */
+/* better-sqlite3's package root is not newable under the jest transform, and the modules under test do not all exist yet */
 
 // ═══════════════════════════════════════════════════════════════
 // Real-round oracle, group story-spend: a story says what it costs.

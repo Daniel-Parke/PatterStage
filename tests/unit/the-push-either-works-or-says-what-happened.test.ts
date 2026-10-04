@@ -1,5 +1,5 @@
 /** @jest-environment node */
-/* eslint-disable @typescript-eslint/no-require-imports -- better-sqlite3's package root is not newable under the jest transform */
+/* better-sqlite3's package root is not newable under the jest transform */
 
 // T-0082 acceptance oracle — QA finding 7: a toolset PUT reports ENOENT and the
 // change persists anyway.

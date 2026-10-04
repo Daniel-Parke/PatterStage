@@ -1,5 +1,5 @@
 /** @jest-environment node */
-/* eslint-disable @typescript-eslint/no-require-imports -- chapter-title's new export is read through a loose require so this file loads before it exists */
+/* chapter-title's new export is read through a loose require so this file loads before it exists */
 
 // ═══════════════════════════════════════════════════════════════
 // B14 oracle, group story-controls: the dead controls, the missing premise and

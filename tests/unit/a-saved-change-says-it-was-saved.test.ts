@@ -41,7 +41,7 @@ jest.mock("@/modules/hermes/lib/profile-push", () => ({
   pushSkillToHermes: (k: string) => mockPushSkill(k),
 }));
 
-// eslint-disable-next-line @typescript-eslint/no-require-imports -- jest.mock factories are hoisted above imports
+
 jest.mock("@/lib/db", () => require("../helpers/mocks").dbMock());
 jest.mock("@/lib/api/api-logger", () => ({
   logApiError: jest.fn(),

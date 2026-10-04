@@ -5,7 +5,7 @@
  * analytics_events migration). `@/lib/db` is mocked so the repo's getDb() hits the
  * test DB and inTransaction runs the callback directly.
  */
-/* eslint-disable @typescript-eslint/no-require-imports */
+
 import type Database from "better-sqlite3";
 import { readFileSync } from "fs";
 import { join } from "path";

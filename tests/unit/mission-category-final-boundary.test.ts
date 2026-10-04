@@ -12,7 +12,7 @@ let mockReadFailurePath = "";
 let mockReadFailureArmed = false;
 let mockReadFailureCount = 0;
 
-// eslint-disable-next-line @typescript-eslint/no-require-imports -- Jest hoists this database mock.
+// Jest hoists this database mock.
 jest.mock("@/lib/db", () => require("../helpers/baseline-db").dbSingletonMock(() => testDb));
 jest.mock("@/lib/host/paths", () => ({ PATHS: { get templates() { return templateDir; } } }));
 jest.mock("fs", () => {

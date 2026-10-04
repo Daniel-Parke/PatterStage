@@ -1,5 +1,5 @@
 /** @jest-environment node */
-/* eslint-disable @typescript-eslint/no-require-imports */
+
 // Phase 2 — the DB-owned framework registry + adapter resolution.
 
 import { join } from "path";
