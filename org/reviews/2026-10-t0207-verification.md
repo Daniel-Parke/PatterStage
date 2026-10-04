@@ -102,3 +102,13 @@ Earlier failed gates remain evidence: gate1 had42 failing unit cases; gate2 exce
 The full parallel Jest run still warns that a worker required forceful shutdown. The separate112-case serial open-handle diagnostic is clean and does not explain that warning. T0195 owns the uncertainty. Build-purity emits Node DEP0190. Route census observes offline owned Hindsight/gateway services, so it does not establish service availability. No whole-product or release acceptance.
 
 Committed T0207 sweep `tmp/t0194-committed-sweeps-1791150413350/summary.json` exits0:8/8 killed through executed matcher failures,0 runtime errors. Original and restored32-case controls pass. All mutation files restore bytes/modes and tree is clean at8daba398. Structured per-run reports are retained for independent causal review.
+
+
+## Final committed causal sweep
+
+At `f765488a63a1244edde327787756c27ad367c9b9`, `tmp/t0194-committed-sweeps-1791150805524/summary.json` reports exit0 for both manifests. T-0207: 8/8 mutants killed, 32/32 original and restored controls passed, zero runtime errors or invalid-mutant kills. The production runner restores bytes/modes in finally and refuses a dirty restored tree; both checks passed. All per-run structured reports and logs remain in the receipt directory.
+
+
+Hosted exact-head acceptance and final record closure remain pending. T0206 timing cause and T0195 parallel worker warning remain unresolved.
+
+Independent Parfit LOCAL R3 PASS atf765488a accepts the implementation, all26 causal kills and the exact bounded review handoff.21 coverage rows are qualified, one confirmed follow-up and20 open. Canonical proposed receiving records195/196/197/201 preserve future proof. Hosted checks still precede batch closure. The independent test-delta checks do not relabel the earlier9051-case full gate as a9053-case run.

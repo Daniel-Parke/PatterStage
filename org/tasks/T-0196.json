@@ -1,0 +1,56 @@
+{
+  "id": "T-0196",
+  "intent": "Consolidate tooling and CI paths. Approved authority, invariants, dependencies, rollback and exact Verify remain in org/plans/2026-09-refactor-programme.json. Receive the exact unresolved review proofs in org/reviews/2026-10-t0194-review-handoff.md; preserve original evidence and do not treat allocation as completion. Red-first oracle and exact opening claims precede implementation.",
+  "declared": {
+    "capabilities": [
+      "edit-code",
+      "edit-tests",
+      "edit-docs",
+      "git",
+      "git-push",
+      "run-isolated-process"
+    ],
+    "side_effects": [
+      "sends-external"
+    ]
+  },
+  "mode": "high-assurance",
+  "tier_proposed": "R2",
+  "status": "proposed",
+  "owner_session": "2026-10-04-t0194-coordinator",
+  "claims": [
+    "scripts/**",
+    ".github/workflows/**",
+    "Dockerfile",
+    ".dockerignore",
+    "docker-compose.yml",
+    "docker-compose.real-hermes.yml",
+    "docker-compose.bench-gateway.yml",
+    "tests/scripts/**",
+    "mock-hermes/server.mjs",
+    "mock-llm/server.mjs",
+    "mock-hindsight/server.mjs",
+    "org/tasks/T-0196.json",
+    "org/reviews/2026-10-t0194-review-handoff.md"
+  ],
+  "timestamps": {
+    "opened": "2026-10-04T22:00:44.414178+00:00",
+    "updated": "2026-10-04T22:00:44.414178+00:00"
+  },
+  "verdicts": [],
+  "tier_ruled": "R2",
+  "reasons": [
+    {
+      "factor": "ci-stateful-infra",
+      "tier_floor": "R2",
+      "source": "derived",
+      "evidence": "Approved T0196 scope includes .github/workflows and CI configuration; runtime dependencies/install scripts remain separately gated."
+    },
+    {
+      "factor": "boundary-contact",
+      "tier_floor": "R1",
+      "source": "declared",
+      "evidence": "declared side effect: sends-external"
+    }
+  ]
+}

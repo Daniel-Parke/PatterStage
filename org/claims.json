@@ -69,7 +69,12 @@
         "org/reviews/2026-10-t0194-t0207-gate-amendments.md",
         "org/reviews/2026-10-t0194-queue-oracle-type-amendment-proposal.md",
         "org/briefs/T-0194-composer-fixture-fold.md",
-        "org/reviews/2026-10-t0194-additional-body-review.md"
+        "org/reviews/2026-10-t0194-additional-body-review.md",
+        "org/reviews/2026-10-t0194-review-handoff.md",
+        "org/tasks/T-0195.json",
+        "org/tasks/T-0196.json",
+        "org/tasks/T-0197.json",
+        "org/tasks/T-0201.json"
       ],
       "acquired": "2026-10-04T19:40:23.974255+01:00",
       "expires": "2026-10-05T19:40:23.974255+01:00"

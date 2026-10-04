@@ -286,3 +286,14 @@ Earlier failed gates remain evidence: gate1 had42 failing unit cases; gate2 exce
 The full parallel Jest run still warns that a worker required forceful shutdown. The separate112-case serial open-handle diagnostic is clean and does not explain that warning. T0195 owns the uncertainty. Build-purity emits Node DEP0190. Route census observes offline owned Hindsight/gateway services, so it does not establish service availability. No whole-product or release acceptance.
 
 First committed T0194 sweep `tmp/t0194-committed-sweeps-1791150322759/summary.json` exits2:16 causal kills, `hindsight-query-key` survives and `queue-stop-receipt-validation` is ERROR/infrastructure. Both96-case original/restored controls pass; tree restores clean. The latter failed an executed Promise rejection assertion without matcherResult, which the strict runner correctly refuses to count. The Hindsight handler overrides the table entry, masking that mutation. Independent supplemental behaviour controls are required; neither outcome is relabelled killed.
+
+
+## Final committed causal sweep
+
+At `f765488a63a1244edde327787756c27ad367c9b9`, `tmp/t0194-committed-sweeps-1791150805524/summary.json` reports exit0 for both manifests. T-0194: 18/18 mutants killed, 98/98 original and restored controls passed, zero runtime errors or invalid-mutant kills. The production runner restores bytes/modes in finally and refuses a dirty restored tree; both checks passed. All per-run structured reports and logs remain in the receipt directory.
+
+Independent Faraday authored two additive controls, committed in1bf46967. Original/restored2/2 pass; each exact mutant produces one intended ordinary matcher failure. Freeze LF5975c736e21f4ba073397b9511d9baa35f7617c05803af7222fbfcadd09167d5; Parfit independently accepts these bounded controls. Existing frozen suites, production code and runner are unchanged. Hindsight proof concerns the exported helper contract; no new handler failure is alleged. First sweep16kills/one survivor/oneERROR remains recorded. Census adds46 test lines with the explicit producer reason; repeated windows remain4768 and all targets stay fixed.
+
+Hosted exact-head acceptance and final record closure remain pending. T0206 timing cause and T0195 parallel worker warning remain unresolved.
+
+Independent Parfit LOCAL R3 PASS atf765488a accepts the implementation, all26 causal kills and the exact bounded review handoff.21 coverage rows are qualified, one confirmed follow-up and20 open. Canonical proposed receiving records195/196/197/201 preserve future proof. Hosted checks still precede batch closure. The independent test-delta checks do not relabel the earlier9051-case full gate as a9053-case run.

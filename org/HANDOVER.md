@@ -15,11 +15,13 @@ Existing skips are recorded. Both censuses passed; repeated test windows4768
 remain below the unchanged4800 oracle ceiling. Three earlier red gate attempts
 and their actual repairs are retained in the verification files.
 
-T0207 committed sweep passes8/8mutants with32-case original/restored controls.
-T0194 first sweep records16kills, one survivor and one infrastructure-classified
-Promise assertion failure, with96-case original/restored controls passing.
-Independent supplemental tests must close those gaps before final acceptance.
-Independent R3 acceptance, task closure and hosted acceptance remain pending.
+Final committed sweeps atf765488a pass18/18 T0194 and8/8 T0207 mutants,
+with98-case and32-case original/restored controls. Two independent additive
+tests committed1bf46967 close the first library sweep's survivor and ERROR;
+both earlier outcomes remain recorded. Production code and old tests unchanged.
+Parfit accepts the bounded local R3 implementation and exact review handoff.
+Qualified task closure still awaits all required hosted checks. Twenty coverage atoms still need their named future proofs;
+an implementation pass must not mark the whole review complete.
 
 The parallel Jest worker warning remains unexplained under T0195. The clean
 serial112-case diagnostic does not explain it. T0206 historical macOS timing

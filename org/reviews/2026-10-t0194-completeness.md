@@ -167,3 +167,11 @@ change, baseline exemption or broader Settings exception is introduced.
 ## Bounded coordinator refresh after the first red gate
 
 Only utils.ts and queue-cleanup.ts receive current byte bindings after comment/type-only repairs. Original hashes and the earlier aggregate digest remain in sourceRefresh. The 107-entry composite manifest does not claim all entries were reinspected. Actual compiler and independent read-only comparisons show identical emitted JavaScript. The first full gate remains red: 12 failed suites/42 tests, lint/typecheck passed, no later steps executed. Source inspection counts and all unresolved scopes remain. T0207 is an explicit dependency for gap-103.c and gap-105.b, alongside broader T0201 review.
+
+## Current committed implementation checkpoint
+
+The preceding pre-gate receipt and its counts remain historical evidence. Joint implementation8daba398 passed the complete unchanged ten-step gate. Final committed f765488a sweeps kill18/18 library and8/8 DNS mutants, with98 and32 original/restored controls. Two additive independent tests address the first sweep's survivor/ERROR without changing production code or old checks.
+
+Additional complete repository-body evidence qualifies gap-102.a/b. Current coverage counts are21 inspected-qualified, one inspected-confirmed-followup and20 unresolved-review. Every original42 atomic ID remains. Exact remaining proofs and canonical proposed receiving records are in [review handoff](2026-10-t0194-review-handoff.md). Parfit independently accepts that exact bounded allocation; exact-head hosted checks remain pending. No future proof, whole product or release is declared complete.
+
+The production-only export report actually ran: Node24.21.0, exit0,1.681s, JSON issues=[] in tmp/t0194-production-exports.json. That bounded Knip scope does not establish dynamic/external export deadness. Existing cross-file-only window counting and selected type-shape scope remain qualified report measures, not a new gate or removal ruling.

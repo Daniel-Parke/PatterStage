@@ -72,7 +72,7 @@
     },
     {
       "id": "lib-domains-05",
-      "outcome": "focused-verified-pending-gate",
+      "outcome": "focused-verified-pending-hosted",
       "task": "T-0194",
       "reason": "org/reviews/2026-10-t0194-verification.md:197 org/briefs/T-0194-obsolete-exports.md:7 tmp/t0194-obsolete-amended-green.json report:exports = knip --production --include exports --reporter json; added, not run by sidecar. Limits: Only eleven authorised helpers/orphan type retired; constructed/external imports remain unproved. Report command presence does not establish a clean export report.",
       "originalDisposition": {
@@ -139,11 +139,12 @@
         },
         "uncertainty": "Static `rg -l -w <symbol> src scripts` finds the named exports only in defining files, except `truncate`, which needs `rg -n '\\btruncate\\(' src scripts` to exclude SQL uses. Dynamic uses remain unproved. `MODULE_ACCENTS` is lock-book pinned."
       },
-      "acceptance": "Focused verified only; unchanged full gate, committed sweep, independent R3 and hosted acceptance outstanding."
+      "acceptance": "Focused verified only; unchanged full gate, committed sweep, independent R3 and hosted acceptance outstanding.",
+      "previousVerificationOutcome": "focused-verified-pending-gate"
     },
     {
       "id": "lib-domains-06",
-      "outcome": "focused-verified-pending-gate",
+      "outcome": "focused-verified-pending-hosted",
       "task": "T-0194",
       "reason": "org/reviews/2026-10-t0194-verification.md:248 tmp/t0194-type-fold-proof.json Three type-only folds: -49 production lines/-966 printer bytes; emitted JS identical. Limits: Only the three measured folds; no arbitrary shape merger or total-tree reduction.",
       "originalDisposition": {
@@ -208,11 +209,12 @@
         },
         "uncertainty": "Duplicate shapes remain, but message nullability and tool-call types differ. Direct aliasing is unsafe."
       },
-      "acceptance": "Focused verified only; unchanged full gate, committed sweep, independent R3 and hosted acceptance outstanding."
+      "acceptance": "Focused verified only; unchanged full gate, committed sweep, independent R3 and hosted acceptance outstanding.",
+      "previousVerificationOutcome": "focused-verified-pending-gate"
     },
     {
       "id": "lib-domains-10",
-      "outcome": "focused-verified-pending-gate",
+      "outcome": "focused-verified-pending-hosted",
       "task": "T-0194",
       "reason": "org/reviews/2026-10-t0194-verification.md:174 tmp/t0194-helper-parity-green.json Limits: Whole-graph insertion fold verified; optional mission field re-listing retained because schema/default and affected-suite cost is not measured.",
       "originalDisposition": {
@@ -270,7 +272,8 @@
         },
         "uncertainty": "Field re-listing and local insert repeats remain; saving needs fresh measurement."
       },
-      "acceptance": "Focused verified only; unchanged full gate, committed sweep, independent R3 and hosted acceptance outstanding."
+      "acceptance": "Focused verified only; unchanged full gate, committed sweep, independent R3 and hosted acceptance outstanding.",
+      "previousVerificationOutcome": "focused-verified-pending-gate"
     },
     {
       "id": "lib-domains-15",
@@ -452,7 +455,7 @@
     },
     {
       "id": "lib-domains-11",
-      "outcome": "focused-verified-pending-gate",
+      "outcome": "focused-verified-pending-hosted",
       "task": "T-0194",
       "reason": "org/reviews/2026-10-t0194-remaining-rulings.md:9 org/reviews/2026-10-t0194-verification.md:179 tmp/t0194-remaining-rulings-green.json Limits: Four-character Research escaper premise supersedes earlier broader mismatch objection: fold passes. Ruled elapsed days verified; distinct parsers/timeAgo/timeUntil retained. Whole rendered entity surface not universally proved.",
       "originalDisposition": {
@@ -514,7 +517,8 @@
         },
         "uncertainty": "Escapers, JSON fallbacks and duration formats have different semantics. Shared-helper cost is unknown."
       },
-      "acceptance": "Focused verified only; unchanged full gate, committed sweep, independent R3 and hosted acceptance outstanding."
+      "acceptance": "Focused verified only; unchanged full gate, committed sweep, independent R3 and hosted acceptance outstanding.",
+      "previousVerificationOutcome": "focused-verified-pending-gate"
     },
     {
       "id": "lib-domains-17",
@@ -650,7 +654,7 @@
     },
     {
       "id": "lib-domains-02",
-      "outcome": "focused-verified-pending-gate",
+      "outcome": "focused-verified-pending-hosted",
       "task": "T-0194",
       "reason": "org/reviews/2026-10-t0194-verification.md:119 Limits: Hermes root/env ownership and exact five-spelling lint allowlist qualified; hosted/full gate acceptance separate.",
       "originalDisposition": {
@@ -702,7 +706,8 @@
         },
         "uncertainty": "Hermes-specific root record remains in core. Path-bound tests add move cost."
       },
-      "acceptance": "Focused verified only; unchanged full gate, committed sweep, independent R3 and hosted acceptance outstanding."
+      "acceptance": "Focused verified only; unchanged full gate, committed sweep, independent R3 and hosted acceptance outstanding.",
+      "previousVerificationOutcome": "focused-verified-pending-gate"
     },
     {
       "id": "lib-domains-04",
@@ -767,7 +772,7 @@
     },
     {
       "id": "lib-domains-14",
-      "outcome": "focused-verified-pending-gate",
+      "outcome": "focused-verified-pending-hosted",
       "task": "T-0194",
       "reason": "org/reviews/2026-10-t0194-remaining-rulings.md:17 org/reviews/2026-10-t0194-verification.md:252 tmp/t0194-remaining-held-green.json scripts/tooling/design-lint.mjs:253; src/lib/config/env.ts:15 Limits: All thirteen documented alias groups and both raw/trimmed selection semantics, pure imports, exact paths readEnv identity and discovery held. Alias retirement remains post-v1. Pure alias-registry metadata HERMES_HOME: [AGENT_HOME] matches hermes-outside-adapter source predicate at design-lint.mjs:257-265. Independent Parfit review permits only the exact next-line canonical/legacy key metadata suppression at config/env.ts:15-16; no filesystem exemption, predicate change, baseline exemption or broader Settings exception.",
       "originalDisposition": {
@@ -835,11 +840,12 @@
         },
         "uncertainty": "Legacy discovery and inconsistent inline alias reads remain. Removing discovery could hide an existing database."
       },
-      "acceptance": "Focused verified only; unchanged full gate, committed sweep, independent R3 and hosted acceptance outstanding."
+      "acceptance": "Focused verified only; unchanged full gate, committed sweep, independent R3 and hosted acceptance outstanding.",
+      "previousVerificationOutcome": "focused-verified-pending-gate"
     },
     {
       "id": "lib-domains-07",
-      "outcome": "focused-verified-pending-gate",
+      "outcome": "focused-verified-pending-hosted",
       "task": "T-0194",
       "reason": "org/reviews/2026-10-t0194-verification.md:67 org/reviews/2026-10-t0194-verification.md:95 Limits: Four wait sites Stop/cleanup/stoppedError qualified; +20 net lines are defect repair, not reduction. Separately confirmed reported-usage retry loss belongs T0208.",
       "originalDisposition": {
@@ -892,11 +898,12 @@
         },
         "uncertainty": "The gateway 429 waits are 30 and 60 seconds and do not observe Stop mid-sleep. Story Weaver and Deep Research call this path. Mission Stop uses HermesRuntime's separate abortable retry sleep, so it is not evidence for this defect. Empty-response and catch-path sleeps also need review; an abortable replacement inside `catch` must preserve `stoppedError()` rather than leak `signal.reason`. Shared-helper/interface cost makes historical net saving unknown."
       },
-      "acceptance": "Focused verified only; unchanged full gate, committed sweep, independent R3 and hosted acceptance outstanding."
+      "acceptance": "Focused verified only; unchanged full gate, committed sweep, independent R3 and hosted acceptance outstanding.",
+      "previousVerificationOutcome": "focused-verified-pending-gate"
     },
     {
       "id": "lib-domains-13",
-      "outcome": "focused-verified-pending-gate",
+      "outcome": "focused-verified-pending-hosted",
       "task": "T-0194",
       "reason": "org/reviews/2026-10-t0194-remaining-rulings.md:17 org/reviews/2026-10-t0194-verification.md:252 Limits: CHAT_DEFAULT_MODEL import verified; intentional Hermes protocol terminology retained. No broad rename or log/table ownership migration.",
       "originalDisposition": {
@@ -956,11 +963,12 @@
         },
         "uncertainty": "Some vendor terms are intentional protocol names or recorded exceptions."
       },
-      "acceptance": "Focused verified only; unchanged full gate, committed sweep, independent R3 and hosted acceptance outstanding."
+      "acceptance": "Focused verified only; unchanged full gate, committed sweep, independent R3 and hosted acceptance outstanding.",
+      "previousVerificationOutcome": "focused-verified-pending-gate"
     },
     {
       "id": "lib-domains-03",
-      "outcome": "focused-verified-pending-gate",
+      "outcome": "focused-verified-pending-hosted",
       "task": "T-0194",
       "reason": "org/reviews/2026-10-t0194-verification.md:119 Limits: Settings metadata remains approved core exception; held lint predicate is not a universal plugin ownership judgement.",
       "originalDisposition": {
@@ -1012,7 +1020,8 @@
         },
         "uncertainty": "Protocol field table remains in core. The exception is operator-ruled but needs its durable ADR record."
       },
-      "acceptance": "Focused verified only; unchanged full gate, committed sweep, independent R3 and hosted acceptance outstanding."
+      "acceptance": "Focused verified only; unchanged full gate, committed sweep, independent R3 and hosted acceptance outstanding.",
+      "previousVerificationOutcome": "focused-verified-pending-gate"
     },
     {
       "id": "lib-domains-12",
@@ -1372,7 +1381,7 @@
     {
       "id": "cross-cutting-14a",
       "parentId": "cross-cutting-14",
-      "outcome": "focused-verified-pending-gate",
+      "outcome": "focused-verified-pending-hosted",
       "task": "T-0194",
       "reason": "org/reviews/2026-10-t0194-verification.md:179 tmp/t0194-helper-parity-green.json Limits: Four-character fold verified; earlier escaper mismatch premise obsolete for this fold. Broader five-character/entity-decoding claims not inferred.",
       "originalDisposition": {
@@ -1424,12 +1433,13 @@
         },
         "uncertainty": "Three renderers remain in source, but the later `components-30` ruling supersedes keep-three for chat: chat and skills should share `SimpleMarkdown`, with the link-scheme guard/test and code-block Copy preserved. Research remains separate. The independent escape-helper ruling excludes `proxy.ts`; sink safety and streaming cost require tests after implementation."
       },
-      "acceptance": "Focused verified only; unchanged full gate, committed sweep, independent R3 and hosted acceptance outstanding."
+      "acceptance": "Focused verified only; unchanged full gate, committed sweep, independent R3 and hosted acceptance outstanding.",
+      "previousVerificationOutcome": "focused-verified-pending-gate"
     },
     {
       "id": "cross-cutting-03b",
       "parentId": "cross-cutting-03",
-      "outcome": "focused-verified-pending-gate",
+      "outcome": "focused-verified-pending-hosted",
       "task": "T-0194",
       "reason": "org/reviews/2026-10-t0194-remaining-rulings.md:17 org/reviews/2026-10-t0194-verification.md:252 scripts/tooling/design-lint.mjs:253; src/lib/config/env.ts:15 Limits: Thirteen groups, raw/trimmed selection semantics, pure import and re-export identity proved; future aliases outside table not presumed. Pure alias-registry metadata HERMES_HOME: [AGENT_HOME] matches hermes-outside-adapter source predicate at design-lint.mjs:257-265. Independent Parfit review permits only the exact next-line canonical/legacy key metadata suppression at config/env.ts:15-16; no filesystem exemption, predicate change, baseline exemption or broader Settings exception.",
       "originalDisposition": {
@@ -1483,12 +1493,13 @@
         },
         "uncertainty": "Multiple env readers and boolean vocabularies remain. Registry needs explicit precedence and fail-closed cases."
       },
-      "acceptance": "Focused verified only; unchanged full gate, committed sweep, independent R3 and hosted acceptance outstanding."
+      "acceptance": "Focused verified only; unchanged full gate, committed sweep, independent R3 and hosted acceptance outstanding.",
+      "previousVerificationOutcome": "focused-verified-pending-gate"
     },
     {
       "id": "lib-domains-05a",
       "parentId": "lib-domains-05",
-      "outcome": "focused-verified-pending-gate",
+      "outcome": "focused-verified-pending-hosted",
       "task": "T-0194",
       "reason": "org/reviews/2026-10-t0194-verification.md:197 report:exports command added as report only Limits: Approved unused subset only; report result not run here and dynamic/external uses remain bounded.",
       "originalDisposition": {
@@ -1541,12 +1552,13 @@
         },
         "uncertainty": "Static `rg -l -w <symbol> src scripts` finds the named exports only in defining files, except `truncate`, which needs `rg -n '\\btruncate\\(' src scripts` to exclude SQL uses. Dynamic uses remain unproved. `MODULE_ACCENTS` is lock-book pinned."
       },
-      "acceptance": "Focused verified only; unchanged full gate, committed sweep, independent R3 and hosted acceptance outstanding."
+      "acceptance": "Focused verified only; unchanged full gate, committed sweep, independent R3 and hosted acceptance outstanding.",
+      "previousVerificationOutcome": "focused-verified-pending-gate"
     },
     {
       "id": "lib-domains-11a",
       "parentId": "lib-domains-11",
-      "outcome": "focused-verified-pending-gate",
+      "outcome": "focused-verified-pending-hosted",
       "task": "T-0194",
       "reason": "org/reviews/2026-10-t0194-remaining-rulings.md:17 tmp/t0194-remaining-rulings-green.json Limits: 23h59m/1d0h/2d1h controls verified; no change inferred for timeUntil/timeAgo semantics.",
       "originalDisposition": {
@@ -1594,12 +1606,13 @@
         },
         "uncertainty": "Escapers, JSON fallbacks and duration formats have different semantics. Shared-helper cost is unknown."
       },
-      "acceptance": "Focused verified only; unchanged full gate, committed sweep, independent R3 and hosted acceptance outstanding."
+      "acceptance": "Focused verified only; unchanged full gate, committed sweep, independent R3 and hosted acceptance outstanding.",
+      "previousVerificationOutcome": "focused-verified-pending-gate"
     },
     {
       "id": "lib-domains-11b",
       "parentId": "lib-domains-11",
-      "outcome": "focused-verified-pending-gate",
+      "outcome": "focused-verified-pending-hosted",
       "task": "T-0194",
       "reason": "org/reviews/2026-10-t0194-verification.md:179 tmp/t0194-helper-parity-green.json Limits: Identical four-character escaper fold qualifies; no universal sanitisation/entity decoding guarantee.",
       "originalDisposition": {
@@ -1645,12 +1658,13 @@
         },
         "uncertainty": "Escapers, JSON fallbacks and duration formats have different semantics. Shared-helper cost is unknown."
       },
-      "acceptance": "Focused verified only; unchanged full gate, committed sweep, independent R3 and hosted acceptance outstanding."
+      "acceptance": "Focused verified only; unchanged full gate, committed sweep, independent R3 and hosted acceptance outstanding.",
+      "previousVerificationOutcome": "focused-verified-pending-gate"
     },
     {
       "id": "lib-domains-02",
       "parentId": "lib-domains-02",
-      "outcome": "focused-verified-pending-gate",
+      "outcome": "focused-verified-pending-hosted",
       "task": "T-0194",
       "reason": "org/reviews/2026-10-t0194-verification.md:119 Limits: Exact root ownership move only; full acceptance separate.",
       "originalDisposition": {
@@ -1695,12 +1709,13 @@
         },
         "uncertainty": "Hermes-specific root record remains in core. Path-bound tests add move cost."
       },
-      "acceptance": "Focused verified only; unchanged full gate, committed sweep, independent R3 and hosted acceptance outstanding."
+      "acceptance": "Focused verified only; unchanged full gate, committed sweep, independent R3 and hosted acceptance outstanding.",
+      "previousVerificationOutcome": "focused-verified-pending-gate"
     },
     {
       "id": "lib-domains-14b",
       "parentId": "lib-domains-14",
-      "outcome": "focused-verified-pending-gate",
+      "outcome": "focused-verified-pending-hosted",
       "task": "T-0194",
       "reason": "org/reviews/2026-10-t0194-remaining-rulings.md:17 org/reviews/2026-10-t0194-verification.md:252 scripts/tooling/design-lint.mjs:253; src/lib/config/env.ts:15 Limits: Discovery retained; alias retirement deferred post-v1 and raw whitespace/caller parsing held. Pure alias-registry metadata HERMES_HOME: [AGENT_HOME] matches hermes-outside-adapter source predicate at design-lint.mjs:257-265. Independent Parfit review permits only the exact next-line canonical/legacy key metadata suppression at config/env.ts:15-16; no filesystem exemption, predicate change, baseline exemption or broader Settings exception.",
       "originalDisposition": {
@@ -1754,12 +1769,13 @@
         },
         "uncertainty": "Legacy discovery and inconsistent inline alias reads remain. Removing discovery could hide an existing database."
       },
-      "acceptance": "Focused verified only; unchanged full gate, committed sweep, independent R3 and hosted acceptance outstanding."
+      "acceptance": "Focused verified only; unchanged full gate, committed sweep, independent R3 and hosted acceptance outstanding.",
+      "previousVerificationOutcome": "focused-verified-pending-gate"
     },
     {
       "id": "lib-domains-13c",
       "parentId": "lib-domains-13",
-      "outcome": "focused-verified-pending-gate",
+      "outcome": "focused-verified-pending-hosted",
       "task": "T-0194",
       "reason": "org/reviews/2026-10-t0194-remaining-rulings.md:17 Limits: Only imported Chat default, field/file/protocol names held.",
       "originalDisposition": {
@@ -1810,12 +1826,13 @@
         },
         "uncertainty": "Some vendor terms are intentional protocol names or recorded exceptions."
       },
-      "acceptance": "Focused verified only; unchanged full gate, committed sweep, independent R3 and hosted acceptance outstanding."
+      "acceptance": "Focused verified only; unchanged full gate, committed sweep, independent R3 and hosted acceptance outstanding.",
+      "previousVerificationOutcome": "focused-verified-pending-gate"
     },
     {
       "id": "lib-domains-03",
       "parentId": "lib-domains-03",
-      "outcome": "focused-verified-pending-gate",
+      "outcome": "focused-verified-pending-hosted",
       "task": "T-0194",
       "reason": "org/reviews/2026-10-t0194-verification.md:119 Limits: Exception has durable accepted ADR; no wider core protocol exemption inferred.",
       "originalDisposition": {
@@ -1861,7 +1878,8 @@
         },
         "uncertainty": "Protocol field table remains in core. The exception is operator-ruled but needs its durable ADR record."
       },
-      "acceptance": "Focused verified only; unchanged full gate, committed sweep, independent R3 and hosted acceptance outstanding."
+      "acceptance": "Focused verified only; unchanged full gate, committed sweep, independent R3 and hosted acceptance outstanding.",
+      "previousVerificationOutcome": "focused-verified-pending-gate"
     },
     {
       "id": "lib-domains-12",
@@ -2982,9 +3000,9 @@
     },
     {
       "id": "gap-102.a",
-      "outcome": "unresolved-review",
+      "outcome": "inspected-qualified",
       "task": "T-0194",
-      "reason": "org/reviews/2026-10-t0194-verification.md:174 Selected prompt/XML and whole-graph insert folds inspected. Limits: Full mission repository/category bodies and every lifecycle remain unreviewed as a corpus; focused proofs do not close original broad obligation.",
+      "reason": "Complete named repository body inspection and source hashes in org/reviews/2026-10-t0194-additional-body-review.md, independently qualified by Parfit and Arendt. Behavioural crash/race/fault probes remain open under final adjudication.",
       "originalDisposition": {
         "outcome": "planned",
         "reason": "Run this T-0164 atomic next proof before closing its owner batch: At current HEAD, Read mission repository and category flows body by body. Starting check: rg --files src/lib/missions. Record command/exit or exact file:line, revision and independent review.",
@@ -3001,15 +3019,16 @@
       ],
       "evidence": [
         "org/reviews/2026-10-t0194-verification.md:174",
-        "Selected prompt/XML and whole-graph insert folds inspected."
+        "Selected prompt/XML and whole-graph insert folds inspected.",
+        "org/reviews/2026-10-t0194-additional-body-review.md: complete six repository body reads; independently checked unchanged hashes."
       ],
       "remainingUncertainty": [
-        "Full mission repository/category bodies and every lifecycle remain unreviewed as a corpus; focused proofs do not close original broad obligation."
+        "Complete body inspection does not prove crash atomicity, race handling or all lifecycle behaviour. Registered fallback partial-write hypothesis needs owned SQLite fault proof; overwrite replacement semantics remain unspecified."
       ],
       "followups": [
         "T-0201"
       ],
-      "reviewer": "Faraday focused helper oracle; broader review unresolved",
+      "reviewer": "Franklin body author; independent Parfit qualifications and Arendt hash/row check.",
       "sourceBindings": [
         {
           "file": "src/lib/missions/build-mission-prompt.ts",
@@ -3022,13 +3041,21 @@
           "lfSha256": "2d17d8450192ae2a053d3df47371626169cb019372049d603bce2430564132f4"
         }
       ],
-      "acceptance": "Bounded disposition; no blanket behaviour/batch acceptance."
+      "acceptance": "Bounded disposition; no blanket behaviour/batch acceptance.",
+      "previousInspection": {
+        "outcome": "unresolved-review",
+        "reason": "org/reviews/2026-10-t0194-verification.md:174 Selected prompt/XML and whole-graph insert folds inspected. Limits: Full mission repository/category bodies and every lifecycle remain unreviewed as a corpus; focused proofs do not close original broad obligation.",
+        "remainingUncertainty": [
+          "Full mission repository/category bodies and every lifecycle remain unreviewed as a corpus; focused proofs do not close original broad obligation."
+        ],
+        "reviewer": "Faraday focused helper oracle; broader review unresolved"
+      }
     },
     {
       "id": "gap-102.b",
-      "outcome": "unresolved-review",
+      "outcome": "inspected-qualified",
       "task": "T-0194",
-      "reason": "org/reviews/2026-10-t0194-verification.md:212 org/reviews/2026-10-t0194-verification.md:248 Limits: Default-owner repair23-case/final33 controls and type fold verified; whole model repository audit broader than selected branches.",
+      "reason": "Complete named repository body inspection and source hashes in org/reviews/2026-10-t0194-additional-body-review.md, independently qualified by Parfit and Arendt. Behavioural crash/race/fault probes remain open under final adjudication.",
       "originalDisposition": {
         "outcome": "planned",
         "reason": "Run this T-0164 atomic next proof before closing its owner batch: At current HEAD, Read model repository behaviour. Starting check: rg --files src/lib/models. Record command/exit or exact file:line, revision and independent review.",
@@ -3044,15 +3071,16 @@
       ],
       "evidence": [
         "org/reviews/2026-10-t0194-verification.md:212",
-        "org/reviews/2026-10-t0194-verification.md:248"
+        "org/reviews/2026-10-t0194-verification.md:248",
+        "org/reviews/2026-10-t0194-additional-body-review.md: complete six repository body reads; independently checked unchanged hashes."
       ],
       "remainingUncertainty": [
-        "Default-owner repair23-case/final33 controls and type fold verified; whole model repository audit broader than selected branches."
+        "Complete body inspection does not prove crash atomicity, race handling or all lifecycle behaviour. Registered fallback partial-write hypothesis needs owned SQLite fault proof; overwrite replacement semantics remain unspecified."
       ],
       "followups": [
         "T-0201"
       ],
-      "reviewer": "Faraday independent audit oracle; broad review unresolved",
+      "reviewer": "Franklin body author; independent Parfit qualifications and Arendt hash/row check.",
       "sourceBindings": [
         {
           "file": "src/lib/models/models-repository.ts",
@@ -3060,7 +3088,15 @@
           "lfSha256": "1f65a77663ba0696aa39f27fe04f9f34c1f097bb51b689b4f4efb1d1c35534ab"
         }
       ],
-      "acceptance": "Bounded disposition; no blanket behaviour/batch acceptance."
+      "acceptance": "Bounded disposition; no blanket behaviour/batch acceptance.",
+      "previousInspection": {
+        "outcome": "unresolved-review",
+        "reason": "org/reviews/2026-10-t0194-verification.md:212 org/reviews/2026-10-t0194-verification.md:248 Limits: Default-owner repair23-case/final33 controls and type fold verified; whole model repository audit broader than selected branches.",
+        "remainingUncertainty": [
+          "Default-owner repair23-case/final33 controls and type fold verified; whole model repository audit broader than selected branches."
+        ],
+        "reviewer": "Faraday independent audit oracle; broad review unresolved"
+      }
     },
     {
       "id": "gap-102.c",
@@ -4508,8 +4544,8 @@
       }
     },
     "sourceManifestSha256": "afd19c903e1854efc024a1df81506adba240a29aae50b411a398b44bcd5ef7b2",
-    "gateStatus": "Full unchanged gate4 passed all10steps; earlier3failed attempts retained. Implementation committed8daba398. Mutation follow-up and independent/hosted acceptance pending; coverage obligations remain itemised and unresolved where stated.",
-    "acceptance": "No whole-batch/full-gate/mutation-sweep/R3/hosted or release acceptance.",
+    "gateStatus": "Full unchanged gate4 and final clean committed18+8 causal sweeps passed. Hosted acceptance and final qualified closure/handoff review pending. Original unresolved coverage atoms remain open; no42-complete claim.",
+    "acceptance": "Independent bounded LOCAL R3 implementation and exact review-handoff PASS; hosted batch acceptance pending. Future proof remains open in receiving records.",
     "scopeLimit": "Coverage inspection can be complete for named bodies without proof of every branch. Broad corpus obligations remain explicit unresolved reviews.",
     "classificationLimit": "Original classify-only scope historical; 137 candidate classification requires independent sceptic, 86 broader named-reader candidates unclassified.",
     "writerScope": [
@@ -4520,7 +4556,7 @@
     "statusCounts": {
       "findings": {
         "verified-existing": 2,
-        "focused-verified-pending-gate": 9,
+        "focused-verified-pending-hosted": 9,
         "retained-net-uncertain": 6,
         "inspected-qualified": 1,
         "ruled-deferred": 1,
@@ -4529,12 +4565,12 @@
       "operatorDispositions": {
         "verified-existing": 2,
         "inspected-qualified": 1,
-        "focused-verified-pending-gate": 9,
+        "focused-verified-pending-hosted": 9,
         "ruled-deferred": 2
       },
       "coverage": {
-        "inspected-qualified": 19,
-        "unresolved-review": 22,
+        "inspected-qualified": 21,
+        "unresolved-review": 20,
         "inspected-confirmed-followup": 1
       }
     },
@@ -4547,8 +4583,6 @@
         "gap-010.b",
         "gap-014.c",
         "gap-071.2",
-        "gap-102.a",
-        "gap-102.b",
         "gap-102.c",
         "gap-102.d",
         "gap-102.e",
@@ -4939,6 +4973,37 @@
     "implementationCommit": "8daba39805eec79f2a32043a946ec17b1c9a748c",
     "fullGateReceipt": "tmp/t0194-final-gate-1791149030291/gate/summary.json",
     "treeSha256": "974c88039e0d6a00b204f35b6dd7bcbd6483b1c2c06d111a8231e32e6ae0ee84",
-    "newBodyReview": "org/reviews/2026-10-t0194-additional-body-review.md"
+    "newBodyReview": "org/reviews/2026-10-t0194-additional-body-review.md",
+    "sweeps": {
+      "receipt": "tmp/t0194-committed-sweeps-1791150805524/summary.json",
+      "committedHead": "f765488a63a1244edde327787756c27ad367c9b9",
+      "T-0194": {
+        "exitCode": 0,
+        "killed": 18,
+        "originalControls": 98,
+        "restoredControls": 98
+      },
+      "T-0207": {
+        "exitCode": 0,
+        "killed": 8,
+        "originalControls": 32,
+        "restoredControls": 32
+      },
+      "restoration": "Original byte/mode restoration and final clean-tree checks passed."
+    }
+  },
+  "reviewHandoff": {
+    "document": "org/reviews/2026-10-t0194-review-handoff.md",
+    "receivingRecords": [
+      "T-0195",
+      "T-0196",
+      "T-0197",
+      "T-0201",
+      "T-0208"
+    ],
+    "status": "independently-accepted-bounded",
+    "authority": "Accepted plan T0194 Verify and oracle brief preserve qualified evidence and foreign ownership; exact receiving batch scope stated per row. Proposed T0208 does not confer implementation authority.",
+    "reviewer": "Parfit 01a107e1-5ba0-7703-ab13-e23e640dc10b",
+    "acceptedAt": "2026-10-04T22:03:53.375571+00:00"
   }
 }

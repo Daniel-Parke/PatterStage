@@ -19,7 +19,7 @@
   },
   "mode": "high-assurance",
   "tier_proposed": "R3",
-  "status": "active",
+  "status": "in-review",
   "owner_session": "2026-10-04-t0194-coordinator",
   "claims": [
     "src/lib/",
@@ -170,11 +170,16 @@
     "org/briefs/T-0194-composer-fixture-fold.md",
     "org/reviews/2026-10-t0194-additional-body-review.md",
     "tests/unit/lib-domain-sweep-regressions.test.ts",
-    "org/briefs/T-0194-sweep-regressions.md"
+    "org/briefs/T-0194-sweep-regressions.md",
+    "org/reviews/2026-10-t0194-review-handoff.md",
+    "org/tasks/T-0195.json",
+    "org/tasks/T-0196.json",
+    "org/tasks/T-0197.json",
+    "org/tasks/T-0201.json"
   ],
   "timestamps": {
     "opened": "2026-10-04T16:51:49.2632+01:00",
-    "updated": "2026-10-04T22:50:07.809028+01:00"
+    "updated": "2026-10-04T22:03:53.375571+00:00"
   },
   "verdicts": [
     {
@@ -239,6 +244,13 @@
       "verdict": "pass",
       "date": "2026-10-04T22:51:20.790083+01:00",
       "notes": "Parfit bounded source/authority PASS for joint implementation8daba398; full unchanged gate4 passed10steps,9051unit/513browser/2purity. Independent causal review confirms T0207 eight kills with32 original/restored controls and T0194 sixteen kills with96 controls. T0194 one survivor and one ERROR remain honestly open pending independent supplemental tests. Both records remain active; no joint batch closure or hosted/product/release acceptance. Exact evidence and limits: org/reviews/2026-10-t0194-verification.md."
+    },
+    {
+      "role": "REVIEWER",
+      "session": "01a107e1-5ba0-7703-ab13-e23e640dc10b",
+      "verdict": "pass",
+      "date": "2026-10-04T22:03:53.375571+00:00",
+      "notes": "Parfit bounded LOCAL R3 PASS atf765488a: unchanged full10stage implementation gate,9051unit/513browser/2purity; additive independent2-case test delta types/lint/Knip0;18 library and8 DNS causal committed kills,98/32 original/restored controls, byte/mode and clean-tree restoration. Accept exact T0194 review-handoff allocation:21 qualified,1 confirmed follow-up,20 open atoms with canonical proposed owners, original evidence/limits and accepted plan authority preserved. Future proof remains open; proposed records do not authorise unclaimed repairs. Batch closure awaits all required exact-head hosted checks. T0206/T0195 unresolved warnings held; no whole-product/release acceptance."
     }
   ],
   "tier_ruled": "R3",
