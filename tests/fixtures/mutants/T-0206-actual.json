@@ -49,11 +49,12 @@
     {
       "id": "invalid-receipt",
       "file": "tests/helpers/release-http-phase-observer.py",
-      "anchor": "if not condition: raise RuntimeError(\"Invalid T0206 actual diagnostic evidence\")",
-      "replacement": "if not condition: return",
+      "anchor": "\"\"\"Validate diagnostic evidence, never reinterpret a failed HTTP outcome.\"\"\"",
+      "replacement": "\"\"\"Validate diagnostic evidence, never reinterpret a failed HTTP outcome.\"\"\"\n    return",
       "tests": [
         "tests/unit/release-http-actual-observer.test.ts"
-      ]
+      ],
+      "why": "Returning before validation falsely accepts missing, malformed and partial evidence without producing unrelated attribute errors."
     },
     {
       "id": "source-binding",
