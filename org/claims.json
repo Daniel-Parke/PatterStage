@@ -188,11 +188,12 @@
         "org/reviews/2026-10-t0192-secret-scan.md",
         "tests/unit/tooling-env-contract.test.ts",
         "src/components/models/CredentialsPanel.tsx",
-        "tests/e2e/models-credential-boundary.spec.ts"
+        "tests/e2e/models-credential-boundary.spec.ts",
+        "tests/unit/t0180-secret-scan-config.test.ts"
       ],
       "acquired": "2026-10-03T21:24:24.476320+00:00",
       "expires": "2026-10-04T21:24:24.476320+00:00"
     }
   ],
-  "note": "Independent contrast author stopped; coordinator only. Local token repair and rebuilt validation pending."
+  "note": "Coordinator only. Halley frozen exact scanner amendment accepted by Laplace and write-stopped. Full verification and hosted acceptance remain pending."
 }

@@ -2,7 +2,7 @@
   "measuredAt": "2026-10-04",
   "counts": {
     "srcLines": 102062,
-    "testLines": 150680,
+    "testLines": 150681,
     "scriptsLines": 13597,
     "srcRepeatedWindowLines": 705,
     "testRepeatedWindowLines": 4787,
@@ -1245,6 +1245,11 @@
       "measuredAt": "2026-10-04",
       "rise": "testLines rose from 150587 to 150680",
       "reason": "T-0192: two independent loaded-Credentials browser contrast regressions close the loading-state coverage gap; no contrast floor or production target changed."
+    },
+    {
+      "measuredAt": "2026-10-04",
+      "rise": "testLines rose from 150680 to 150681",
+      "reason": "T-0192: one exact non-secret fingerprint membership assertion added by an independent author; all three existing identities and scanner controls retained."
     }
   ]
 }

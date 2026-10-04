@@ -13,3 +13,5 @@ d5d5e52a8656af8707a8820f2ef45fb6070cc2b0:tests/unit/secret-mask.test.ts:generic-
 # T-0192: two independently reproduced evidence digests, see org/reviews/2026-10-t0192-secret-scan.md.
 0705653877e89110ae1a01eb9ccd9d17d699bf53:org/reviews/2026-10-t0192-dispositions.json:generic-api-key:2056
 0705653877e89110ae1a01eb9ccd9d17d699bf53:org/reviews/2026-10-t0192-dispositions.json:generic-api-key:2080
+# T-0192: frozen browser-oracle checksum, independently verified against committed bytes.
+6f12427918c5082d04be8578c1e071140bcd9720:org/tasks/T-0192.json:generic-api-key:590

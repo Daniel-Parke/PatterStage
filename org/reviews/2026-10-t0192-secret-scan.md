@@ -133,3 +133,39 @@ at `tmp/t0192-credentials-green-1791092115203/` passed both frozen cases and
 measured **3.076349474:1** at each width. The coordinator inspected both PNGs;
 geometry, h1 and overflow controls still pass. Mutation qualification and a
 fresh hosted head remain pending.
+
+### Final browser mutation and third digest finding
+
+At implementation head `6f124279`, the new boundary mutation was accepted by
+Laplace as one causal kill. Both original and restored cases passed at
+3.076349474:1; both mutant cases failed only on the unchanged contrast floor,
+at 1.106237703:1. Source bytes and the built control were restored. The
+receipt is `tmp/t0192-credential-boundary-sweep-1791092215512/summary.json`.
+
+The fresh hosted scans `37181385443` and `37181382329` found one additional
+non-secret digest in the task's frozen-oracle map. The pinned, fully redacted
+local history scan reproduced that finding across 1,899 reported commits;
+see `tmp/t0192-secret-scan/contrast-head.json`. Laplace verified the value
+against the committed test, both checkouts and the frozen red receipt.
+Only the exact introducing commit, file, rule and line fingerprint is added.
+There is no file, hash-pattern or scanner-rule exemption.
+
+Halley, independent of the previous amendment author Nash, added the exact
+membership assertion and changed the count from 12 to 13. All three test
+identities and other assertions survive. Red commit `2532559d` records one
+count failure and two passes, without runtime errors. The later membership
+assertion was not reached during that red run. Its receipt is
+`tmp/t0192-secret-scan-amendment-1791093844410/receipt.json`.
+This is coordinator transcription of independent review under Q-015, not a
+new operator ruling. The original failed hosted runs remain evidence.
+
+The corrected pinned scan reported 1,900 commits and no findings; its JSON
+report is `tmp/t0192-secret-scan/third-corrected.json`. The unchanged canary
+passed its clean control and rejected the planted secret. Session 2706's
+observed result is explicitly transcribed in `third-observed-execution.json`.
+Gate `1791094097595` then passed all ten stages on an unchanged tree, with
+8,819 unit and 499 browser passes, unchanged skips, both database-purity
+controls and both censuses. Before the scanner correction, implementation
+head `6f124279` also passed all eleven PR CI jobs and all nine applicable
+push CI jobs; its two failed scanner runs remain failures. A fresh committed
+correction-head scan and hosted acceptance remain required.

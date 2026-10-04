@@ -503,7 +503,7 @@
   ],
   "timestamps": {
     "opened": "2026-10-03T20:37:32.586979+00:00",
-    "updated": "2026-10-04T05:14:38.520783+00:00"
+    "updated": "2026-10-04T06:07:53.797380+00:00"
   },
   "tier_ruled": "R2",
   "reasons": [
@@ -3381,6 +3381,15 @@
         "author_session": "01a10198-6b4f-7593-aa19-e0b3c8facad8",
         "authorised_by": "Laplace independent Q015 exact-byte review, transcribed by coordinator",
         "date": "2026-10-04T04:30:00.452073+00:00"
+      },
+      {
+        "reason": "Q015 independent exact fingerprint assertion for a proven non-secret frozen oracle digest. All three identities and prior assertions retained. Red commit2532559d: one count failure of three. See org/reviews/2026-10-t0192-secret-scan.md.",
+        "change": "tests/unit/t0180-secret-scan-config.test.ts",
+        "old_hash": "c72bdaf72c1f0e3200b6f4c3b2d688366e20a654476e727ee58fab83195369d4",
+        "new_hash": "a10b3092d068d376f8bf7a8f14f3dbd11d5f1e468e854894b738a4d3eb63a23b",
+        "author_session": "01a10195-e680-7d01-b79a-86627d74049c",
+        "authorised_by": "Laplace independent Q015 exact-byte review, transcribed by coordinator",
+        "date": "2026-10-04T06:07:53.797380+00:00"
       }
     ]
   },
