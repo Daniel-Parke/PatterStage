@@ -7,31 +7,33 @@ updated: 2026-10-04
 
 # Handover · PatterStage, 2026-10-02
 
-## Active batch, 2026-10-04
+## Accepted batch checkpoint, 2026-10-04
 
-T-0193 is in-review. Product9ce945ac implements profile draft/canonical rename
-ownership, truthful Models/Skill/Growth read states, retained Composer artifact
-save ownership, keyboard and semantic accessibility fixes, Reader contrast and
-reduced motion. Missions removes41lines; shared Research labels remove6.
-The whole unchanged gate passes10stages:8892unit/511browser, with existing
-9unit/24browser skips. Committed19mutants are all causally killed,58original and
-restored controls pass, exact bytes/modes restored. Banach accepts LOCAL scope;
-all required exact-head hosted jobs and final task closure remain pending.
-See [verification](reviews/2026-10-t0193-verification.md) and the19-row
-[disposition ledger](reviews/2026-10-t0193-dispositions.json).
+T-0193 is done, independently accepted by Banach at070f24ea. Its product
+commit9ce945ac repairs profile draft/rename ownership, Models/Skill/Growth
+read truth, Composer artifact-save lifecycle, keyboard/semantic accessibility,
+Reader contrast and reduced motion. Missions removes41lines; shared Research
+labels remove6. The full unchanged gate passes all10stages:8,892unit and
+511browser tests, existing9unit/24browser skips unchanged. All19mutants are
+causally killed;58original/restored controls pass with exact restoration.
+All11PR and9required push jobs plus both Gitleaks jobs pass at070f24ea.
+See [verification](reviews/2026-10-t0193-verification.md) and the final19-row
+[dispositions](reviews/2026-10-t0193-dispositions.json).
 
-Current census:source102068, tests151770, repeatedwindows693/4787,
-one-importer103. Targets have not moved. Thirteen of22main batches remain
-formally complete pendingT0193hosted acceptance. T0194–T0199 and closingT0201
-remain; T0200retirement stays deferred throughv1.0.0. T0194's exact Settings
-schema exception ADR0018 proposal was accepted as drafted by the operator on
-4October; its protected entry and ruled task still await the batch dependency.
+Fourteen of22 main batches are complete. T0194–T0199 and closingT0201
+remain; T0200 retirement is deferred throughv1.0.0. Census:source102068,
+tests151770, repeated windows693/4787, one-importer103. Targets have not moved.
+ADR0018 Settings field-table exception is accepted as drafted; T0194 must
+record its routed tier before creating the protected ADR. T0194 also carries
+the already ruled Q027 mission timeout wording correction; see
+[preparation](reviews/2026-10-t0194-preparation.md).
 
-Q036 permits this batch's start whileT0206remains explicitly red: the original
-macOS C02/C05 timing cause is unproved. This is not repaired by a later green
-run, and release acceptance remains blocked. PR157merge/tags/releases remain
-operator actions. Personal controlled walks used127.0.0.1:3999; owned server
-is stopped. Normal app port3333 and operator data were untouched.
+Q036/T0206 remains explicitly red: the original macOS C02/C05 timing cause
+is unproved. Latest greens do not establish its repair. No whole-product,
+paid-provider or release acceptance is claimed. PR157 merge/tags/releases
+remain operator actions. Owned preview3999 is stopped; normal port3333 and
+operator data were untouched. The closure metadata head still needs all
+required hosted jobs observed before opening T0194.
 
 ## Previous checkpoint, 2026-10-04
 

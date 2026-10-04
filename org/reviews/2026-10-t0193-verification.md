@@ -227,3 +227,57 @@ tests151770(+1003), repeatedsource693(-12), repeatedtests4787 and one-importer10
 Growth records explain regression coverage and ownership/accessible-state cost;
 fixed targets remain unchanged. T0193 stays in-review, not done, until hosted
 acceptance and independent final verdict. T0206 remains explicitly red.
+
+
+## Final bounded acceptance, 2026-10-04
+
+Implementation-head 070f24eac34edb82ff65b730e770ff9a6a46cf54: every required hosted job passed.
+Receipt: `tmp/t0191-hosted-t0193-local/snapshot-1791120129793.json`. PR CI37204421933 has11 successful jobs;
+push CI37204418789 has9 required successful jobs and its two existing
+event-specific skips. PR/push Gitleaks37204421954/37204418775 pass.
+Banach independently inspected these exact-head receipts and returned FINAL
+bounded R2 PASS, ready for closure. Runtime contents remain identical to the
+full gate and committed mutation controls. All19 supplemental rows have final
+dispositions:15 done,4 retained; no foreign child owner was closed.
+
+Additional personal walk used the final full-gate build and fresh owned data,
+listener127.0.0.1:3999,1440x900 and390x844. StoryCreate Clear disabled Begin
+Writing; owned title/premise opened Save as Theme, the phone modal remained
+contained, and Save produced a persistent Library theme. Reload/Use Theme and
+Load Draft restored the observed premise; original-title persistence is not
+claimed. No paid generation ran. Missions Save Draft persisted the owned
+instruction and two goals; selection rendered the prompt and Runtime details.
+Fresh seeded Research report rendered its five labels and semantic export
+links. Inspected desktop Missions/Research had one h1, no horizontal overflow
+and no captured console error. Owned listener17828 was identity-checked and
+stopped; viewport override and temporary tab were removed. Port3333 and
+operator data were untouched.
+
+Image qualification correction: screenshots are JPEG bytes, including files
+whose names end .png. The earlier Research desktop and first later Missions
+desktop images are416x900 partial captures after resize, not full-desktop
+evidence. Originals remain preserved. The corresponding -full-after.jpg files
+supersede those captures and are verified1440x900. All other image dimensions
+are recorded below; requested viewport labels alone do not prove image size.
+
+- `tmp/t0193-ui-proof/composer-inspector-phone-after.png`: jpeg,390x844, SHA256 `81767c3eeaf703fba624ff1c9369c6e2ee7b2411055eae588b4332bf3712bfd7`.
+- `tmp/t0193-ui-proof/composer-inspector-phone-clean-after.png`: jpeg,390x844, SHA256 `7600d0a8e4db7e3053338a4f6781e235ec12f372cf1382262e74b26567e5fa87`.
+- `tmp/t0193-ui-proof/missions-draft-desktop-after.png`: jpeg,416x900, SHA256 `e40131159d6d11cdb873dc987b55dd0331b48a112f8086c358e08eb300516c8e`.
+- `tmp/t0193-ui-proof/missions-draft-desktop-full-after.jpg`: jpeg,1440x900, SHA256 `3333dcdc5e33446443a9a4c5d4cf852f224a0741f8854c57729e729d5fbc73e2`.
+- `tmp/t0193-ui-proof/models-phone-after.png`: jpeg,390x844, SHA256 `b844374bfe3a7462f9790993eb69a992978226ea451cf8bfece892cdba03d4d5`.
+- `tmp/t0193-ui-proof/profile-rename-phone-after.png`: jpeg,390x844, SHA256 `e26acff4b779b27483113617b52597e9667047ca1c5957e8c4b741e56592b57d`.
+- `tmp/t0193-ui-proof/reader-settings-desktop-after.png`: jpeg,1440x900, SHA256 `123d93fc6ecb35eec7ed77bc1f5be5b73d17a09ade98268ba6bc0a9b615f6e62`.
+- `tmp/t0193-ui-proof/reader-settings-phone-after.png`: jpeg,390x844, SHA256 `f1d886d851e6ce132de832efa37fbb4d69bb27c29c2b71e4aa7acf3cefe06b7d`.
+- `tmp/t0193-ui-proof/reader-settings-phone-clean-after.png`: jpeg,390x844, SHA256 `777099083df0ce4411e57f1cf5a88d73438cb77bdefa5ee6e742ce2f9f595780`.
+- `tmp/t0193-ui-proof/research-desktop-after.png`: jpeg,416x900, SHA256 `828f5792d5874c6dc6047faef3d2b4d790bc7b8ab30a833093438ebae5e12f3e`.
+- `tmp/t0193-ui-proof/research-desktop-full-after.jpg`: jpeg,1440x900, SHA256 `8261f3f32902c893ff4f79736e725c19c18afc15f7b126552f5f8a05650b3506`.
+- `tmp/t0193-ui-proof/story-create-theme-desktop-after.png`: jpeg,1440x900, SHA256 `b3c47075d75918de173e38a5bd588c3ebdd11c1efa73b7f170ad0c3352c8c743`.
+- `tmp/t0193-ui-proof/story-create-theme-phone-after.png`: jpeg,390x844, SHA256 `78f9272b20b82011fb5ef59debb38100d2b794fc00fedbbe1f7cd08e55dac86d`.
+
+The mission walk exposed the already ruled Q027 wording obligation: core
+reconciliation uses elapsed deadlines, but the prompt, Runtime card and guide
+still claim activity resets an inactivity timer. This is assigned to T0194 in
+2026-10-t0194-preparation.md; no timer behaviour or release acceptance is
+changed by this closure. T0206 remains explicitly red for its original
+unexplained macOS timing failure, despite latest hosted macOS greens.
+The closure metadata commit requires its own exact-head hosted observation.

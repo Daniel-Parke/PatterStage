@@ -1,7 +1,7 @@
 {
   "task": "T-0193",
-  "draft": true,
-  "inspectedRevision": "9ce945ac633e72c8a489812fa287aa31eb15fc5a",
+  "draft": false,
+  "inspectedRevision": "070f24eac34edb82ff65b730e770ff9a6a46cf54",
   "historical": {
     "findings": [],
     "operatorDispositions": [],
@@ -45,148 +45,148 @@
     },
     {
       "id": "missions-cohort",
-      "status": "locally-verified-awaiting-hosted",
+      "status": "done",
       "evidence": [
         "org/tasks/T-0193.json#oracle_provenance",
         "org/reviews/2026-10-t0193-verification.md"
       ],
-      "scepticVerdict": "Banach bounded LOCAL acceptance: applicable independent red oracles, full8892unit/511browser gate and19causal mutations/restoration pass. Browser-only contrast/reveal claims are bounded by the12new production controls; all required hosted jobs and final closure remain pending.",
+      "scepticVerdict": "Banach FINAL bounded PASS at 070f24eac34edb82ff65b730e770ff9a6a46cf54: independently frozen red controls, complete unchanged-tree gate,19 causal mutants with restored controls, all required hosted jobs. Manual walks supplement controlled tests; whole-product and release acceptance remain unclaimed.",
       "authority": "org/plans/2026-09-refactor-programme.json#T-0193",
       "reason": "31binding names and five callback aliases replaced with the existing vm object. Page208\u2192167physical lines, net\u221241, zero new hooks/interfaces/test assertions. All30existing unit names match and pass before/after."
     },
     {
       "id": "profile-draft-ownership",
-      "status": "locally-verified-awaiting-hosted",
+      "status": "done",
       "evidence": [
         "org/tasks/T-0193.json#oracle_provenance",
         "org/reviews/2026-10-t0193-verification.md"
       ],
-      "scepticVerdict": "Banach bounded LOCAL acceptance: applicable independent red oracles, full8892unit/511browser gate and19causal mutations/restoration pass. Browser-only contrast/reveal claims are bounded by the12new production controls; all required hosted jobs and final closure remain pending.",
+      "scepticVerdict": "Banach FINAL bounded PASS at 070f24eac34edb82ff65b730e770ff9a6a46cf54: independently frozen red controls, complete unchanged-tree gate,19 causal mutants with restored controls, all required hosted jobs. Manual walks supplement controlled tests; whole-product and release acceptance remain unclaimed.",
       "authority": "org/plans/2026-09-refactor-programme.json#T-0193"
     },
     {
       "id": "t0191-composer-output-save-ownership",
-      "status": "locally-verified-awaiting-hosted",
+      "status": "done",
       "source": "t0191ReviewFollowups",
       "evidence": [
         "org/tasks/T-0193.json#oracle_provenance",
         "org/reviews/2026-10-t0193-verification.md"
       ],
-      "scepticVerdict": "Banach bounded LOCAL acceptance: applicable independent red oracles, full8892unit/511browser gate and19causal mutations/restoration pass. Browser-only contrast/reveal claims are bounded by the12new production controls; all required hosted jobs and final closure remain pending.",
+      "scepticVerdict": "Banach FINAL bounded PASS at 070f24eac34edb82ff65b730e770ff9a6a46cf54: independently frozen red controls, complete unchanged-tree gate,19 causal mutants with restored controls, all required hosted jobs. Manual walks supplement controlled tests; whole-product and release acceptance remain unclaimed.",
       "authority": "org/plans/2026-09-refactor-programme.json#T-0193"
     },
     {
       "id": "t0191-script-tab-navigation",
-      "status": "locally-verified-awaiting-hosted",
+      "status": "done",
       "source": "t0191ReviewFollowups",
       "evidence": [
         "org/tasks/T-0193.json#oracle_provenance",
         "org/reviews/2026-10-t0193-verification.md"
       ],
-      "scepticVerdict": "Banach bounded LOCAL acceptance: applicable independent red oracles, full8892unit/511browser gate and19causal mutations/restoration pass. Browser-only contrast/reveal claims are bounded by the12new production controls; all required hosted jobs and final closure remain pending.",
+      "scepticVerdict": "Banach FINAL bounded PASS at 070f24eac34edb82ff65b730e770ff9a6a46cf54: independently frozen red controls, complete unchanged-tree gate,19 causal mutants with restored controls, all required hosted jobs. Manual walks supplement controlled tests; whole-product and release acceptance remain unclaimed.",
       "authority": "org/plans/2026-09-refactor-programme.json#T-0193"
     },
     {
       "id": "t0191-research-copy-and-export",
-      "status": "locally-verified-awaiting-hosted",
+      "status": "done",
       "source": "t0191ReviewFollowups",
       "evidence": [
         "org/tasks/T-0193.json#oracle_provenance",
         "org/reviews/2026-10-t0193-verification.md"
       ],
-      "scepticVerdict": "Banach bounded LOCAL acceptance: applicable independent red oracles, full8892unit/511browser gate and19causal mutations/restoration pass. Browser-only contrast/reveal claims are bounded by the12new production controls; all required hosted jobs and final closure remain pending.",
+      "scepticVerdict": "Banach FINAL bounded PASS at 070f24eac34edb82ff65b730e770ff9a6a46cf54: independently frozen red controls, complete unchanged-tree gate,19 causal mutants with restored controls, all required hosted jobs. Manual walks supplement controlled tests; whole-product and release acceptance remain unclaimed.",
       "authority": "org/plans/2026-09-refactor-programme.json#T-0193"
     },
     {
       "id": "t0191-agent-growth-error-truth",
-      "status": "locally-verified-awaiting-hosted",
+      "status": "done",
       "source": "t0191ReviewFollowups",
       "evidence": [
         "org/tasks/T-0193.json#oracle_provenance",
         "org/reviews/2026-10-t0193-verification.md"
       ],
-      "scepticVerdict": "Banach bounded LOCAL acceptance: applicable independent red oracles, full8892unit/511browser gate and19causal mutations/restoration pass. Browser-only contrast/reveal claims are bounded by the12new production controls; all required hosted jobs and final closure remain pending.",
+      "scepticVerdict": "Banach FINAL bounded PASS at 070f24eac34edb82ff65b730e770ff9a6a46cf54: independently frozen red controls, complete unchanged-tree gate,19 causal mutants with restored controls, all required hosted jobs. Manual walks supplement controlled tests; whole-product and release acceptance remain unclaimed.",
       "authority": "org/plans/2026-09-refactor-programme.json#T-0193"
     },
     {
       "id": "t0191-skill-search-category-context",
-      "status": "locally-verified-awaiting-hosted",
+      "status": "done",
       "source": "t0191ReviewFollowups",
       "evidence": [
         "org/tasks/T-0193.json#oracle_provenance",
         "org/reviews/2026-10-t0193-verification.md"
       ],
-      "scepticVerdict": "Banach bounded LOCAL acceptance: applicable independent red oracles, full8892unit/511browser gate and19causal mutations/restoration pass. Browser-only contrast/reveal claims are bounded by the12new production controls; all required hosted jobs and final closure remain pending.",
+      "scepticVerdict": "Banach FINAL bounded PASS at 070f24eac34edb82ff65b730e770ff9a6a46cf54: independently frozen red controls, complete unchanged-tree gate,19 causal mutants with restored controls, all required hosted jobs. Manual walks supplement controlled tests; whole-product and release acceptance remain unclaimed.",
       "authority": "org/plans/2026-09-refactor-programme.json#T-0193"
     },
     {
       "id": "t0191-trend-chart-text-equivalent",
-      "status": "locally-verified-awaiting-hosted",
+      "status": "done",
       "source": "t0191ReviewFollowups",
       "evidence": [
         "org/tasks/T-0193.json#oracle_provenance",
         "org/reviews/2026-10-t0193-verification.md"
       ],
-      "scepticVerdict": "Banach bounded LOCAL acceptance: applicable independent red oracles, full8892unit/511browser gate and19causal mutations/restoration pass. Browser-only contrast/reveal claims are bounded by the12new production controls; all required hosted jobs and final closure remain pending.",
+      "scepticVerdict": "Banach FINAL bounded PASS at 070f24eac34edb82ff65b730e770ff9a6a46cf54: independently frozen red controls, complete unchanged-tree gate,19 causal mutants with restored controls, all required hosted jobs. Manual walks supplement controlled tests; whole-product and release acceptance remain unclaimed.",
       "authority": "org/plans/2026-09-refactor-programme.json#T-0193"
     },
     {
       "id": "t0191-collection-state-semantics",
-      "status": "locally-verified-awaiting-hosted",
+      "status": "done",
       "source": "t0191ReviewFollowups",
       "evidence": [
         "org/tasks/T-0193.json#oracle_provenance",
         "org/reviews/2026-10-t0193-verification.md"
       ],
-      "scepticVerdict": "Banach bounded LOCAL acceptance: applicable independent red oracles, full8892unit/511browser gate and19causal mutations/restoration pass. Browser-only contrast/reveal claims are bounded by the12new production controls; all required hosted jobs and final closure remain pending.",
+      "scepticVerdict": "Banach FINAL bounded PASS at 070f24eac34edb82ff65b730e770ff9a6a46cf54: independently frozen red controls, complete unchanged-tree gate,19 causal mutants with restored controls, all required hosted jobs. Manual walks supplement controlled tests; whole-product and release acceptance remain unclaimed.",
       "authority": "org/plans/2026-09-refactor-programme.json#T-0193"
     },
     {
       "id": "skill-detail-error-truth",
-      "status": "locally-verified-awaiting-hosted",
+      "status": "done",
       "source": "t0192VisibleStateFollowups",
       "inheritedEvidenceStatus": "reproduced500/404atbothwidths",
       "evidence": [
         "org/tasks/T-0193.json#oracle_provenance",
         "org/reviews/2026-10-t0193-verification.md"
       ],
-      "scepticVerdict": "Banach bounded LOCAL acceptance: applicable independent red oracles, full8892unit/511browser gate and19causal mutations/restoration pass. Browser-only contrast/reveal claims are bounded by the12new production controls; all required hosted jobs and final closure remain pending.",
+      "scepticVerdict": "Banach FINAL bounded PASS at 070f24eac34edb82ff65b730e770ff9a6a46cf54: independently frozen red controls, complete unchanged-tree gate,19 causal mutants with restored controls, all required hosted jobs. Manual walks supplement controlled tests; whole-product and release acceptance remain unclaimed.",
       "authority": "org/plans/2026-09-refactor-programme.json#T-0193"
     },
     {
       "id": "models-error-truth",
-      "status": "locally-verified-awaiting-hosted",
+      "status": "done",
       "source": "t0192VisibleStateFollowups",
       "inheritedEvidenceStatus": "reproduced500plusfalseemptyatbothwidths",
       "evidence": [
         "org/tasks/T-0193.json#oracle_provenance",
         "org/reviews/2026-10-t0193-verification.md"
       ],
-      "scepticVerdict": "Banach bounded LOCAL acceptance: applicable independent red oracles, full8892unit/511browser gate and19causal mutations/restoration pass. Browser-only contrast/reveal claims are bounded by the12new production controls; all required hosted jobs and final closure remain pending.",
+      "scepticVerdict": "Banach FINAL bounded PASS at 070f24eac34edb82ff65b730e770ff9a6a46cf54: independently frozen red controls, complete unchanged-tree gate,19 causal mutants with restored controls, all required hosted jobs. Manual walks supplement controlled tests; whole-product and release acceptance remain unclaimed.",
       "authority": "org/plans/2026-09-refactor-programme.json#T-0193"
     },
     {
       "id": "reader-popover-contrast",
-      "status": "locally-verified-awaiting-hosted",
+      "status": "done",
       "source": "t0192VisibleStateFollowups",
       "inheritedEvidenceStatus": "rendered4.041muted/2.463selected/2.188hoverratiosobserved",
       "evidence": [
         "org/tasks/T-0193.json#oracle_provenance",
         "org/reviews/2026-10-t0193-verification.md"
       ],
-      "scepticVerdict": "Banach bounded LOCAL acceptance: applicable independent red oracles, full8892unit/511browser gate and19causal mutations/restoration pass. Browser-only contrast/reveal claims are bounded by the12new production controls; all required hosted jobs and final closure remain pending.",
+      "scepticVerdict": "Banach FINAL bounded PASS at 070f24eac34edb82ff65b730e770ff9a6a46cf54: independently frozen red controls, complete unchanged-tree gate,19 causal mutants with restored controls, all required hosted jobs. Manual walks supplement controlled tests; whole-product and release acceptance remain unclaimed.",
       "authority": "org/plans/2026-09-refactor-programme.json#T-0193"
     },
     {
       "id": "reduced-motion-reveal",
-      "status": "locally-verified-awaiting-hosted",
+      "status": "done",
       "source": "t0192VisibleStateFollowups",
       "inheritedEvidenceStatus": "source-supportedonly",
       "evidence": [
         "org/tasks/T-0193.json#oracle_provenance",
         "org/reviews/2026-10-t0193-verification.md"
       ],
-      "scepticVerdict": "Banach bounded LOCAL acceptance: applicable independent red oracles, full8892unit/511browser gate and19causal mutations/restoration pass. Browser-only contrast/reveal claims are bounded by the12new production controls; all required hosted jobs and final closure remain pending.",
+      "scepticVerdict": "Banach FINAL bounded PASS at 070f24eac34edb82ff65b730e770ff9a6a46cf54: independently frozen red controls, complete unchanged-tree gate,19 causal mutants with restored controls, all required hosted jobs. Manual walks supplement controlled tests; whole-product and release acceptance remain unclaimed.",
       "authority": "org/plans/2026-09-refactor-programme.json#T-0193"
     },
     {
@@ -203,24 +203,24 @@
     },
     {
       "id": "step-label-consolidation",
-      "status": "locally-verified-awaiting-hosted",
+      "status": "done",
       "evidence": [
         "org/tasks/T-0193.json#oracle_provenance",
         "org/reviews/2026-10-t0193-verification.md"
       ],
-      "scepticVerdict": "Banach bounded LOCAL acceptance: applicable independent red oracles, full8892unit/511browser gate and19causal mutations/restoration pass. Browser-only contrast/reveal claims are bounded by the12new production controls; all required hosted jobs and final closure remain pending.",
+      "scepticVerdict": "Banach FINAL bounded PASS at 070f24eac34edb82ff65b730e770ff9a6a46cf54: independently frozen red controls, complete unchanged-tree gate,19 causal mutants with restored controls, all required hosted jobs. Manual walks supplement controlled tests; whole-product and release acceptance remain unclaimed.",
       "authority": "org/plans/2026-09-refactor-programme.json#T-0193",
       "scope": "t0191AttributedConsolidationCandidates.cohorts[1]: ResearchReport and laboratory/deep-research/report.",
       "reason": "Export existing pure report STEP_LABEL; import it in the UI instead of repeating seven lines. Net\u22126source lines, no new interface file; five labels and unknown-kind fallback pass."
     },
     {
       "id": "comment-qualification",
-      "status": "locally-verified-awaiting-hosted",
+      "status": "done",
       "evidence": [
         "org/tasks/T-0193.json#oracle_provenance",
         "org/reviews/2026-10-t0193-verification.md"
       ],
-      "scepticVerdict": "Banach bounded LOCAL acceptance: applicable independent red oracles, full8892unit/511browser gate and19causal mutations/restoration pass. Browser-only contrast/reveal claims are bounded by the12new production controls; all required hosted jobs and final closure remain pending.",
+      "scepticVerdict": "Banach FINAL bounded PASS at 070f24eac34edb82ff65b730e770ff9a6a46cf54: independently frozen red controls, complete unchanged-tree gate,19 causal mutants with restored controls, all required hosted jobs. Manual walks supplement controlled tests; whole-product and release acceptance remain unclaimed.",
       "authority": "org/plans/2026-09-refactor-programme.json#T-0193",
       "scope": "Both t0192VisibleStateFollowups.commentScope (globals.css) and t0192CommentFollowup (Models/error headers)."
     },
@@ -237,5 +237,5 @@
       "reason": "Preserve child authority:03aT0196/03bT0194;04a/bT0200afterv1.0;14aT0194/14bacceptedT0191;21aacceptedT0190/21bruledout-key-renaming;23a/bruledout/23cT0195. Final parent reconciliation belongs to T0201, without claiming other owners complete."
     }
   ],
-  "qualification": "All19supplemental obligations have a local disposition. Supplemental accountability is excluded from historical totals; draft remains until required hosted acceptance. Mixed-parent children retain their owners and final reconciliation belongs to T0201."
+  "qualification": "All19 supplemental obligations adjudicated:15 done and4 measured retentions. Supplemental accountability remains excluded from historical totals. Mixed-parent children retain their owners; final reconciliation belongs to T0201. Q027 timeout wording is separately assigned to T0194, not silently marked repaired."
 }
