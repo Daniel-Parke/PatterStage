@@ -853,5 +853,20 @@
       "tmp/t0192-defects-logs-1791072920447"
     ],
     "qualification": "Earlier group workflowId fixture, bootseparator, tokenlocation and dynamicmock-lifetime failures were corrected beforefreeze. Missing-helper failures are prospective contracts, not41product defects. Global testtypes initialfailure was concurrent unfrozen Missionsdraft, laterfixed."
+  },
+  "testRequirePolicyOracle": {
+    "file": "tests/unit/test-require-policy.test.ts",
+    "sha256": "b1bcb12f5adee1bbc13a71ee312a7e2a5aa023d58a109f5941222509746247b2",
+    "author": "Nash",
+    "reviewer": "Laplace",
+    "receipt": "tmp/t0191-green-validation/tmp/t0192-require-policy-red-1791073733476",
+    "result": "9cases:4causal policy failures,5passing boundaries. RealESLint calculatedpolicy andlintText with inlineconfig disabled; types/lint0.",
+    "amendmentScope": "285exactfiles assigned:284testfiles311directives+Jest. Remove140reasonless89exactboilerplate, preserve82specificreasons+Jest asplaincomments. Tokens/nontargetcomments/expandedidentities mustmatch.",
+    "lineEndingBinding": "b14-spend-one-window.test.ts primary/validation rawbytes differ onlyLF/CRLF. Independent author must regenerate exactprimaryhash/spans or explicitly prove normalisation; driftcheck cannotbebypassed.",
+    "limits": "Commentamendment and scopedoverride notimplemented; before/after identity and fullgate pending."
+  },
+  "nativeLinuxExpandedCandidate": {
+    "receipt": "tmp/t0192-linux-1791074008592217500",
+    "result": "Original95controls pass; expanded111cases108pass3infrastructurefailures. npm cannotspawnsh duefixturePATH. Independent correction assignedNash; no Linuxfullgateclaim."
   }
 }
