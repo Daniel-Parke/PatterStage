@@ -22,3 +22,13 @@ causally: second confirmed rename selects default after the first refresh
 refuses. Receipt: `tmp/t0193-profile-amendment-red.json`;17cases,16pass,
 1fail,0runtime errors. Original frozen hash remains recorded above and in
 commit e1eea671. Amendment LF SHA256: `77ab9c3c79be00642ef09cce4ac62f79b6597f42a6f8d7d40763bacabd43ee12`.
+
+Faraday's four frozen browser cases reproduce the missing replacement dialog
+after a real persisted old write at1440x900 and390x844. Existing isolated
+production build at64ed3aca; real opaque sign-in and keyless owned fixtures.
+Receipt:`tmp/t0193-profile-browser-red.json`; four failures. Each first failure
+is a disappeared dialog, followed by soft assertion timeouts. Fixture boot,
+authentication and persistence succeeded; these are not launch failures.
+LF SHA256:`acf9c71fa7450adb062d6e451a68cb7db740c7d3de66aef3e8d2df1c144a7886`. No source build was performed for this red control.
+The additional profile recovery control now passes17/17, zero runtime errors:
+`tmp/t0193-profile-amendment-green.json`. Browser green awaits the batch build.

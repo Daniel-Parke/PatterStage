@@ -84,10 +84,12 @@
   ],
   "oracle_provenance": {
     "files": [
-      "tests/unit/profile-draft-ownership.test.tsx"
+      "tests/unit/profile-draft-ownership.test.tsx",
+      "tests/e2e/page-state-profile-ownership.spec.ts"
     ],
     "hashes": {
-      "tests/unit/profile-draft-ownership.test.tsx": "77ab9c3c79be00642ef09cce4ac62f79b6597f42a6f8d7d40763bacabd43ee12"
+      "tests/unit/profile-draft-ownership.test.tsx": "77ab9c3c79be00642ef09cce4ac62f79b6597f42a6f8d7d40763bacabd43ee12",
+      "tests/e2e/page-state-profile-ownership.spec.ts": "acf9c71fa7450adb062d6e451a68cb7db740c7d3de66aef3e8d2df1c144a7886"
     },
     "author_session": "Faraday 01a1062b-0f36-7702-885b-476fd150d9bf; independent real-form and held-transport oracle; Q015 amendment by Franklin 01a1062c-ad31-77c2-8ff2-71c41ee9b5d6, preserving all16 original controls",
     "independence_method": "metamorphic"
