@@ -176,3 +176,10 @@ Franklin independently qualified the selector correction for commit after
 observing the complete ten-stage gate and unchanged executable hashes.
 Post-commit mutation and exact-head hosted checks remain required. This is
 bounded amendment acceptance, not a timing repair or T-0206 closure.
+
+Committed sweep64ed3aca detected all three intended workflow mutants with
+42passing controls before and after, zero infrastructure failures and exact
+restoration. Receipt:tmp/t0206-diagnostic-sweep-1791106980809/summary.json.
+The executable workflow hash remainsbeb3dd48d3ec3631a08d9fc23216086d44dd46537a198f16ef65af983ba57cf2.
+Q-035 and this verification checkpoint add metadata only after the gate;
+the independently frozen selector and diagnostic executable bytes are unchanged.

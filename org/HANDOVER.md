@@ -17,8 +17,9 @@ remain unexplained and no repair is claimed. T-0195 carries that follow-up.
 The selector correction preserves all12feature test names and assertions.
 The full unchanged-tree gate passed all10stages:8,833unit/499browser passes,
 existing9unit/24browser skips; build purity and both censuses pass. Receipt:
-tmp/t0206-coordinator-gate-1791105254756/gate/summary.json. Committed sweep
-and exact-head hosted checks follow. See the T-0206 review for earlier failures.
+tmp/t0206-coordinator-gate-1791105254756/gate/summary.json. The committed sweep
+detected all3mutants with42original/restored controls and exact restoration.
+Exact-head hosted checks follow. See the T-0206 review for earlier failures.
 
 Thirteen of22main batches are complete. T-0193 is not yet open; T-0200 stays
 deferred throughv1.0.0. Source102,062; tests150,767; repeated windows705/4,787;
