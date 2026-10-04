@@ -7,11 +7,9 @@ import { NextRequest } from "next/server";
 import { ok, notFound } from "@/lib/api/api-response";
 import { deleteArtifact, getArtifact } from "@/lib/runs/artifacts-repository";
 import { recordEvent } from "@/lib/analytics/record-event";
-import { route } from "@/lib/api/api-route";
+import { route, type RouteContext } from "@/lib/api/api-route";
 
-interface Ctx {
-  params: Promise<{ id: string }>;
-}
+type Ctx = RouteContext<{ id: string }>;
 
 export const GET = route("GET /api/artifacts/[id]", (p) => `id=${p.id}`, "Failed to read artifact", async (request: NextRequest, ctx: Ctx) => {
   const { id } = await ctx.params;

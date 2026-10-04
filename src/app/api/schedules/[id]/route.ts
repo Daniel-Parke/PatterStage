@@ -8,14 +8,11 @@ import { z } from "zod";
 import { ok, notFound, badRequest } from "@/lib/api/api-response";
 import { parseAndValidateJsonBody } from "@/lib/api/parse-json-body";
 import { getSchedule, updateSchedule, deleteSchedule } from "@/lib/schedule/schedules-repository";
-import { parseSchedule } from "@/lib/schedule/parse-schedule";
-import { computeNextRun, scheduleCanEverFire } from "@/lib/schedule/next-run";
-import { scheduleIntervalProblem } from "@/lib/schedule/interval-bounds";
-import { route } from "@/lib/api/api-route";
+import { computeNextRun } from "@/lib/schedule/next-run";
+import { scheduleProblem } from "@/lib/schedule/schedule-problem";
+import { route, type RouteContext } from "@/lib/api/api-route";
 
-interface Ctx {
-  params: Promise<{ id: string }>;
-}
+type Ctx = RouteContext<{ id: string }>;
 
 const schedulePatchSchema = z
   .object({
@@ -45,23 +42,8 @@ export const PATCH = route("PATCH /api/schedules/[id]", (p) => `id=${p.id}`, "Fa
   // Recompute next_run_at when the schedule expression changes.
   let nextRunAt: string | null | undefined;
   if (parsed.schedule !== undefined) {
-    if (parseSchedule(parsed.schedule).kind === "invalid") {
-      return badRequest(`Unrecognized schedule: ${parsed.schedule}`);
-    }
-    // Shape is not satisfiability -- see the note in
-    // src/app/api/schedules/route.ts. `0 0 30 2 *` parses cleanly and can
-    // never fire (T-0079).
-    if (!scheduleCanEverFire(parsed.schedule)) {
-      return badRequest(
-        `Schedule "${parsed.schedule}" can never fire: it names a date that does not ` +
-          `exist, or a field outside its range. Check the day-of-month against the month.`,
-      );
-    }
-    // How often, as well as whether. See the note in
-    // src/app/api/schedules/route.ts: `every 0m` is due again the instant it
-    // fires, so it dispatched a paid agent run on every tick.
-    const tooFrequent = scheduleIntervalProblem(parsed.schedule);
-    if (tooFrequent) return badRequest(tooFrequent);
+    const problem = scheduleProblem(parsed.schedule);
+    if (problem) return badRequest(problem);
     const next = computeNextRun(parsed.schedule, new Date());
     nextRunAt = next ? next.toISOString() : null;
   }

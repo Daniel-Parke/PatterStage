@@ -44,7 +44,8 @@ import { Check, AlertCircle, Info, X } from "lucide-react";
 
 import { FeedbackContext } from "./feedback-context";
 
-export type ToastType = "success" | "error" | "info";
+import type { ToastType } from "@/types/console";
+export type { ToastType } from "@/types/console";
 
 interface ToastProps {
   message: string;

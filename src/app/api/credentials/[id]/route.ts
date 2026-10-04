@@ -51,11 +51,9 @@ import {
   syncCredentialToHermesEnv,
 } from "@/modules/hermes/lib/hermes-env-sync";
 import { envVarForProvider, isHermesProvider } from "@/modules/hermes/lib/providers";
-import { route } from "@/lib/api/api-route";
+import { route, type RouteContext } from "@/lib/api/api-route";
 
-interface Ctx {
-  params: Promise<{ id: string }>;
-}
+type Ctx = RouteContext<{ id: string }>;
 
 // The key and nothing else. `.trim()` before `.min(1)` so "   " is refused
 // here rather than reaching updateCredential, which reads a blank key as

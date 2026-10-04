@@ -7,18 +7,10 @@
 // Listing endpoints expose only `keyHint`, never `apiKey`.
 
 import { getDb, inTransaction, uuid, now } from "../db/index";
+import type { CredentialSummary } from "@/types/console";
+export type { CredentialSummary } from "@/types/console";
 
 // ── Public types ────────────────────────────────────────────────
-
-/** Public-facing credential record (no api_key, hint only). */
-export interface CredentialSummary {
-  id: string;
-  label: string;
-  provider: string;
-  keyHint: string;
-  createdAt: string;
-  updatedAt: string;
-}
 
 /** Internal-only credential record including the plaintext key. */
 export interface CredentialWithKey extends CredentialSummary {

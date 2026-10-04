@@ -55,3 +55,37 @@ export interface Mission extends MissionDraftFields {
   /** True when dispatchMode=queue and waiting for the queue worker; false for save drafts. */
   queuedForRun?: boolean;
 }
+
+export interface MissionTemplate {
+  id: string;
+  name: string;
+  icon: string;
+  color: string;
+  category: string;
+  profile: string;
+  description: string;
+  instruction: string;
+  context: string;
+  goals: string[];
+  suggestedSkills: string[];
+  suggestedToolsets?: string[];
+  localDirs?: LocalDirEntry[];
+  references?: string[];
+  isCustom?: boolean;
+  dispatchMode?: string;
+  schedule?: string;
+  defaultModel?: string;
+  defaultProvider?: string;
+  timeoutMinutes?: number;
+  outputFormat?: string;
+  constraints?: string;
+}
+
+export interface ManagedCategory {
+  id: string;
+  name: string;
+  color: string;
+  seedKey?: string | null;
+  missionCount: number;
+  templateCount: number;
+}

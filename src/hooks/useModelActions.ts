@@ -257,27 +257,32 @@ export function useModelActions({
   /** One PUT per task type, one sentence about all of them. */
   const handleBulkAuxiliaryChange = useCallback(
     async (taskTypes: TaskType[], targetModelId: string) => {
-      await runWrite<{ taskType: TaskType; ok: boolean }[]>({
+      await runWrite<{ taskType: TaskType; ok: boolean; syncError?: string | null }[]>({
         setBusy: (busy) => setBusyTaskType(busy ? "agent" : null),
         showToast,
         request: () =>
           Promise.all(
             taskTypes.map((taskType) =>
-              apiFetch("/api/models/defaults", {
+              apiFetch<{ data?: { error?: string | null } }>("/api/models/defaults", {
                 method: "PUT",
                 body: JSON.stringify({ taskType, modelId: targetModelId }),
               }).then(
-                () => ({ taskType, ok: true }),
+                (response) => ({ taskType, ok: true, syncError: response?.data?.error }),
                 () => ({ taskType, ok: false }),
               ),
             ),
           ),
         successMessage: (results) => {
           const failures = results.filter((r) => !r.ok);
-          return failures.length === 0
+          const unsynchronised = results.filter((r) => r.ok && r.syncError);
+          return failures.length === 0 && unsynchronised.length === 0
             ? `Set ${taskTypes.length} auxiliary default${pluralise(taskTypes.length)}`
             : {
-                message: `${results.length - failures.length}/${taskTypes.length} updated — ${failures.map((f) => f.taskType).join(", ")} failed`,
+                message: [
+                  `${results.length - failures.length}/${taskTypes.length} auxiliary defaults saved`,
+                  failures.length ? `${failures.map((f) => f.taskType).join(", ")} failed` : "",
+                  unsynchronised.length ? `YAML sync failed for ${unsynchronised.map((r) => r.taskType).join(", ")}` : "",
+                ].filter(Boolean).join("; "),
                 type: "error",
               };
         },

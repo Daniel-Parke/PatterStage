@@ -12,11 +12,9 @@
 
 import { NextRequest } from "next/server";
 import { handleCancelMission } from "@/lib/missions/mission-handlers/cancel";
-import { route } from "@/lib/api/api-route";
+import { route, type RouteContext } from "@/lib/api/api-route";
 
-interface Ctx {
-  params: Promise<{ id: string }>;
-}
+type Ctx = RouteContext<{ id: string }>;
 
 export const POST = route("POST /api/missions/[id]/cancel", (p) => `id=${p.id}`, "Failed to cancel mission", async (_request: NextRequest, ctx: Ctx) => {
   const { id } = await ctx.params;

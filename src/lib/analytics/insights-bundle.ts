@@ -17,9 +17,7 @@ import {
   type TopMissionRow,
 } from "./run-aggregates";
 import { EVENT_CATEGORIES, categoryForEventType } from "./categories";
-import type { HistogramBin } from "@/components/viz/DistributionHistogram";
-import type { StackedPoint, StackedSeries } from "@/components/viz/StackedAreaTrend";
-import type { AreaPoint } from "@/components/viz/AreaTrend";
+import type { HistogramBin, StackedPoint, StackedSeries, AreaPoint } from "@/types/console";
 
 export interface InsightsBundle {
   days: number;

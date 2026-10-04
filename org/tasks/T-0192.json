@@ -481,7 +481,9 @@
     "src/lib/missions/mission-form-utils.ts",
     "src/modules/hermes/lib/sync-manager.ts",
     "tests/unit/type-owner-equivalence.test.ts",
-    "org/briefs/T-0192-type-owner-oracle.md"
+    "org/briefs/T-0192-type-owner-oracle.md",
+    "src/lib/api/response-route.ts",
+    "src/app/results/insights/page.tsx"
   ],
   "timestamps": {
     "opened": "2026-10-03T20:37:32.586979+00:00",

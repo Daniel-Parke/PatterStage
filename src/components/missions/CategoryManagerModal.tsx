@@ -11,14 +11,8 @@ import { InlineSelect } from "@/components/ui/Select";
 import { Input } from "@/components/ui/field";
 import { CATEGORY_COLOR_CLASSES } from "@/lib/missions/mission-categories";
 
-export interface ManagedCategory {
-  id: string;
-  name: string;
-  color: string;
-  seedKey?: string | null;
-  missionCount: number;
-  templateCount: number;
-}
+import type { ManagedCategory } from "@/lib/missions/mission-types";
+export type { ManagedCategory } from "@/lib/missions/mission-types";
 
 export interface CategoryManagerModalProps {
   open: boolean;

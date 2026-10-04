@@ -28,6 +28,8 @@
 // canonical form (raw 5-field cron, no leading `{`) are left alone.
 // The migration runs in a single transaction and never raises.
 
+import { serverLog } from "@/lib/logs/server-log";
+
 import type Database from "better-sqlite3";
 import { getSchemaVersion, setSchemaVersion } from "@/lib/db-schema";
 import { intervalShorthandToCron } from "@/lib/schedule/parse-schedule";
@@ -142,8 +144,7 @@ export function applyCronScheduleCanonicalisation(
     // Never let a malformed row take the migration down. Log and
     // continue — the next push-to-Hermes cycle will overwrite
     // schedule on the next user edit.
-    console.warn(
-      "[cron-schedule-canonicalisation] partial apply; some rows left untouched:",
+    serverLog("db", "warn", "partial apply; some rows left untouched:",
       err,
     );
   }

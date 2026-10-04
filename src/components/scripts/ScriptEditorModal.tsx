@@ -22,6 +22,7 @@ export interface ScriptEditorModalProps {
   content: string;
   onContentChange: (content: string) => void;
   loading: boolean;
+  readError?: string | null;
   saving: boolean;
   onClose: () => void;
   onSave: () => void;
@@ -38,6 +39,7 @@ export default function ScriptEditorModal({
   content,
   onContentChange,
   loading,
+  readError,
   saving,
   onClose,
   onSave,
@@ -80,7 +82,7 @@ export default function ScriptEditorModal({
           <Button variant="ghost" size="sm" onClick={onClose} disabled={saving}>
             Cancel
           </Button>
-          <Button variant="primary" color="cyan" size="sm" icon={Save} onClick={onSave} loading={saving}>
+          <Button variant="primary" color="cyan" size="sm" icon={Save} onClick={onSave} loading={saving} disabled={loading || Boolean(readError)}>
             Save
           </Button>
         </>
@@ -102,6 +104,8 @@ export default function ScriptEditorModal({
         )}
         {loading ? (
           <div className="py-8"><LoadingSpinner text="Loading script…" /></div>
+        ) : readError ? (
+          <p role="alert" className="text-body text-semantic-danger">{readError}</p>
         ) : (
           <>
             <Textarea
@@ -124,12 +128,12 @@ export default function ScriptEditorModal({
               }}
               spellCheck={false}
               rows={20}
-              className="block leading-relaxed"
+              className="block max-h-96 leading-relaxed sm:max-h-none"
               style={{ tabSize: 2 }}
             />
-            <div className="flex items-center justify-between font-mono text-micro text-ps-text-muted">
+            <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1 font-mono text-micro text-ps-text-muted">
               <span>{content.split("\n").length} lines · {new Blob([content]).size} bytes</span>
-              <span>Tab = 2 spaces · ⌘/Ctrl+S to save · runs server-side via /bin/bash</span>
+              <span>Tab = 2 spaces · ⌘/Ctrl+S to save · runs on the server</span>
             </div>
           </>
         )}

@@ -13,9 +13,9 @@ import { parseJsonBody } from "@/lib/api/parse-json-body";
 import { getConversation, getMessages, getMessageByRunId, updateMessage } from "@/lib/chat/chat-repository";
 import { getRun, updateRun } from "@/lib/runs/runs-repository";
 import { runtime } from "@/lib/runtime";
-import { route } from "@/lib/api/api-route";
+import { route, type RouteContext } from "@/lib/api/api-route";
 
-type Ctx = { params: Promise<{ id: string }> };
+type Ctx = RouteContext<{ id: string }>;
 
 export const POST = route("POST /api/chat/[id]/stop", (p) => p.id, "Failed to stop run", async (request: NextRequest, ctx: Ctx) => {
   const { id } = await ctx.params;

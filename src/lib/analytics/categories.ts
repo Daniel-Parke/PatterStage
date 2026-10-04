@@ -12,7 +12,7 @@
 // ═══════════════════════════════════════════════════════════════
 
 import type { AnalyticsEventType } from "./event-types";
-import type { NeonColor } from "@/components/viz/colors";
+import type { NeonColor } from "@/types/console";
 
 export interface EventCategory {
   key: string;

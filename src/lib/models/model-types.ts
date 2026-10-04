@@ -34,3 +34,29 @@ export interface ApiModel extends ModelRow {
   createdAt: string;
   updatedAt: string;
 }
+
+/**
+ * One drift sentence with the handles to act on it. The banner used to offer a
+ * single "Sync Now" that re-imported everything whichever way the drift
+ * pointed; a line says which side is ahead so the banner offers the one
+ * direction that resolves it (T-0100). `primary`: the agent default and
+ * config.yaml's primary disagree, `registryId` the row matching the Hermes
+ * primary or null; `hermes-only`: config.yaml has a model the registry lacks,
+ * pull adds it; `db-only`: the registry has one config.yaml lacks.
+ */
+export interface DriftLine {
+  kind: "primary" | "hermes-only" | "db-only";
+  /** The sentence, identical to the matching `driftDetails` entry. */
+  text: string;
+  provider: string;
+  modelId: string;
+  /** The registry row this line is about, when there is one. */
+  registryId: string | null;
+}
+
+export interface SyncDrift {
+  hasDrift: boolean;
+  driftDetails: string[];
+  /** Optional so a body cached before T-0100 still renders as plain sentences. */
+  lines?: DriftLine[];
+}

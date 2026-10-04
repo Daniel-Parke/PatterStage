@@ -3,7 +3,7 @@
 // ═══════════════════════════════════════════════════════════════
 
 import type { LocalDirEntry } from "@/types/console";
-import type { ManagedCategory } from "@/components/missions/CategoryManagerModal";
+import type { ManagedCategory } from "@/lib/missions/mission-types";
 
 /** Split newline-delimited goals string into non-empty array. */
 export function splitGoals(goals: string): string[] {

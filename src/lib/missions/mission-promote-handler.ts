@@ -12,8 +12,8 @@ import { runMissionQueueTick } from "@/lib/missions/mission-queue-tick";
 import { createSchedule } from "@/lib/schedule/schedules-repository";
 import { inTransaction } from "@/lib/db";
 import { parseSchedule, scheduleDisplayFromParsed } from "@/lib/schedule/parse-schedule";
-import { computeNextRun, scheduleCanEverFire } from "@/lib/schedule/next-run";
-import { scheduleIntervalProblem } from "@/lib/schedule/interval-bounds";
+import { computeNextRun } from "@/lib/schedule/next-run";
+import { scheduleProblem } from "@/lib/schedule/schedule-problem";
 import { enrichedMission } from "@/lib/missions/mission-response";
 import { logApiError } from "@/lib/api/api-logger";
 import { isMissionDraft, isMissionQueuedForRun } from "@/lib/missions/mission-board";
@@ -98,23 +98,9 @@ export async function promoteMission(
 
   let cronPlan: { scheduleDisplay: string; nextRunAt: string | null } | null = null;
   if (isCronMode) {
+    const problem = scheduleProblem(input.schedule!);
+    if (problem) return { ok: false, status: 400, error: problem };
     const parsed = parseSchedule(input.schedule!);
-    if (parsed.kind === "invalid") {
-      return { ok: false, status: 400, error: `Unrecognized schedule: ${input.schedule}` };
-    }
-    if (!scheduleCanEverFire(input.schedule!)) {
-      return {
-        ok: false,
-        status: 400,
-        error:
-          `Schedule "${input.schedule}" can never fire: it names a date that does not ` +
-          `exist, or a field outside its range. Check the day-of-month against the month.`,
-      };
-    }
-    const tooFrequent = scheduleIntervalProblem(input.schedule!);
-    if (tooFrequent) {
-      return { ok: false, status: 400, error: tooFrequent };
-    }
     const next = computeNextRun(input.schedule!, new Date());
     cronPlan = {
       scheduleDisplay: scheduleDisplayFromParsed(parsed, input.schedule!),

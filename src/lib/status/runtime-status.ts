@@ -12,7 +12,7 @@
 // them without dragging any of this into a browser bundle.
 //
 // NO SECRETS. It says whether the token mode is on, never what the token is;
-// the gateway URL is an address, not a credential. Every reader here is the
+// gateway URL userinfo, query and fragment are removed; paths remain. Every reader here is the
 // one the guards use, so the answer cannot claim a state a guard does not
 // enforce.
 // ═══════════════════════════════════════════════════════════════
@@ -26,7 +26,7 @@ import { getDb } from "@/lib/db";
 import { getSchemaVersion } from "@/lib/db-schema";
 import { isFeatureEnabled } from "@/lib/feature-flags";
 import { PS_DATA_DIR, getDbPath, readEnv } from "@/lib/host/paths";
-import type { RuntimeStatus } from "@/lib/status/runtime-status-format";
+import { diagnosticGatewayUrl, type RuntimeStatus } from "@/lib/status/runtime-status-format";
 import { runGit } from "@/lib/update-handlers/shared";
 
 /** The gateway address the runtime falls back to when HERMES_GATEWAY_URL is unset. */
@@ -58,10 +58,10 @@ function schemaVersion(): number {
 }
 
 /**
- * The agent's home is the one fact core cannot read itself (ADR-0005: core
- * does not import a module), so the route hands it in.
+ * The route supplies module-owned paths and resolved endpoints (ADR-0005:
+ * core does not import a module).
  */
-export function collectRuntimeStatus(agent: { hermesHome: string }): RuntimeStatus {
+export function collectRuntimeStatus(agent: { hermesHome: string; gatewayUrl?: string }): RuntimeStatus {
   return {
     authMode: getAuthMode(),
     deployApiEnabled: isDeployApiEnabled(),
@@ -74,7 +74,7 @@ export function collectRuntimeStatus(agent: { hermesHome: string }): RuntimeStat
     schemaVersion: schemaVersion(),
     appVersion: appVersion(),
     gitHash: gitHash(),
-    gatewayUrl: readEnv("HERMES_GATEWAY_URL") ?? DEFAULT_GATEWAY_URL,
+    gatewayUrl: diagnosticGatewayUrl(agent.gatewayUrl ?? readEnv("HERMES_GATEWAY_URL") ?? DEFAULT_GATEWAY_URL),
     node: process.version,
     platform: process.platform,
   };

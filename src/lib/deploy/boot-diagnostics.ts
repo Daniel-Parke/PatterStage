@@ -17,8 +17,8 @@
 // something is wrong cannot be used to establish that nothing is.
 //
 // NO SECRETS. This line is meant to be pasted into a bug report, so it names
-// whether a token exists and never what it is. `HERMES_GATEWAY_URL` is an
-// address, not a credential, and an override is invisible without it: the QA
+// whether a token exists and never what it is. Gateway diagnostics remove URL
+// userinfo, query and fragment; paths remain. An override is otherwise invisible: the QA
 // pass ran its mock on :8643 and spent time confused about which gateway a
 // finding belonged to.
 // ═══════════════════════════════════════════════════════════════
@@ -26,6 +26,8 @@
 import { isDeployApiEnabled } from "@/lib/api/api-auth";
 import { readEnv } from "@/lib/host/paths";
 import { isReadOnly } from "@/lib/api/read-only";
+import { isFeatureEnabled } from "@/lib/feature-flags";
+import { diagnosticGatewayUrl } from "@/lib/status/runtime-status-format";
 
 function onOff(value: boolean): string {
   return value ? "on" : "off";
@@ -39,19 +41,17 @@ function onOff(value: boolean): string {
  * file used to carry a mirror of that rule; two copies of one rule is how a
  * boot line and a 403 come to disagree (T-0095).
  */
-export function describeOperationalFlags(): string {
+export function describeOperationalFlags(gateway = readEnv("HERMES_GATEWAY_URL")): string {
   const deployApi = isDeployApiEnabled();
 
   const authMode = readEnv("PS_AUTH_MODE")?.toLowerCase() === "none" ? "NONE" : "token";
-  const composerRaw = readEnv("PS_COMPOSER")?.toLowerCase();
-  const composer = composerRaw === "0" || composerRaw === "false" ? "off" : "on";
-  const gateway = readEnv("HERMES_GATEWAY_URL") ?? "default";
+  const composer = onOff(isFeatureEnabled("composer"));
 
   return [
     `read-only=${onOff(isReadOnly())}`,
     `deploy-api=${onOff(deployApi)}`,
     `auth=${authMode}`,
     `composer=${composer}`,
-    `gateway=${gateway}`,
+    `gateway=${gateway === undefined ? "default" : diagnosticGatewayUrl(gateway)}`,
   ].join("  ");
 }

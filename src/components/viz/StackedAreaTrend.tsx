@@ -1,16 +1,9 @@
-import { neon, neonAlpha, gradId, type NeonColor } from "./colors";
+import { neon, neonAlpha, gradId } from "./colors";
 
-export interface StackedSeries {
-  key: string;
-  label: string;
-  color: NeonColor;
-}
+import type { StackedSeries, StackedPoint } from "@/types/console";
+export type { StackedSeries, StackedPoint } from "@/types/console";
 
-export interface StackedPoint {
-  date: string;
-  /** value per series key */
-  values: Record<string, number>;
-}
+
 
 interface StackedAreaTrendProps {
   data: StackedPoint[];

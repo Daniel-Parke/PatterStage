@@ -9,7 +9,7 @@ import { dump, load } from 'js-yaml';
 
 // Independent T-0192 oracle infrastructure. Only owned roots and actual HTTP;
 // no production modules, operator environment, live providers or rebuilt output.
-export type WireResponse = { status: number; body: string; json: <T = Record<string, unknown>>() => T };
+type WireResponse = { status: number; body: string; json: <T = Record<string, unknown>>() => T };
 export type Runtime = {
   root: string; data: string; hermes: string; origin: string; refusalOrigin: string;
   api: (path: string, method?: string, body?: unknown) => Promise<WireResponse>;

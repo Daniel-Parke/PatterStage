@@ -11,7 +11,7 @@
 // indexed COUNT against a table this process already has open; routing them
 // through a synced key bought nothing and cost the truth.
 
-import { NextResponse } from "next/server";
+import { ok } from "@/lib/api/api-response";
 
 import { ensureSyncLayer } from "@/lib/sync";
 import { getSystemStat } from "@/lib/system/system-repository";
@@ -28,14 +28,12 @@ export const GET = route("GET /api/status", "reading system status", "Failed to 
   const sessionsTotal = listSessions({ limit: 0 }).total;
   const memoryDbSize = getSystemStat("memory.db_size") ?? "N/A";
 
-  return NextResponse.json({
-    data: {
-      soulFile: soulPresent,
-      configFile: configPresent,
-      skillsCount,
-      sessionsCount: sessionsTotal,
-      memorySize: memoryDbSize,
-      timestamp: new Date().toISOString(),
-    },
+  return ok({
+    soulFile: soulPresent,
+    configFile: configPresent,
+    skillsCount,
+    sessionsCount: sessionsTotal,
+    memorySize: memoryDbSize,
+    timestamp: new Date().toISOString(),
   });
 });

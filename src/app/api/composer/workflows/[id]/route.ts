@@ -12,9 +12,9 @@ import { guardRoute } from "@/lib/api/response-route";
 import { NextRequest, NextResponse } from "next/server";
 
 import { serverErrorFromCatch } from "@/lib/api/api-logger";
-import { ok, badRequest, notFound, serviceUnavailable } from "@/lib/api/api-response";
+import { ok, badRequest, notFound } from "@/lib/api/api-response";
 import { ensureDb } from "@/lib/db";
-import { isFeatureEnabled } from "@/lib/feature-flags";
+import { composerOff } from "@/lib/feature-flags-guard";
 import { parseAndValidateJsonBody } from "@/lib/api/parse-json-body";
 import {
   WorkflowHistoryWouldBeLost,
@@ -26,18 +26,15 @@ import {
 } from "@/lib/composer/composer-repository";
 import { workflowDefSchema } from "@/lib/composer/schema";
 import { recordEvent } from "@/lib/analytics/record-event";
-import { route } from "@/lib/api/api-route";
+import { route, type RouteContext } from "@/lib/api/api-route";
 
-interface Ctx {
-  params: Promise<{ id: string }>;
-}
+type Ctx = RouteContext<{ id: string }>;
 
 const ACTIVE_EDIT_MSG = "Cannot change a workflow with active runs — let them finish or cancel them first.";
 
 export const GET = route("GET /api/composer/workflows/[id]", (p) => `id=${p.id}`, "Failed to load workflow", async (_request: NextRequest, ctx: Ctx) => {
-  if (!isFeatureEnabled("composer")) {
-    return serviceUnavailable("Composer is not enabled. Set PS_COMPOSER=1 to enable workflows.");
-  }
+  const unavailable = composerOff();
+  if (unavailable) return unavailable;
   const { id } = await ctx.params;
   ensureDb();
   const graph = getWorkflowGraph(id);
@@ -46,9 +43,8 @@ export const GET = route("GET /api/composer/workflows/[id]", (p) => `id=${p.id}`
 });
 
 async function PUTImpl(request: NextRequest, ctx: Ctx) {
-  if (!isFeatureEnabled("composer")) {
-    return serviceUnavailable("Composer is not enabled. Set PS_COMPOSER=1 to enable workflows.");
-  }
+  const unavailable = composerOff();
+  if (unavailable) return unavailable;
   const { id } = await ctx.params;
 
   const parsed = await parseAndValidateJsonBody(request, workflowDefSchema);
@@ -82,9 +78,8 @@ async function PUTImpl(request: NextRequest, ctx: Ctx) {
 }
 
 export const DELETE = route("DELETE /api/composer/workflows/[id]", (p) => `id=${p.id}`, "Failed to delete workflow", async (request: NextRequest, ctx: Ctx) => {
-  if (!isFeatureEnabled("composer")) {
-    return serviceUnavailable("Composer is not enabled. Set PS_COMPOSER=1 to enable workflows.");
-  }
+  const unavailable = composerOff();
+  if (unavailable) return unavailable;
   const { id } = await ctx.params;
   ensureDb();
   const graph = getWorkflowGraph(id);

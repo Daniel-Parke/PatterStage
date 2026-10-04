@@ -5,7 +5,7 @@
 import { existsSync, readFileSync } from "fs";
 import { join } from "path";
 
-const WHITELIST = /^(PS_[A-Z0-9_]+|CH_[A-Z0-9_]+|INSTALL_HERMES_[A-Z0-9_]+|HERMES_HOME)$/;
+const WHITELIST = /^(PS_[A-Z0-9_]+|CH_[A-Z0-9_]+|INSTALL_HERMES_[A-Z0-9_]+|HERMES_HOME|CONTROL_HUB_DATA_DIR)$/;
 const NONBLANK_KEYS = new Set([
   "SCRIPTS_DIR", "ENABLE_DEPLOY_API",
   "REQUEST_SIGNING_SECRET", "READ_ONLY",
@@ -46,7 +46,12 @@ export function parseEnvLocal(dir) {
     if (!line || line.startsWith("#")) continue;
     const eq = line.indexOf("=");
     if (eq <= 0) continue;
-    out[line.slice(0, eq)] = line.slice(eq + 1);
+    let value = line.slice(eq + 1);
+    if (value.length >= 2 && ((value.startsWith('"') && value.endsWith('"')) ||
+        (value.startsWith("'") && value.endsWith("'")))) {
+      value = value.slice(1, -1);
+    }
+    out[line.slice(0, eq)] = value;
   }
   return out;
 }

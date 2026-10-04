@@ -5,7 +5,7 @@ import type { FallbackConfig } from "@/types/console";
 
 export function syncEnabledFallbackChainToHermes(
   config: FallbackConfig
-): { backupPath: string | null; configPath: string; hermesHome: string } | null {
+): { backupPath: string | null; configPath: string; hermesHome: string } {
   const chain = listFallbackChain()
     .filter((e) => e.enabled)
     .map((e) => ({
@@ -15,7 +15,6 @@ export function syncEnabledFallbackChainToHermes(
       overrideBaseUrl: e.overrideBaseUrl,
       apiKey: null as string | null,
     }));
-  if (chain.length === 0) return null;
   return syncFallbacksToHermesConfig(chain, {
     restorePrimaryOnFallback: config.restorePrimaryOnFallback,
     fallbackNotification: config.fallbackNotification,
@@ -35,9 +34,8 @@ export function syncEnabledFallbackChainToHermes(
  *     return NextResponse.json(...);
  *   } catch (error) { ... }
  *
- * Both `appendAuditLine` and `syncEnabledFallbackChainToHermes` are
- * non-throwing (audit has an internal try/catch; sync returns null on an
- * empty chain), so this helper itself never throws.
+ * Sync writes empty chains too. A sync failure propagates to the caller;
+ * the success audit is appended only after the configuration write succeeds.
  */
 export function commitFallbackChange(
   action: string,

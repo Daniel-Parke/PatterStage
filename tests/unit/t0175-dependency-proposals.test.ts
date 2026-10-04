@@ -50,7 +50,6 @@ describe("T-0175 nonvisual dependency proposals", () => {
 
   it("preserves every other direct dependency range", () => {
     expect(exceptProposals(manifest.dependencies, ["@tanstack/react-query", "@dagrejs/dagre"])).toEqual({
-      "@types/js-yaml": "^4.0.9",
       "@xyflow/react": "^12.11.6",
       "better-sqlite3": "^12.11.1",
       "js-yaml": "^4.2.0",
@@ -67,6 +66,7 @@ describe("T-0175 nonvisual dependency proposals", () => {
       "@testing-library/react": "^16.3.2",
       "@types/better-sqlite3": "^7.6.13",
       "@types/jest": "^30.0.0",
+      "@types/js-yaml": "^4.0.9",
       "@types/node": "^20.19.43",
       "@types/react": "^19.2.18",
       "@types/react-dom": "^19",
@@ -75,11 +75,11 @@ describe("T-0175 nonvisual dependency proposals", () => {
       "eslint-config-next": "16.3.6",
       jest: "^30.3.0",
       "jest-environment-jsdom": "^30.3.0",
+      jsdom: "26.1.0",
       knip: "^6.34.0",
       "markdown-it": "^15.0.1",
       postcss: "8.5.15",
       tailwindcss: "^4.3.1",
-      "ts-jest": "^29.4.11",
       typescript: "^5",
     });
   });

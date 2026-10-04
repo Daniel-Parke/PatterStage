@@ -16,6 +16,8 @@
 // Idempotency-Key, so this lease is defence-in-depth, not the sole guard.
 // ═══════════════════════════════════════════════════════════════
 
+import { serverLog } from "@/lib/logs/server-log";
+
 import { SyncScheduler } from "@/lib/sync/SyncScheduler";
 import type { SyncSource, SyncResult } from "@/lib/sync/types";
 import { getSystemStat, upsertMetaValue } from "@/lib/system/system-repository";
@@ -102,8 +104,7 @@ export class BackgroundScheduler {
     this.inner.register(new HeartbeatSource(() => this.refreshHeartbeat()));
     this.inner.start();
 
-    console.log(
-      `[scheduler] BackgroundScheduler started (pid=${process.pid}, owner=${this.owner})`,
+    serverLog("scheduler", "log", `BackgroundScheduler started (pid=${process.pid}, owner=${this.owner})`,
     );
   }
 
@@ -127,8 +128,7 @@ export class BackgroundScheduler {
       heartbeatFresh &&
       isPidAlive(ownerPid)
     ) {
-      console.warn(
-        `[scheduler] live owner (pid=${ownerPid}) holds the scheduling lease — standing down as follower`,
+      serverLog("scheduler", "warn", `live owner (pid=${ownerPid}) holds the scheduling lease — standing down as follower`,
       );
       return false;
     }
@@ -169,7 +169,7 @@ export function ensureBackgroundScheduler(): BackgroundScheduler {
   try {
     reconcileRunsOnBoot();
   } catch (err) {
-    console.warn("[scheduler] boot run-reconcile failed:", err);
+    serverLog("scheduler", "warn", "boot run-reconcile failed:", err);
   }
   // Module rows left mid-flight by a previous process, through the
   // composition root (ADR-0005: core does not import a module). Stories
@@ -179,7 +179,7 @@ export function ensureBackgroundScheduler(): BackgroundScheduler {
     try {
       mod.reconcileOnBoot();
     } catch (err) {
-      console.warn("[scheduler] boot " + mod.id + " reconcile failed:", err);
+      serverLog("scheduler", "warn", "boot " + mod.id + " reconcile failed:", err);
     }
   }
 
@@ -187,7 +187,7 @@ export function ensureBackgroundScheduler(): BackgroundScheduler {
   try {
     ensureDefaultComposerWorkflows();
   } catch (err) {
-    console.warn("[scheduler] composer seed failed:", err);
+    serverLog("scheduler", "warn", "composer seed failed:", err);
   }
 
   // Orchestration sources: reconcile active runs, then fire due schedules.

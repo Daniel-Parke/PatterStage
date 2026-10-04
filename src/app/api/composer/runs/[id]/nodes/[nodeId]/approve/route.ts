@@ -9,8 +9,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 
-import { ok, badRequest, notFound, serviceUnavailable } from "@/lib/api/api-response";
-import { isFeatureEnabled } from "@/lib/feature-flags";
+import { ok, badRequest, notFound } from "@/lib/api/api-response";
+import { composerOff } from "@/lib/feature-flags-guard";
 import { parseJsonBody } from "@/lib/api/parse-json-body";
 import {
   getComposerRun,
@@ -21,7 +21,7 @@ import {
 import { advanceComposerRun } from "@/lib/composer/engine";
 import { approvalActionSchema } from "@/lib/composer/schema";
 import { recordEvent } from "@/lib/analytics/record-event";
-import { route } from "@/lib/api/api-route";
+import { route, type RouteContext } from "@/lib/api/api-route";
 
 const bodySchema = z.object({ action: approvalActionSchema, note: z.string().optional() }).strict();
 
@@ -59,14 +59,11 @@ function describeNotAwaiting(run: { status: string; error: string | null }): str
   return `This run is ${run.status}, not waiting at a gate. Reload to see where it is now.`;
 }
 
-interface Ctx {
-  params: Promise<{ id: string; nodeId: string }>;
-}
+type Ctx = RouteContext<{ id: string; nodeId: string }>;
 
 export const POST = route("POST /api/composer/runs/[id]/nodes/[nodeId]/approve", (p) => `id=${p.id}`, "Failed to record approval", async (request: NextRequest, ctx: Ctx) => {
-  if (!isFeatureEnabled("composer")) {
-    return serviceUnavailable("Composer is not enabled. Set PS_COMPOSER=1 to enable workflows.");
-  }
+  const unavailable = composerOff();
+  if (unavailable) return unavailable;
 
   const { id, nodeId } = await ctx.params;
   // A guessed verb gets the two real ones and the hint, not a Zod flatten.

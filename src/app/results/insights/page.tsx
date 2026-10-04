@@ -29,6 +29,8 @@ import {
   AreaTrend, ActivityHeatmap, Donut, RadialActivityClock,
   DistributionHistogram, TopList, StackedAreaTrend,
 } from "@/components/viz";
+import type { HistogramBin } from "@/components/viz/DistributionHistogram";
+import type { StackedPoint, StackedSeries } from "@/components/viz/StackedAreaTrend";
 import { neon, neonAlpha, type NeonColor } from "@/components/viz/colors";
 import { AchievementShowcase, StreakFlame } from "@/components/achievements";
 import { Stagger, StaggerItem } from "@/components/motion";
@@ -250,7 +252,7 @@ export default function InsightsPage() {
                     <CardTitle icon={Activity} hint="Daily volume of recorded events per category over the selected range. Colours match the legend below.">Activity by category — last {days} days</CardTitle>
                     {insights && insights.categoryDaily.some((d) => Object.values(d.values).some((v) => v > 0)) ? (
                       <>
-                        <StackedAreaTrend data={insights.categoryDaily} series={insights.categorySeries} height={150} />
+                        <StackedAreaTrend data={insights.categoryDaily satisfies StackedPoint[]} series={insights.categorySeries satisfies StackedSeries[]} height={150} />
                         <div className="mt-2 flex flex-wrap gap-x-3 gap-y-1">
                           {insights.categorySeries.map((s) => (
                             <span key={s.key} className="flex items-center gap-1.5 text-body text-ps-text-muted">
@@ -314,7 +316,7 @@ export default function InsightsPage() {
                   </Card>
                   <Card>
                     <CardTitle icon={Timer} hint="How long agent runs take, bucketed (e.g. <5s, 5–15s, …). Taller bars = more runs in that range.">Run duration</CardTitle>
-                    <DistributionHistogram bins={insights?.durationBuckets ?? []} color="purple" height={150} />
+                    <DistributionHistogram bins={insights?.durationBuckets satisfies HistogramBin[] | undefined ?? []} color="purple" height={150} />
                   </Card>
                   <Card>
                     <CardTitle icon={TrendingUp} hint="Completed vs failed missions per day over the selected range.">Mission success trend</CardTitle>

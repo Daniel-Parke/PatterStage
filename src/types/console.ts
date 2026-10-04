@@ -21,6 +21,16 @@ import type { SchedulerHealth } from "@/lib/orchestration/scheduler/health";
 
 import type { MissionDraftFields } from "@/lib/missions/mission-types";
 
+/** Public credential metadata; secret-bearing records stay server-side. */
+export interface CredentialSummary {
+  id: string;
+  label: string;
+  provider: string;
+  keyHint: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
 export interface ApiResponse<T> {
   data?: T;
   error?: string;
@@ -243,3 +253,34 @@ export type AccentColor =
   | "red"
   | "blue"
   | "yellow";
+
+export interface HistogramBin {
+  label: string;
+  value: number;
+}
+
+export interface StackedSeries {
+  key: string;
+  label: string;
+  color: NeonColor;
+}
+
+export interface StackedPoint {
+  date: string;
+  /** value per series key */
+  values: Record<string, number>;
+}
+
+export interface AreaPoint {
+  date: string;
+  completed: number;
+  failed?: number;
+}
+
+export type NeonColor = "cyan" | "purple" | "pink" | "green" | "orange" | "yellow";
+
+export type ToastType = "success" | "error" | "info";
+
+export interface FeedbackContextValue {
+  showToast: (message: string, type?: ToastType) => void | (() => void);
+}

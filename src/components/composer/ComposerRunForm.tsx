@@ -54,7 +54,9 @@ export default function ComposerRunForm({
   submitting: boolean;
   onRun: () => void;
 }) {
-  const { data: graph } = useComposerWorkflowGraph(activeWorkflowId || null);
+  const graphRead = useComposerWorkflowGraph(activeWorkflowId || null);
+  const graph = graphRead.data?.id === activeWorkflowId && !graphRead.error ? graphRead.data : undefined;
+  const graphReady = Boolean(graph && !graphRead.isLoading);
   const spec = graph ? getInputSpec(graph) : null;
   const objectiveLabel = spec?.objectiveLabel ?? "Objective";
   const objectiveHint = spec?.objectiveHint || DEFAULT_HINT;
@@ -71,6 +73,7 @@ export default function ComposerRunForm({
 
   const [confirming, setConfirming] = useState(false);
   function confirmAndRun() {
+    if (!graphReady || !workflow || tooShort || submitting) return;
     setConfirming(false);
     onRun();
   }
@@ -152,7 +155,7 @@ export default function ComposerRunForm({
           color="cyan"
           loading={submitting}
           onClick={() => setConfirming(true)}
-          disabled={tooShort || !workflow}
+          disabled={tooShort || !workflow || !graphReady}
         >
           {/* "Review…", not "Review & run": the ellipsis is the convention for
               a control that opens a further step, and this one opens the
@@ -161,6 +164,11 @@ export default function ComposerRunForm({
           {!submitting ? <Play className="h-4 w-4" /> : null} Review…
         </Button>
       </div>
+      {!graphReady && workflow ? (
+        <p role="status" className="mt-1.5 text-body text-ps-text-muted">
+          {graphRead.error ? "Workflow details are unavailable. Reload the page to retry." : "Loading workflow details before review…"}
+        </p>
+      ) : null}
       {tooShort ? (
         <p className="mt-1.5 text-right text-body text-ps-text-muted">Describe your objective (≥ 3 characters) to enable the run.</p>
       ) : null}
@@ -182,6 +190,7 @@ export default function ComposerRunForm({
             variant="primary"
             color={writeStages.length > 0 ? "orange" : "cyan"}
             loading={submitting}
+            disabled={!graphReady || !workflow || tooShort}
             onClick={confirmAndRun}
           >
             <Play className="h-4 w-4" />

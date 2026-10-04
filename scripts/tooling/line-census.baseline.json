@@ -1,12 +1,12 @@
 {
-  "measuredAt": "2026-10-03",
+  "measuredAt": "2026-10-04",
   "counts": {
-    "srcLines": 102132,
-    "testLines": 147076,
-    "scriptsLines": 13667,
-    "srcRepeatedWindowLines": 807,
-    "testRepeatedWindowLines": 4796,
-    "routesWithTryCatch": 18,
+    "srcLines": 102070,
+    "testLines": 150463,
+    "scriptsLines": 13597,
+    "srcRepeatedWindowLines": 705,
+    "testRepeatedWindowLines": 4787,
+    "routesWithTryCatch": 11,
     "handRolledReadHooks": 2,
     "writeHooksWithoutMutation": 0,
     "repeatedTypeShapeFiles": 2,
@@ -1225,6 +1225,11 @@
       "measuredAt": "2026-10-03",
       "rise": "testLines rose from 147075 to 147076",
       "reason": "T-0191 independent mutation-attribution amendment adds one explicit cardinality assertion before preserved timer visibility;23case identities and all other behaviour unchanged. Original18KILLED1ERROR retained; exact candidate04bd5c1e reviewed by Laplace and23controls/type/lint pass. No production or runner change."
+    },
+    {
+      "measuredAt": "2026-10-04",
+      "rise": "testLines rose from 147076 to 150463",
+      "reason": "T-0192 adds 3387 net test lines (147076 to 150463) for regression and contract oracles with recorded authorship and independent review. Historical test identities and coverage floors are preserved. Fixed programme targets remain unchanged. One-importer components remain 103 after shared chart types retain legitimate UI boundary consumers."
     }
   ]
 }

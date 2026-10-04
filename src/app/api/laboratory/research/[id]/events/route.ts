@@ -1,3 +1,4 @@
+import type { RouteContext } from "@/lib/api/api-route";
 // ═══════════════════════════════════════════════════════════════
 // GET /api/laboratory/research/[id]/events — live SSE for a research run
 //
@@ -15,9 +16,7 @@ import {
   listResearchSteps,
 } from "@/lib/laboratory/deep-research/research-repository";
 
-interface Ctx {
-  params: Promise<{ id: string }>;
-}
+type Ctx = RouteContext<{ id: string }>;
 
 const TERMINAL = new Set(["completed", "failed", "cancelled"]);
 

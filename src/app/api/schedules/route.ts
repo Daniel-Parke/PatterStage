@@ -12,9 +12,8 @@ import { ok, created, badRequest } from "@/lib/api/api-response";
 import { parseAndValidateJsonBody } from "@/lib/api/parse-json-body";
 import { listSchedules, createSchedule } from "@/lib/schedule/schedules-repository";
 import { boundsFrom, SCHEDULE_LIST_BOUNDS } from "@/lib/ui/list-bounds";
-import { parseSchedule } from "@/lib/schedule/parse-schedule";
-import { computeNextRun, scheduleCanEverFire } from "@/lib/schedule/next-run";
-import { scheduleIntervalProblem } from "@/lib/schedule/interval-bounds";
+import { computeNextRun } from "@/lib/schedule/next-run";
+import { scheduleProblem } from "@/lib/schedule/schedule-problem";
 import { recordEvent } from "@/lib/analytics/record-event";
 import { route } from "@/lib/api/api-route";
 
@@ -52,25 +51,8 @@ export const POST = route("POST /api/schedules", "create", "Failed to create sch
   if (kind === "script" && !parsed.scriptName) {
     return badRequest("scriptName is required for a script schedule");
   }
-  if (parseSchedule(parsed.schedule).kind === "invalid") {
-    return badRequest(`Unrecognized schedule: ${parsed.schedule}`);
-  }
-  // Shape is not satisfiability. `0 0 30 2 *` is five well-formed fields
-  // naming a date that never comes: it stored enabled, computed a null
-  // next-run, and getDueSchedules filters `next_run_at IS NOT NULL` -- so
-  // the row sat enabled forever and dead forever (T-0079).
-  if (!scheduleCanEverFire(parsed.schedule)) {
-    return badRequest(
-      `Schedule "${parsed.schedule}" can never fire: it names a date that does not ` +
-        `exist, or a field outside its range. Check the day-of-month against the month.`,
-    );
-  }
-  // And how OFTEN is a third question. `every 0m` names a moment that is
-  // always reachable: the one you are standing in. It stored happily, was due
-  // again on the tick that had just fired it, and every tick of that loop
-  // dispatched a real agent run at a paid provider.
-  const tooFrequent = scheduleIntervalProblem(parsed.schedule);
-  if (tooFrequent) return badRequest(tooFrequent);
+  const problem = scheduleProblem(parsed.schedule);
+  if (problem) return badRequest(problem);
   const next = computeNextRun(parsed.schedule, new Date());
   const schedule = createSchedule({
     kind,

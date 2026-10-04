@@ -4,9 +4,9 @@
 // ═══════════════════════════════════════════════════════════════
 
 import { guardRoute } from "@/lib/api/response-route";
+import { route } from "@/lib/api/api-route";
 import { NextRequest, NextResponse } from "next/server";
 import { isReadOnly, requireAuthenticatedHostWrites } from "@/lib/api/api-auth";
-import { serverErrorFromCatch } from "@/lib/api/api-logger";
 import { ok, badRequest, notFound, serviceUnavailable } from "@/lib/api/api-response";
 import { readOnlyMessage } from "@/lib/api/read-only";
 import { parseJsonBody } from "@/lib/api/parse-json-body";
@@ -26,7 +26,7 @@ async function POSTImpl(request: NextRequest) {
   const name = typeof (bodyResult as { name?: unknown }).name === "string" ? (bodyResult as { name: string }).name : "";
   if (!name) return badRequest("name is required");
 
-  try {
+  return route("POST /api/scripts/run", name, "Failed to run script", async () => {
     const result = await runScriptFile(name);
     if (result.outcome === "not-started") {
       // A script that is not there is a lookup that found nothing: a 404, and
@@ -49,9 +49,7 @@ async function POSTImpl(request: NextRequest) {
       metadata: { outcome: result.outcome, exitCode: result.exitCode },
     });
     return ok({ name, outcome: result.outcome, exitCode: result.exitCode, ok: result.ok });
-  } catch (error) {
-    return serverErrorFromCatch("POST /api/scripts/run", name, error, "Failed to run script");
-  }
+  })();
 }
 
 export const POST = guardRoute(POSTImpl);

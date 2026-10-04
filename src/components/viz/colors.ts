@@ -1,7 +1,8 @@
 // Shared color helpers for the viz primitives. Everything resolves to the neon
 // design tokens in globals.css so charts stay on-theme automatically.
 
-export type NeonColor = "cyan" | "purple" | "pink" | "green" | "orange" | "yellow";
+import type { NeonColor } from "@/types/console";
+export type { NeonColor } from "@/types/console";
 
 /** Solid token color, e.g. var(--color-neon-cyan). */
 export const neon = (c: NeonColor): string => `var(--color-neon-${c})`;

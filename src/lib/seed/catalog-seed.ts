@@ -2,6 +2,8 @@
 // catalog-seed.ts — Seed professional catalog into SQLite
 // ═══════════════════════════════════════════════════════════════
 
+import { serverLog } from "@/lib/logs/server-log";
+
 import { existsSync, readFileSync, writeFileSync } from "fs";
 import { join } from "path";
 
@@ -227,7 +229,7 @@ function seedMemories(mode: SeedMode, strict: boolean): number {
 function seedTemplates(mode: SeedMode, idFilter?: string, strict = false): number {
   if (!existsSync(TEMPLATE_PACK)) {
     if (strict) throw new Error("Bundled template pack is missing");
-    console.warn(`catalog-seed: missing ${TEMPLATE_PACK}`);
+    serverLog("seed", "warn", `catalog-seed: missing ${TEMPLATE_PACK}`);
     return 0;
   }
   const pack = JSON.parse(readFileSync(TEMPLATE_PACK, "utf-8")) as TemplatePack;
@@ -340,7 +342,7 @@ export function runCatalogSeed(options: SeedTarget): SeedResult {
       // One module failing must not lose the catalogs core already seeded, nor
       // take down boot: ensureCatalogSeededOnce runs this on every start. Logged
       // rather than swallowed, because unlike a missing agent this IS a fault.
-      console.warn(`[seed] module ${m.id} failed to seed its catalog:`, err);
+      serverLog("seed", "warn", `module ${m.id} failed to seed its catalog:`, err);
       continue;
     }
     if (!seeded) continue;

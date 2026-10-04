@@ -10,15 +10,15 @@
 // tick and read by nobody -- work done for no reader, under a comment that sent
 // the next person looking for a writer that was never there (T-0081).
 //
-// All filesystem I/O is async (fs.promises) so the event loop is
-// not blocked while reading config.yaml. While config.yaml is
-// normally small, a user-edited file with bloat could become
-// multi-megabyte; the synchronous readFileSync was a latent
-// event-loop block. See SyncScheduler for the per-source timeout.
+// On Windows, read and close config.yaml within one turn: an asynchronous
+// read handle can prevent a concurrent atomic replacement. This content read
+// blocks the event loop; the scheduler timeout cannot interrupt it. Existence
+// checks remain asynchronous, as do content reads on other platforms.
 // ═══════════════════════════════════════════════════════════════
 
 import { access, constants } from "fs/promises";
 import { readFile } from "fs/promises";
+import { readFileSync } from "fs";
 import yaml from "js-yaml";
 import { getActiveHermesPaths } from "../lib/agent-runtime";
 import { setMultipleStats } from "@/lib/system/system-repository";
@@ -61,7 +61,9 @@ export class ConfigSync implements SyncSource {
         return syncSuccess(this.name, 2, start);
       }
 
-      const raw = await readFile(configPath, "utf-8");
+      const raw = process.platform === "win32"
+        ? readFileSync(configPath, "utf-8")
+        : await readFile(configPath, "utf-8");
 
       // yaml.load can throw on duplicate keys (PR #135 fix). Treat that
       // as a non-fatal sync result — the API route layer has its own

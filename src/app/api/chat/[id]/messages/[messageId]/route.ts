@@ -17,9 +17,9 @@ import {
   type ChatMessageStatus,
   type ToolCallRecord,
 } from "@/lib/chat/chat-repository";
-import { route } from "@/lib/api/api-route";
+import { route, type RouteContext } from "@/lib/api/api-route";
 
-type Ctx = { params: Promise<{ id: string; messageId: string }> };
+type Ctx = RouteContext<{ id: string; messageId: string }>;
 
 const TERMINAL: ReadonlySet<string> = new Set(["complete", "failed", "cancelled", "streaming"]);
 

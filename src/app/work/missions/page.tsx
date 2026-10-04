@@ -33,45 +33,6 @@ export default function MissionsPage() {
     handleEditTemplate,
     handleDeleteTemplate,
     categoryFilter,
-    showTemplateEditor,
-    editingTemplateId,
-    templateName,
-    setTemplateName,
-    templateDescription,
-    setTemplateDescription,
-    templateIcon,
-    setTemplateIcon,
-    templateColor,
-    setTemplateColor,
-    templateSaving,
-    templateInstruction,
-    setTemplateInstruction,
-    templateContext,
-    setTemplateContext,
-    templateGoals,
-    setTemplateGoals,
-    templateProfile,
-    setTemplateProfile,
-    templateModel,
-    templateProvider,
-    setTemplateModelAndProvider,
-    templateMissionTime,
-    setTemplateMissionTime,
-    templateTimeout,
-    setTemplateTimeout,
-    templateLocalDirs,
-    setTemplateLocalDirs,
-    templateLocalDirDraft,
-    setTemplateLocalDirDraft,
-    templateReferences,
-    setTemplateReferences,
-    templateReferenceInput,
-    setTemplateReferenceInput,
-    templateSkills,
-    setTemplateSkills,
-    templateCategoryId,
-    setTemplateCategoryId,
-    handleTemplateSave,
     missions,
     formState,
     setFormField,
@@ -102,12 +63,6 @@ export default function MissionsPage() {
   const closeCategoryManager = vm.closeCategoryManager;
   const closeTemplateManager = vm.closeTemplateManager;
   const openCategoryManager = vm.openCategoryManager;
-  // One close path. The editor used to have two, a SOFT close that left
-  // editingTemplateId set and a HARD one that cleared it, described in a long
-  // comment as a deliberate discriminator. It was the defect: a soft close and
-  // then Save as Template on an unrelated mission sent action:"update" against
-  // whatever had last been open (T-0104, D70). closeTemplateEditor clears it.
-  const closeTemplateEditor = vm.closeTemplateEditor;
 
   // One header, both shells. The loading branch used to render none at all, so
   // the busiest screen in the product opened as an unnamed spinner: no title,
@@ -247,51 +202,7 @@ export default function MissionsPage() {
         onCreateTemplate={handleCreateNewTemplate}
       />
 
-      <TemplateEditorModal
-        open={showTemplateEditor}
-        onClose={closeTemplateEditor}
-        onCancel={closeTemplateEditor}
-        editingTemplateId={editingTemplateId}
-        templateName={templateName}
-        onTemplateNameChange={setTemplateName}
-        templateDescription={templateDescription}
-        onTemplateDescriptionChange={setTemplateDescription}
-        templateIcon={templateIcon}
-        onTemplateIconChange={setTemplateIcon}
-        templateColor={templateColor}
-        onTemplateColorChange={setTemplateColor}
-        templateSaving={templateSaving}
-        onSave={handleTemplateSave}
-        categories={mapCategories(categories)}
-        categoryId={templateCategoryId}
-        onCategoryChange={setTemplateCategoryId}
-        onCreateCategory={handleCreateCategory}
-        newInstruction={templateInstruction}
-        onNewInstructionChange={setTemplateInstruction}
-        newContext={templateContext}
-        onNewContextChange={setTemplateContext}
-        newGoals={templateGoals}
-        onNewGoalsChange={setTemplateGoals}
-        newProfile={templateProfile}
-        onNewProfileChange={setTemplateProfile}
-        newModel={templateModel}
-        newProvider={templateProvider}
-        onModelChange={setTemplateModelAndProvider}
-        newMissionTime={templateMissionTime}
-        onNewMissionTimeChange={setTemplateMissionTime}
-        newTimeout={templateTimeout}
-        onNewTimeoutChange={setTemplateTimeout}
-        newLocalDirs={templateLocalDirs}
-        onNewLocalDirsChange={setTemplateLocalDirs}
-        localDirDraft={templateLocalDirDraft}
-        onLocalDirDraftChange={setTemplateLocalDirDraft}
-        newReferences={templateReferences}
-        onNewReferencesChange={setTemplateReferences}
-        referenceInput={templateReferenceInput}
-        onReferenceInputChange={setTemplateReferenceInput}
-        newSkills={templateSkills}
-        onNewSkillsChange={setTemplateSkills}
-      />
+      <TemplateEditorModal {...vm.templateEditorProps} />
     </AppPageShell>
   );
 }

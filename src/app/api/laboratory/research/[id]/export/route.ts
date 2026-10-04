@@ -1,3 +1,4 @@
+import type { RouteContext } from "@/lib/api/api-route";
 // ═══════════════════════════════════════════════════════════════
 // GET /api/laboratory/research/[id]/export — standalone interactive HTML report
 // ═══════════════════════════════════════════════════════════════
@@ -9,9 +10,7 @@ import { ensureDb } from "@/lib/db";
 import { getResearchRun, listResearchSteps } from "@/lib/laboratory/deep-research/research-repository";
 import { buildExportHtml } from "@/lib/laboratory/deep-research/report";
 
-interface Ctx {
-  params: Promise<{ id: string }>;
-}
+type Ctx = RouteContext<{ id: string }>;
 
 async function GETImpl(_request: NextRequest, ctx: Ctx) {
   const { id } = await ctx.params;

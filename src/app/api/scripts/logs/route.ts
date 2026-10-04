@@ -3,9 +3,9 @@
 // ═══════════════════════════════════════════════════════════════
 
 import { guardRoute } from "@/lib/api/response-route";
+import { route } from "@/lib/api/api-route";
 import { NextRequest } from "next/server";
 
-import { serverErrorFromCatch } from "@/lib/api/api-logger";
 import { ok, badRequest } from "@/lib/api/api-response";
 import { tailScriptLog } from "@/lib/scripts/scripts-manager";
 
@@ -16,12 +16,10 @@ async function GETImpl(request: NextRequest) {
   const linesParam = Number(searchParams.get("lines"));
   const lines = Number.isFinite(linesParam) && linesParam > 0 ? Math.min(linesParam, 2000) : 200;
 
-  try {
+  return route("GET /api/scripts/logs", name, "Failed to read script log", async () => {
     const log = tailScriptLog(name, lines);
     return ok({ name, log: log ?? "", hasLog: log !== null });
-  } catch (error) {
-    return serverErrorFromCatch("GET /api/scripts/logs", name, error, "Failed to read script log");
-  }
+  })();
 }
 
 export const GET = guardRoute(GETImpl);

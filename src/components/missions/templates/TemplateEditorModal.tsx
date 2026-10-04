@@ -71,7 +71,7 @@ const ICON_MAP: Record<string, React.ComponentType<{ className?: string }>> = {
   RefreshCw,
 };
 
-interface TemplateEditorModalProps {
+export interface TemplateEditorModalProps {
   open: boolean;
   onClose: () => void;
   onCancel: () => void;
@@ -208,7 +208,7 @@ export function TemplateEditorModal({
             onCreateCategory={onCreateCategory}
           />
         )}
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
           <div>
             <label className="text-micro text-ps-text-muted font-mono block mb-1">
               Template Name

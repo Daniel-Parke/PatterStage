@@ -1,10 +1,7 @@
 import { neon, neonAlpha, gradId, type NeonColor } from "./colors";
 
-export interface AreaPoint {
-  date: string;
-  completed: number;
-  failed?: number;
-}
+import type { AreaPoint } from "@/types/console";
+export type { AreaPoint } from "@/types/console";
 
 interface AreaTrendProps {
   data: AreaPoint[];

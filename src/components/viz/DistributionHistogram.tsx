@@ -1,10 +1,8 @@
 import { neon, neonAlpha, type NeonColor } from "./colors";
 import { niceMax } from "./geometry";
 
-export interface HistogramBin {
-  label: string;
-  value: number;
-}
+import type { HistogramBin } from "@/types/console";
+export type { HistogramBin } from "@/types/console";
 
 interface DistributionHistogramProps {
   bins: HistogramBin[];

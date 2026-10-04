@@ -257,7 +257,11 @@ export function useSettingsEditor() {
               setSettled((s) => ({ ...s, [id]: settle({ ...original, ...changed }) }));
               setDrafts((d) => {
                 const next = { ...d };
-                delete next[id];
+                const remaining = Object.fromEntries(Object.entries(d[id] ?? {}).filter(
+                  ([key, value]) => JSON.stringify(value) !== JSON.stringify(values[key]),
+                ));
+                if (Object.keys(remaining).length) next[id] = remaining;
+                else delete next[id];
                 return next;
               });
             }

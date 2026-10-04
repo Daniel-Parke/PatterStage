@@ -22,6 +22,8 @@
 // touching it.
 // ═══════════════════════════════════════════════════════════════
 
+import { serverLog } from "@/lib/logs/server-log";
+
 import type Database from "better-sqlite3";
 
 import { getDb } from "../db";
@@ -89,7 +91,7 @@ function reportSkips(skipped: number, samples: string[]): void {
     if (lastSkipSignature !== null) {
       // The drained transition. Without it the log simply stops, and an operator
       // cannot tell "it cleared" from "the sync died".
-      console.warn("[syncHermesSessionsToDb] session skips cleared");
+      serverLog("sessions", "warn", "session skips cleared");
       lastSkipSignature = null;
     }
     return;
@@ -103,8 +105,7 @@ function reportSkips(skipped: number, samples: string[]): void {
   // through logApiError said "Error" four times a minute for a stable,
   // non-actionable condition, which is how it trained an operator's watchdog to
   // treat this file as noise.
-  console.warn(
-    `[syncHermesSessionsToDb] skipped ${skipped} session(s). ` +
+  serverLog("sessions", "warn", `skipped ${skipped} session(s). ` +
       `Causes (up to ${MAX_SKIP_SAMPLES}): ${samples.join(" | ")}`,
   );
 }

@@ -4,7 +4,7 @@
 // unwrap `{ data: { ...inner } }`, type the payload per action. The POST
 // surface (create / update / refresh / delete) goes through `runWrite`.
 
-import type { FeedbackContextValue } from "@/components/ui/feedback-context";
+import type { FeedbackContextValue } from "@/types/console";
 import { safeApiCall } from "@/lib/api/api-fetch";
 
 type ShowToast = (message: string, tone?: Extract<Parameters<FeedbackContextValue["showToast"]>[1], "success" | "error" | "info">) => void;

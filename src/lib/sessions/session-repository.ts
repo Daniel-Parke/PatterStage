@@ -16,6 +16,8 @@
 // Schema: src/lib/db/migrations/009_sessions.sql
 // ═══════════════════════════════════════════════════════════════
 
+import { serverLog } from "@/lib/logs/server-log";
+
 import { getDb, uuid, now } from "../db";
 import { syncHermesSessionsToDb } from "./session-sync";
 import { API_NOISE_MAX_BYTES, API_NOISE_MAX_DURATION_MS } from "./session-filters";
@@ -417,7 +419,7 @@ export function listSessions(opts: ListSessionsOptions = {}): {
     try {
       syncHermesSessionsToDb();
     } catch (e) {
-      console.warn("[listSessions] syncIfActive sync failed, returning stale data:", e);
+      serverLog("sessions", "warn", "syncIfActive sync failed, returning stale data:", e);
     }
   }
 

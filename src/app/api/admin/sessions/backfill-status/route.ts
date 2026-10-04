@@ -40,7 +40,7 @@ async function POSTImpl(request: NextRequest) {
   try {
     body = (await request.json().catch(() => ({}))) as { dryRun?: boolean };
   } catch {
-    // empty body is fine — defaults to dryRun=false
+    // An empty body defaults to dryRun=true.
   }
   const dryRun = body.dryRun !== false; // default to dry-run for safety
 

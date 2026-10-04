@@ -12,6 +12,10 @@ compiled_from: normalised
 
 Quick lookup for PatterStage and Hermes paths. Set values in `.env.local` (created by `scripts/bootstrap/setup.sh`) or export them before `npm run start`.
 
+The explicit migration, catalogue seed, Hermes import, model-sync and retention commands keep nonempty shell values. Their shared loader fills missing or empty values from `.env.local`; the first nonempty duplicate wins. An explicit `--hermes-home` argument to the import command takes precedence afterwards.
+
+The deployment runner reloads its whitelisted `.env.local` values before starting the server, so file values replace inherited values and the last duplicate wins. Matched outer single or double quotes are removed. `PORT` is an exception: an inherited value takes precedence over the file. Deployment accepts `CONTROL_HUB_DATA_DIR` as a legacy fallback without creating a `PS_DATA_DIR` value from it.
+
 > **Env naming:** canonical variables use the **`PS_`** prefix. The legacy **`CH_`** names (and `CONTROL_HUB_*`) are still read as fallbacks through v1.0.0, so an existing `.env.local` keeps working. A boot warning names a legacy key only when it supplied the selected value; it never prints that value. These aliases retire in the first release after v1.0.0. Move to the canonical names before then. See [MIGRATION.md → Path & environment rename](migration.md#path--environment-rename-control-hub--patterstage).
 
 | Deprecated input | Replacement |
@@ -46,6 +50,7 @@ Quick lookup for PatterStage and Hermes paths. Set values in `.env.local` (creat
 | `PS_DATA_DIR` / `CONTROL_HUB_DATA_DIR` | `~/patterstage/data` | PatterStage SQLite, missions JSON, templates, stories, hardware scripts |
 | `PS_SCRIPTS_DIR` | `{PS_DATA_DIR}/scripts` | System cron script prefix (must match crontab entries) |
 | `PS_HARDWARE_LOG_DIR` | `{PS_DATA_DIR}/logs` | Hardware cron log output |
+| `PS_LOG_RETENTION_DAYS` | `30` days | Age threshold for pruning compressed hardware logs when `ps-log-rotate` runs. Applies to `.log.gz` files in the hardware log directory. |
 | `PS_DB_BACKUP_DIR` | `{PS_DATA_DIR}/backups/db` | Where database snapshots are written and listed from (Settings > System, and the snapshot taken before a restore or a purge) |
 | `PORT` | `42069` (or first free in 42069, 42100 at setup) | Next.js listen port |
 
@@ -86,6 +91,9 @@ Enforced in `src/proxy.ts` for every request. See [SECURITY.md](../SECURITY.md) 
 |----------|---------|
 | `PS_ENABLE_DEPLOY_API` | Gates `POST /api/update`: Update, Rebuild and Restart on Settings › System (they left the sidebar in the final-release regroup; the rail keeps a version line and an "Update available" badge). Setup writes `true` on a fresh install and never overwrites a value already there, so the buttons work out of the box and stay off if you turned them off. Set `0`/`false`/`no` to close the route; the page says so before the click. Unset (an install that predates setup writing it), the gate is open whenever `NODE_ENV !== "production"` and closed in production. |
 | `PS_UPDATE_GIT_BRANCH` | Branch for `ps-deploy update` (default `dev`) |
+| `PS_DEPLOY_STATUS_FILE` | Deployment status file. The Node deploy runner defaults to `{HERMES_HOME}/logs/ps-deploy.status`; the shell status helper defaults to `$HOME/.hermes/logs/ps-deploy.status`. Set the same explicit path if both are used with a custom Hermes root. |
+| `PS_RUNTIME_LOG` | Standard output and error log for the server started by the Node deploy runner. Defaults to `{HERMES_HOME}/logs/ps-runtime.log`. |
+| `PS_NEXT_BIND_HOST` | Bind address for the Node deploy runner's restart action. Defaults to `127.0.0.1`. A non-loopback address requires the configured public origin and network access mode to pass the same network-startup checks. |
 | `PS_REQUEST_SIGNING_SECRET` | Optional HMAC on `POST /api/update`, the only route that checks it. When set, the request must carry `x-ps-ts` and `x-ps-signature` inside a 5 minute window. **The signature does not cover the request body**, and there is no nonce, so a captured signed request can be replayed with another action or branch inside that window. **Setting it also turns off the in-app deploy buttons**: Update, Rebuild and Restart send no signature and answer 401 `Missing signature headers`. Set it only if you drive the route from your own signed client. |
 
 ## Runtime / gateway

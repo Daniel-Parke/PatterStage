@@ -15,7 +15,6 @@ import { getLatestRunForMission, listLatestRunsForMissions } from "@/lib/runs/ru
 import { buildMissionRunView } from "@/lib/orchestration/run-deadline";
 import { getScheduleForMission, listSchedulesForMissions } from "@/lib/schedule/schedules-repository";
 import { toMissionScheduleView } from "@/lib/missions/mission-schedule-view";
-import { serverErrorFromCatch } from "@/lib/api/api-logger";
 import { parseJsonBody } from "@/lib/api/parse-json-body";
 import { badRequest, ok } from "@/lib/api/api-response";
 import { ensureSyncLayer } from "@/lib/sync";
@@ -39,7 +38,7 @@ async function GETImpl(request: NextRequest) {
   const url = new URL(request.url);
   const id = url.searchParams.get("id");
 
-  try {
+  return route("GET /api/missions", id ? `mission ${id}` : "listing missions", "Failed to load missions", async () => {
     if (id) {
       const mission = getMissionOrNotFound(id);
       if (mission instanceof NextResponse) return mission;
@@ -78,9 +77,7 @@ async function GETImpl(request: NextRequest) {
         scheduleStatus: toMissionScheduleView(schedules.get(m.id) ?? null),
       })),
     });
-  } catch (error) {
-    return serverErrorFromCatch("GET /api/missions", id ? `mission ${id}` : "listing missions", error, "Failed to load missions");
-  }
+  })();
 }
 
 // ── POST ──────────────────────────────────────────────────────

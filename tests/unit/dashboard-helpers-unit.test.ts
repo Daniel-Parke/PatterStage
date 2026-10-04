@@ -2,7 +2,6 @@
 // `src/components/dashboard/DispatchStrip.tsx` — the dashboard's Mission
 // Dispatch strip, which uses it to build the compose URL.
 
-import { describe, it, expect } from "@jest/globals";
 import { composeTemplateUrl } from "@/components/dashboard/DispatchStrip";
 
 describe("composeTemplateUrl", () => {

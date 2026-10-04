@@ -33,7 +33,7 @@ const ROOT = fileURLToPath(new URL("../..", import.meta.url));
  * template, a batch record — quotes it from here rather than restating it.
  */
 export const STEPS = [
-  { name: "lint", command: "npm run lint", why: "the twelve checks, from agent files to eslint" },
+  { name: "lint", command: "npm run lint", why: "the thirteen checks, from agent files to script types" },
   { name: "tsc", command: "npx tsc --noEmit", why: "the app's own program" },
   { name: "jest", command: "npm run test:coverage", why: "the unit corpus with the coverage floors CI enforces" },
   { name: "knip", command: "npm run lint:knip", why: "files, exports and dependencies nothing reaches" },

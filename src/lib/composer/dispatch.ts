@@ -11,6 +11,7 @@ import { now } from "@/lib/db";
 import { runtime } from "@/lib/runtime";
 import { messageFromError } from "@/lib/api/api-fetch";
 import { logApiError } from "@/lib/api/api-logger";
+import { serverLog } from "@/lib/logs/server-log";
 import { createRun, attachBackendRun, updateRun } from "@/lib/runs/runs-repository";
 import { createResearchRun } from "@/lib/laboratory/deep-research/research-repository";
 import { runResearchJob } from "@/lib/laboratory/deep-research/run-job";
@@ -73,7 +74,9 @@ async function dispatchResearchNode(
     // Fire-and-forget; nudge the workflow forward when it settles. The composer
     // tick is the cross-restart backstop (+ a cap in the engine).
     void runResearchJob(research.id, query, config).finally(() => {
-      void import("./engine").then((m) => m.advanceComposerRun(run.id)).catch(() => {});
+      void import("./engine").then((m) => m.advanceComposerRun(run.id)).catch(() => {
+        serverLog("composer", "warn", `Research continuation failed for run ${run.id}`);
+      });
     });
     return { ok: true, nodeRunId: nodeRun.id };
   } catch (err) {
@@ -137,7 +140,9 @@ async function dispatchGroupNode(run: ComposerRun, node: ComposerNode): Promise<
     updateNodeRun(nodeRun.id, { status: "running" });
     // Kick the child run; the composer tick is the backstop, and the child
     // nudges this parent to settle when it terminates.
-    void import("./engine").then((m) => m.advanceComposerRun(childRun.id)).catch(() => {});
+    void import("./engine").then((m) => m.advanceComposerRun(childRun.id)).catch(() => {
+      serverLog("composer", "warn", `Child continuation failed for run ${childRun.id} (parent ${run.id})`);
+    });
     return { ok: true, nodeRunId: nodeRun.id };
   } catch (err) {
     const message = messageFromError(err, "group stage dispatch failed");

@@ -12,7 +12,7 @@ import { guardRoute } from "@/lib/api/response-route";
 import { NextRequest, NextResponse } from "next/server";
 
 import { parseAndValidateJsonBody } from "@/lib/api/parse-json-body";
-import { logApiError, serverErrorFromCatch } from "@/lib/api/api-logger";
+import { logApiError } from "@/lib/api/api-logger";
 import { toError } from "@/lib/api/api-fetch";
 import { appendAuditLine } from "@/lib/api/audit-log";
 import {
@@ -39,7 +39,7 @@ async function POSTImpl(request: NextRequest) {
   const parsed = await parseAndValidateJsonBody(request, fallbackActionSchema);
   if (parsed instanceof NextResponse) return parsed;
 
-  try {
+  return route("POST /api/models/fallbacks", `fallback action ${parsed.action}`, "Failed to process fallback action", async () => {
     switch (parsed.action) {
       // ── Add from registry ──────────────────────────────────────
       case "add": {
@@ -133,14 +133,7 @@ async function POSTImpl(request: NextRequest) {
         }
       }
     }
-  } catch (error) {
-    return serverErrorFromCatch(
-      "POST /api/models/fallbacks",
-      `fallback action ${parsed.action}`,
-      error,
-      "Failed to process fallback action",
-    );
-  }
+  })();
 }
 
 export const POST = guardRoute(POSTImpl);

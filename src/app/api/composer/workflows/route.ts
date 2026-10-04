@@ -8,9 +8,9 @@
 
 import { NextRequest, NextResponse } from "next/server";
 
-import { ok, created, serviceUnavailable } from "@/lib/api/api-response";
+import { ok, created } from "@/lib/api/api-response";
 import { ensureDb } from "@/lib/db";
-import { isFeatureEnabled } from "@/lib/feature-flags";
+import { composerOff } from "@/lib/feature-flags-guard";
 import { parseAndValidateJsonBody } from "@/lib/api/parse-json-body";
 import { createWorkflowFromDef, listWorkflows } from "@/lib/composer/composer-repository";
 import { workflowDefSchema } from "@/lib/composer/schema";
@@ -18,17 +18,15 @@ import { recordEvent } from "@/lib/analytics/record-event";
 import { route } from "@/lib/api/api-route";
 
 export const GET = route("GET /api/composer/workflows", "list", "Failed to list workflows", async () => {
-  if (!isFeatureEnabled("composer")) {
-    return serviceUnavailable("Composer is not enabled. Set PS_COMPOSER=1 to enable workflows.");
-  }
+  const unavailable = composerOff();
+  if (unavailable) return unavailable;
   ensureDb();
   return ok({ workflows: listWorkflows() });
 });
 
 export const POST = route("POST /api/composer/workflows", "create", "Failed to create workflow", async (request: NextRequest) => {
-  if (!isFeatureEnabled("composer")) {
-    return serviceUnavailable("Composer is not enabled. Set PS_COMPOSER=1 to enable workflows.");
-  }
+  const unavailable = composerOff();
+  if (unavailable) return unavailable;
 
   const parsed = await parseAndValidateJsonBody(request, workflowDefSchema);
   if (parsed instanceof NextResponse) return parsed;

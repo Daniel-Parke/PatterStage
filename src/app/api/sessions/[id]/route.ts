@@ -1,4 +1,5 @@
 import { guardRoute } from "@/lib/api/response-route";
+import { route } from "@/lib/api/api-route";
 import { NextRequest } from "next/server";
 import { readFileSync, statSync } from "fs";
 import { basename } from "path";
@@ -6,7 +7,7 @@ import { basename } from "path";
 import { getAgentWorkspace } from "@/lib/runtime/workspace";
 import { readAgentSessionDetail } from "@/lib/runtime/state-db";
 import { getMaxSessionMessages } from "@/lib/sessions/sessions-api-guard";
-import { logApiError, serverErrorFromCatch } from "@/lib/api/api-logger";
+import { logApiError } from "@/lib/api/api-logger";
 
 import { badRequest, notFound, ok, payloadTooLarge } from "@/lib/api/api-response";
 import { safeStat } from "@/lib/fs/fs-stats";
@@ -228,7 +229,7 @@ async function GETImpl(
     return notFound(`Session "${sanitizedId}" not found`);
   }
 
-  try {
+  return route("GET /api/sessions/[id]", "reading session " + sanitizedId, `Failed to read session "${sanitizedId}"`, async () => {
     const st = statSync(filePath);
     const maxBytes = getMaxSessionFileBytes();
     if (st.size > maxBytes) {
@@ -289,14 +290,7 @@ async function GETImpl(
         }),
       );
     }
-  } catch (error) {
-    return serverErrorFromCatch(
-      "GET /api/sessions/[id]",
-      "reading session " + sanitizedId,
-      error,
-      `Failed to read session "${sanitizedId}"`,
-    );
-  }
+  })();
 }
 
 export const GET = guardRoute(GETImpl);

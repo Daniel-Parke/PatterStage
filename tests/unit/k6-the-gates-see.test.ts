@@ -727,8 +727,21 @@ describe("K6 · app-04a · the route census counts a catch that logs and answers
   });
 
   it("the six files that hand-roll one are named in the report, hindsight included", () => {
-    const counted = new Set(census(null).routes.files);
-    expect(HAND_ROLLED_ROUTE_FILES.filter((f) => !counted.has(f))).toEqual([]);
+    // 2026-10-04 independent amendment, T-0192: Update delegates its catch
+    // to route(). Keep the historical six-path detector proof in an owned
+    // fixture, while the live-tree differentials still cover every route.
+    const root = scratchDir("k6-historical-catches-");
+    for (const file of HAND_ROLLED_ROUTE_FILES) {
+      const target = join(root, file);
+      mkdirSync(dirname(target), { recursive: true });
+      writeFileSync(target, HAND_ROLLED_ROUTE.join("\n"));
+    }
+    const report = census(root);
+    expect(report.routes.files.slice().sort()).toEqual(HAND_ROLLED_ROUTE_FILES.slice().sort());
+    expect(report.routes.count).toBe(6);
+    expect(report.routes.sites).toBe(6);
+    expect(report.counts.routesWithTryCatch).toBe(6);
+    expect(census(null).routes.files).toContain("src/app/api/memory/hindsight/route.ts");
   });
 
   it("the rise the widening causes is held in the census baseline, with its reason", () => {

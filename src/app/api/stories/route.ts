@@ -1,7 +1,7 @@
 // ═══════════════════════════════════════════════════════════════
 // /api/stories — Story Weaver (SQLite storage). Thin POST action router.
-// Per-action handlers live in src/lib/story-handlers/ (mirrors the
-// mission-handlers layout). All LLM generation logic is preserved there.
+// Per-action handlers, including LLM generation, live in
+// src/modules/rec-room/handlers/.
 // ═══════════════════════════════════════════════════════════════
 
 import { guardRoute } from "@/lib/api/response-route";

@@ -3,6 +3,7 @@
 // ═══════════════════════════════════════════════════════════════
 
 import { NextResponse } from "next/server";
+import { uuid } from "@/lib/db";
 
 import { normalizeLocalDirsInput } from "@/lib/fs/local-dir-entry";
 import { resolveTemplateCategoryId } from "@/lib/missions/mission-category-repository";
@@ -18,7 +19,7 @@ import { isDispatchMode } from "@/lib/ui/dispatch-mode";
 import { recordEvent } from "@/lib/analytics/record-event";
 
 export function handleCreateTemplate(body: TemplateActionBody): NextResponse {
-  const id = "ct_" + Date.now().toString(36) + Math.random().toString(36).slice(2, 4);
+  const id = "ct_" + uuid();
   const now = new Date().toISOString();
 
   const suggestedSkills =

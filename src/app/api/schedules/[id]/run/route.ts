@@ -8,11 +8,9 @@ import { NextRequest } from "next/server";
 import { ok, notFound, badRequest, serverError } from "@/lib/api/api-response";
 import { getSchedule, recordScheduleRun } from "@/lib/schedule/schedules-repository";
 import { dispatchMissionRun } from "@/lib/orchestration";
-import { route } from "@/lib/api/api-route";
+import { route, type RouteContext } from "@/lib/api/api-route";
 
-interface Ctx {
-  params: Promise<{ id: string }>;
-}
+type Ctx = RouteContext<{ id: string }>;
 
 export const POST = route("POST /api/schedules/[id]/run", (p) => `id=${p.id}`, "Failed to run schedule", async (request: NextRequest, ctx: Ctx) => {
   const { id } = await ctx.params;

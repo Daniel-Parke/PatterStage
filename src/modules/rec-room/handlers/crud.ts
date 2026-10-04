@@ -6,6 +6,7 @@
 import { NextResponse } from "next/server";
 
 import { callLLM } from "@/lib/models/llm";
+import { serverErrorFromCatch } from "@/lib/api/api-logger";
 import { listStories, getStory, updateStory, deleteStory } from "@/modules/rec-room/lib/story-repository";
 
 import {
@@ -18,8 +19,8 @@ export async function handleList(): Promise<NextResponse> {
   try {
     const stories = listStories();
     return NextResponse.json({ data: { stories } });
-  } catch {
-    return NextResponse.json({ data: { stories: [] } });
+  } catch (error) {
+    return serverErrorFromCatch("POST /api/stories", "listing stories", error, "Failed to load stories");
   }
 }
 

@@ -316,7 +316,10 @@ map now exists in src/lib/modules/registry.ts and is held to its shape by
 tests/unit/lockbook-tokens.test.ts; what is still **unenforced** is that a
 surface obeys its module's entry, because the nav links carry the hues the tree
 grew rather than the map's, and that repaint has no queue item yet. WG-WEB-010 is
-a type ruling and this sitting did not touch it.
+a type ruling. The operator's accepted app-22 ruling on 2026-09-12 retains
+Story Weaver's four vendored reader faces, Literata, EB Garamond, Lora and
+Merriweather, as a scoped exception to the house trio. Their saved reader
+settings remain supported. See [the decision register](reviews/2026-09-decision-register.md#app-22--story-weavers-four-vendored-serif-fonts-keep-or-delete).
 
 ## Deviations from doctrine
 

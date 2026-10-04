@@ -13,10 +13,7 @@
 
 import { createContext } from "react";
 
-import type { ToastType } from "./Toast";
-
-export interface FeedbackContextValue {
-  showToast: (message: string, type?: ToastType) => void | (() => void);
-}
+import type { FeedbackContextValue } from "@/types/console";
+export type { FeedbackContextValue } from "@/types/console";
 
 export const FeedbackContext = createContext<FeedbackContextValue | null>(null);

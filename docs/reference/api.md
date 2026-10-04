@@ -59,7 +59,7 @@ Every `route.ts` under `src/app/api` has a row, here or in the Chat / Composer /
 | `/api/schedules/[id]` | `GET`, `PATCH`, `DELETE` | Read one schedule (404 when missing), pause/resume or edit it (`enabled`, `name`, `schedule`, `scheduleDisplay`, `catchUpPolicy`, `repeatTimes`, `profileName`), or delete it. |
 | `/api/schedules/[id]/run` | `POST` | Dispatch a scheduled mission immediately (run-now). |
 | `/api/stats` | `GET` | Dashboard analytics aggregate (throughput, mission mix, run activity, tokens, per-agent performance, derived progression + the ~36 achievements). Also appends a per-agent progression snapshot when an agent's recorded level or unlocked set has moved. |
-| `/api/agents/progression` | `GET` | The **recorded** per-agent growth, from the append-only `agent_progression_snapshots` table: newest row per profile, or one profile's whole trail with `?slug=`. Survives the retention prune of the events it was derived from (see [MIGRATION.md](../running/migration.md)). |
+| `/api/agents/progression` | `GET` | **Retained operator API.** The **recorded** per-agent growth, from the append-only `agent_progression_snapshots` table: newest row per profile, or one profile's whole trail with `?slug=`. Survives the retention prune of the events it was derived from (see [MIGRATION.md](../running/migration.md)). |
 | `/api/analytics` | `GET` | Interaction analytics summary (`{ totals, last30, activeDays }`) over the `analytics_events` log. Read-only: events are server-emitted, so there is no `POST`. See [ANALYTICS.md](../guides/insights.md). |
 | `/api/analytics/timeseries` | `GET` | Gap-filled daily event counts (`?type=&days=&bucket=day`; `days` clamped 1, 365). |
 | `/api/analytics/insights` | `GET` | Composed bundle for the Insights workbench (`?days=`, default 30): hour-of-day, per-category daily, run-duration distribution, per-model tokens/cost, top missions, success-rate trend. |
@@ -69,12 +69,12 @@ Every `route.ts` under `src/app/api` has a row, here or in the Chat / Composer /
 | `/api/gateway/health` | `GET` | Gateway probe → `{ online, authConfigured }`. Any HTTP response (incl. 401/403) ⇒ reachable; 401/403 ⇒ reachable but the `API_SERVER_KEY` is missing/wrong. |
 | `/api/gateway/models` | `GET` | List models from gateway. |
 | `/api/logs` | `GET`, `DELETE` | Read recent Hermes logs; clear/truncate log tail. |
-| `/api/memory` | `GET` | Memory **provider status**, not facts: `{ facts, total, dbSize, available, provider, message }`, with `facts` empty on every branch. Facts are managed by agent tools (`hindsight_retain` / `_recall` / `_reflect`), never by the dashboard, so `POST`, `PUT` and `DELETE` are all bound to one handler that returns **400** for every provider. |
+| `/api/memory` | `GET` | **Retained operator API.** Memory **provider status**, not facts: `{ facts, total, dbSize, available, provider, message }`, with `facts` empty on every branch. Facts are managed by agent tools (`hindsight_retain` / `_recall` / `_reflect`), never by the dashboard, so `POST`, `PUT` and `DELETE` are all bound to one handler that returns **400** for every provider. |
 | `/api/memory/config` | `GET`, `PUT`, `POST` | The PatterStage-owned memory provider config. `GET` lists providers + the active connection; `PUT` updates a provider's host/port/bank (and enable/activate), and on an activation also writes `memory.provider` into the agent's `config.yaml`, answering `{ provider, configYaml }` where `configYaml` reports whether the file was written and why not; `POST { action: "test", type, config }` probes an endpoint before saving and answers `{ health }`. See [MEMORY.md](../guides/memory.md). |
 | `/api/memory/hindsight` | `GET`, `POST`, `DELETE` | Hindsight bridge (see [Hindsight actions](#hindsight-actions) below). |
 | `/api/mission-categories` | `GET`, `POST`, `PUT`, `DELETE` | Mission category CRUD (see [MISSIONS.md](../guides/missions.md)). |
 | `/api/missions` | `GET`, `POST` | Mission list/detail + RPC mutations (see [RPC-style routes](#rpc-style-routes)). |
-| `/api/missions/[id]` | `GET` | One mission, for REST symmetry with the sub-routes below. The list endpoint also accepts `?id=`. |
+| `/api/missions/[id]` | `GET` | **Retained operator API.** One mission, for REST symmetry with the sub-routes below. The list endpoint also accepts `?id=`. |
 | `/api/missions/[id]/cancel` | `POST` | Stop a running mission via `runtime.stopRun`. Local run/mission/session state is finalised even if the backend call fails. |
 | `/api/missions/[id]/run` | `GET` | The mission's latest run, so the board can resolve a PatterStage run id and stream `/api/runs/[id]/events`. |
 | `/api/models` | `GET`, `POST` | Models registry (SQLite). |
@@ -97,7 +97,7 @@ Every `route.ts` under `src/app/api` has a row, here or in the Chat / Composer /
 | `/api/seed/clean` | `GET`, `POST` | `GET` previews the throwaway test data a purge would remove; `POST` takes a `pre-clean` database snapshot, purges, writes an audit line, and answers `{ removed, counts, backup }`. |
 | `/api/sessions` | `GET` | List sessions. Query: `source` (any value the column holds, not only the named ones), `status` (`active`, `completed`, `failed`), `hideApiNoise=1` (drop api sessions under 1KB that lived under a minute, in SQL), `missionId`, `search`, `limit` (max 100), `offset`. Answers `{ sessions, total, totals, sources }`, where `sources` is every source the same filter can still reach. |
 | `/api/sessions/[id]` | `GET` | Read one session transcript. Carries `status`, `exitCode`, `error`, and `truncated` when only the newest `MAX_SESSION_MESSAGES` messages were loaded. |
-| `/api/admin/sessions/backfill-status` | `POST` | One-shot orphan-close sweep over stuck session rows, running the same logic as the recurring 15s sync as an explicit operator action. `{ dryRun: true }` (the default) returns the counts that *would* change. See [MISSIONS.md](../guides/missions.md). |
+| `/api/admin/sessions/backfill-status` | `POST` | **Retained operator API.** One-shot orphan-close sweep over stuck session rows, running the same logic as the recurring 15s sync as an explicit operator action. `{ dryRun: true }` (the default) returns the counts that *would* change. See [MISSIONS.md](../guides/missions.md). |
 | `/api/skills` | `GET` | List skills inventory. |
 | `/api/skills/[name]` | `GET`, `PUT` | Read or update one skill document. |
 | `/api/skills/[name]/toggle` | `PUT` | Enable/disable a skill for a profile. |

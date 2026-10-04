@@ -34,6 +34,8 @@ import { useMissionsData } from "@/hooks/useMissionsData";
 import { useMissionDispatch } from "@/hooks/useMissionDispatch";
 import { useMissionTemplateActions } from "@/hooks/useMissionTemplateActions";
 import { useMissionsFiltering } from "@/hooks/useMissionsFiltering";
+import { mapCategories } from "@/lib/missions/mission-form-utils";
+import type { TemplateEditorModalProps } from "@/components/missions/templates/TemplateEditorModal";
 
 export function useMissionsPage() {
   const { showToast, toastElement } = useToast();
@@ -97,6 +99,56 @@ export function useMissionsPage() {
   });
 
   return {
+    // One close path. The editor used to have two, a SOFT close that left
+    // editingTemplateId set and a HARD one that cleared it, described in a long
+    // comment as a deliberate discriminator. It was the defect: a soft close and
+    // then Save as Template on an unrelated mission sent action:"update" against
+    // whatever had last been open (T-0104, D70). closeTemplateEditor clears it.
+    templateEditorProps: {
+      open: templateState.showTemplateEditor,
+      onClose: templateState.closeTemplateEditor,
+      onCancel: templateState.closeTemplateEditor,
+      editingTemplateId: templateState.editingTemplateId,
+      templateName: templateState.templateName,
+      onTemplateNameChange: templateState.setTemplateName,
+      templateDescription: templateState.templateDescription,
+      onTemplateDescriptionChange: templateState.setTemplateDescription,
+      templateIcon: templateState.templateIcon,
+      onTemplateIconChange: templateState.setTemplateIcon,
+      templateColor: templateState.templateColor,
+      onTemplateColorChange: templateState.setTemplateColor,
+      templateSaving: templateState.templateSaving,
+      onSave: templateActions.handleTemplateSave,
+      categories: mapCategories(data.categories),
+      categoryId: templateState.templateCategoryId,
+      onCategoryChange: templateState.setTemplateCategoryId,
+      onCreateCategory: data.handleCreateCategory,
+      newInstruction: templateState.templateInstruction,
+      onNewInstructionChange: templateState.setTemplateInstruction,
+      newContext: templateState.templateContext,
+      onNewContextChange: templateState.setTemplateContext,
+      newGoals: templateState.templateGoals,
+      onNewGoalsChange: templateState.setTemplateGoals,
+      newProfile: templateState.templateProfile,
+      onNewProfileChange: templateState.setTemplateProfile,
+      newModel: templateState.templateModel,
+      newProvider: templateState.templateProvider,
+      onModelChange: templateState.setTemplateModelAndProvider,
+      newMissionTime: templateState.templateMissionTime,
+      onNewMissionTimeChange: templateState.setTemplateMissionTime,
+      newTimeout: templateState.templateTimeout,
+      onNewTimeoutChange: templateState.setTemplateTimeout,
+      newLocalDirs: templateState.templateLocalDirs,
+      onNewLocalDirsChange: templateState.setTemplateLocalDirs,
+      localDirDraft: templateState.templateLocalDirDraft,
+      onLocalDirDraftChange: templateState.setTemplateLocalDirDraft,
+      newReferences: templateState.templateReferences,
+      onNewReferencesChange: templateState.setTemplateReferences,
+      referenceInput: templateState.templateReferenceInput,
+      onReferenceInputChange: templateState.setTemplateReferenceInput,
+      newSkills: templateState.templateSkills,
+      onNewSkillsChange: templateState.setTemplateSkills,
+    } satisfies TemplateEditorModalProps,
     toastElement,
     loading: data.loading,
     missions: data.missions,

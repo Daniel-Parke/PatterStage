@@ -26,8 +26,7 @@
 // otherwise, so a caller that needs the answer reads it, and `onSuccess`
 // is awaited before busy clears so a spinner outlives the reload.
 
-import type { ToastType } from "@/components/ui/Toast";
-import type { FeedbackContextValue } from "@/components/ui/feedback-context";
+import type { ToastType, FeedbackContextValue } from "@/types/console";
 import { apiFetch, messageFromError, safeApiCall, type ApiFetchOptions, type SafeApiCallResult } from "@/lib/api/api-fetch";
 
 type ShowToastFn = FeedbackContextValue["showToast"];

@@ -11,23 +11,20 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 
-import { ok, badRequest, notFound, serviceUnavailable } from "@/lib/api/api-response";
-import { isFeatureEnabled } from "@/lib/feature-flags";
+import { ok, badRequest, notFound } from "@/lib/api/api-response";
+import { composerOff } from "@/lib/feature-flags-guard";
 import { parseAndValidateJsonBody } from "@/lib/api/parse-json-body";
 import { getComposerRun, getNode, updateComposerRun } from "@/lib/composer/composer-repository";
 import { dispatchComposerNode } from "@/lib/composer/dispatch";
-import { route } from "@/lib/api/api-route";
+import { route, type RouteContext } from "@/lib/api/api-route";
 
 const bodySchema = z.object({ answer: z.string().min(1).max(20_000) }).strict();
 
-interface Ctx {
-  params: Promise<{ id: string }>;
-}
+type Ctx = RouteContext<{ id: string }>;
 
 export const POST = route("POST /api/composer/runs/[id]/clarify", (p) => `id=${p.id}`, "Failed to submit clarification", async (request: NextRequest, ctx: Ctx) => {
-  if (!isFeatureEnabled("composer")) {
-    return serviceUnavailable("Composer is not enabled. Set PS_COMPOSER=1 to enable workflows.");
-  }
+  const unavailable = composerOff();
+  if (unavailable) return unavailable;
 
   const { id } = await ctx.params;
   const parsed = await parseAndValidateJsonBody(request, bodySchema);

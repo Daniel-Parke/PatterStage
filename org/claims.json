@@ -172,22 +172,13 @@
         "src/lib/missions/mission-filters.ts",
         "src/lib/missions/mission-form-utils.ts",
         "src/modules/hermes/lib/sync-manager.ts",
-        "org/briefs/T-0192-type-owner-oracle.md"
+        "org/briefs/T-0192-type-owner-oracle.md",
+        "src/lib/api/response-route.ts",
+        "src/app/results/insights/page.tsx"
       ],
       "acquired": "2026-10-03T21:24:24.476320+00:00",
       "expires": "2026-10-04T21:24:24.476320+00:00"
-    },
-    {
-      "lane_id": "T-0192-require-oracle",
-      "task_id": "T-0192",
-      "session_id": "01a101b3-7c34-7a71-94b5-334c72f652cb",
-      "host": "local",
-      "path_claims": [
-        "tests/unit/type-owner-equivalence.test.ts"
-      ],
-      "acquired": "2026-10-04T00:30:00Z",
-      "expires": "2026-10-05T00:30:00Z"
     }
   ],
-  "note": "Nash and Sartre stopped. Galileo independently authors one type-owner equivalence oracle only. Coordinator owns exact21 production paths; no implementation before red freeze. Two writing lanes."
+  "note": "All independent writing lanes stopped. Coordinator only. Finished candidate gate must run without edits; mutation target response-route claimed solely for owned clean-tree mutation experiments."
 }

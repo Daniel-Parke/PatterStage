@@ -11,9 +11,9 @@ import { boundsFrom } from "@/lib/ui/list-bounds";
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 
-import { ok, created, badRequest, serviceUnavailable } from "@/lib/api/api-response";
+import { ok, created, badRequest } from "@/lib/api/api-response";
 import { ensureDb } from "@/lib/db";
-import { isFeatureEnabled } from "@/lib/feature-flags";
+import { composerOff } from "@/lib/feature-flags-guard";
 import { parseAndValidateJsonBody } from "@/lib/api/parse-json-body";
 import {
   createComposerRun,
@@ -36,17 +36,15 @@ const startSchema = z
   .refine((v) => v.workflowId || v.workflowKey, { message: "workflowId or workflowKey is required" });
 
 export const GET = route("GET /api/composer/runs", "list", "Failed to list runs", async (request: NextRequest) => {
-  if (!isFeatureEnabled("composer")) {
-    return serviceUnavailable("Composer is not enabled. Set PS_COMPOSER=1 to enable workflows.");
-  }
+  const unavailable = composerOff();
+  if (unavailable) return unavailable;
   ensureDb();
   return ok({ runs: listComposerRuns(boundsFrom(request, { defaultLimit: 50, maxLimit: 500 }).limit) });
 });
 
 export const POST = route("POST /api/composer/runs", "start", "Failed to start run", async (request: NextRequest) => {
-  if (!isFeatureEnabled("composer")) {
-    return serviceUnavailable("Composer is not enabled. Set PS_COMPOSER=1 to enable workflows.");
-  }
+  const unavailable = composerOff();
+  if (unavailable) return unavailable;
 
   const parsed = await parseAndValidateJsonBody(request, startSchema);
   if (parsed instanceof NextResponse) return parsed;

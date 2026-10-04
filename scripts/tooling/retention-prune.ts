@@ -36,32 +36,13 @@
  * predict a deletion costs more than the rows it saves.
  */
 
-import { readFileSync, existsSync } from "fs";
 import { join, dirname } from "path";
 import { fileURLToPath } from "url";
+import { loadEnvLocal } from "./load-env-local";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const ROOT = join(__dirname, "..", "..");
 
-function loadEnvLocal(): void {
-  const envPath = join(ROOT, ".env.local");
-  if (!existsSync(envPath)) return;
-  for (const line of readFileSync(envPath, "utf-8").split("\n")) {
-    const trimmed = line.trim();
-    if (!trimmed || trimmed.startsWith("#")) continue;
-    const eq = trimmed.indexOf("=");
-    if (eq === -1) continue;
-    const key = trimmed.slice(0, eq).trim();
-    let val = trimmed.slice(eq + 1).trim();
-    if (
-      (val.startsWith('"') && val.endsWith('"')) ||
-      (val.startsWith("'") && val.endsWith("'"))
-    ) {
-      val = val.slice(1, -1);
-    }
-    if (!process.env[key]) process.env[key] = val;
-  }
-}
 
 function flagValue(argv: string[], name: string): string | null {
   const i = argv.indexOf(name);
@@ -71,7 +52,7 @@ function flagValue(argv: string[], name: string): string | null {
 }
 
 async function main(): Promise<void> {
-  loadEnvLocal();
+  loadEnvLocal(ROOT);
 
   const { getPsDataDir, getDbPath } = await import("../../src/lib/host/paths");
   const dataDir = getPsDataDir();

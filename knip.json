@@ -1,5 +1,5 @@
 {
-  "$schema": "https://unpkg.com/knip@5/schema.json",
+  "$schema": "https://unpkg.com/knip@6/schema.json",
   "entry": [
     "src/instrumentation.ts",
     "scripts/**/*.{ts,mjs}",
@@ -22,10 +22,7 @@
     "test-harness/**/*.{mjs,cjs}"
   ],
   "ignoreDependencies": [
-    "ts-jest",
-    "tailwindcss",
-    "@jest/globals",
-    "jsdom"
+    "tailwindcss"
   ],
   "ignoreBinaries": [
     "python",

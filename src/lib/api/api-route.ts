@@ -27,6 +27,8 @@ import { guardCompletedResponse } from "@/lib/api/response-route";
 import { serverErrorFromCatch } from "@/lib/api/api-logger";
 
 type Params = Record<string, string>;
+export type RouteContext<P> = { params: Promise<P> };
+
 export type RouteText = string | ((params: Params) => string);
 type Handler<Args extends unknown[]> = (...args: Args) => Promise<NextResponse | Response> | NextResponse | Response;
 

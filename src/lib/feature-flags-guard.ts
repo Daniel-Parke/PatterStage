@@ -8,10 +8,16 @@
 // ═══════════════════════════════════════════════════════════════
 
 import { notFound } from "next/navigation";
+import { serviceUnavailable } from "./api/api-response";
 
 import { isFeatureEnabled, type FeatureFlag } from "./feature-flags";
 
 /** 404 the current page/route when its feature flag is disabled. */
 export function requireFeatureOr404(flag: FeatureFlag): void {
   if (!isFeatureEnabled(flag)) notFound();
+}
+
+export function composerOff() {
+  return isFeatureEnabled("composer") ? null
+    : serviceUnavailable("Composer is not enabled. Set PS_COMPOSER=1 to enable workflows.");
 }

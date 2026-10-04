@@ -16,33 +16,14 @@
  */
 
 import Database from "better-sqlite3";
-import { readFileSync, existsSync, mkdirSync } from "fs";
+import { existsSync, mkdirSync } from "fs";
 import { join, dirname } from "path";
 import { fileURLToPath } from "url";
+import { loadEnvLocal } from "./load-env-local";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const ROOT = join(__dirname, "..", "..");
 
-function loadEnvLocal(): void {
-  const envPath = join(ROOT, ".env.local");
-  if (!existsSync(envPath)) return;
-  const text = readFileSync(envPath, "utf-8");
-  for (const line of text.split("\n")) {
-    const trimmed = line.trim();
-    if (!trimmed || trimmed.startsWith("#")) continue;
-    const eq = trimmed.indexOf("=");
-    if (eq === -1) continue;
-    const key = trimmed.slice(0, eq).trim();
-    let val = trimmed.slice(eq + 1).trim();
-    if (
-      (val.startsWith('"') && val.endsWith('"')) ||
-      (val.startsWith("'") && val.endsWith("'"))
-    ) {
-      val = val.slice(1, -1);
-    }
-    if (!process.env[key]) process.env[key] = val;
-  }
-}
 
 /** Peek the stored schema_version with a throwaway read-only connection. */
 function readSchemaVersion(dbPath: string): number {
@@ -60,7 +41,7 @@ function readSchemaVersion(dbPath: string): number {
 }
 
 async function main(): Promise<void> {
-  loadEnvLocal();
+  loadEnvLocal(ROOT);
   // Single source of truth: reuse the app's resolver (respects PS_DATA_DIR env,
   // else discovers an existing populated data dir). Replaces the old hardcoded
   // lowercase ~/patterstage/data + control-hub.db, which on a case-sensitive

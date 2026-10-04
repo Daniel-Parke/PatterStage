@@ -16,7 +16,7 @@ import {
 } from "@/lib/missions/mission-categories";
 import { getCategoryIdFromTemplate } from "@/lib/missions/mission-composer-utils";
 import type { MissionCategory } from "@/lib/missions/mission-category-repository";
-import type { MissionTemplate } from "@/components/missions/TemplateModals";
+import type { MissionTemplate } from "@/lib/missions/mission-types";
 
 /** Minimal mission shape the selectors read (subset of MissionRow). */
 export type MissionFilterFields = {

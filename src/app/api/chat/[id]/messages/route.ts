@@ -13,9 +13,9 @@ import { ok, badRequest, notFound, serviceUnavailable, methodNotAllowed } from "
 import { parseJsonBody } from "@/lib/api/parse-json-body";
 import { getConversation } from "@/lib/chat/chat-repository";
 import { dispatchChatTurn, appendFastTurn } from "@/lib/orchestration/chat-dispatch";
-import { route } from "@/lib/api/api-route";
+import { route, type RouteContext } from "@/lib/api/api-route";
 
-type Ctx = { params: Promise<{ id: string }> };
+type Ctx = RouteContext<{ id: string }>;
 
 export const POST = route("POST /api/chat/[id]/messages", (p) => p.id, "Failed to send message", async (request: NextRequest, ctx: Ctx) => {
   const { id } = await ctx.params;

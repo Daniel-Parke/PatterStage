@@ -1,7 +1,7 @@
 import { guardRoute } from "@/lib/api/response-route";
 import { NextRequest, NextResponse } from "next/server";
 
-import { logApiError } from "@/lib/api/api-logger";
+import { route } from "@/lib/api/api-route";
 import {
   getCorrelationId,
   isDeployApiEnabled,
@@ -47,7 +47,7 @@ import { checkVersion } from "@/lib/update-handlers/version-check";
 
 // GET /api/update
 async function GETImpl(request: NextRequest) {
-  try {
+  return route("GET /api/update", "checking version", "Failed to check version", async () => {
     const { searchParams } = new URL(request.url);
 
     // `deployEnabled` travels on both answers so the footer can say "the deploy
@@ -83,10 +83,7 @@ async function GETImpl(request: NextRequest) {
     return NextResponse.json({
       data: { ...ver, branch: ver.checkoutBranch, deployEnabled },
     });
-  } catch (error) {
-    logApiError("GET /api/update", "checking version", error);
-    return NextResponse.json({ error: "Failed to check version" }, { status: 500 });
-  }
+  })();
 }
 
 // POST /api/update
@@ -103,7 +100,7 @@ async function POSTImpl(request: NextRequest) {
   const signed = requireSignedRequest(request);
   if (signed) return signed;
 
-  try {
+  return route("POST /api/update", "processing request", "Update failed", async () => {
     const body = await request.json().catch(() => ({}));
     const action = body.action || "update";
 
@@ -130,10 +127,7 @@ async function POSTImpl(request: NextRequest) {
       { error: "Unknown action. Use 'update', 'rebuild', or 'restart'" },
       { status: 400 }
     );
-  } catch (error) {
-    logApiError("POST /api/update", "processing request", error);
-    return NextResponse.json({ error: "Update failed" }, { status: 500 });
-  }
+  })();
 }
 
 export const GET = guardRoute(GETImpl);

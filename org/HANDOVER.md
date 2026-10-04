@@ -2,7 +2,7 @@
 summary: What the consolidation programme did and left behind, how a batch was landed, what is open, and what waits next
 type: venture
 tags: [handover, consolidation]
-updated: 2026-10-02
+updated: 2026-10-04
 ---
 
 # Handover · PatterStage, 2026-10-02
@@ -10,6 +10,29 @@ updated: 2026-10-02
 ## Active batch, 2026-10-03
 
 T-0192 is open at R2 after every T-0191 closure-head hosted job passed. Independent oracles precede implementation. It owns41findings,16operator dispositions and25coverage obligations, plus linked defects and latency investigation. See [record](tasks/T-0192.json) and [opening](reviews/2026-10-t0192-route-verification.md). No new implementation or product acceptance is implied.
+
+Candidate verification on 2026-10-04: 815 focused unit cases and 58 browser
+cases passed. Isolated Windows and native Linux builds passed. The independently
+corrected POSIX compiler fixture now passes all 111 cases in its six-suite Linux
+cohort. These are bounded checks, not the full batch gate. Evidence paths and
+qualifications are in `reviews/2026-10-t0192-task-evidence.json`.
+
+The broader comment-cleanup baseline exposed 13 failures. Twelve migration
+failures disappeared with the required shell permissions: all 15 controls pass
+unchanged. An exact Node account-lookup probe reproduced `uv_os_get_passwd ENOMEM`
+only inside the restricted shell. The historical Story case expected false
+success; its independent amendment preserves the identity and expects the
+approved explicit server error. All failed receipts remain preserved. The
+285-file comment amendment and scoped lint policy are integrated: 282 suites,
+2,954 unchanged identities pass, plus nine policy cases. This was not a
+green-before/green-after comparison. Full gate, committed mutation sweep,
+final independent acceptance and hosted checks are still outstanding.
+
+The six-endpoint timing investigation completed 228 successful requests on
+each platform using synthetic isolated data and fresh processes. Warm serial
+medians were about 5 ms; first requests ranged from roughly 0.3 to 0.8 seconds.
+These measurements do not establish production performance or database/Git
+causality. All owned listeners and the Linux validation container were stopped.
 
 ## Previous accepted batch, 2026-10-03
 

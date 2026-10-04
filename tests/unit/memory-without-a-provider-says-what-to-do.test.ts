@@ -31,7 +31,7 @@ jest.mock("@/lib/api/api-logger", () => ({ logApiError: jest.fn() }));
 jest.mock("@/lib/memory/memory-providers", () => {
   const {
     UnavailableMemoryProvider: Unavailable,
-    // eslint-disable-next-line @typescript-eslint/no-require-imports -- jest.mock factory cannot use the ESM import above
+    // jest.mock factory cannot use the ESM import above
   } = require("@/lib/memory/memory-providers/unavailable-provider");
   return {
     getActiveMemoryProvider: () => new Unavailable("none"),

@@ -18,9 +18,9 @@ import {
   deleteScriptFile,
 } from "@/lib/scripts/scripts-manager";
 import { recordEvent } from "@/lib/analytics/record-event";
-import { route } from "@/lib/api/api-route";
+import { route, type RouteContext } from "@/lib/api/api-route";
 
-type Ctx = { params: Promise<{ name: string }> };
+type Ctx = RouteContext<{ name: string }>;
 
 export const GET = route("GET /api/scripts/[name]", (p) => p.name, "Failed to read script", async (_request: NextRequest, ctx: Ctx) => {
   const { name } = await ctx.params;

@@ -9,9 +9,9 @@ import { NextRequest } from "next/server";
 import { ok, notFound } from "@/lib/api/api-response";
 import { getConversation, deleteConversation } from "@/lib/chat/chat-repository";
 import { reconcilePendingChatMessages } from "@/lib/orchestration/chat-dispatch";
-import { route } from "@/lib/api/api-route";
+import { route, type RouteContext } from "@/lib/api/api-route";
 
-type Ctx = { params: Promise<{ id: string }> };
+type Ctx = RouteContext<{ id: string }>;
 
 export const GET = route("GET /api/chat/[id]", (p) => p.id, "Failed to load conversation", async (_request: NextRequest, ctx: Ctx) => {
   const { id } = await ctx.params;

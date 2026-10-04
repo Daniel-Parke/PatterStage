@@ -92,6 +92,12 @@ The work leading to the 1.0.0 release.
 
 ### Changed
 
+- Server logs use consistent subsystem tags. Function-specific session tags now use
+  `[sessions]`, Hermes configuration tags use `[config]`, and catalogue messages use
+  `[seed]`. The cron migration warning uses `[db]`. Existing `[auth]` and `[config]`
+  boot messages are unchanged. Failed Composer continuations now emit a `[composer]`
+  warning with run identifiers, without printing prompts or rejection contents.
+
 - **A refused write says why, in the same place every time.** On Composer,
   Research, Artifacts, Logs, Scripts, the Story Weaver library, the memory
   provider card, the system backup and the Insights budget, a write that the

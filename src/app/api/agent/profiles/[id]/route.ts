@@ -67,7 +67,10 @@ export const PUT = route("PUT /api/agent/profiles/[id]", "updating profile", "Fa
 
       const oldDir = resolveProfileHermesHome(prof.profile);
       const newDir = resolveProfileHermesHome(newSlug);
-      if (existsSync(oldDir) && !existsSync(newDir)) {
+      if (existsSync(newDir)) {
+        return conflict(`Profile directory "${newSlug}" already exists`);
+      }
+      if (existsSync(oldDir)) {
         renameSync(oldDir, newDir);
       }
 
@@ -76,12 +79,11 @@ export const PUT = route("PUT /api/agent/profiles/[id]", "updating profile", "Fa
         return serverError("Failed to rename profile");
       }
       slug = newSlug;
-    } else if (newSlug === prof.profile) {
-      updateProfileContent(slug, {
-        displayName: name.trim(),
-        description: typeof description === "string" ? description : undefined,
-      });
     }
+    updateProfileContent(slug, {
+      displayName: name.trim(),
+      description: typeof description === "string" ? description : undefined,
+    });
   } else if (typeof description === "string") {
     updateProfileContent(slug, { description });
   }

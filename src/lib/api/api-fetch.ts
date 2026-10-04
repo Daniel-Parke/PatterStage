@@ -131,7 +131,7 @@ export async function apiFetch<T = any>(
   if (!res.ok) {
     const base = publishedErrorMessage(json) ?? `HTTP ${res.status}`;
     const push =
-      typeof json.cronPushError === "string" && json.cronPushError.trim()
+      typeof json?.cronPushError === "string" && json.cronPushError.trim()
         ? json.cronPushError
         : null;
     throw new ApiError(push ? `${base}: ${push}` : base, res.status, json);

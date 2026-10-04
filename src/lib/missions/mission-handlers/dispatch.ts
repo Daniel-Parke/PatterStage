@@ -21,8 +21,8 @@ import { appendAuditLine } from "@/lib/api/audit-log";
 import { resolveAgentSlug } from "@/lib/agents/roster";
 import { createSchedule } from "@/lib/schedule/schedules-repository";
 import { parseSchedule, scheduleDisplayFromParsed } from "@/lib/schedule/parse-schedule";
-import { computeNextRun, scheduleCanEverFire } from "@/lib/schedule/next-run";
-import { scheduleIntervalProblem } from "@/lib/schedule/interval-bounds";
+import { computeNextRun } from "@/lib/schedule/next-run";
+import { scheduleProblem } from "@/lib/schedule/schedule-problem";
 import { dispatchMissionNow } from "@/lib/missions/mission-dispatch";
 import { missionModelIdError, parseMissionBodyFields } from "@/lib/missions/mission-body";
 import { missionTimeoutError } from "@/lib/missions/mission-timeout";
@@ -121,19 +121,8 @@ export async function handleDispatchMission(
   const timeoutError = missionTimeoutError(body);
   if (timeoutError) return badRequest(timeoutError);
   if (parseDispatchMode(dispatchMode, scheduleVal).isCronMode) {
-    if (parseSchedule(scheduleVal!).kind === "invalid") {
-      return badRequest(`Unrecognized schedule: ${scheduleVal}`);
-    }
-    if (!scheduleCanEverFire(scheduleVal!)) {
-      return badRequest(
-        `Schedule "${scheduleVal}" can never fire: it names a date that does not ` +
-          `exist, or a field outside its range. Check the day-of-month against the month.`,
-      );
-    }
-    // The opposite failure, and the expensive one: `every 0m` fires constantly,
-    // and each firing here is a paid agent run.
-    const tooFrequent = scheduleIntervalProblem(scheduleVal!);
-    if (tooFrequent) return badRequest(tooFrequent);
+    const problem = scheduleProblem(scheduleVal!);
+    if (problem) return badRequest(problem);
   }
   const mission = createMission({
     // Derived from the instruction when no name was given, so the board does

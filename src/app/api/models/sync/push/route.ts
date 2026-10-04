@@ -4,10 +4,10 @@
 // pushes linked credential to .env if pushCredential is true.
 // ═══════════════════════════════════════════════════════════════
 import { guardRoute } from "@/lib/api/response-route";
+import { route } from "@/lib/api/api-route";
 import { NextRequest, NextResponse } from "next/server";
 
 import { parseAndValidateJsonBody } from "@/lib/api/parse-json-body";
-import { serverErrorFromCatch } from "@/lib/api/api-logger";
 import { pushModelToHermes, pushCredential } from "@/modules/hermes/lib/sync-manager";
 import { getModelWithKey } from "@/lib/models/models-repository";
 import { ok } from "@/lib/api/api-response";
@@ -28,7 +28,7 @@ async function POSTImpl(request: NextRequest) {
   const { modelId, pushCredential: pushCredRaw } = parsed;
   const pushCred = pushCredRaw !== false;
 
-  try {
+  return route("POST /api/models/sync/push", `pushing model ${modelId}`, "Failed to push model", async () => {
     const modelResult = pushModelToHermes(modelId);
     if (!modelResult.success) {
       // A 500 naming the model and the reason, the shape every sync route
@@ -65,14 +65,7 @@ async function POSTImpl(request: NextRequest) {
       details,
       backupPath: modelResult.backupPath,
     });
-  } catch (error) {
-    return serverErrorFromCatch(
-      "POST /api/models/sync/push",
-      `pushing model ${modelId}`,
-      error,
-      "Failed to push model",
-    );
-  }
+  })();
 }
 
 export const POST = guardRoute(POSTImpl);

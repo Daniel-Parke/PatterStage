@@ -5,7 +5,7 @@
 // Shared by useMissionComposer and useMissionsPage, and kept out of both so
 // neither hook imports the other.
 
-import type { MissionTemplate } from "@/components/missions/TemplateModals";
+import type { MissionTemplate } from "@/lib/missions/mission-types";
 
 /** localStorage key for the most recently selected mission category */
 const LAST_CATEGORY_KEY = "ps-last-mission-category";

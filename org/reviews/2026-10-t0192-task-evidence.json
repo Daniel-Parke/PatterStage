@@ -1165,6 +1165,94 @@
     "result": "37cases:26pass11structuralred, no runtimeerrors; types/lint0. First escaped-path parser failure retained as infrastructure, notredproof.",
     "scope": "21 productionfiles,12upwardlibraryedges across9consumers. Existing canonicalowners and historicalreexports. HookUIcoordination imports retained.",
     "proof": "Pinned TypeScript5.9.3 emittedJS hashes, exact publictype shapes and3in-memory sensitivitycontrols. No application execution.",
-    "limits": "Not SWC/browser proof. Definition relocation can increase lines; no net reduction claimed. Implementation/fullgate pending."
+    "limits": "Not SWC/browser proof. Definition relocation can increase lines; no net reduction claimed. Implementation/fullgate pending.",
+    "postImplementation": {
+      "hashes": "tmp/t0192-type-owner-final.json",
+      "oracle": "tmp/t0191-green-validation/tmp/t0192-type-owner-green.json",
+      "result": "37/37 exit0; independent Laplace 21/21 emittedJS comparison and publicownership review accepted.",
+      "appTypes": "tmp/t0192-defects-types-1791078494555:exit0",
+      "testTypes": "tmp/t0192-defects-test-types-1791078431480:exit0",
+      "lint": "Exact21 productionfile ESLint max-warnings0 exits0",
+      "netSourceLines": 23,
+      "limits": "TypeScript emitter only; broadgate, final build/UI/sweep stillrequired."
+    }
+  },
+  "censusGrowthReason": {
+    "baseline": "scripts/tooling/line-census.baseline.json",
+    "testLines": "T-0192 adds 3387 net test lines (147076 to 150463) for regression and contract oracles with recorded authorship and independent review. Historical test identities and coverage floors are preserved. Fixed programme targets remain unchanged. One-importer components remain 103 after shared chart types retain legitimate UI boundary consumers.",
+    "oneImporterComponents": "103 committed and final. Intermediate candidate 105 retained in tmp/t0192-census-superseded-candidate.json; chart compatibility types now have real rendering-boundary consumers. No new visual components.",
+    "fixedTargets": "Unchanged. No general exemption; candidate mutations or latergrowth require fresh reasons."
+  },
+  "mutationPreparation": {
+    "manifest": "tests/fixtures/mutants/T-0192.json",
+    "author": "Nash",
+    "reviewer": "Laplace",
+    "result": "18Jest anchors and2separatebrowser anchors unique and parseable in independent read-only review. No mutants executed; no kills claimed.",
+    "browserCandidates": [
+      {
+        "id": "b01-profile-submitted-description",
+        "file": "src/app/api/agent/profiles/[id]/route.ts",
+        "anchor": "description: typeof description === \"string\" ? description : undefined,",
+        "replacement": "description: undefined,",
+        "oracle": "tests/e2e/route-contract-persistence.spec.ts",
+        "intendedIdentity": "T-0192 owned HTTP and persistence profile changed slug: submitted metadata and owned files survive reload without losing snapshots",
+        "intendedAssertion": "Reloaded metadata must retain the submitted description.",
+        "qualification": "Covers one part of original defect 5. Does not establish rename-refusal atomicity or reference preservation. Excluded from the Jest manifest."
+      },
+      {
+        "id": "b02-empty-fallback-no-write",
+        "file": "src/modules/hermes/lib/hermes-fallback-config.ts",
+        "anchor": "const yamlConfig: HermesConfig = loadHermesConfigFromString(original);",
+        "replacement": "const yamlConfig: HermesConfig = loadHermesConfigFromString(original); if (chain.length === 0) return { backupPath, configPath, hermesHome: paths.root };",
+        "oracle": "tests/e2e/route-contract-persistence.spec.ts",
+        "intendedIdentityPattern": "T-0192 owned HTTP and persistence fallback <existing action>: SQLite and real YAML both contain an empty enabled chain",
+        "intendedAssertion": "Independent YAML read must show an empty fallback chain after the real mutation.",
+        "qualification": "Represents original defect 6. Expand the existing action parameters when preparing a browser experiment; do not invent a Jest identity or count this as a Jest kill."
+      }
+    ],
+    "limits": [
+      "Original defects 1-4 have selected direct Jest mutants. Original defects 5-6 have exact source candidates linked to existing Playwright persistence oracles, not selected Jest kills.",
+      "Composer m17 proves loaded-graph review-before-launch only. Pending, refused and stale graph selection remains covered by route-contract-followups.spec.ts browser cases, not by this mutant.",
+      "Script unread-save and pending-draft ownership are additional browser obligations, not claimed covered by these 18 mutants.",
+      "Responsive geometry, clipping, focus behaviour, real HTTP persistence and browser-session entry enforcement cannot be inferred from Jest kills.",
+      "m09 covers response-settlement reauthorisation through the existing unit boundary; it is not proxy integration proof.",
+      "Gateway mutation covers disclosure for valid URLs. Invalid/control-character fail-closed behaviour and endpoint precedence remain separate existing assertions, not independently mutated here.",
+      "Boot mutants cover missing recovery and swallowed startup failure; they do not independently mutate every startup ordering edge.",
+      "Environment mutants sample precedence and paired-quote behaviour. Alias provenance, whitelist, caller execution order and copied-deploy packaging are not fully mutation-covered.",
+      "No parser, typecheck, test or sweep was executed for this proposal. Syntactic and causal suitability still require controlled verification."
+    ],
+    "reviewConditions": [
+      "m14 requires causal planted MTS compiler refusal, not config/launch failure",
+      "m16 requires actual saved-name payload mismatch to claim behaviour, not mapping assertion alone",
+      "m15 description corrected to three creations",
+      "Run only clean committed candidate with passing unmodified and restored controls"
+    ]
+  },
+  "chartCompatibilityRepair": {
+    "failedGate": "tmp/t0192-coordinator-gate-1791078831917/gate/summary.json",
+    "failure": "Knip detected three unused retained chart type exports; full Jest 8814 passed, 1 failed, 9 skipped. Tree unchanged. Later stages not executed.",
+    "repair": "Insights chart inputs use retained compatibility types through erased satisfies checks. Canonical library ownership remains unchanged.",
+    "emission": "tmp/t0192-insights-emission.json: identical TypeScript 5.9.3 JavaScript emission",
+    "controls": "tmp/t0191-green-validation/tmp/t0192-chart-knip-controls.json: 43/43 passed",
+    "baseline": "Normal generator started from exact committed baseline; committed allowed history preserved. Superseded uncommitted candidate retained, one justified test-line rise remains.",
+    "qualification": "The satisfies checks are redundant with existing bundle/component types; their purpose is to consume retained historical export paths at the real rendering boundary. The census change reflects type-import edges, not new rendering consumers or a claimed architectural reduction."
+  },
+  "fullCandidateGate": {
+    "receipt": "tmp/t0192-coordinator-gate-1791079520716/gate/summary.json",
+    "treeHash": "5252829a408c9313a6ed983b58c0517c8a1b980d8249873643fb624083b8d315",
+    "result": "All ten stages exit 0; complete, unchanged tree.",
+    "jest": {
+      "passed": 8815,
+      "skipped": 9,
+      "failed": 0
+    },
+    "browser": {
+      "passed": 497,
+      "skipped": 24,
+      "failed": 0
+    },
+    "buildPurity": "Both empty and populated data checks passed.",
+    "designCensus": "One complete documented-route census passed.",
+    "limits": "Candidate verification only. Mutation sweep, remaining evidence inventories, targeted visual review, final independent acceptance and hosted checks remain open."
   }
 }

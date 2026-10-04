@@ -25,6 +25,8 @@
 //   - every config.yaml write goes through `writeHermesConfigFile`,
 //     so the read cache is dropped in the same call (WG-ARCH-003).
 
+import { serverLog } from "@/lib/logs/server-log";
+
 import { existsSync, readFileSync } from "fs";
 import * as yaml from "js-yaml";
 
@@ -90,8 +92,8 @@ export function syncDefaultsToHermesConfig(
     // backing error so it surfaces in server logs but do NOT write a corrupted
     // file — return the backup path so the caller can surface a meaningful error.
     const msg = (toError(err).message || String(err)).split(String.fromCharCode(10))[0].trim();
-    console.error(`[syncDefaultsToHermesConfig] yaml.load failed: ${msg} — not overwriting ${configPath}`);
-    console.error(`[syncDefaultsToHermesConfig] Backup at: ${backupPath}. Please repair the YAML and retry.`);
+    serverLog("config", "error", `yaml.load failed: ${msg} — not overwriting ${configPath}`);
+    serverLog("config", "error", `Backup at: ${backupPath}. Please repair the YAML and retry.`);
     // The refusal used to be indistinguishable from success in the return
     // value — which is exactly how a corrupt file kept round-tripping:
     // finalizeRootConfigOnDisk saw no error and copied the corrupt disk text
@@ -204,7 +206,7 @@ export function finalizeRootConfigOnDisk(
       yaml.load(fullYaml);
     } catch (err) {
       const msg = (toError(err).message || String(err)).split(String.fromCharCode(10))[0].trim();
-      console.error(`[finalizeRootConfigOnDisk] disk config.yaml does not parse (${msg}) — leaving agent_root.config_yaml alone`);
+      serverLog("config", "error", `disk config.yaml does not parse (${msg}) — leaving agent_root.config_yaml alone`);
       return { appliedModelDefaults, backupPath, error: `disk config.yaml did not parse (${msg})` };
     }
     updateAgentRoot({ configYaml: fullYaml });

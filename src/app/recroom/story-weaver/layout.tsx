@@ -5,12 +5,6 @@ import localFont from "next/font/local";
 // `next build` reach the network and forced CI to carry a font warmup and a
 // whole-build retry.
 //
-// Worth knowing: WG-WEB-010 rules the house set as a trio (Space Grotesk display,
-// Inter text, JetBrains Mono), and the 2026-07 review recorded these four as a
-// design-system fork. They may be deleted rather than kept. Vendoring does not make
-// that harder, since removal is then a file delete, and until it happens the build
-// is at least deterministic.
-//
 // All four are variable fonts, so one file each covers the range the CSS API used
 // to serve. Merriweather previously requested three discrete weights; the variable
 // file spans them.

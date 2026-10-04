@@ -53,26 +53,32 @@
         "sourceReference": "org/plans/2026-09-refactor-ownership.json#findings/app-07",
         "inspectedRevision": "49aa7a604cfead440c6cce827a53d2a294408e60",
         "evidence": [
-          "tmp/t0192-opening-reconciliation.md"
+          "tmp/t0192-opening-reconciliation.md",
+          "org/reviews/2026-10-t0192-task-evidence.json",
+          "tmp/t0192-context-cohort.json",
+          "tmp/t0192-type-only-proof.json"
         ],
-        "scepticVerdict": "Opening read-only reconciliation only; final evidence and independent verdict pending.",
+        "scepticVerdict": "25 context declarations consolidated; 29-file type-only emitted-JavaScript comparison and public inventory retained.",
         "ruling": "Reverify this T-0164 source-level observation and its item ruling before any edit: Repeated context types persist. The historic 23-count and saving were not re-derived as a current net result.",
         "owningTask": "T-0192",
         "status": "pending-final-disposition",
-        "remainingUncertainty": "Reverify and link current proof before marking done, ruled out or deferred."
+        "remainingUncertainty": "Candidate progress only. Final disposition awaits full unchanged-tree gate, committed mutation sweep, independent batch review and hosted jobs. Oracle test-type fixture errors remain explicitly open in task evidence."
       },
       {
         "id": "app-05",
         "sourceReference": "org/plans/2026-09-refactor-ownership.json#findings/app-05",
         "inspectedRevision": "49aa7a604cfead440c6cce827a53d2a294408e60",
         "evidence": [
-          "tmp/t0192-opening-reconciliation.md"
+          "tmp/t0192-opening-reconciliation.md",
+          "org/reviews/2026-10-t0192-task-evidence.json",
+          "tmp/t0192-local-catch-fold.json",
+          "tmp/t0192-defects-unit-1791068703110/summary.json"
         ],
-        "scepticVerdict": "Opening read-only reconciliation only; final evidence and independent verdict pending.",
+        "scepticVerdict": "Laplace accepted eight terminal-catch replacements across seven routes, minus42 source lines. Original try bodies and nested recovery copied unchanged;621 coordinator cases pass including76 exact catch controls.",
         "ruling": "Reverify this T-0164 source-level observation and its item ruling before any edit: Own catches and parameterised wrapper coexist. The historical seven-of-thirteen population predates the widened census; current report is 18 own-catch routes.",
         "owningTask": "T-0192",
         "status": "pending-final-disposition",
-        "remainingUncertainty": "Reverify and link current proof before marking done, ruled out or deferred."
+        "remainingUncertainty": "Candidate progress only. Final disposition awaits full unchanged-tree gate, committed mutation sweep, independent batch review and hosted jobs. Oracle test-type fixture errors remain explicitly open in task evidence."
       },
       {
         "id": "app-04",
@@ -105,26 +111,32 @@
         "sourceReference": "org/plans/2026-09-refactor-ownership.json#findings/app-11",
         "inspectedRevision": "49aa7a604cfead440c6cce827a53d2a294408e60",
         "evidence": [
-          "tmp/t0192-opening-reconciliation.md"
+          "tmp/t0192-opening-reconciliation.md",
+          "org/reviews/2026-10-t0192-task-evidence.json",
+          "tmp/t0192-defects-schedule-1791068255826/summary.json",
+          "tmp/t0192-defects-schedule-browser-1791068421691/summary.json"
         ],
-        "scepticVerdict": "Opening read-only reconciliation only; final evidence and independent verdict pending.",
+        "scepticVerdict": "Halley accepted five-file schedule extraction, net minus41 source lines. Historical51 and built HTTP16 pass before/after; nullable next-run and refusal precedence retained.",
         "ruling": "Reverify this T-0164 source-level observation and its item ruling before any edit: Schedule checks and refusal text repeat across four paths, but result shapes differ.",
         "owningTask": "T-0192",
         "status": "pending-final-disposition",
-        "remainingUncertainty": "Reverify and link current proof before marking done, ruled out or deferred."
+        "remainingUncertainty": "Candidate progress only. Final disposition awaits full unchanged-tree gate, committed mutation sweep, independent batch review and hosted jobs. Oracle test-type fixture errors remain explicitly open in task evidence."
       },
       {
         "id": "app-13",
         "sourceReference": "org/plans/2026-09-refactor-ownership.json#findings/app-13",
         "inspectedRevision": "49aa7a604cfead440c6cce827a53d2a294408e60",
         "evidence": [
-          "tmp/t0192-opening-reconciliation.md"
+          "tmp/t0192-opening-reconciliation.md",
+          "org/reviews/2026-10-t0192-task-evidence.json",
+          "tmp/t0192-composer-guards.py",
+          "tmp/t0192-defects-unit-1791068703110/summary.json"
         ],
-        "scepticVerdict": "Opening read-only reconciliation only; final evidence and independent verdict pending.",
+        "scepticVerdict": "Twelve Composer guards now use the existing feature-guard module; original positions and exact503 retained. Expanded coordinator regression passed.",
         "ruling": "Reverify this T-0164 source-level observation and its item ruling before any edit: Repeated composer flag guard and 503 sentence remain. A shared helper must preserve the API status/body.",
         "owningTask": "T-0192",
         "status": "pending-final-disposition",
-        "remainingUncertainty": "Reverify and link current proof before marking done, ruled out or deferred."
+        "remainingUncertainty": "Candidate progress only. Final disposition awaits full unchanged-tree gate, committed mutation sweep, independent batch review and hosted jobs. Oracle test-type fixture errors remain explicitly open in task evidence."
       },
       {
         "id": "app-19",
@@ -144,13 +156,16 @@
         "sourceReference": "org/plans/2026-09-refactor-ownership.json#findings/app-16",
         "inspectedRevision": "49aa7a604cfead440c6cce827a53d2a294408e60",
         "evidence": [
-          "tmp/t0192-opening-reconciliation.md"
+          "tmp/t0192-opening-reconciliation.md",
+          "org/reviews/2026-10-t0192-task-evidence.json",
+          "tests/unit/runtime-operational-consistency.test.ts",
+          "tmp/t0192-defects-unit-1791067559071/summary.json"
         ],
-        "scepticVerdict": "Opening read-only reconciliation only; final evidence and independent verdict pending.",
+        "scepticVerdict": "Boot recovery now precedes fallible startup operations; runtime consistency oracle exercises healthy boot and catalogue/scheduler/sync failures.",
         "ruling": "Reverify this T-0164 source-level observation and its item ruling before any edit: Sync and scheduler can throw before recovery sweeps. No injected boot failure was run. Catalog seed catches internally, so the risk is narrower than all three bare calls.",
         "owningTask": "T-0192",
         "status": "pending-final-disposition",
-        "remainingUncertainty": "Reverify and link current proof before marking done, ruled out or deferred."
+        "remainingUncertainty": "Candidate progress only. Final disposition awaits full unchanged-tree gate, committed mutation sweep, independent batch review and hosted jobs. Oracle test-type fixture errors remain explicitly open in task evidence."
       },
       {
         "id": "app-12",
@@ -404,13 +419,17 @@
         "sourceReference": "org/plans/2026-09-refactor-ownership.json#findings/cross-cutting-16",
         "inspectedRevision": "49aa7a604cfead440c6cce827a53d2a294408e60",
         "evidence": [
-          "tmp/t0192-opening-reconciliation.md"
+          "tmp/t0192-opening-reconciliation.md",
+          "org/reviews/2026-10-t0192-task-evidence.json",
+          "tmp/t0192-defects-template-1791068870506/summary.json",
+          "tmp/t0192-defects-template-1791068988367/summary.json",
+          "tmp/t0192-defects-unit-1791071240862/summary.json"
         ],
-        "scepticVerdict": "Opening read-only reconciliation only; final evidence and independent verdict pending.",
+        "scepticVerdict": "Independent real-house-UUID fixture correction accepted; original2red/current2green and27historical controls pass. No legacy-ID migration.",
         "ruling": "Reverify this T-0164 source-level observation and its item ruling before any edit: Some helper bypasses remain; each apparent duplicate needs semantic matching.",
         "owningTask": "T-0192",
         "status": "pending-final-disposition",
-        "remainingUncertainty": "Reverify and link current proof before marking done, ruled out or deferred."
+        "remainingUncertainty": "Candidate progress only. Full unchanged-tree gate, committed mutation sweep, independent batch acceptance and hosted jobs remain pending."
       },
       {
         "id": "cross-cutting-18",
@@ -469,26 +488,33 @@
         "sourceReference": "org/plans/2026-09-refactor-ownership.json#findings/cross-cutting-01",
         "inspectedRevision": "49aa7a604cfead440c6cce827a53d2a294408e60",
         "evidence": [
-          "tmp/t0192-opening-reconciliation.md"
+          "tmp/t0192-opening-reconciliation.md",
+          "org/reviews/2026-10-t0192-task-evidence.json",
+          "tests/unit/runtime-operational-consistency.test.ts",
+          "tmp/t0192-defects-unit-1791067559071/summary.json"
         ],
-        "scepticVerdict": "Opening read-only reconciliation only; final evidence and independent verdict pending.",
+        "scepticVerdict": "Boot Composer reporting uses the canonical flag reader; true/off/no/empty/unset cases remain in the runtime oracle.",
         "ruling": "Reverify this T-0164 source-level observation and its item ruling before any edit: `PS_COMPOSER=off` or `no` disables feature while boot prints `composer=on`. Source-supported defect; no boot process run.",
         "owningTask": "T-0192",
         "status": "pending-final-disposition",
-        "remainingUncertainty": "Reverify and link current proof before marking done, ruled out or deferred."
+        "remainingUncertainty": "Candidate progress only. Final disposition awaits full unchanged-tree gate, committed mutation sweep, independent batch review and hosted jobs. Oracle test-type fixture errors remain explicitly open in task evidence."
       },
       {
         "id": "cross-cutting-02",
         "sourceReference": "org/plans/2026-09-refactor-ownership.json#findings/cross-cutting-02",
         "inspectedRevision": "49aa7a604cfead440c6cce827a53d2a294408e60",
         "evidence": [
-          "tmp/t0192-opening-reconciliation.md"
+          "tmp/t0192-opening-reconciliation.md",
+          "org/reviews/2026-10-t0192-task-evidence.json",
+          "tests/unit/runtime-gateway-diagnostic-redaction.test.ts",
+          "tmp/t0192-defects-unit-1791067559071/summary.json",
+          "tmp/t0192-defects-unit-1791071240862/summary.json"
         ],
-        "scepticVerdict": "Opening read-only reconciliation only; final evidence and independent verdict pending.",
+        "scepticVerdict": "Laplace accepted existing neutral gateway port binding, with all-trailing-slash diagnostic normalisation qualified. Redaction preserved; design-lint and650-case cohort pass.",
         "ruling": "Reverify this T-0164 source-level observation and its item ruling before any edit: Mismatch when `PS_LLM_API` has a chat-completions URL from which runtime derives another base; a bare base does not establish same case.",
         "owningTask": "T-0192",
         "status": "pending-final-disposition",
-        "remainingUncertainty": "Reverify and link current proof before marking done, ruled out or deferred."
+        "remainingUncertainty": "Candidate progress only. Full unchanged-tree gate, committed mutation sweep, independent batch acceptance and hosted jobs remain pending."
       },
       {
         "id": "cross-cutting-10",
@@ -534,9 +560,11 @@
         "sourceReference": "org/plans/2026-09-refactor-ownership.json#findings/cross-cutting-03",
         "inspectedRevision": "49aa7a604cfead440c6cce827a53d2a294408e60",
         "evidence": [
-          "tmp/t0192-opening-reconciliation.md"
+          "tmp/t0192-opening-reconciliation.md",
+          "tests/unit/tooling-env-contract.test.ts",
+          "org/reviews/2026-10-t0192-task-evidence.json"
         ],
-        "scepticVerdict": "Opening read-only reconciliation only; final evidence and independent verdict pending.",
+        "scepticVerdict": "Five equivalent CLI loaders share one helper. Deploy precedence intentionally remains distinct.48new environment cases and115historical controls pass; unmatched quote regression preserved. This is not a claim that all application env readers have identical semantics.",
         "ruling": "Reverify this T-0164 source-level observation and its item ruling before any edit: Multiple env readers and boolean vocabularies remain. Registry needs explicit precedence and fail-closed cases.",
         "owningTask": "T-0192",
         "status": "pending-final-disposition",
@@ -640,13 +668,16 @@
         "sourceReference": "org/plans/2026-09-refactor-ownership.json#operatorDispositions/app-16",
         "inspectedRevision": "49aa7a604cfead440c6cce827a53d2a294408e60",
         "evidence": [
-          "tmp/t0192-opening-reconciliation.md"
+          "tmp/t0192-opening-reconciliation.md",
+          "org/reviews/2026-10-t0192-task-evidence.json",
+          "tests/unit/runtime-operational-consistency.test.ts",
+          "tmp/t0192-defects-unit-1791067559071/summary.json"
         ],
-        "scepticVerdict": "Opening read-only reconciliation only; final evidence and independent verdict pending.",
+        "scepticVerdict": "Boot recovery now precedes fallible startup operations; runtime consistency oracle exercises healthy boot and catalogue/scheduler/sync failures.",
         "ruling": "org/reviews/2026-09-decision-register.md:2396; Reverify the item-specific ruled disposition against its accepted decision and parent qualification.",
         "owningTask": "T-0192",
         "status": "pending-final-disposition",
-        "remainingUncertainty": "Reverify and link current proof before marking done, ruled out or deferred."
+        "remainingUncertainty": "Candidate progress only. Final disposition awaits full unchanged-tree gate, committed mutation sweep, independent batch review and hosted jobs. Oracle test-type fixture errors remain explicitly open in task evidence."
       },
       {
         "id": "app-18",
@@ -731,13 +762,17 @@
         "sourceReference": "org/plans/2026-09-refactor-ownership.json#operatorDispositions/cross-cutting-16",
         "inspectedRevision": "49aa7a604cfead440c6cce827a53d2a294408e60",
         "evidence": [
-          "tmp/t0192-opening-reconciliation.md"
+          "tmp/t0192-opening-reconciliation.md",
+          "org/reviews/2026-10-t0192-task-evidence.json",
+          "tmp/t0192-defects-template-1791068870506/summary.json",
+          "tmp/t0192-defects-template-1791068988367/summary.json",
+          "tmp/t0192-defects-unit-1791071240862/summary.json"
         ],
-        "scepticVerdict": "Opening read-only reconciliation only; final evidence and independent verdict pending.",
+        "scepticVerdict": "Independent real-house-UUID fixture correction accepted; original2red/current2green and27historical controls pass. No legacy-ID migration.",
         "ruling": "org/reviews/2026-09-decision-register.md:3105; Reverify the item-specific free-band disposition against its accepted decision and parent qualification.",
         "owningTask": "T-0192",
         "status": "pending-final-disposition",
-        "remainingUncertainty": "Reverify and link current proof before marking done, ruled out or deferred."
+        "remainingUncertainty": "Candidate progress only. Full unchanged-tree gate, committed mutation sweep, independent batch acceptance and hosted jobs remain pending."
       },
       {
         "id": "cross-cutting-11",

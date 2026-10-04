@@ -16,7 +16,7 @@
 
 "use client";
 
-import { useCallback, useState } from "react";
+import { useCallback, useRef, useState } from "react";
 import { Terminal, RefreshCw, Plus, FileCode, ScrollText } from "lucide-react";
 import AppPageShell from "@/components/layout/AppPageShell";
 import { SCRIPT_EXT_LIST, hasScriptExt, stripScriptExt } from "@/lib/scripts/script-ext";
@@ -117,9 +117,31 @@ export default function ScriptsPage() {
   const [editorContent, setEditorContent] = useState("");
   const [editorIsNew, setEditorIsNew] = useState(false);
   const [editorLoading, setEditorLoading] = useState(false);
+  const [editorError, setEditorError] = useState<string | null>(null);
   const [editorSaving, setEditorSaving] = useState(false);
+  const editorRead = useRef(0);
+  const editorDraft = useRef({ revision: 0, nameRevision: 0 });
+
+  const changeEditorName = useCallback((name: string) => {
+    editorDraft.current.revision++;
+    editorDraft.current.nameRevision++;
+    setEditorName(name);
+  }, []);
+
+  const changeEditorContent = useCallback((content: string) => {
+    editorDraft.current.revision++;
+    setEditorContent(content);
+  }, []);
+
+  const closeEditor = useCallback(() => {
+    editorRead.current++;
+    setEditorOpen(false);
+  }, []);
 
   const openNew = useCallback((name = "", content = "") => {
+    editorRead.current++;
+    setEditorLoading(false);
+    setEditorError(null);
     setEditorIsNew(true);
     setEditorName(name);
     setEditorContent(content || "#!/usr/bin/env bash\nset -euo pipefail\n\n");
@@ -127,21 +149,29 @@ export default function ScriptsPage() {
   }, []);
 
   const openEdit = useCallback(async (s: ScriptFile) => {
+    const request = ++editorRead.current;
     setEditorIsNew(false);
     setEditorName(s.name);
     setEditorContent("");
     setEditorOpen(true);
     setEditorLoading(true);
+    setEditorError(null);
     try {
       const res = await safeApiCall<{ data?: { content?: string } }>(`/api/scripts/${encodeURIComponent(s.name)}`);
-      setEditorContent(res.ok ? res.data?.data?.content ?? "" : "");
-      if (!res.ok) showToast("Failed to load script", "error");
+      if (request !== editorRead.current) return;
+      if (res.ok && typeof res.data?.data?.content === "string") {
+        setEditorContent(res.data.data.content);
+      } else {
+        setEditorError("Failed to load script. Close the editor and open it again to retry.");
+        showToast("Failed to load script", "error");
+      }
     } finally {
-      setEditorLoading(false);
+      if (request === editorRead.current) setEditorLoading(false);
     }
   }, [showToast]);
 
   const saveEditor = useCallback(async () => {
+    if (editorLoading || editorError || editorSaving) return;
     let name = editorName.trim();
     // `.sh` stays the default for a bare name; what changed is that a name
     // that already ends in one of the seven no longer gets a second extension,
@@ -151,6 +181,8 @@ export default function ScriptsPage() {
       showToast("Give the script a name", "error");
       return;
     }
+    const request = editorRead.current;
+    const { revision, nameRevision } = editorDraft.current;
     await runWrite({
       showToast,
       setBusy: setEditorSaving,
@@ -160,15 +192,23 @@ export default function ScriptsPage() {
       successMessage: `Saved ${name}`,
       errorMessage: "Failed to save script",
       onSuccess: () => {
-        setEditorOpen(false);
+        if (request === editorRead.current) {
+          if (revision === editorDraft.current.revision) closeEditor();
+          else if (editorIsNew && nameRevision === editorDraft.current.nameRevision) {
+            setEditorIsNew(false);
+            setEditorName(name);
+          }
+        }
         void refetch();
       },
     });
-  }, [editorName, editorIsNew, editorContent, refetch, showToast]);
+  }, [editorName, editorIsNew, editorContent, editorLoading, editorError, editorSaving, refetch, showToast, closeEditor]);
 
   // The editor's ConfirmButton has already asked; this is the second click.
   const deleteEditor = useCallback(async () => {
     if (editorIsNew || !editorName) return;
+    const request = editorRead.current;
+    const { revision } = editorDraft.current;
     await runWrite({
       showToast,
       setBusy: setEditorSaving,
@@ -177,11 +217,14 @@ export default function ScriptsPage() {
       successMessage: `Deleted ${editorName}`,
       errorMessage: "Failed to delete",
       onSuccess: () => {
-        setEditorOpen(false);
+        if (request === editorRead.current) {
+          if (revision === editorDraft.current.revision) closeEditor();
+          else setEditorIsNew(true);
+        }
         void refetch();
       },
     });
-  }, [editorIsNew, editorName, refetch, showToast]);
+  }, [editorIsNew, editorName, refetch, showToast, closeEditor]);
 
   const handleRun = useCallback(
     (s: ScriptFile) => {
@@ -317,12 +360,13 @@ export default function ScriptsPage() {
         open={editorOpen}
         isNew={editorIsNew}
         name={editorName}
-        onNameChange={setEditorName}
+        onNameChange={changeEditorName}
         content={editorContent}
-        onContentChange={setEditorContent}
+        onContentChange={changeEditorContent}
         loading={editorLoading}
+        readError={editorError}
         saving={editorSaving}
-        onClose={() => setEditorOpen(false)}
+        onClose={closeEditor}
         onSave={() => void saveEditor()}
         onDelete={() => void deleteEditor()}
         scheduled={Boolean(scripts.find((s) => s.name === editorName)?.schedule)}

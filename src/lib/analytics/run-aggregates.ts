@@ -14,7 +14,7 @@ import {
 import { estimateCost } from "./model-cost";
 import { parseStoredUsage } from "@/lib/runs/parse-stored-usage";
 import { safeRead } from "@/lib/db/safe-read";
-import type { HistogramBin } from "@/components/viz/DistributionHistogram";
+import type { HistogramBin } from "@/types/console";
 
 function days(n: number): string {
   return `-${Math.max(0, Math.floor(n))} days`;

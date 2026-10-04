@@ -24,9 +24,22 @@ export interface RuntimeStatus {
   platform: string;
 }
 
+/** Redact credential-bearing URL components; arbitrary path segments are retained. */
+export function diagnosticGatewayUrl(value: string): string {
+  if ([...value].some(char => char.charCodeAt(0) < 32 || char.charCodeAt(0) === 127)) return "invalid-endpoint";
+  try {
+    const url = new URL(value);
+    if (url.protocol !== "http:" && url.protocol !== "https:") return "invalid-endpoint";
+    return url.origin + (url.pathname === "/" ? "" : url.pathname);
+  } catch {
+    return "invalid-endpoint";
+  }
+}
+
 /**
  * The same facts as one pasteable block, the shape the boot line uses, so a
- * bug report reads the way the maintainer expects and carries no secret.
+ * bug report uses the same diagnostic fields. Gateway userinfo, query and
+ * fragment are removed by the collector; arbitrary path segments remain.
  */
 export function formatRuntimeStatus(s: RuntimeStatus): string {
   return [

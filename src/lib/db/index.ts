@@ -23,6 +23,8 @@
 // the three are not counted; they were not moved behind a seam.
 // ═══════════════════════════════════════════════════════════════
 
+import { serverLog } from "@/lib/logs/server-log";
+
 import Database, { type Database as _DatabaseType } from "better-sqlite3";
 import { join } from "path";
 import { existsSync, readFileSync, readdirSync, statSync } from "fs";
@@ -429,8 +431,7 @@ export function getSchemaHealth(): SchemaHealth {
     categoryCount = countMissionCategories(database);
   }
   if (schemaVersion >= 2 && !hasMissionCategoriesTable) {
-    console.error(
-      "[db] schema_version >= 2 but mission_categories table is missing — database may be corrupt",
+    serverLog("db", "error", "schema_version >= 2 but mission_categories table is missing — database may be corrupt",
     );
   }
   return { schemaVersion, hasMissionCategoriesTable, categoryCount };

@@ -16,7 +16,7 @@ import { messageFromError } from "@/lib/api/api-fetch";
 
 import type { SyncActionResult } from "@/lib/models/sync-result";
 // The line shape is a UI contract, declared in core; the module reads it.
-import type { DriftLine } from "@/components/models/types";
+import type { DriftLine } from "@/lib/models/model-types";
 export type { SyncActionResult };
 
 export interface DriftReport {

@@ -10,19 +10,17 @@
 
 import { NextRequest } from "next/server";
 
-import { ok, badRequest, notFound, serviceUnavailable } from "@/lib/api/api-response";
+import { ok, badRequest, notFound } from "@/lib/api/api-response";
 import { appendAuditLine } from "@/lib/api/audit-log";
-import { isFeatureEnabled } from "@/lib/feature-flags";
+import { composerOff } from "@/lib/feature-flags-guard";
 import { ensureDb } from "@/lib/db";
 import { runtime } from "@/lib/runtime";
 import { cancelComposerRun, stopBackendRuns } from "@/lib/composer/cancel";
 import { getComposerRun } from "@/lib/composer/composer-repository";
 import type { ComposerRun } from "@/lib/composer/schema";
-import { route } from "@/lib/api/api-route";
+import { route, type RouteContext } from "@/lib/api/api-route";
 
-interface Ctx {
-  params: Promise<{ id: string }>;
-}
+type Ctx = RouteContext<{ id: string }>;
 
 /**
  * Explain the state we are refusing from.
@@ -46,9 +44,8 @@ function describeNotCancellable(run: ComposerRun): string {
 }
 
 export const POST = route("POST /api/composer/runs/[id]/cancel", (p) => `id=${p.id}`, "Failed to cancel run", async (_request: NextRequest, ctx: Ctx) => {
-  if (!isFeatureEnabled("composer")) {
-    return serviceUnavailable("Composer is not enabled. Set PS_COMPOSER=1 to enable workflows.");
-  }
+  const unavailable = composerOff();
+  if (unavailable) return unavailable;
 
   const { id } = await ctx.params;
   ensureDb();

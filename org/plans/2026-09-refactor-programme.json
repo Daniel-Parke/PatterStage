@@ -1399,7 +1399,8 @@
         "src/lib/update-handlers/shared.ts",
         "src/modules/hermes/lib/agent-runtime.ts",
         "src/modules/hermes/lib/home.ts",
-        "src/modules/hermes/lib/profile-paths.ts"
+        "src/modules/hermes/lib/profile-paths.ts",
+        "src/instrumentation.ts"
       ],
       "dependsOn": [
         "T-0199",

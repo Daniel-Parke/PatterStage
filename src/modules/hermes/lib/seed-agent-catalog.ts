@@ -16,6 +16,8 @@
 // repo and its location is resolved by the core helper both halves share.
 // ═══════════════════════════════════════════════════════════════
 
+import { serverLog } from "@/lib/logs/server-log";
+
 import { existsSync, readFileSync } from "fs";
 
 import { seedPath } from "@/lib/seed/seed-paths";
@@ -130,8 +132,7 @@ function seedRoot(mode: SeedMode, confirmOverride = false): number {
       (k) => JSON.stringify(seedPreserved[k]) !== JSON.stringify(currentPreserved[k]),
     );
     if (differingKeys.length > 0) {
-      console.warn(
-        `[seed] root: existing config preserved. Differing sections: ${differingKeys.join(", ")}. ` +
+      serverLog("seed", "warn", `root: existing config preserved. Differing sections: ${differingKeys.join(", ")}. ` +
           "Pass --confirm-override to apply seed defaults for these sections.",
       );
       if (confirmOverride) {
@@ -164,8 +165,7 @@ function seedRoot(mode: SeedMode, confirmOverride = false): number {
 function seedProfiles(mode: SeedMode, slugFilter?: string, strict = false): number {
   if (!existsSync(PROFILES_MANIFEST)) {
     if (strict) throw new Error("Bundled profiles manifest is missing");
-    console.warn(
-      `catalog-seed: missing ${PROFILES_MANIFEST} — run: node scripts/tooling/generate-seed-pack.mjs`,
+    serverLog("seed", "warn", `catalog-seed: missing ${PROFILES_MANIFEST} — run: node scripts/tooling/generate-seed-pack.mjs`,
     );
     return 0;
   }

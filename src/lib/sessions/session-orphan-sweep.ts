@@ -9,6 +9,8 @@
 // they mirror; the try/catch stays here because a failed sweep is a non-fatal
 // "closed nothing this tick", and that judgement is the sweep's.
 
+import { serverLog } from "@/lib/logs/server-log";
+
 import type Database from "better-sqlite3";
 
 import {
@@ -153,10 +155,10 @@ export function closeOrphanedActiveSessions(
 
   if (options.log !== false) {
     if (counters.total > 0 && (lastOrphanCloseCount === null || Math.abs(counters.total - lastOrphanCloseCount) >= 100)) {
-      console.log(`[syncHermesSessionsToDb] closed ${counters.total} orphaned active sessions`);
+      serverLog("sessions", "log", `closed ${counters.total} orphaned active sessions`);
       lastOrphanCloseCount = counters.total;
     } else if (counters.total === 0 && lastOrphanCloseCount !== null && lastOrphanCloseCount > 0) {
-      console.log(`[syncHermesSessionsToDb] orphan session queue drained (was ${lastOrphanCloseCount})`);
+      serverLog("sessions", "log", `orphan session queue drained (was ${lastOrphanCloseCount})`);
       lastOrphanCloseCount = null;
     } else if (counters.total > 0) {
       lastOrphanCloseCount = counters.total;

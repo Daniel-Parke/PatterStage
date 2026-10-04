@@ -1,11 +1,12 @@
 import { guardRoute } from "@/lib/api/response-route";
+import { route } from "@/lib/api/api-route";
 import { NextRequest, NextResponse } from "next/server";
 import { existsSync, readFileSync, writeFileSync } from "fs";
 import { dirname } from "path";
 
 import { resolveProfileHermesHome, buildProfileHermesPathBundle } from "@/modules/hermes/lib/profile-paths";
 import { getBehaviorFiles } from "@/modules/hermes/lib/behavior-files";
-import { logApiError, serverErrorFromCatch } from "@/lib/api/api-logger";
+import { logApiError } from "@/lib/api/api-logger";
 import { parseJsonBody } from "@/lib/api/parse-json-body";
 import { safeStat } from "@/lib/fs/fs-stats";
 import { ensureDir, backupTimestamp } from "@/lib/fs/fs-helpers";
@@ -146,7 +147,7 @@ async function GETImpl(
     return badRequest(resolved.error);
   }
 
-  try {
+  return route("GET /api/agent/files/[key]", `reading ${resolved.path}`, "Failed to read file", async () => {
     ensureDb();
     const profileSlug = safeProfileSlug(profile);
 
@@ -195,15 +196,7 @@ async function GETImpl(
         profileSlug,
       ),
     );
-  }
-  catch (error) {
-    return serverErrorFromCatch(
-      "GET /api/agent/files/[key]",
-      `reading ${resolved.path}`,
-      error,
-      "Failed to read file",
-    );
-  }
+  })();
 }
 
 async function PUTImpl(
@@ -230,7 +223,7 @@ async function PUTImpl(
     );
   }
 
-  try {
+  return route("PUT /api/agent/files/[key]", `writing ${resolved.path}`, "Failed to write file", async () => {
     ensureDb();
     const bodyResult = await parseJsonBody(request);
     if (bodyResult instanceof NextResponse) return bodyResult;
@@ -336,15 +329,7 @@ async function PUTImpl(
     });
 
     return ok({ success: true, key, path: resolved.path });
-  }
-  catch (error) {
-    return serverErrorFromCatch(
-      "PUT /api/agent/files/[key]",
-      `writing ${resolved.path}`,
-      error,
-      "Failed to write file",
-    );
-  }
+  })();
 }
 
 export const GET = guardRoute(GETImpl);
