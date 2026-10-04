@@ -83,7 +83,8 @@
       "anchor": "if (this.gatewayIdentity(endpoint) !== input.gatewayIdentity) {",
       "replacement": "if (this.gatewayIdentity(endpoint) !== input.gatewayIdentity && false) {",
       "tests": [
-        "tests/unit/lib-domain-queue-confirmation.test.ts"
+        "tests/unit/lib-domain-queue-confirmation.test.ts",
+        "tests/unit/lib-domain-sweep-regressions.test.ts"
       ],
       "why": "Stop refuses a changed gateway before credential handoff."
     },
@@ -124,7 +125,8 @@
       "anchor": "query: copyField(\"source_query\"),",
       "replacement": "query: copyField(\"query\"),",
       "tests": [
-        "tests/unit/lib-domain-audit-regressions.test.ts"
+        "tests/unit/lib-domain-audit-regressions.test.ts",
+        "tests/unit/lib-domain-sweep-regressions.test.ts"
       ],
       "why": "Upstream query PATCH carries its literal source_query key."
     },
@@ -183,7 +185,9 @@
       "file": "src/lib/composer/cancel.ts",
       "anchor": "updateRun(agentRun.id, { status: \"cancelled\", error: CANCELLED_BY_USER });",
       "replacement": "updateRun(agentRun.id, { status: \"started\", error: CANCELLED_BY_USER });",
-      "tests": ["tests/unit/lib-domain-queue-invalid-cancel.test.ts"],
+      "tests": [
+        "tests/unit/lib-domain-queue-invalid-cancel.test.ts"
+      ],
       "why": "Malformed private responsibility cannot prevent the local agent cancellation."
     }
   ]

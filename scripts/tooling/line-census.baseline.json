@@ -2,7 +2,7 @@
   "measuredAt": "2026-10-04",
   "counts": {
     "srcLines": 102409,
-    "testLines": 154313,
+    "testLines": 154359,
     "scriptsLines": 13597,
     "srcRepeatedWindowLines": 655,
     "testRepeatedWindowLines": 4768,
@@ -1315,6 +1315,11 @@
       "measuredAt": "2026-10-04",
       "rise": "testRepeatedWindowLines rose from 4795 to 4826",
       "reason": "T0194/T0207 operator-authorised independent retained-fixture seams, exact config inverse guards and K3 anti-vacuity assertions; all existing names, deadlines and behaviour assertions held. One source line restores the required root-purpose comment. Targets unchanged."
+    },
+    {
+      "measuredAt": "2026-10-04",
+      "rise": "testLines rose from 154313 to 154359",
+      "reason": "T-0194 committed-sweep follow-up: two independently authored behaviour controls close one survivor and one non-qualifying Promise assertion; existing tests, source and targets unchanged."
     }
   ]
 }
