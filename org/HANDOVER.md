@@ -7,6 +7,28 @@ updated: 2026-10-04
 
 # Handover · PatterStage, 2026-10-02
 
+## Actual HTTP diagnostic checkpoint, 2026-10-04
+
+T0206 remains active; this is observability progress, not a timing repair.
+Implementation3d62a0d7 passes the full unchanged gate:8902unit/511browser,
+existing9/24skips,2build-purity controls and both censuses. Current-source
+Windows and nativeLinux actual controls preserve21native/status/completion/
+returned counts, deadlines and cleanup. Independent recording controls52/52
+pass; the corrected committed sweep9b2d140e proves7causal matcher kills,
+52before/restored controls, exact restoration and identity. The earlier
+invalid-mutant attempt is rejected and retained. Only that mutant definition
+changed after the full gate; its results are not relabeled as a new full run.
+See [HTTP budget evidence](reviews/2026-10-t0206-http-budget.md).
+
+Test baseline152071includes301independent oracle/assertion lines with the
+written growth reason. Source102068/repeated693, tests repeated4787 and
+one-importer103 remain; targets have not moved. Current-head hosted results
+must be read after the dev push. Original macOS failures still lack a causal
+repair, regardless of later greens. T0194 stays unopened until its start
+dependency is met; ADR0018 accepted proposal is preserved, protected entry
+not yet created. Normal port3333/operator data were untouched. Personal
+preview3999 is stopped; full-browser gate used its owned port3000 instance.
+
 ## Accepted batch checkpoint, 2026-10-04
 
 T-0193 is done, independently accepted by Banach at070f24ea. Its product

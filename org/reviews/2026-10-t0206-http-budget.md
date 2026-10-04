@@ -296,3 +296,43 @@ Node24.21 and must rerun all stages. No assertion or deadline was relaxed.
 Amended oracle LF SHA256:
 c5e80eb53dbb92a00f138618f9871e374b0a31e555bc454f7b281a4fde82bc73.
 The first red receipt remains tmp/t0206-coordinator-gate-1791124875497/gate/summary.json.
+
+
+## Independently verified diagnostic checkpoint
+
+Implementation3d62a0d7 passes the full unchanged gate at
+tmp/t0206-coordinator-gate-1791125479799/gate/summary.json:
+10stages all exit0,8902unit/9existing skips,511browser/24existing skips,
+2build-purity controls and both censuses. The production Turbopack build
+took846.4s; previous753.2s. Resource samples support memory pressure as a
+possible contributor, not a proven compiler defect. No alternate build or
+check relaxation was used. Gate stamp before/after:
+0d196d3f0809fe99112df6091992b32b01afa6941919ff2f8c057fd749b1f366.
+Content/mode proof covers2697paths:
+tmp/t0206-actual-gate-content-binding.json. Text CRLF normalisation is
+explicit; the actual validation tree's raw gate stamp was separately held.
+
+The second attempt was interrupted deliberately after noticing that the
+growth allowance had been checked without --update-baseline. Only verified
+owned descendants were stopped; no pass is claimed for that run. Receipt:
+tmp/t0206-coordinator-gate-1791125308264/interrupted.json. The final full
+gate includes the persisted301line oracle growth reason and unchanged targets.
+
+The first sweep's generic runner printed7kills, but the coordinator's
+stronger causal check rejected invalid-receipt: two controls had individual
+fixture infrastructure failures after a validation guard was removed. It
+is not accepted as a seven-kill sweep. All52original/restored controls passed,
+and exact restoration held. Receipts retained under
+tmp/t0206-actual-sweep-1791127313944. Commit9b2d140e changes only that
+mutant's definition to return before validation; no implementation or oracle
+assertion changed. The full gate above is attributed to3d62a0d7, not silently
+relabeled as a full run at this subsequent manifest-only commit.
+
+Corrected committed sweep at9b2d140e:
+tmp/t0206-actual-sweep-1791127587574/summary.json. Seven intended matcher
+kills, zero individual or suite infrastructure failures,52original/restored
+controls, exact bytes/modes and test identities retained. Banach's bounded
+review accepts the diagnostic checkpoint only. T0206 remains active: original
+macOS timing cause unproved; no repair, whole-product or release acceptance.
+Current-head hosted jobs must be observed after push. T0194 stays unopened;
+accepted ADR0018 has not been added to the protected decisions directory.
