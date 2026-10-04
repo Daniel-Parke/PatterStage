@@ -102,15 +102,15 @@ function clipboard(writeText: jest.Mock) { Object.defineProperty(navigator, "cli
 describe("T-0193 Research actions and labels", () => {
   it("clipboard refusal is handled visibly without claiming Copied", async () => {
     const writeText = jest.fn().mockRejectedValue(new Error("Owned clipboard refusal")); clipboard(writeText);
-    render(<ResearchReport run={research} steps={[]} />); fireEvent.click(screen.getByRole("button", { name: "Copy", exact: true }));
+    render(<ResearchReport run={research} steps={[]} />); fireEvent.click(screen.getByRole("button", { name: "Copy" }));
     await screen.findByRole("alert");
     expect(screen.queryByRole("button", { name: "Copied" })).toBeNull();
-    expect(screen.getByRole("button", { name: "Copy", exact: true })).toBeEnabled();
+    expect(screen.getByRole("button", { name: "Copy" })).toBeEnabled();
     expect(writeText).toHaveBeenCalledWith(research.report);
   });
   it("successful clipboard copy uses the report and confirms success", async () => {
     clipboard(jest.fn().mockResolvedValue(undefined));
-    render(<ResearchReport run={research} steps={[]} />); fireEvent.click(screen.getByRole("button", { name: "Copy", exact: true }));
+    render(<ResearchReport run={research} steps={[]} />); fireEvent.click(screen.getByRole("button", { name: "Copy" }));
     await screen.findByRole("button", { name: "Copied" }); expect(navigator.clipboard.writeText).toHaveBeenCalledWith(research.report);
   });
   it("exports are single links with preserved targets and no nested controls", () => {
@@ -186,7 +186,7 @@ describe("T-0193 collection state semantics", () => {
       if (!data) throw new Error(`Unmatched owned collection: ${input}`); return jsonResponse({ data });
     });
     renderWithQuery(<HindsightBrowser />); await screen.findByText(/No memories yet/i);
-    const memories = screen.getByRole("button", { name: "Memories", exact: true }), directives = screen.getByRole("button", { name: "Directives", exact: true });
+    const memories = screen.getByRole("button", { name: "Memories" }), directives = screen.getByRole("button", { name: "Directives" });
     expect(memories).toHaveAttribute("aria-pressed", "true"); expect(directives).toHaveAttribute("aria-pressed", "false");
     fireEvent.click(directives); await screen.findByText(/Create your first directive/i);
     expect(memories).toHaveAttribute("aria-pressed", "false"); expect(directives).toHaveAttribute("aria-pressed", "true");

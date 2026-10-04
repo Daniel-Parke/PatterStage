@@ -48,21 +48,7 @@
       ],
       "acquired": "2026-10-04T10:03:25.397971+00:00",
       "expires": "2026-10-05T10:03:25.397971+00:00"
-    },
-    {
-      "lane_id": "T-0193-followup-oracle",
-      "task_id": "T-0193",
-      "session_id": "Franklin-01a1062c-ad31-77c2-8ff2-71c41ee9b5d6",
-      "host": "local",
-      "path_claims": [
-        "tests/unit/profile-draft-ownership.test.tsx",
-        "tests/unit/page-read-failure-truth.test.tsx",
-        "tests/unit/page-state-followups.test.tsx",
-        "tests/e2e/page-state-reader-motion.spec.ts"
-      ],
-      "acquired": "2026-10-04T10:30:39.373668+00:00",
-      "expires": "2026-10-05T10:30:39.373668+00:00"
     }
   ],
-  "note": "Two disjoint writers. Faraday completed and froze16unit/fourbrowser profile cases. Franklin independently amends the untouched profile recovery control under Q015 and authors remaining followup oracles. Coordinator owns runtime/metadata. T0206 remains red and open."
+  "note": "Independent oracle writers completed and released. Coordinator only; T0206 remains active/red without a writer lane."
 }

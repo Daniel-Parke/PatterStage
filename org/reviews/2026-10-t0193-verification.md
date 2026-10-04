@@ -65,3 +65,18 @@ at1440x900/390x844. Five faces/persistence/dismissal and normal-motion controls
 pass. Receipt:`tmp/t0193-reader-browser-red.json`; LF SHA256:`4eed73564270643e4849b4ef9ee005a6a5c4c1d11698d99de99e2b4b801a3aa2`.
 Measured muted labels4.0328:1, and delayed reduced-motion children remain
 opacity0 (last delay0.55s) despite duration0.01ms. No rule was changed yet.
+
+Coordinator pre-gate:50new unit controls pass; existing five-page suites38pass;
+Missions before/after30pass with identical complete name sets. App typecheck
+and changed-source ESLint pass. Initial test typecheck failed on five unsupported
+Testing Library `exact` options. Faraday independently removed only those
+properties; string matching stays exact,17names/assertions preserved; focused
+17and complete test typecheck pass. Amended LF hash is recorded on the task.
+
+Census before full gate: source102077(+15), tests151608(+841), source repeated
+windows693(−12); test windows4787 and one-importer103 unchanged. The new50unit
+and12browser controls are retained regression coverage. Source growth is the
+net cost of draft ownership, truthful read errors and accessible state after
+Missions−41, label-map−6 and narration cleanup. Targets remain unchanged.
+Reader production green, controlled walks, full gate, sweep and acceptance
+remain pending. No batch closure or macOS repair is claimed.

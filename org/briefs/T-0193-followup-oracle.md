@@ -37,3 +37,12 @@ retain normal-motion control. No whole-product acceptance inferred.
 No broad tests/builds/commits or runtime edits. Report only causal failing
 checks, infrastructure distinctly, hashes and test identities. New tests may
 start red, but must compile against the current interfaces.
+
+## Independent typing amendment
+
+2026-10-04 Faraday owns only page-state-followups.test.tsx. Test typecheck
+reports five TS2769 errors: Testing Library ByRoleOptions has no `exact`.
+String accessible names already match exactly by default. Remove only those
+five unsupported properties, preserve17names and assertions, prove the prior
+and new names agree, run the17controls and the test typecheck. No other edits.
+Runtime authored by coordinator; frozen original oracle authored by Franklin.
