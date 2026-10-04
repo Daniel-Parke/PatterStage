@@ -49,7 +49,7 @@ async function GETImpl(_request: NextRequest) {
       });
     }
   } catch {
-    /* unreachable — fall through to the not-configured response */
+    /* Provider inspection failed; return the configured-provider diagnostic below. */
   }
 
   // Name the provider the DATABASE says is active, even when it cannot be

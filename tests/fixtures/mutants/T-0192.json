@@ -161,10 +161,10 @@
     },
     {
       "id": "m16-missions-name-binding",
-      "file": "src/hooks/useMissionsPage.ts",
-      "anchor": "onTemplateNameChange: templateState.setTemplateName,",
-      "replacement": "onTemplateNameChange: () => undefined,",
-      "why": "T-0192 actual Missions template editor wiring real controls save the exact editor payload without altering the composer draft: editing Template name must reach the saved payload. The separate 43-binding mapping assertion may fail first; inspect the behavioural case before claiming payload coverage.",
+      "file": "src/components/missions/templates/TemplateEditorModal.tsx",
+      "anchor": "onChange={(e) => onTemplateNameChange(e.target.value)}",
+      "replacement": "onChange={() => undefined}",
+      "why": "The actual Template name input stops publishing edits while the 43 hook-to-modal bindings remain unchanged. Require the real-controls save case to reach its saved payload assertion and observe the original name instead of Edited template; a mapping-only failure is insufficient.",
       "tests": [
         "tests/unit/mission-template-editor-wiring.test.tsx"
       ]
@@ -187,6 +187,26 @@
       "why": "T-0192 route-local terminal catch contracts Missions list: exact terminal log and 500 for Error: require the exact original route/context/message and exactly one terminal log.",
       "tests": [
         "tests/unit/route-local-catch-contract.test.ts"
+      ]
+    },
+    {
+      "id": "m19-sign-in-language",
+      "file": "src/proxy.ts",
+      "anchor": "<html lang=\"en\">",
+      "replacement": "<html lang=\"fr\">",
+      "why": "The actual standalone sign-in document must declare English; preserve all refusal controls.",
+      "tests": [
+        "tests/unit/sign-in-document-metadata.test.ts"
+      ]
+    },
+    {
+      "id": "m20-sign-in-viewport",
+      "file": "src/proxy.ts",
+      "anchor": "width=device-width, initial-scale=1",
+      "replacement": "width=980, initial-scale=1",
+      "why": "The actual document viewport must follow the device rather than the reproduced980px phone layout.",
+      "tests": [
+        "tests/unit/sign-in-document-metadata.test.ts"
       ]
     }
   ]

@@ -114,9 +114,9 @@ export const PUT = route("PUT /api/config", "updating config", "Failed to update
   // file with a stale snapshot, discarding whatever they were mid-way through
   // hand-editing.
   //
-  // This is the shape src/modules/hermes/lib/config-sync.ts:69-80 has always
-  // used on the same file. Two sites is not three: the shape is mirrored, not
-  // extracted (see the Rule of Three in src/lib/api/api-response.ts).
+  // Keep this route's pre-write corruption check explicit. A cached snapshot
+  // must not replace a file the operator is editing when that file no longer
+  // parses as valid YAML.
   const raw = existsSync(paths.config) ? readFileSync(paths.config, "utf-8") : "";
   let config: Record<string, unknown>;
   try {

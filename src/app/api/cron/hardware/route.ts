@@ -28,7 +28,7 @@ import { handleUpdateHardwareCron } from "@/lib/hardware-cron-handlers/update";
  * The three handlers below nonetheless carry an isReadOnly() check of their
  * own, beside requireAuthenticatedHostWrites, and both doublings are
  * deliberate. A crontab line this route writes is executed later by cron, so
- * this is one of the three host-side surfaces proxy.ts:58-63 names: a harness
+ * this is one of the three host-side surfaces proxy.ts lists in HOST_SIDE_EFFECT_PREFIXES: a harness
  * that calls a handler directly, without the proxy, must still be refused.
  * app-06 (ruled 2026-09-12) deleted the eleven route-level read-only checks
  * that were NOT host-side and kept these.

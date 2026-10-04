@@ -1,8 +1,8 @@
 {
   "measuredAt": "2026-10-04",
   "counts": {
-    "srcLines": 102070,
-    "testLines": 150463,
+    "srcLines": 102062,
+    "testLines": 150531,
     "scriptsLines": 13597,
     "srcRepeatedWindowLines": 705,
     "testRepeatedWindowLines": 4787,
@@ -1230,6 +1230,11 @@
       "measuredAt": "2026-10-04",
       "rise": "testLines rose from 147076 to 150463",
       "reason": "T-0192 adds 3387 net test lines (147076 to 150463) for regression and contract oracles with recorded authorship and independent review. Historical test identities and coverage floors are preserved. Fixed programme targets remain unchanged. One-importer components remain 103 after shared chart types retain legitimate UI boundary consumers."
+    },
+    {
+      "measuredAt": "2026-10-04",
+      "rise": "testLines rose from 150463 to 150531",
+      "reason": "T-0192: four independent sign-in document metadata cases and causal rejection assertions preserving all16 fetch identities; no ceiling or historical target changes."
     }
   ]
 }

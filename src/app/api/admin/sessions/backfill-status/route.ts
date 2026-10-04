@@ -6,21 +6,18 @@
 //   { "dryRun": false }  — applies the sweep, returns actual counts
 //
 // Runs the same orphan-close logic the recurring 15s sync uses, but
-// as an explicit operator action. The dry-run mode lets the operator
-// see exactly which rows will close before committing. On a fresh
-// deploy the "would close" count is in the hundreds (33 mission +
-// 202 cron + 57 discord + 43 telegram sessions accumulated before
-// the fix landed); the next sync tick would also clean them up, but
-// running the backfill explicitly produces an audit-log entry and
-// makes the change visible in the admin UI immediately.
+// as an explicit operator action. Dry-run previews eligible counts by
+// source and resulting status. Counts depend on the current data, and
+// concurrent synchronisation can change them before a later apply.
+// Both modes record an audit entry and return their aggregate counts.
 //
-// Auth: requires an authenticated session, like every other admin route.
+// Auth: the proxy authenticates requests before this handler runs.
 //
 // Read-only mode refuses this endpoint outright, dry-run included, because
 // src/proxy.ts rejects unsafe METHODS and this is a POST. The comment here used
 // to promise that a dry run was still allowed for inspection; that has not been
-// true since the proxy took over enforcement, and the inner guard below was
-// unreachable. Kept as defence-in-depth under the shared message (T-0048).
+// true since the proxy took over enforcement. The redundant inner guard was
+// removed; response-settlement checks still protect in-flight requests.
 // ═══════════════════════════════════════════════════════════════
 
 import { guardRoute } from "@/lib/api/response-route";

@@ -163,7 +163,7 @@ function unauthorized(request: NextRequest, clearLegacyCookie = false): NextResp
       : `<p>Read your token locally from <code>PS_DATA_DIR/auth-token</code>. The server log gives the resolved file location but never prints the token.</p>`;
 
   const response = new NextResponse(
-    `<!doctype html><meta charset="utf-8"><title>PatterStage: access token required</title>` +
+    `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>PatterStage: access token required</title></head>` +
       `<body style="font:16px/1.6 system-ui;max-width:38rem;margin:10vh auto;padding:0 1.5rem;background:#05080d;color:#eaf2f8">` +
       `<h1 style="font-size:1.4rem">PatterStage needs your access token</h1>` +
       `<p>PatterStage is a single-operator control plane. The server minted one random operator token on first boot.</p>` +
@@ -177,7 +177,7 @@ function unauthorized(request: NextRequest, clearLegacyCookie = false): NextResp
       (source.kind === "file"
         ? `<p>If the token file is lost, delete it and restart to mint a new one. This also invalidates existing Bearer credentials and browser sessions.</p>`
         : "") +
-      `</body>`,
+      `</body></html>`,
     { status: 401, headers: { "content-type": "text/html; charset=utf-8" } },
   );
   if (clearLegacyCookie) response.cookies.delete(SESSION_COOKIE);

@@ -69,7 +69,7 @@ async function GETImpl(
       // falls through to the generic "No messages in this session"
       // empty state, which the user reported as confusing — the
       // session is healthy and live, just not yet flushed. The
-      // existing isSessionStillRunning() helper in src/lib/session-title.ts
+      // existing isSessionStillRunning() helper in src/lib/sessions/session-title.ts
       // pattern-matches the note text ("still running"/"in progress"/
       // "mid-flight") to drive the refresh-CTA render, so we keep
       // the same vocabulary.

@@ -1,5 +1,5 @@
 // ═══════════════════════════════════════════════════════════════
-// Gateway Health Check — Proxied through CH to avoid CORS issues
+// Gateway Health Check — Proxied through PatterStage to avoid CORS issues
 // ═══════════════════════════════════════════════════════════════
 // GET /api/gateway/health
 // ═══════════════════════════════════════════════════════════════
