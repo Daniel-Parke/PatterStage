@@ -88,7 +88,7 @@ function plantedCommand(configText: string, command: string, extension: "ts" | "
       join(dirname(process.execPath), "../lib/node_modules/npm/bin/npm-cli.js"), "/usr/share/nodejs/npm/bin/npm-cli.js"]
       .find((file): file is string => Boolean(file && file.endsWith("npm-cli.js") && existsSync(file)));
     if (!npm) throw new Error("INFRASTRUCTURE: npm CLI unavailable for the owned command fixture");
-    const env: NodeJS.ProcessEnv = { NODE_ENV: "test", PATH: dirname(process.execPath), HOME: directory, USERPROFILE: directory,
+    const env: NodeJS.ProcessEnv = { NODE_ENV: "test", PATH: process.platform === "win32" ? dirname(process.execPath) : [dirname(process.execPath), "/usr/bin", "/bin"].join(":"), HOME: directory, USERPROFILE: directory,
       TMP: directory, TEMP: directory, TMPDIR: directory, npm_config_cache: join(directory, "npm-cache"), npm_config_ignore_scripts: "true", npm_config_update_notifier: "false" };
     for (const key of ["SystemRoot", "WINDIR", "COMSPEC"]) if (process.env[key]) env[key] = process.env[key];
     const plant = `scripts/tooling/new-script-oracle.${extension}`;

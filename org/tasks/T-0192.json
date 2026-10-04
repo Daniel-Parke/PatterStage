@@ -657,6 +657,15 @@
         "author_session": "01a10195-e680-7d01-b79a-86627d74049c",
         "authorised_by": "Laplace exact R2 review under Q015",
         "date": "2026-10-04T00:04:26.675883+00:00"
+      },
+      {
+        "reason": "Independent POSIX fixture correction adds system shell directories after selected Node directory. Eight identities and all assertions unchanged; original three spawn sh ENOENT failures retained.",
+        "change": "tests/unit/scripts-typecheck-contract.test.ts",
+        "old_hash": "b7a5b7c81c4e164af788679348179eef0fa1a77f9d3fb6eaeb16ec01386ad650",
+        "new_hash": "54c3e733bbb19af183970cd9fceaee732b889e6d2bcf506767c1fc5533d40777",
+        "author_session": "01a10198-6b4f-7593-aa19-e0b3c8facad8",
+        "authorised_by": "Laplace exact R2 review under Q015",
+        "date": "2026-10-04T00:56:46.850828+00:00"
       }
     ]
   },

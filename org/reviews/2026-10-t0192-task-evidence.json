@@ -834,6 +834,13 @@
     "postImplementation": {
       "receipt": "tmp/t0192-defects-mission-wiring-1791073268229",
       "result": "37/37unchanged identities,minus37productionlines; Laplace sourceaccepted. BuiltUI/persistence and fullgate pending."
+    },
+    "builtWalk": {
+      "before": "tmp/t0192-mission-visual-1791073814015",
+      "after": "tmp/t0192-mission-visual-1791074111142",
+      "result": "1440x900and390x844 eachpassactualcreate/edit/diskJSON/reload/reopen/Cancel. UUIDv4formatchecked fornewIDs. Noerrors/overflow,oneh1. Coordinator inspectedbothbefore screenshots andafterphone.",
+      "polish": "Stackname/descriptionfieldsbelow sm breakpoint; desktopcolumnsretained. Oneclassline, noaddedsource lines. Metadata was visiblytruncated at390beforechange.",
+      "limits": "Privatebuiltwalk complementsfrozenjsdomoracle. No legacy-ID import proof or wholeproductacceptance."
     }
   },
   "serverLoggingOracle": {
@@ -852,7 +859,11 @@
       "tmp/t0192-defects-logs-1791072887905",
       "tmp/t0192-defects-logs-1791072920447"
     ],
-    "qualification": "Earlier group workflowId fixture, bootseparator, tokenlocation and dynamicmock-lifetime failures were corrected beforefreeze. Missing-helper failures are prospective contracts, not41product defects. Global testtypes initialfailure was concurrent unfrozen Missionsdraft, laterfixed."
+    "qualification": "Earlier group workflowId fixture, bootseparator, tokenlocation and dynamicmock-lifetime failures were corrected beforefreeze. Missing-helper failures are prospective contracts, not41product defects. Global testtypes initialfailure was concurrent unfrozen Missionsdraft, laterfixed.",
+    "postImplementation": {
+      "receipt": "tmp/t0192-defects-logs-1791073499729",
+      "result": "49/49exit0; Laplace accepted27call substitutions, exactbootmessages, argumentidentity and nonfatalComposer diagnostics. Productiondelta+25lines; no generalredaction claim."
+    }
   },
   "testRequirePolicyOracle": {
     "file": "tests/unit/test-require-policy.test.ts",
@@ -867,6 +878,28 @@
   },
   "nativeLinuxExpandedCandidate": {
     "receipt": "tmp/t0192-linux-1791074008592217500",
-    "result": "Original95controls pass; expanded111cases108pass3infrastructurefailures. npm cannotspawnsh duefixturePATH. Independent correction assignedNash; no Linuxfullgateclaim."
+    "result": "Original95controls pass; expanded111cases108pass3infrastructurefailures. npm cannotspawnsh duefixturePATH. Independent correction assignedNash; no Linuxfullgateclaim.",
+    "posixCorrection": {
+      "author": "Nash",
+      "reviewer": "Laplace",
+      "sha256": "54c3e733bbb19af183970cd9fceaee732b889e6d2bcf506767c1fc5533d40777",
+      "receipt": "tmp/t0192-linux-posix-correction",
+      "result": "111/111 tests in six suites, no pending, exit 0. Includes all eight compiler contracts. Original failed receipt retained. Not a full gate."
+    }
+  },
+  "coordinatorExpandedCandidate": {
+    "unit": "tmp/t0192-defects-unit-1791073531584",
+    "result": "815/815in62suites,exit0,zero pending. Jest delayed-exit warning retained; cause not established.",
+    "browser": "tmp/t0192-defects-browser-1791073847428",
+    "browserResult": "58/58sixworkers0retriesexit0, before one-line phone metadata layout adjustment.",
+    "windowsBuild": "tmp/t0192-defects-build-1791073939552",
+    "windowsBuildResult": "exit0 after final phone metadata adjustment, owneddataonly.",
+    "linuxBuild": "tmp/t0192-linux-1791074008592217500/build-summary.json",
+    "linuxBuildResult": "nativeLinuxNode24.21.0,exit0. Packincludesclaimeduntrackedhelpers. Notwholegate.",
+    "limits": "Newrequire-policy oracle remains deliberatelyred pending scopedoverride/commentamendment. Nativecompilerfixture infrastructurefailures remainopen. Fullbatchgate/sweep/hostedacceptance absent."
+  },
+  "migrationSandboxProbe": {
+    "command": "pinned Node -e console.log(require('node:os').userInfo().username.length)",
+    "result": "Default restricted shell exits 1 with uv_os_get_passwd ENOMEM; elevated shell exits 0. No account name logged. Isolated migration controls rerunning with required permissions; earlier failures retained."
   }
 }
