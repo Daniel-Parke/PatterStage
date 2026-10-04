@@ -38,3 +38,10 @@ Receipt:`tmp/t0193-read-truth-red.json`; LF SHA256:`ceba024fdee96317882e56fcff6b
 Models primary-read failures show false empty, Skill500/network says missing,
 and Growth failure asserts no completed work. The cached/disclosure control
 and genuine empty/missing/malformed/thin success controls already pass.
+
+Independent Franklin followup oracle:17cases,6pass11fail,0runtime errors.
+Receipt:`tmp/t0193-followups-red.json`; LF SHA256:`16f1e4377c3581b2cabe650573727052a32acd794dc2bb1abd6c9bf305658856`.
+Includes held Composer ownership, keyboard navigation/indent/save controls,
+clipboard refusal/success, exports/labels, search context, daily chart values
+and collection state. These source hypotheses now have runnable controls.
+Read truth/profile combined31/31 and existing five-page suites38/38 pass.
