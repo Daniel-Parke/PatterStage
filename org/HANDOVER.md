@@ -7,6 +7,29 @@ updated: 2026-10-04
 
 # Handover · PatterStage, 2026-10-02
 
+## T0194 opened, 2026-10-04
+
+All required hosted jobs pass at93e425d556f384663fe5715c983d8b0c0c47fd07:
+11PR jobs,9required push jobs and both Gitleaks scans. Snapshot:
+tmp/t0191-hosted-t0206-actual-ready/snapshot-1791129063547.json.
+The current macOS full coverage and actual receipt pass; this does not
+establish repair of the historical T0206 timing failure. T0206 stays active.
+
+T0194 is now active, ruledR3 for its accepted ADR0018 protected entry.
+Two disjoint writing lanes: coordinator source/metadata, Faraday independent
+oracle files. No source or protected edit has begun. Independent first controls
+cover four gateway backoff Stop paths and Q027 elapsed-deadline guidance.
+Settings field metadata remains core; parser/root ownership moves remain
+Hermes; Laboratory and v1.0 compatibility retirement remain deferred.
+
+The queue readiness trace confirms that upstream Hermes admission counts
+completed undrained queues in its10queue cap. Composer persists results via
+polling; its SQLite SSE does not release upstream queues. Generic run SSE
+has competing readers of the same upstream queue. Blind draining is not
+accepted as a repair. Qualify exclusive cleanup ownership, recovery and late
+subscribers, preserving durable output/usage and the ten-active admission cap.
+No upstream API/image or new public fan-out contract is authorised by this trace.
+
 ## Actual HTTP diagnostic checkpoint, 2026-10-04
 
 T0206 remains active; this is observability progress, not a timing repair.

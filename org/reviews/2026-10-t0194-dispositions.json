@@ -1,0 +1,493 @@
+{
+  "task": "T-0194",
+  "draft": true,
+  "inspectedRevision": "93e425d556f384663fe5715c983d8b0c0c47fd07",
+  "findings": [
+    {
+      "id": "critic-03",
+      "outcome": "planned",
+      "task": "T-0194",
+      "reason": "Reverify this T-0164 source-level observation and its item ruling before any edit: Token printing and permissive creation paths are addressed in source. Existing operator-file permissions cannot be certified from source."
+    },
+    {
+      "id": "lib-domains-05",
+      "outcome": "planned",
+      "task": "T-0194",
+      "reason": "Reverify this T-0164 source-level observation and its item ruling before any edit: Static `rg -l -w <symbol> src scripts` finds the named exports only in defining files, except `truncate`, which needs `rg -n '\\btruncate\\(' src scripts` to exclude SQL uses. Dynamic uses remain unproved. `MODULE_ACCENTS` is lock-book pinned."
+    },
+    {
+      "id": "lib-domains-06",
+      "outcome": "planned",
+      "task": "T-0194",
+      "reason": "Reverify this T-0164 source-level observation and its item ruling before any edit: Duplicate shapes remain, but message nullability and tool-call types differ. Direct aliasing is unsafe."
+    },
+    {
+      "id": "lib-domains-10",
+      "outcome": "planned",
+      "task": "T-0194",
+      "reason": "Reverify this T-0164 source-level observation and its item ruling before any edit: Field re-listing and local insert repeats remain; saving needs fresh measurement."
+    },
+    {
+      "id": "lib-domains-15",
+      "outcome": "planned",
+      "task": "T-0194",
+      "reason": "Reverify this T-0164 source-level observation and its item ruling before any edit: Shim remains. Nine mocks and differing return shapes make the proposed net saving unknown."
+    },
+    {
+      "id": "lib-domains-09",
+      "outcome": "planned",
+      "task": "T-0194",
+      "reason": "Reverify this T-0164 source-level observation and its item ruling before any edit: Local repeats remain. Replacing toolset parser with coercion changes empty-string behaviour unless preserved."
+    },
+    {
+      "id": "lib-domains-18",
+      "outcome": "planned",
+      "task": "T-0194",
+      "reason": "Reverify this T-0164 source-level observation and its item ruling before any edit: Repeats remain, but argument order and error contracts limit safe extraction."
+    },
+    {
+      "id": "lib-domains-11",
+      "outcome": "planned",
+      "task": "T-0194",
+      "reason": "Reverify this T-0164 source-level observation and its item ruling before any edit: Escapers, JSON fallbacks and duration formats have different semantics. Shared-helper cost is unknown."
+    },
+    {
+      "id": "lib-domains-17",
+      "outcome": "planned",
+      "task": "T-0194",
+      "reason": "Reverify this T-0164 source-level observation and its item ruling before any edit: One-importer files remain; `frameworks/registry.ts` is a named composition root and should stay."
+    },
+    {
+      "id": "lib-domains-08",
+      "outcome": "planned",
+      "task": "T-0194",
+      "reason": "Reverify this T-0164 source-level observation and its item ruling before any edit: Stale comments remain. Historical exact net saving was not measured."
+    },
+    {
+      "id": "lib-domains-02",
+      "outcome": "planned",
+      "task": "T-0194",
+      "reason": "Reverify this T-0164 source-level observation and its item ruling before any edit: Hermes-specific root record remains in core. Path-bound tests add move cost."
+    },
+    {
+      "id": "lib-domains-04",
+      "outcome": "planned",
+      "task": "T-0194",
+      "reason": "Reverify this T-0164 source-level observation and its item ruling before any edit: Handler placement remains mixed. This is navigational, with many path-bound tests."
+    },
+    {
+      "id": "lib-domains-14",
+      "outcome": "planned",
+      "task": "T-0194",
+      "reason": "Reverify this T-0164 source-level observation and its item ruling before any edit: Legacy discovery and inconsistent inline alias reads remain. Removing discovery could hide an existing database."
+    },
+    {
+      "id": "lib-domains-07",
+      "outcome": "planned",
+      "task": "T-0194",
+      "reason": "Reverify this T-0164 source-level observation and its item ruling before any edit: The gateway 429 waits are 30 and 60 seconds and do not observe Stop mid-sleep. Story Weaver and Deep Research call this path. Mission Stop uses HermesRuntime's separate abortable retry sleep, so it is not evidence for this defect. Empty-response and catch-path sleeps also need review; an abortable replacement inside `catch` must preserve `stoppedError()` rather than leak `signal.reason`. Shared-helper/interface cost makes historical net saving unknown."
+    },
+    {
+      "id": "lib-domains-13",
+      "outcome": "planned",
+      "task": "T-0194",
+      "reason": "Reverify this T-0164 source-level observation and its item ruling before any edit: Some vendor terms are intentional protocol names or recorded exceptions."
+    },
+    {
+      "id": "lib-domains-03",
+      "outcome": "planned",
+      "task": "T-0194",
+      "reason": "Reverify this T-0164 source-level observation and its item ruling before any edit: Protocol field table remains in core. The exception is operator-ruled but needs its durable ADR record."
+    },
+    {
+      "id": "lib-domains-12",
+      "outcome": "planned",
+      "task": "T-0194",
+      "reason": "Reverify this T-0164 source-level observation and its item ruling before any edit: Fence content enters `data-code` before inline replacements and newline-to-`<br />`; the Copy handler reads that attribute, so a multiline block can yield markup instead of raw code. This is source-level evidence, not a current browser/clipboard result. Both cited chat suites mock `renderMarkdown`; a focused real-renderer/browser assertion remains due. The research renderer is not a drop-in, and an in-place fix has unmeasured line cost."
+    },
+    {
+      "id": "lib-domains-01",
+      "outcome": "planned",
+      "task": "T-0194",
+      "reason": "Reverify this T-0164 source-level observation and its item ruling before any edit: Laboratory remains core and Composer imports it. A move entails capability and table-ownership work."
+    },
+    {
+      "id": "lib-domains-16",
+      "outcome": "planned",
+      "task": "T-0194",
+      "reason": "Reverify this T-0164 source-level observation and its item ruling before any edit: Large mixed files remain. Splits are moves with import and test cost, not established net reductions."
+    },
+    {
+      "id": "lib-domains-19",
+      "outcome": "planned",
+      "task": "T-0194",
+      "reason": "Reverify this T-0164 source-level observation and its item ruling before any edit: Repeated-window measure excludes same-file repeats; shape list has three entries. Report-only measure cost is unknown."
+    }
+  ],
+  "operatorDispositions": [
+    {
+      "id": "critic-03a",
+      "parentId": "critic-03",
+      "outcome": "planned",
+      "task": "T-0194",
+      "reason": "org/reviews/2026-09-decision-register.md:983; Reverify the item-specific ruled disposition against its accepted decision and parent qualification."
+    },
+    {
+      "id": "critic-03b",
+      "parentId": "critic-03",
+      "outcome": "planned",
+      "task": "T-0194",
+      "reason": "org/reviews/2026-09-decision-register.md:3127; Reverify the item-specific free-band disposition against its accepted decision and parent qualification."
+    },
+    {
+      "id": "cross-cutting-14a",
+      "parentId": "cross-cutting-14",
+      "outcome": "planned",
+      "task": "T-0194",
+      "reason": "org/reviews/2026-09-decision-register.md:3104; Converge the shared escape helper while preserving rendered output."
+    },
+    {
+      "id": "cross-cutting-03b",
+      "parentId": "cross-cutting-03",
+      "outcome": "planned",
+      "task": "T-0194",
+      "reason": "org/reviews/2026-09-decision-register.md:3072; Move shared env reads to the parity-tested table without retiring names early."
+    },
+    {
+      "id": "lib-domains-05a",
+      "parentId": "lib-domains-05",
+      "outcome": "planned",
+      "task": "T-0194",
+      "reason": "org/reviews/2026-09-decision-register.md:3093; Reverify the item-specific free-band disposition against its accepted decision and parent qualification."
+    },
+    {
+      "id": "lib-domains-11a",
+      "parentId": "lib-domains-11",
+      "outcome": "planned",
+      "task": "T-0194",
+      "reason": "org/reviews/2026-09-decision-register.md:3106; Reverify the item-specific free-band disposition against its accepted decision and parent qualification."
+    },
+    {
+      "id": "lib-domains-11b",
+      "parentId": "lib-domains-11",
+      "outcome": "planned",
+      "task": "T-0194",
+      "reason": "org/reviews/2026-09-decision-register.md:3107; Reverify the item-specific free-band disposition against its accepted decision and parent qualification."
+    },
+    {
+      "id": "lib-domains-02",
+      "parentId": "lib-domains-02",
+      "outcome": "planned",
+      "task": "T-0194",
+      "reason": "org/reviews/2026-09-decision-register.md:2495; Reverify the item-specific ruled disposition against its accepted decision and parent qualification."
+    },
+    {
+      "id": "lib-domains-14b",
+      "parentId": "lib-domains-14",
+      "outcome": "planned",
+      "task": "T-0194",
+      "reason": "org/reviews/2026-09-decision-register.md:3069; Reverify the item-specific free-band disposition against its accepted decision and parent qualification."
+    },
+    {
+      "id": "lib-domains-13c",
+      "parentId": "lib-domains-13",
+      "outcome": "planned",
+      "task": "T-0194",
+      "reason": "org/reviews/2026-09-decision-register.md:3073; Reverify the item-specific free-band disposition against its accepted decision and parent qualification."
+    },
+    {
+      "id": "lib-domains-03",
+      "parentId": "lib-domains-03",
+      "outcome": "planned",
+      "task": "T-0194",
+      "reason": "org/reviews/2026-09-decision-register.md:2508; Reverify the item-specific ruled disposition against its accepted decision and parent qualification."
+    },
+    {
+      "id": "lib-domains-12",
+      "parentId": "lib-domains-12",
+      "outcome": "planned",
+      "task": "T-0194",
+      "reason": "org/reviews/2026-09-decision-register.md:3108; Reverify the item-specific free-band disposition against its accepted decision and parent qualification."
+    },
+    {
+      "id": "lib-domains-01a",
+      "parentId": "lib-domains-01",
+      "outcome": "planned",
+      "task": "T-0194",
+      "reason": "org/reviews/2026-09-decision-register.md:2467; Reverify the item-specific ruled disposition against its accepted decision and parent qualification."
+    },
+    {
+      "id": "lib-domains-01b",
+      "parentId": "lib-domains-01",
+      "outcome": "planned",
+      "task": "T-0194",
+      "reason": "org/reviews/2026-09-decision-register.md:2481; Reverify the item-specific ruled disposition against its accepted decision and parent qualification."
+    }
+  ],
+  "coverage": [
+    {
+      "id": "gap-002.a",
+      "outcome": "planned",
+      "task": "T-0194",
+      "reason": "Run this T-0164 atomic next proof before closing its owner batch: At current HEAD, Verify repository token-file and setup permission code. Starting check: src/lib/api/auth-token.ts:66-70; scripts/bootstrap/setup.sh:121-124. Record command/exit or exact file:line, revision and independent review."
+    },
+    {
+      "id": "gap-003.a",
+      "outcome": "planned",
+      "task": "T-0194",
+      "reason": "Run this T-0164 atomic next proof before closing its owner batch: At current HEAD, Identify current forwarded-header throttle policy. Starting check: src/lib/api/auth-throttle.ts:35-72. Record command/exit or exact file:line, revision and independent review."
+    },
+    {
+      "id": "gap-007.a",
+      "outcome": "planned",
+      "task": "T-0194",
+      "reason": "Run this T-0164 atomic next proof before closing its owner batch: At current HEAD, Check whether browser cookie contains root token. Starting check: src/proxy.ts:268-290; src/lib/auth/session-store.ts:68-90 issues random secret. Record command/exit or exact file:line, revision and independent review."
+    },
+    {
+      "id": "gap-007.b",
+      "outcome": "planned",
+      "task": "T-0194",
+      "reason": "Run this T-0164 atomic next proof before closing its owner batch: At current HEAD, Check cookie lifetime ceiling. Starting check: src/lib/auth/public-origin.ts:45-51 caps Max-Age at 43,200 seconds. Record command/exit or exact file:line, revision and independent review."
+    },
+    {
+      "id": "gap-007.c",
+      "outcome": "planned",
+      "task": "T-0194",
+      "reason": "Run this T-0164 atomic next proof before closing its owner batch: At current HEAD, Check idle, absolute and token-rotation binding. Starting check: src/lib/auth/session-store.ts:10-11,42-53,97-115. Record command/exit or exact file:line, revision and independent review."
+    },
+    {
+      "id": "gap-010.a",
+      "outcome": "planned",
+      "task": "T-0194",
+      "reason": "Run this T-0164 atomic next proof before closing its owner batch: At current HEAD, Read and verify the 11 identified app pages. Starting check: git show HEAD:<each listed page>. Record command/exit or exact file:line, revision and independent review."
+    },
+    {
+      "id": "gap-010.b",
+      "outcome": "planned",
+      "task": "T-0194",
+      "reason": "Run this T-0164 atomic next proof before closing its owner batch: In an isolated or authorised fixture, Check visual equivalence of component folds. Starting check: Controlled 1440x900 and 390x844 capture. Record command/exit or exact file:line, revision and independent review."
+    },
+    {
+      "id": "gap-011.a",
+      "outcome": "planned",
+      "task": "T-0194",
+      "reason": "Run this T-0164 atomic next proof before closing its owner batch: At current HEAD, Review PlatformsPanel behaviour. Starting check: src/modules/hermes/components/PlatformsPanel.tsx:1. Record command/exit or exact file:line, revision and independent review."
+    },
+    {
+      "id": "gap-011.b",
+      "outcome": "planned",
+      "task": "T-0194",
+      "reason": "Run this T-0164 atomic next proof before closing its owner batch: At current HEAD, Review profile-patch behaviour. Starting check: src/modules/hermes/handlers/profile-patch.ts:1. Record command/exit or exact file:line, revision and independent review."
+    },
+    {
+      "id": "gap-012.a",
+      "outcome": "planned",
+      "task": "T-0194",
+      "reason": "Run this T-0164 atomic next proof before closing its owner batch: At current HEAD, Read install/update Python harness logic. Starting check: tests/integration/test_full_install_update_process.py:1. Record command/exit or exact file:line, revision and independent review."
+    },
+    {
+      "id": "gap-012.b",
+      "outcome": "planned",
+      "task": "T-0194",
+      "reason": "Run this T-0164 atomic next proof before closing its owner batch: At current HEAD, Read shell-custom harness logic. Starting check: tests/scripts/run-shell-custom-tests.sh:1. Record command/exit or exact file:line, revision and independent review."
+    },
+    {
+      "id": "gap-012.c",
+      "outcome": "planned",
+      "task": "T-0194",
+      "reason": "Run this T-0164 atomic next proof before closing its owner batch: At current HEAD, Recheck stale routes, aliases and script targets. Starting check: git grep -n obsolete names HEAD -- both files. Record command/exit or exact file:line, revision and independent review."
+    },
+    {
+      "id": "gap-013.a",
+      "outcome": "planned",
+      "task": "T-0194",
+      "reason": "Run this T-0164 atomic next proof before closing its owner batch: At current HEAD, Review remaining test-harness bodies. Starting check: test-harness/baseline-fix-verify.mjs:1; poll-run.mjs:1; poll-pair.mjs:1; hermes-seed.Dockerfile:1. Record command/exit or exact file:line, revision and independent review."
+    },
+    {
+      "id": "gap-013.b",
+      "outcome": "planned",
+      "task": "T-0194",
+      "reason": "Run this T-0164 atomic next proof before closing its owner batch: At current HEAD, Verify reference counts and retention case. Starting check: git grep -n harness filenames HEAD -- .. Record command/exit or exact file:line, revision and independent review."
+    },
+    {
+      "id": "gap-014.a",
+      "outcome": "planned",
+      "task": "T-0194",
+      "reason": "Run this T-0164 atomic next proof before closing its owner batch: At current HEAD, Locate Hindsight effect reads. Starting check: src/components/memory/hindsight/useHindsightMemories.ts:58-74,104,143. Record command/exit or exact file:line, revision and independent review."
+    },
+    {
+      "id": "gap-014.b",
+      "outcome": "planned",
+      "task": "T-0194",
+      "reason": "Run this T-0164 atomic next proof before closing its owner batch: At current HEAD, Verify every Hindsight write uses runWrite. Starting check: useHindsightCrudTab.ts:82-116; useHindsightMemories.ts:157; inspect all call sites. Record command/exit or exact file:line, revision and independent review."
+    },
+    {
+      "id": "gap-014.c",
+      "outcome": "planned",
+      "task": "T-0194",
+      "reason": "Run this T-0164 atomic next proof before closing its owner batch: At current HEAD, Cost a useApiResource conversion. Starting check: src/hooks/useApiResource.ts:84; Hindsight hooks. Record command/exit or exact file:line, revision and independent review."
+    },
+    {
+      "id": "gap-071.1",
+      "outcome": "planned",
+      "task": "T-0194",
+      "reason": "Run this T-0164 atomic next proof before closing its owner batch: At current HEAD, Locate and read markdown renderer and export-helper bodies. Starting check: src/lib/chat/chat-utils.ts:22-110. Record command/exit or exact file:line, revision and independent review."
+    },
+    {
+      "id": "gap-071.2",
+      "outcome": "planned",
+      "task": "T-0194",
+      "reason": "Run this T-0164 atomic next proof before closing its owner batch: At current HEAD, Verify markdown output and JSON/CSV/download behaviour on edge cases. Starting check: src/lib/chat/chat-utils.ts:28-107. Record command/exit or exact file:line, revision and independent review."
+    },
+    {
+      "id": "gap-101.b",
+      "outcome": "planned",
+      "task": "T-0194",
+      "reason": "Run this T-0164 atomic next proof before closing its owner batch: At current HEAD, Recheck each purported test-only export through dynamic imports and re-exports. Starting check: rg -n 'updateFramework|listFrameworks|MODULE_ACCENTS' src scripts tests org; then AST/import graph. Record command/exit or exact file:line, revision and independent review."
+    },
+    {
+      "id": "gap-101.c",
+      "outcome": "planned",
+      "task": "T-0194",
+      "reason": "Run this T-0164 atomic next proof before closing its owner batch: At current HEAD, Preserve ruled export exceptions in that review. Starting check: LOCKBOOK:112 (org/LOCKBOOK.md:112) and registry:172 (src/lib/modules/registry.ts:172) explicitly retain MODULE_ACCENTS. Record command/exit or exact file:line, revision and independent review."
+    },
+    {
+      "id": "gap-102.a",
+      "outcome": "planned",
+      "task": "T-0194",
+      "reason": "Run this T-0164 atomic next proof before closing its owner batch: At current HEAD, Read mission repository and category flows body by body. Starting check: rg --files src/lib/missions. Record command/exit or exact file:line, revision and independent review."
+    },
+    {
+      "id": "gap-102.b",
+      "outcome": "planned",
+      "task": "T-0194",
+      "reason": "Run this T-0164 atomic next proof before closing its owner batch: At current HEAD, Read model repository behaviour. Starting check: rg --files src/lib/models. Record command/exit or exact file:line, revision and independent review."
+    },
+    {
+      "id": "gap-102.c",
+      "outcome": "planned",
+      "task": "T-0194",
+      "reason": "Run this T-0164 atomic next proof before closing its owner batch: At current HEAD, Read schedule repository behaviour. Starting check: rg --files src/lib/schedule. Record command/exit or exact file:line, revision and independent review."
+    },
+    {
+      "id": "gap-102.d",
+      "outcome": "planned",
+      "task": "T-0194",
+      "reason": "Run this T-0164 atomic next proof before closing its owner batch: At current HEAD, Read reconciliation and scheduler tick. Starting check: rg --files src/lib/orchestration. Record command/exit or exact file:line, revision and independent review."
+    },
+    {
+      "id": "gap-102.e",
+      "outcome": "planned",
+      "task": "T-0194",
+      "reason": "Run this T-0164 atomic next proof before closing its owner batch: At current HEAD, Read Rec Room create/edit/generate and component flows. Starting check: rg --files src/modules/rec-room. Record command/exit or exact file:line, revision and independent review."
+    },
+    {
+      "id": "gap-103.a",
+      "outcome": "planned",
+      "task": "T-0194",
+      "reason": "Run this T-0164 atomic next proof before closing its owner batch: At current HEAD, Audit memory-provider and Hindsight internals. Starting check: rg --files src/lib/memory. Record command/exit or exact file:line, revision and independent review."
+    },
+    {
+      "id": "gap-103.b",
+      "outcome": "planned",
+      "task": "T-0194",
+      "reason": "Run this T-0164 atomic next proof before closing its owner batch: At current HEAD, Audit spend internals. Starting check: rg --files src/lib/spend. Record command/exit or exact file:line, revision and independent review."
+    },
+    {
+      "id": "gap-103.c",
+      "outcome": "planned",
+      "task": "T-0194",
+      "reason": "Run this T-0164 atomic next proof before closing its owner batch: At current HEAD, Audit search internals. Starting check: rg --files src/lib/search. Record command/exit or exact file:line, revision and independent review."
+    },
+    {
+      "id": "gap-103.d",
+      "outcome": "planned",
+      "task": "T-0194",
+      "reason": "Run this T-0164 atomic next proof before closing its owner batch: At current HEAD, Audit skills internals. Starting check: rg --files src/lib/skills. Record command/exit or exact file:line, revision and independent review."
+    },
+    {
+      "id": "gap-103.e",
+      "outcome": "planned",
+      "task": "T-0194",
+      "reason": "Run this T-0164 atomic next proof before closing its owner batch: At current HEAD, Audit Help manifest parsing and resolution. Starting check: help-manifest.ts:133 (src/lib/help/help-manifest.ts:133) onward. Record command/exit or exact file:line, revision and independent review."
+    },
+    {
+      "id": "gap-103.f",
+      "outcome": "planned",
+      "task": "T-0194",
+      "reason": "Run this T-0164 atomic next proof before closing its owner batch: At current HEAD, Audit schedule internals beyond repository. Starting check: rg --files src/lib/schedule. Record command/exit or exact file:line, revision and independent review."
+    },
+    {
+      "id": "gap-105.a",
+      "outcome": "planned",
+      "task": "T-0194",
+      "reason": "Run this T-0164 atomic next proof before closing its owner batch: Trace every caller of src/lib/fs/path-security.ts, then run traversal, symlink and boundary cases in a disposable filesystem fixture; record paths, statuses and source lines."
+    },
+    {
+      "id": "gap-105.b",
+      "outcome": "planned",
+      "task": "T-0194",
+      "reason": "Run this T-0164 atomic next proof before closing its owner batch: Trace the URL guard call path and run mapped IPv4, NAT64, DNS rebinding and private-address probes on an authorised isolated network fixture; record resolver and transport outcomes."
+    },
+    {
+      "id": "gap-105.c",
+      "outcome": "planned",
+      "task": "T-0194",
+      "reason": "Run this T-0164 atomic next proof before closing its owner batch: Trace scripts-manager.ts execFile call sites, allowlist, argument construction and time/output caps; run rejected-path and argument-injection cases in a disposable script fixture."
+    },
+    {
+      "id": "gap-106.a",
+      "outcome": "planned",
+      "task": "T-0194",
+      "reason": "Run this T-0164 atomic next proof before closing its owner batch: At current HEAD, Census remaining source-reading/regex unit suites. Starting check: rg -n 'readFileSync|toMatch|\\\\.match\\\\(' tests/unit followed by source-target classification. Record command/exit or exact file:line, revision and independent review."
+    },
+    {
+      "id": "gap-106.b",
+      "outcome": "planned",
+      "task": "T-0194",
+      "reason": "Run this T-0164 atomic next proof before closing its owner batch: At current HEAD, Attribute refactor cost to each affected suite. Starting check: Map classified suites to the proposed source moves. Record command/exit or exact file:line, revision and independent review."
+    },
+    {
+      "id": "gap-107.a",
+      "outcome": "planned",
+      "task": "T-0194",
+      "reason": "Run this T-0164 atomic next proof before closing its owner batch: At current HEAD, Audit API and DB/schema contracts. Starting check: rg --files src/lib/api src/lib/db. Record command/exit or exact file:line, revision and independent review."
+    },
+    {
+      "id": "gap-107.b",
+      "outcome": "planned",
+      "task": "T-0194",
+      "reason": "Run this T-0164 atomic next proof before closing its owner batch: At current HEAD, Audit seed, sessions, stats and sync contracts. Starting check: rg --files src/lib/seed src/lib/sessions src/lib/stats src/lib/sync. Record command/exit or exact file:line, revision and independent review."
+    },
+    {
+      "id": "gap-107.c",
+      "outcome": "planned",
+      "task": "T-0194",
+      "reason": "Run this T-0164 atomic next proof before closing its owner batch: At current HEAD, Audit UI, analytics, dashboard and retention contracts. Starting check: rg --files src/lib/ui src/lib/analytics src/lib/dashboard src/lib/retention. Record command/exit or exact file:line, revision and independent review."
+    },
+    {
+      "id": "gap-107.d",
+      "outcome": "planned",
+      "task": "T-0194",
+      "reason": "Run this T-0164 atomic next proof before closing its owner batch: At current HEAD, Audit hook consumers and failure states. Starting check: rg --files src/hooks. Record command/exit or exact file:line, revision and independent review."
+    },
+    {
+      "id": "gap-107.e",
+      "outcome": "planned",
+      "task": "T-0194",
+      "reason": "Run this T-0164 atomic next proof before closing its owner batch: At current HEAD, Audit scripts as an execution surface. Starting check: rg --files scripts. Record command/exit or exact file:line, revision and independent review."
+    }
+  ],
+  "supplemental": [
+    {
+      "id": "Q027-deadline-guidance",
+      "status": "planned",
+      "authority": "org/reviews/2026-09-refactor-addendum.md:45"
+    },
+    {
+      "id": "T0202-completed-queue-admission",
+      "status": "planned",
+      "authority": "org/tasks/T-0202.json"
+    }
+  ]
+}

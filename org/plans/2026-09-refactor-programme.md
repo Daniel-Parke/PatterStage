@@ -198,7 +198,7 @@ T-0199 before release. T-0200 remains the first post-1.0 retirement unit.
 | T-0191 | Components, accessibility and primitives | Select/Picker stay distinct; named controls and desktop/phone states pass; folds save net lines. |
 | T-0192 | API route envelopes and validation | Public URL/method matrix and malformed-body responses pass with exact auth and read-only refusals. |
 | T-0193 | Large page hooks and visible state | Composer, Missions and Story Weaver retain URL state, dialogs, focus and responsive layout. |
-| T-0194 | Library domains and Hermes module | ADR-0005 and five path spellings hold; moved tests retain names and Knip/TypeScript pass. |
+| T-0194 | Library domains and Hermes module | Accepted ADR-0018 retains Settings metadata in core; root/parser moves check five path spellings. Gateway Stop, Q-027 deadline guidance and completed-queue controls pass; moved tests retain names and Knip/TypeScript pass. |
 | T-0195 | Test harness and source-assertion repair | Test names and floors remain, source assertions get behavioural replacements where feasible, and flake reruns are honest. |
 | T-0196 | Tooling and CI consolidation | Both platforms, Docker, install/update and planted lint defects pass; Compose volume names keep existing data. |
 | T-0197 | Running, root and CHANGELOG documentation | Canonical commands, manifest, links and live-doc scope pass; protected token-rule edit remains ADR-gated. |
