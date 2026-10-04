@@ -455,7 +455,33 @@
     "tests/unit/dependency-hygiene-contract.test.ts",
     "package-lock.json",
     "knip.json",
-    "org/briefs/T-0192-dependency-oracle.md"
+    "org/briefs/T-0192-dependency-oracle.md",
+    "src/app/api/stories/route.ts",
+    "tests/unit/memory-without-a-provider-says-what-to-do.test.ts",
+    "tests/unit/k6-the-gates-see.test.ts",
+    "docs/contributing/testing.md",
+    "scripts/tooling/gate.mjs",
+    "src/lib/missions/mission-types.ts",
+    "src/lib/models/model-types.ts",
+    "src/components/missions/templates/types.ts",
+    "src/components/missions/CategoryManagerModal.tsx",
+    "src/components/viz/DistributionHistogram.tsx",
+    "src/components/viz/StackedAreaTrend.tsx",
+    "src/components/viz/AreaTrend.tsx",
+    "src/components/viz/colors.ts",
+    "src/components/ui/Toast.tsx",
+    "src/components/ui/feedback-context.ts",
+    "src/lib/analytics/categories.ts",
+    "src/lib/analytics/insights-bundle.ts",
+    "src/lib/analytics/run-aggregates.ts",
+    "src/lib/api/api-write.ts",
+    "src/lib/memory/hindsight-client.ts",
+    "src/lib/missions/mission-composer-utils.ts",
+    "src/lib/missions/mission-filters.ts",
+    "src/lib/missions/mission-form-utils.ts",
+    "src/modules/hermes/lib/sync-manager.ts",
+    "tests/unit/type-owner-equivalence.test.ts",
+    "org/briefs/T-0192-type-owner-oracle.md"
   ],
   "timestamps": {
     "opened": "2026-10-03T20:37:32.586979+00:00",
@@ -506,7 +532,8 @@
       "tests/unit/server-log-contract.test.ts",
       "tests/unit/server-log-boot-contract.test.ts",
       "tests/unit/test-require-policy.test.ts",
-      "tests/unit/dependency-hygiene-contract.test.ts"
+      "tests/unit/dependency-hygiene-contract.test.ts",
+      "tests/unit/type-owner-equivalence.test.ts"
     ],
     "hashes": {
       "tests/unit/api-fetch-error-envelope.test.ts": "f19bdd09a27ac0e4204ed36fe873cfc81adc7946f8b0ffab644a6bfe6135db51",
@@ -537,9 +564,10 @@
       "tests/unit/server-log-contract.test.ts": "771fa19b7f496e165c465e33b9609d7af028f908450fd47680fe379b4dbbf6ac",
       "tests/unit/server-log-boot-contract.test.ts": "2f6e0ad627ab99075866224564484b62a9c1ba3d45911c2923aa497a20bda5ca",
       "tests/unit/test-require-policy.test.ts": "b1bcb12f5adee1bbc13a71ee312a7e2a5aa023d58a109f5941222509746247b2",
-      "tests/unit/dependency-hygiene-contract.test.ts": "100e0bbcd70bee2799b1c29df2b0a4836662c98aa5b6a02f0579e9dcfdb56874"
+      "tests/unit/dependency-hygiene-contract.test.ts": "100e0bbcd70bee2799b1c29df2b0a4836662c98aa5b6a02f0579e9dcfdb56874",
+      "tests/unit/type-owner-equivalence.test.ts": "99fc48f9a962e64b2ec3f22f514d174addf2731ac14ee70df71017c6c39f59c6"
     },
-    "author_session": "Galileo and Sartre original authors; Halley and Sartre independent amendments; full attribution in org/reviews/2026-10-t0192-task-evidence.json; Nash independently corrected diagnostic candidate and authored ConfigSync replacement oracle; coordinator authored schedule persistence characterisation before consolidation; coordinator authored template identifier oracle before correction; Galileo tooling environment oracle independently reviewed by Laplace; Galileo Missions wiring characterisation reviewed by Laplace; coordinator server logging oracles reviewed by Laplace; Nash scoped test require-policy oracle reviewed by Laplace; Sartre dependency hygiene oracle reviewed by Laplace",
+    "author_session": "Galileo and Sartre original authors; Halley and Sartre independent amendments; full attribution in org/reviews/2026-10-t0192-task-evidence.json; Nash independently corrected diagnostic candidate and authored ConfigSync replacement oracle; coordinator authored schedule persistence characterisation before consolidation; coordinator authored template identifier oracle before correction; Galileo tooling environment oracle independently reviewed by Laplace; Galileo Missions wiring characterisation reviewed by Laplace; coordinator server logging oracles reviewed by Laplace; Nash scoped test require-policy oracle reviewed by Laplace; Sartre dependency hygiene oracle reviewed by Laplace; Galileo bounded type-owner metamorphic oracle reviewed by Laplace",
     "independence_method": "metamorphic",
     "amendments": [
       {
@@ -3241,6 +3269,69 @@
         "author_session": "01a10198-6b4f-7593-aa19-e0b3c8facad8",
         "authorised_by": "Laplace exact R2 review under Q015 and T0192 Story invariant",
         "date": "2026-10-04T01:03:30.860003+00:00"
+      },
+      {
+        "reason": "Independent cross22 dependency map/import amendment, or local-only WireResponse type export. Historical identities and unrelated assertions unchanged; exact diff reviewed by Laplace.",
+        "change": "tests/helpers/route-contract-runtime.ts",
+        "old_hash": "89028f9dbe4df0e84a4b7c84be273da7ca2c82f94a46fc97e756b92955b3bc6d",
+        "new_hash": "dd39ffd453d88429512ef92081626ab21dc99c69c59111981bb259c333c15dea",
+        "author_session": "01a101b0-fa17-7b10-a55b-b6201e93c846",
+        "authorised_by": "Independent R2 authority relayed by coordinator under Q015",
+        "date": "2026-10-04T01:18:03.989164+00:00"
+      },
+      {
+        "reason": "Independent cross22 dependency map/import amendment, or local-only WireResponse type export. Historical identities and unrelated assertions unchanged; exact diff reviewed by Laplace.",
+        "change": "tests/unit/t0175-dependency-proposals.test.ts",
+        "old_hash": "805c23655ebd329f4eed47acad5b00459cbac081e6778d908f71722e28664652",
+        "new_hash": "b42bd421c59b25ba4da9369592c79e52b9627de9ecc2f02ca4206730383fe217",
+        "author_session": "01a101b0-fa17-7b10-a55b-b6201e93c846",
+        "authorised_by": "Independent R2 authority relayed by coordinator under Q015",
+        "date": "2026-10-04T01:18:03.989185+00:00"
+      },
+      {
+        "reason": "Independent cross22 dependency map/import amendment, or local-only WireResponse type export. Historical identities and unrelated assertions unchanged; exact diff reviewed by Laplace.",
+        "change": "tests/unit/t0176-visual-dependency-proposals.test.ts",
+        "old_hash": "29a631f090805164d9dcbba727766ff5f56e8d05ca16b42175b734ae645a1aa0",
+        "new_hash": "d2ad8ecc926a81895adbc9d78b1f913da1c13e5b36489f0e9bb19d43ebadd8d1",
+        "author_session": "01a101b0-fa17-7b10-a55b-b6201e93c846",
+        "authorised_by": "Independent R2 authority relayed by coordinator under Q015",
+        "date": "2026-10-04T01:18:03.989189+00:00"
+      },
+      {
+        "reason": "Independent cross22 dependency map/import amendment, or local-only WireResponse type export. Historical identities and unrelated assertions unchanged; exact diff reviewed by Laplace.",
+        "change": "tests/unit/t0177-knip-proposal.test.ts",
+        "old_hash": "83878dd4a5f1a3705c8d68c136f1683064776c25d845460724d42061f275a090",
+        "new_hash": "999d124e7653172347a696a2621996d90c43cf0b032ffd17713b36056d855d62",
+        "author_session": "01a101b0-fa17-7b10-a55b-b6201e93c846",
+        "authorised_by": "Independent R2 authority relayed by coordinator under Q015",
+        "date": "2026-10-04T01:18:03.989191+00:00"
+      },
+      {
+        "reason": "Independent cross22 dependency map/import amendment, or local-only WireResponse type export. Historical identities and unrelated assertions unchanged; exact diff reviewed by Laplace.",
+        "change": "tests/unit/dashboard-helpers-unit.test.ts",
+        "old_hash": "896f34e5278f1689d9d9575bdd55e29d4a87480dcc05bd7e7ff85b9666cf0c2b",
+        "new_hash": "f94ef2768aaace75c85914c354639162cf851051d8f4c1fdbde3411cc89d87d9",
+        "author_session": "01a101b0-fa17-7b10-a55b-b6201e93c846",
+        "authorised_by": "Independent R2 authority relayed by coordinator under Q015",
+        "date": "2026-10-04T01:18:03.989193+00:00"
+      },
+      {
+        "reason": "Independent removal of redundant inline require-import directive only; specific reason, all tokens and six identities retained.",
+        "change": "tests/unit/memory-without-a-provider-says-what-to-do.test.ts",
+        "old_hash": "cf1a2406d10460f55b8e5ce3c726c8ecbe11f8a985a83ecc0e19b6942956d3be",
+        "new_hash": "bb0de6173cf1730c2809b243f28f0fe6438e63149021945580159415b6e4fb63",
+        "author_session": "01a10198-6b4f-7593-aa19-e0b3c8facad8",
+        "authorised_by": "Laplace independent Q015 review relayed by coordinator",
+        "date": "2026-10-04T01:24:08.520917+00:00"
+      },
+      {
+        "reason": "Independent K6 historical catch roster moved into six-path owned fixture; exact six sites/files plus live Hindsight, all existing AST/differential/negative controls and 34 identities preserved.",
+        "change": "tests/unit/k6-the-gates-see.test.ts",
+        "old_hash": "ff54a99eb520e694e4d130e2e6e99ca4e21eee832faf384018d2f3858a7c2379",
+        "new_hash": "6e6800b50f37816d3cd2e5ff018a918698c124da94a41fa6571a92d910427223",
+        "author_session": "01a10198-6b4f-7593-aa19-e0b3c8facad8",
+        "authorised_by": "Laplace independent Q015 review relayed by coordinator",
+        "date": "2026-10-04T01:34:52.826401+00:00"
       }
     ]
   },

@@ -149,7 +149,30 @@
         "eslint.config.mjs",
         "package-lock.json",
         "knip.json",
-        "org/briefs/T-0192-dependency-oracle.md"
+        "org/briefs/T-0192-dependency-oracle.md",
+        "src/app/api/stories/route.ts",
+        "docs/contributing/testing.md",
+        "scripts/tooling/gate.mjs",
+        "src/lib/missions/mission-types.ts",
+        "src/lib/models/model-types.ts",
+        "src/components/missions/templates/types.ts",
+        "src/components/missions/CategoryManagerModal.tsx",
+        "src/components/viz/DistributionHistogram.tsx",
+        "src/components/viz/StackedAreaTrend.tsx",
+        "src/components/viz/AreaTrend.tsx",
+        "src/components/viz/colors.ts",
+        "src/components/ui/Toast.tsx",
+        "src/components/ui/feedback-context.ts",
+        "src/lib/analytics/categories.ts",
+        "src/lib/analytics/insights-bundle.ts",
+        "src/lib/analytics/run-aggregates.ts",
+        "src/lib/api/api-write.ts",
+        "src/lib/memory/hindsight-client.ts",
+        "src/lib/missions/mission-composer-utils.ts",
+        "src/lib/missions/mission-filters.ts",
+        "src/lib/missions/mission-form-utils.ts",
+        "src/modules/hermes/lib/sync-manager.ts",
+        "org/briefs/T-0192-type-owner-oracle.md"
       ],
       "acquired": "2026-10-03T21:24:24.476320+00:00",
       "expires": "2026-10-04T21:24:24.476320+00:00"
@@ -157,19 +180,14 @@
     {
       "lane_id": "T-0192-require-oracle",
       "task_id": "T-0192",
-      "session_id": "01a101b0-fa17-7b10-a55b-b6201e93c846",
+      "session_id": "01a101b3-7c34-7a71-94b5-334c72f652cb",
       "host": "local",
       "path_claims": [
-        "tests/unit/t0175-dependency-proposals.test.ts",
-        "tests/unit/t0176-visual-dependency-proposals.test.ts",
-        "tests/unit/t0177-knip-proposal.test.ts",
-        "tests/unit/dashboard-helpers-unit.test.ts",
-        "tests/unit/dependency-hygiene-contract.test.ts",
-        "tests/helpers/route-contract-runtime.ts"
+        "tests/unit/type-owner-equivalence.test.ts"
       ],
       "acquired": "2026-10-04T00:30:00Z",
       "expires": "2026-10-05T00:30:00Z"
     }
   ],
-  "note": "Nash lane finished; Sartre independent dependency oracle/amendment lane owns five exact test files. Coordinator owns manifest, lock and Knip. Two writing lanes maximum."
+  "note": "Nash and Sartre stopped. Galileo independently authors one type-owner equivalence oracle only. Coordinator owns exact21 production paths; no implementation before red freeze. Two writing lanes."
 }
