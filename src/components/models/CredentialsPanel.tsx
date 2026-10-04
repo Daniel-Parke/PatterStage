@@ -118,7 +118,7 @@ export default function CredentialsPanel({
         <KeyRound className="h-4 w-4 text-ps-text-muted" />
         {/* "Credentials" is this screen's word for the thing the corpus calls
             an API key, and this card is where it is met. */}
-        <h2 className={sectionHeadingClasses}>
+        <h2 className={sectionHeadingClasses} style={{ borderBottomColor: "var(--color-ps-edge-emphasis)" }}>
           <ConceptHint id="api-key">Credentials</ConceptHint>
         </h2>
         <button

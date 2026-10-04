@@ -1,6 +1,6 @@
 {
   "id": "T-0192",
-  "intent": "Repair independently reproduced route and application-state defects, preserve public API and compatibility contracts, and converge only measured equivalent route/type/prop cohorts; account for all82assigned review obligations and linked follow-ups.\nEvidence: org/reviews/2026-10-t0192-task-evidence.json.\nInvariants: Every shipped route URL/method, auth/read-only boundary, response-time session check and guard order survives. Preserve optional-body handling, exact error text, specialised Hindsight/stream/auth and HTTP200partial-success contracts. Story genuine read failure is the narrow approved exception to false-success empty data. Preserve all historical identities; only independently reviewed valid-loaded-graph fixture amendment is contemplated, with allthree Composer assertions/names intact. Never touch operator data; isolated built instances and synthetic keyless data only. No paid provider calls or script execution. No fixed target, ceiling, coverage floor, timeout, retry or concurrency weakening. T0191 oracles and all prior invariants remain frozen. Runtime-status fixture: preserve all four test bodies, assertions and identities.\nRollback: Revert each coherent defect or route/type/prop cohort with its callers. Retain regression tests; no schema or stored-key migration. Public contracts remain pinned.\nCandidate verification2026-10-04: a21b4ee8, all10 unchanged-tree gate stages,8819unit/497browser passes, existing9unit/24browser skips.22controlledstatewalks,2rebuilt sign-in walks and2Next fallback observations completed. Preserve4failed outer-boundary hypothesis probes.20Jest causal kills with297controls before/after;2separate browser persistence kills with4controls before/after each, originalb01analyserERROR retained.82reasoned proposals61done13ruledout8deferred; explicitT0193 follow-ups remain. LocalR2 technical readiness confirmed; exact-head hosted and finalbatch acceptance pending. Full evidence/deviations: org/reviews/2026-10-t0192-task-evidence.json. No whole-product or paid-provider acceptance.",
+  "intent": "Repair independently reproduced route and application-state defects, preserve public API and compatibility contracts, and converge only measured equivalent route/type/prop cohorts; account for all82assigned review obligations and linked follow-ups.\nEvidence: org/reviews/2026-10-t0192-task-evidence.json.\nInvariants: Every shipped route URL/method, auth/read-only boundary, response-time session check and guard order survives. Preserve optional-body handling, exact error text, specialised Hindsight/stream/auth and HTTP200partial-success contracts. Story genuine read failure is the narrow approved exception to false-success empty data. Preserve all historical identities; only independently reviewed valid-loaded-graph fixture amendment is contemplated, with allthree Composer assertions/names intact. Never touch operator data; isolated built instances and synthetic keyless data only. No paid provider calls or script execution. No fixed target, ceiling, coverage floor, timeout, retry or concurrency weakening. T0191 oracles and all prior invariants remain frozen. Runtime-status fixture: preserve all four test bodies, assertions and identities.\nRollback: Revert each coherent defect or route/type/prop cohort with its callers. Retain regression tests; no schema or stored-key migration. Public contracts remain pinned.\nCandidate verification2026-10-04: a21b4ee8, all10 unchanged-tree gate stages,8819unit/497browser passes, existing9unit/24browser skips.22controlledstatewalks,2rebuilt sign-in walks and2Next fallback observations completed. Preserve4failed outer-boundary hypothesis probes.20Jest causal kills with297controls before/after;2separate browser persistence kills with4controls before/after each, originalb01analyserERROR retained.82reasoned proposals61done13ruledout8deferred; explicitT0193 follow-ups remain. LocalR2 technical readiness confirmed; exact-head hosted and finalbatch acceptance pending. Full evidence/deviations: org/reviews/2026-10-t0192-task-evidence.json. No whole-product or paid-provider acceptance.\nHosted prerequisite defect: fully rendered Credentials heading uses a hairline on a raised surface, observed 1.11:1 against existing 1.55 floor. Claim a focused independently authored loaded-state oracle and local existing-token repair; no threshold, palette, route or interaction change. Preserve original failed hosted trace.\nLoaded Credentials contrast oracle authored by Nash before repair; exact freeze accepted by Laplace after two causal reds at1.106237703 versus unchanged1.55 floor. Receipt tmp/t0192-credentials-boundary-1791090647545/receipt.json; initial scratch launch failure preserved separately.",
   "declared": {
     "capabilities": [
       "edit-code",
@@ -497,11 +497,13 @@
     "src/app/api/config/route.ts",
     ".gitleaksignore",
     "tests/unit/t0180-secret-scan-config.test.ts",
-    "org/reviews/2026-10-t0192-secret-scan.md"
+    "org/reviews/2026-10-t0192-secret-scan.md",
+    "src/components/models/CredentialsPanel.tsx",
+    "tests/e2e/models-credential-boundary.spec.ts"
   ],
   "timestamps": {
     "opened": "2026-10-03T20:37:32.586979+00:00",
-    "updated": "2026-10-04T04:30:00.452073+00:00"
+    "updated": "2026-10-04T05:14:38.520783+00:00"
   },
   "tier_ruled": "R2",
   "reasons": [
@@ -550,7 +552,8 @@
       "tests/unit/test-require-policy.test.ts",
       "tests/unit/dependency-hygiene-contract.test.ts",
       "tests/unit/type-owner-equivalence.test.ts",
-      "tests/unit/sign-in-document-metadata.test.ts"
+      "tests/unit/sign-in-document-metadata.test.ts",
+      "tests/e2e/models-credential-boundary.spec.ts"
     ],
     "hashes": {
       "tests/unit/api-fetch-error-envelope.test.ts": "b5b70b1a437c6894d24bbf53c13e50cbccca6b48390d293a4b5592e553fa5b01",
@@ -583,7 +586,8 @@
       "tests/unit/test-require-policy.test.ts": "b1bcb12f5adee1bbc13a71ee312a7e2a5aa023d58a109f5941222509746247b2",
       "tests/unit/dependency-hygiene-contract.test.ts": "100e0bbcd70bee2799b1c29df2b0a4836662c98aa5b6a02f0579e9dcfdb56874",
       "tests/unit/type-owner-equivalence.test.ts": "99fc48f9a962e64b2ec3f22f514d174addf2731ac14ee70df71017c6c39f59c6",
-      "tests/unit/sign-in-document-metadata.test.ts": "5d9fa42fecb4245d5fac875442f27bd071236126800ee5500aaa314b17570a3a"
+      "tests/unit/sign-in-document-metadata.test.ts": "5d9fa42fecb4245d5fac875442f27bd071236126800ee5500aaa314b17570a3a",
+      "tests/e2e/models-credential-boundary.spec.ts": "9641baef1b0d2161e8e6586b75ee5d0e43373880d10e893de7d2fbbf6de6303b"
     },
     "author_session": "Galileo and Sartre original authors; Halley and Sartre independent amendments; full attribution in org/reviews/2026-10-t0192-task-evidence.json; Nash independently corrected diagnostic candidate and authored ConfigSync replacement oracle; coordinator authored schedule persistence characterisation before consolidation; coordinator authored template identifier oracle before correction; Galileo tooling environment oracle independently reviewed by Laplace; Galileo Missions wiring characterisation reviewed by Laplace; coordinator server logging oracles reviewed by Laplace; Nash scoped test require-policy oracle reviewed by Laplace; Sartre dependency hygiene oracle reviewed by Laplace; Galileo bounded type-owner metamorphic oracle reviewed by Laplace",
     "independence_method": "metamorphic",
@@ -3394,6 +3398,13 @@
       "verdict": "pass",
       "date": "2026-10-03T22:32:09.307339+00:00",
       "notes": "Scoped red-freeze acceptance of exact diagnostic and ConfigSync oracles only: 40 causal reds of57. Security uses a plain environment double; ConfigSync controls real descriptor lifetime. Linux, performance and implementation acceptance remain open."
+    },
+    {
+      "role": "REVIEWER",
+      "session": "01a1019a-65c6-7ae2-aafe-5b79b166c745",
+      "verdict": "pass",
+      "date": "2026-10-04T05:14:38.520783+00:00",
+      "notes": "Exact red-freeze only: loaded Credentials two-width oracle 9641baef1b0d2161e8e6586b75ee5d0e43373880d10e893de7d2fbbf6de6303b. No repair or final acceptance yet."
     }
   ]
 }

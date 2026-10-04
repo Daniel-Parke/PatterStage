@@ -94,3 +94,42 @@ Its before/after tree stamp is identical:
 The census records 56 additional test lines with a written reason; production
 counts, repeated windows and fixed targets are unchanged. A fresh committed
 sweep and exact-head hosted results remain required.
+
+## Loaded Credentials contrast defect
+
+At corrected candidate `5b2e1d6f`, both secret scans and all push jobs passed.
+The PR's full browser run passed 496 cases but failed the Models boundary
+check; its acceptance summary also failed as required. Preserve PR run
+37178257018 and `tmp/t0192-corrected-e2e-failure.log`. The trace shows a fully
+loaded Credentials heading, not a loading placeholder.
+
+The heading inherited the hairline border token on a raised card. Independent
+oracle author Nash reproduced 1.106237703:1 against the existing 1.55:1 floor
+at 1440x900 and 390x844. The new cases wait for all controlled reads and the
+loaded empty state, and require one visible heading, a painted 1px solid
+border, one h1 and zero horizontal overflow before the contrast assertion.
+Both fail only on contrast. The earlier general scan could complete during
+loading, before this boundary appeared. No prior green proves this loaded
+boundary met its floor.
+
+Laplace accepted exact oracle hash
+`9641baef1b0d2161e8e6586b75ee5d0e43373880d10e893de7d2fbbf6de6303b`.
+Red-first commit `74e7743d` adds two cases. The causal red receipt and both
+coordinator-inspected screenshots are under
+`tmp/t0192-credentials-boundary-1791090647545/`. Preserve the initial scratch
+configuration launch failure separately at `1791090619381`.
+
+The repair sets only this heading's bottom-border colour to the existing
+emphasis token through a CSS-variable reference. Shared heading classes,
+global CSS, palette, contrast floor and all interactions remain unchanged.
+An initial class-string replacement was rejected by design lint in gate
+`1791090957693`; that failed receipt remains. The direct token reference
+passes the unchanged design lint.
+
+Gate `1791091034116` then passed all ten stages on an unchanged tree: 8,819
+unit tests, 499 browser tests, the existing nine unit and 24 browser skips,
+both database-purity controls and both censuses. A separate rebuilt capture
+at `tmp/t0192-credentials-green-1791092115203/` passed both frozen cases and
+measured **3.076349474:1** at each width. The coordinator inspected both PNGs;
+geometry, h1 and overflow controls still pass. Mutation qualification and a
+fresh hosted head remain pending.
