@@ -1,0 +1,46 @@
+{
+  "id": "T-0206",
+  "intent": "Investigate the recurring macOS full-suite HTTP fixture deadline failure before T0193. Preserve every frozen bound and assertion; identify avoidable overhead by independent phase evidence before authoring a repair oracle or implementation. Adopt independent R2 verification even if the declaration router minimum is R1; invariants and rollback are in org/briefs/T-0206-oracle.md.",
+  "declared": {
+    "capabilities": [
+      "edit-tests",
+      "edit-docs",
+      "run-isolated-process",
+      "owned-container",
+      "git",
+      "git-push"
+    ],
+    "side_effects": [
+      "sends-external"
+    ]
+  },
+  "mode": "high-assurance",
+  "tier_proposed": "R2",
+  "status": "active",
+  "owner_session": "2026-10-04-t0206-coordinator",
+  "claims": [
+    "org/tasks/T-0206.json",
+    "org/claims.json",
+    "org/briefs/T-0206-oracle.md",
+    "org/reviews/2026-10-t0206-http-budget.md",
+    "org/HANDOVER.md",
+    "org/TASKS.md",
+    "org/STATE.md",
+    "docs/manifest.json",
+    "tests/helpers/release-http-phase-observer.py"
+  ],
+  "timestamps": {
+    "opened": "2026-10-04T07:07:12.340680+00:00",
+    "updated": "2026-10-04T07:07:12.340680+00:00"
+  },
+  "verdicts": [],
+  "tier_ruled": "R1",
+  "reasons": [
+    {
+      "factor": "boundary-contact",
+      "tier_floor": "R1",
+      "source": "declared",
+      "evidence": "declared side effect: sends-external"
+    }
+  ]
+}

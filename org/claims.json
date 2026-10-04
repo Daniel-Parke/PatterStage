@@ -1,6 +1,36 @@
 {
   "version": 1,
-  "assigned": "2026-10-03",
-  "lanes": [],
-  "note": "T-0192 accepted at 926a13d3be8b14b6214025ff32755350b0039d0b; coordinator lane released after closure writes. T-0193 awaits required closure-head hosted green. Two-writer cap and Q033 retained."
+  "assigned": "2026-10-04",
+  "lanes": [
+    {
+      "lane_id": "T-0206-coordinator",
+      "task_id": "T-0206",
+      "session_id": "2026-10-04-t0206-coordinator",
+      "host": "local",
+      "path_claims": [
+        "org/tasks/T-0206.json",
+        "org/claims.json",
+        "org/briefs/T-0206-oracle.md",
+        "org/reviews/2026-10-t0206-http-budget.md",
+        "org/HANDOVER.md",
+        "org/TASKS.md",
+        "org/STATE.md",
+        "docs/manifest.json"
+      ],
+      "acquired": "2026-10-04T07:07:12.340680+00:00",
+      "expires": "2026-10-05T07:07:12.340680+00:00"
+    },
+    {
+      "lane_id": "T-0206-independent-observer",
+      "task_id": "T-0206",
+      "session_id": "01a10198-6b4f-7593-aa19-e0b3c8facad8",
+      "host": "local",
+      "path_claims": [
+        "tests/helpers/release-http-phase-observer.py"
+      ],
+      "acquired": "2026-10-04T07:08:23.490348+00:00",
+      "expires": "2026-10-04T15:08:23.490348+00:00"
+    }
+  ],
+  "note": "Coordinator and Nash independent phase-observer author, disjoint two-lane assignment. Measurement only; no repair or frozen fixture amendment."
 }
