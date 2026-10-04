@@ -89,6 +89,12 @@ describe("T-0192 tooling environment precedence", () => {
     for (const snapshot of load("deploy", `PS_QUOTES=${quote}a=b#literal${quote}\r\nPS_UNMATCHED=${quote}value${quote === "'" ? '"' : "'"}\n`))
       expect(snapshot.values).toMatchObject({ PS_QUOTES: "a=b#literal", PS_UNMATCHED: quote + "value" + (quote === "'" ? '"' : "'") });
   });
+  it.each(["'", '"'])("deploy preserves a lone %s quote as a literal value", quote => {
+    for (const snapshot of load("deploy", `PS_QUOTES=${quote}\n`)) {
+      expect(snapshot.error).toBeUndefined();
+      expect(snapshot.values.PS_QUOTES).toBe(quote);
+    }
+  });
   it("deploy admits only the exact CONTROL_HUB_DATA_DIR exception without manufacturing PS_DATA_DIR", () => {
     for (const snapshot of load("deploy", "CONTROL_HUB_DATA_DIR=older-private-sentinel\nCONTROL_HUB_OTHER=blocked\nUNRELATED=blocked\nINSTALL_HERMES_TEST=allowed\n")) {
       expect(snapshot.values).toMatchObject({ CONTROL_HUB_DATA_DIR: "older-private-sentinel", CONTROL_HUB_OTHER: null, UNRELATED: null, INSTALL_HERMES_TEST: "allowed", PS_DATA_DIR: null });

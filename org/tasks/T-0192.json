@@ -144,7 +144,8 @@
     "scripts/tooling/seed-catalog.ts",
     "scripts/tooling/retention-prune.ts",
     "package.json",
-    "tsconfig.scripts.json"
+    "tsconfig.scripts.json",
+    "tests/unit/mission-template-editor-wiring.test.tsx"
   ],
   "timestamps": {
     "opened": "2026-10-03T20:37:32.586979+00:00",
@@ -335,6 +336,15 @@
         "author_session": "2026-10-03-t0192-coordinator",
         "authorised_by": "Repository .gitattributes canonical text policy",
         "date": "2026-10-03T23:27:03.076935+00:00"
+      },
+      {
+        "reason": "Independent two-case lone-quote regression: matching one quote is not a pair. Existing46identities and assertions unchanged.",
+        "change": "tests/unit/tooling-env-contract.test.ts",
+        "old_hash": "c2994435592fbeaa804a53adc2c008927b067824ea3b90f70ad6f5be213e5c43",
+        "new_hash": "72f3769868dfc8e45e717b68963f092ed587940a803dcb9d1ce3bbe04da22b4e",
+        "author_session": "01a10195-e680-7d01-b79a-86627d74049c",
+        "authorised_by": "Laplace exact R2 review under Q015",
+        "date": "2026-10-04T00:04:26.675883+00:00"
       }
     ]
   },

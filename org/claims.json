@@ -130,22 +130,23 @@
         "scripts/tooling/retention-prune.ts",
         "tests/unit/scripts-typecheck-contract.test.ts",
         "package.json",
-        "tsconfig.scripts.json"
+        "tsconfig.scripts.json",
+        "tests/unit/tooling-env-contract.test.ts"
       ],
       "acquired": "2026-10-03T21:24:24.476320+00:00",
       "expires": "2026-10-04T21:24:24.476320+00:00"
     },
     {
-      "lane_id": "T-0192-env-amendment",
+      "lane_id": "T-0192-mission-wiring-oracle",
       "task_id": "T-0192",
-      "session_id": "01a10195-e680-7d01-b79a-86627d74049c",
+      "session_id": "01a101b3-7c34-7a71-94b5-334c72f652cb",
       "host": "local",
       "path_claims": [
-        "tests/unit/tooling-env-contract.test.ts"
+        "tests/unit/mission-template-editor-wiring.test.tsx"
       ],
       "acquired": "2026-10-03T23:27:03.076935+00:00",
       "expires": "2026-10-04T23:27:03.076935+00:00"
     }
   ],
-  "note": "Galileo stopped. Halley owns only the independent lone-quote amendment; coordinator owns production."
+  "note": "Halley stopped. Galileo owns one new Missions wiring characterisation suite. Coordinator owns production and approved oracle integration."
 }

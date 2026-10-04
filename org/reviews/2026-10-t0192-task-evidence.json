@@ -778,7 +778,18 @@
     "receipt": "tmp/t0191-green-validation/tmp/t0192-env-candidate-1791070203854",
     "result": "46cases:26pass,10missing-helper contracts,5missing-import structural checks,5behavioural deploy failures; no runtime errors or pending cases.",
     "limits": "Copied CLI probes stop before application import. Copied deploy runner intercepts external effects; actual child only records handoff, not real deployment. AST imports alone do not prove consolidation; source review must check helper calls and removal of all five duplicate loaders. Historical alias and packaging controls remain required.",
-    "typecheck": "Explicit tsconfig.tests.json and focused lint exit0; repeated test windows4796/4800."
+    "typecheck": "Explicit tsconfig.tests.json and focused lint exit0; repeated test windows4796/4800.",
+    "loneQuoteAmendment": {
+      "author": "Halley",
+      "reviewer": "Laplace",
+      "sha256": "72f3769868dfc8e45e717b68963f092ed587940a803dcb9d1ce3bbe04da22b4e",
+      "receipt": "tmp/t0192-defects-env-1791072133259",
+      "result": "46pass,2causal red, existing identities/assertions preserved; explicit tests types and lint0."
+    },
+    "historicalControls": {
+      "receipt": "tmp/t0192-defects-env-controls-1791071610677",
+      "result": "49/49in10suites,exit0 before lone-quote guard; more alias controls remain for final gate."
+    }
   },
   "scriptTypecheckOracle": {
     "file": "tests/unit/scripts-typecheck-contract.test.ts",
@@ -788,6 +799,11 @@
     "receipt": "tmp/t0191-green-validation/tmp/t0192-typing-oracle-1791071397501",
     "result": "8cases:2controls pass,6missing-contract failures. Five stop at missing config; one exposes missing mandatory wiring.",
     "baseline": "Three TS5097 diagnostics at scripts/docs/check.mts lines29-31. Existing explicit extension imports need allowImportingTsExtensions in a no-emit config.",
-    "limits": "Passing isolated control proves compiler refusal/correction without CLI execution. Production-config planted TS/MTS tests and actual scripts program remain unexecuted until config implementation. No full-gate claim."
+    "limits": "Passing isolated control proves compiler refusal/correction without CLI execution. Production-config planted TS/MTS tests and actual scripts program remain unexecuted until config implementation. No full-gate claim.",
+    "postImplementation": {
+      "reviewer": "Laplace",
+      "receipt": "tmp/t0192-defects-script-types-1791072029868",
+      "result": "8/8exit0, real scripts program and both plantedTS/MTS refusal/correction controls. No CLI execution or emitted files. Mandatory lint retains prior checks."
+    }
   }
 }
