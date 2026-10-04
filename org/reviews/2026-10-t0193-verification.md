@@ -58,3 +58,10 @@ The existing page hook and interface stay; only repeated bindings/aliases go.
 This cohort uses behaviour parity controls; it is not a newly red behavioural
 defect. The batch red-first defects remain separately recorded above.
 Frozen existing-test LF hashes: {"tests/unit/mission-query-ownership.test.tsx": "645d7bcf373803a83a7b3e0e674d767f71f8c8a848730de9cde27443e6ce1b5a", "tests/unit/mission-template-editor-wiring.test.tsx": "5970075307193edafa251aaa93db6ffaf27c6021b63d1a593052a654944f64ef", "tests/e2e/missions-flows.spec.ts": "0b6b72b33bd9f717b4feaba08b78ce3cfa36ba23e65f2561429fd1683ff4170c", "tests/e2e/missions-compose.spec.ts": "b03c3daa0ead65eeaa49538f6f8ae1fc96c0e30fdc9b7f8bccae7d3a044e5caa"}
+
+Franklin visual oracle:8cases,4pass4fail on isolated old64ed3aca build.
+Reader small-text contrast and reduced-motion first-frame reveal each fail
+at1440x900/390x844. Five faces/persistence/dismissal and normal-motion controls
+pass. Receipt:`tmp/t0193-reader-browser-red.json`; LF SHA256:`4eed73564270643e4849b4ef9ee005a6a5c4c1d11698d99de99e2b4b801a3aa2`.
+Measured muted labels4.0328:1, and delayed reduced-motion children remain
+opacity0 (last delay0.55s) despite duration0.01ms. No rule was changed yet.
