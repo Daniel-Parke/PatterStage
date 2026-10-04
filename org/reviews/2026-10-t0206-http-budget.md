@@ -211,3 +211,33 @@ Banach independently finds the cause still unresolved. The smallest useful
 next probe captures the actual oracle invocation, not another separate sample.
 See org/briefs/T-0206-actual-oracle.md. No timer/concurrency/assertion change or
 performance repair is claimed. Old reds remain red.
+
+
+## Actual-invocation oracle, red before implementation
+
+Independent Faraday controls:52cases,33pass19matcherfail,zero skips/runtime
+errors; structured receipt tmp/t0206-actual-oracle-red-strengthened.json.
+The42original release-tool names/assertions reconstruct the committed source
+after removing only the additive Q015 amendment. Ten new synthetic controls
+cover disabled delegation, actual callback decoration, partial failure,
+redaction/source binding,21real bridge receive/validation intervals with
+synthetic native execution, malformed/missing/partial receipts, failed oracle
+outcome qualification and interrupted native communication restoration.
+Eleven existing-control failures are only new workflow/environment assertions.
+Eight new-control failures expose missing capabilities; validator rejection
+behaviour remains unproved until green. Types, ESLint and diff checks pass.
+
+Banach initially found two gaps (decorator could manufacture events away from
+the callback; receiver/validation not exercised). Before implementation the
+author strengthened the same52names; Banach independently accepts the exact
+red freeze. No helper or workflow implementation existed at freeze.
+
+- `tests/unit/release-http-actual-observer.test.ts` LF SHA256 `7aade66cc03fc1e477bf4fcbdbb481339f8f826d4cd7359851d120577e5f734b`.
+- `tests/unit/release-test-tools.test.ts` LF SHA256 `8f07fcf7dcd40344199d7387c99ad6d5a7f93bc4145bf73b49ed96c2eb2844f0`.
+- `tests/helpers/release-http-phase-observer.py` LF SHA256 `31d4a11ec9785c6e68d4d6a372f7e1c8f6c77c23ea0094aed686e1eb82cc7100`.
+- `tests/helpers/release-install-http-context-probe.py` LF SHA256 `7c88d3f7c8fc54ae7116b189d32905208e0bc77bc5228f74d85b85d671d6794a`.
+
+Existing task-stored phase-observer hash is the prior raw CRLF digest; the
+current LF baseline above is its documented normalisation, not a source edit.
+The oracle commit is red by design. This is observability acceptance only;
+all original timing failures and T0206 final verification remain open.

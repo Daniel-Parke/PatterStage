@@ -11,7 +11,7 @@ import { load } from "js-yaml";
 import { launch, quote, roots, shellPath, timerCheck, tools } from "../helpers/release-test-tools-harness";
 
 const script = resolve("scripts/tooling/prepare-release-test-tools.sh");
-type WorkflowStep = { name?: string; run?: string; shell?: string; env?: Record<string, string>; if?: string; "continue-on-error"?: boolean };
+type WorkflowStep = { name?: string; run?: string; shell?: string; env?: Record<string, string>; if?: string; with?: Record<string, string>; "continue-on-error"?: boolean };
 const readWorkflow = () => load(readFileSync(resolve(".github/workflows/ci.yml"), "utf8")) as {
   jobs: Record<string, { "runs-on": string; steps: WorkflowStep[] }>;
 };
@@ -43,6 +43,10 @@ event() { printf '%s\n' "$1" >> "$RUNNER_TEMP/events"; }
 npm() {
   [[ "$#" == 2 && "$1" == run && "$2" == test:coverage ]] || return 91
   event coverage
+  # Q015 Faraday, 2026-10-04: coverage itself inherits the actual-receipt lane.
+  if [[ "\${T0206_ACTUAL_PHASE_DIR:-}" == "$RUNNER_TEMP/t0206-actual-phases" ]]; then
+    event actual-receipt-env
+  fi
   : > "$RUNNER_TEMP/coverage-done"
   return ${coverage}
 }
@@ -460,6 +464,11 @@ describe("T-0203 release test prerequisites", () => {
     expect(macos.steps[setup].shell).toBe("bash");
     const owners = Object.entries(workflow.jobs).filter(([, job]) => job.steps.some((step) => step.run?.includes("prepare-release-test-tools.sh"))).map(([name]) => name);
     expect(owners).toEqual(["build-test-macos"]);
+    // Q015 Faraday, 2026-10-04: add actual-invocation evidence, retain every old guard.
+    expect(macos.steps[coverage].run).toMatch(/export T0206_ACTUAL_PHASE_DIR="\$RUNNER_TEMP\/t0206-actual-phases"/);
+    const artifact = macos.steps.find(step => step.name === "Preserve T-0206 diagnostic receipt");
+    expect(artifact?.if).toBe("${{ always() }}");
+    expect(artifact?.with?.path).toContain("${{ runner.temp }}/t0206-actual-phases");
   });
 
   it.each([
@@ -485,6 +494,7 @@ describe("T-0203 release test prerequisites", () => {
     expect(events.filter((event) => event === "cat")).toHaveLength(1);
     expect(events.indexOf("observer-finished")).toBeGreaterThan(events.indexOf("coverage"));
     expect(events.indexOf("report")).toBeGreaterThan(events.indexOf("observer-finished"));
+    expect(events.filter(event => event === "actual-receipt-env")).toHaveLength(1);
   });
 
 

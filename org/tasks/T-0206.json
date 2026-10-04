@@ -45,9 +45,17 @@
   ],
   "timestamps": {
     "opened": "2026-10-04T07:07:12.340680+00:00",
-    "updated": "2026-10-04T13:56:03.491154+00:00"
+    "updated": "2026-10-04T14:21:31.407837+00:00"
   },
-  "verdicts": [],
+  "verdicts": [
+    {
+      "role": "REVIEWER",
+      "session": "01a10610-cd11-7cd1-a83c-bbed065d1f98",
+      "verdict": "pass",
+      "date": "2026-10-04T14:21:31.407837+00:00",
+      "notes": "Bounded final RED-freeze PASS only:52controls,33pass19matcherfail,zero skips/runtime errors. A02 wraps exactly the actual single stalled callback; A05 real bridge receiver/validation, synthetic native execution,21correlated intervals.42old names/assertions held. Missing-validator reds establish absent capability only, not rejection behaviour until green. No implementation, timing repair or final T0206 acceptance. Receipt tmp/t0206-actual-oracle-red-strengthened.json; evidence org/reviews/2026-10-t0206-http-budget.md."
+    }
+  ],
   "tier_ruled": "R2",
   "reasons": [
     {
@@ -66,13 +74,15 @@
   "oracle_provenance": {
     "files": [
       "tests/unit/release-test-tools.test.ts",
-      "tests/helpers/release-http-phase-observer.py"
+      "tests/helpers/release-http-phase-observer.py",
+      "tests/unit/release-http-actual-observer.test.ts"
     ],
     "hashes": {
-      "tests/unit/release-test-tools.test.ts": "d82fa3722b6855ce02e889e0f517b88c1dfab978a1894aa61c59405bedf217fb",
-      "tests/helpers/release-http-phase-observer.py": "5df60fd8f6c59216107b9634eea615d7b86311871cccfb36a510c2704110364f"
+      "tests/unit/release-test-tools.test.ts": "8f07fcf7dcd40344199d7387c99ad6d5a7f93bc4145bf73b49ed96c2eb2844f0",
+      "tests/helpers/release-http-phase-observer.py": "5df60fd8f6c59216107b9634eea615d7b86311871cccfb36a510c2704110364f",
+      "tests/unit/release-http-actual-observer.test.ts": "7aade66cc03fc1e477bf4fcbdbb481339f8f826d4cd7359851d120577e5f734b"
     },
-    "author_session": "Nash 01a10198-6b4f-7593-aa19-e0b3c8facad8; separate-author Q-015 diagnostic amendment reviewed by Laplace; original T-0203 and frozen HTTP records untouched",
+    "author_session": "Nash 01a10198-6b4f-7593-aa19-e0b3c8facad8; separate-author Q-015 diagnostic amendment reviewed by Laplace; original T-0203 and frozen HTTP records untouched; Faraday01a1062b-0f36-7702-885b-476fd150d9bf independent actual-entrypoint red controls and Q015 additive workflow amendment2026-10-04, Banach bounded red-freeze PASS,42original/10new identities held",
     "independence_method": "metamorphic"
   }
 }
