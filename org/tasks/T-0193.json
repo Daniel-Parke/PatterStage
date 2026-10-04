@@ -63,7 +63,8 @@
     "tests/e2e/page-state-reader-motion.spec.ts",
     "src/app/work/missions/page.tsx",
     "tests/unit/type-owner-equivalence.test.ts",
-    "tests/unit/c5-comments-that-narrate.test.ts"
+    "tests/unit/c5-comments-that-narrate.test.ts",
+    "tests/e2e/component-accessibility-responsive.spec.ts"
   ],
   "timestamps": {
     "opened": "2026-10-04T10:03:25.397971+00:00",
@@ -97,7 +98,8 @@
       "tests/e2e/missions-compose.spec.ts",
       "tests/e2e/page-state-reader-motion.spec.ts",
       "tests/unit/type-owner-equivalence.test.ts",
-      "tests/unit/c5-comments-that-narrate.test.ts"
+      "tests/unit/c5-comments-that-narrate.test.ts",
+      "tests/e2e/component-accessibility-responsive.spec.ts"
     ],
     "hashes": {
       "tests/unit/profile-draft-ownership.test.tsx": "9f6003bb94a453ea3c33495e8f37488e2700b9c10987b439dcf412b8ff46a977",
@@ -110,9 +112,10 @@
       "tests/e2e/missions-compose.spec.ts": "b03c3daa0ead65eeaa49538f6f8ae1fc96c0e30fdc9b7f8bccae7d3a044e5caa",
       "tests/e2e/page-state-reader-motion.spec.ts": "9737b028b3f37669c010247a248c65563db195f216883d3ce2d9fd25b0f2d80b",
       "tests/unit/type-owner-equivalence.test.ts": "8ad507d737d5a84621976ed3f707941166d8c4c17cfb9bf85f0fbf9d6d7db06b",
-      "tests/unit/c5-comments-that-narrate.test.ts": "7704d220dc79ee0512da3254fd0450a30680406241a323424c37a14728efa671"
+      "tests/unit/c5-comments-that-narrate.test.ts": "7704d220dc79ee0512da3254fd0450a30680406241a323424c37a14728efa671",
+      "tests/e2e/component-accessibility-responsive.spec.ts": "283bc48ad95fadcb4f3536d8a0bbfc22f9737893cf2e5a42384b3d9db7c32a74"
     },
-    "author_session": "Faraday 01a1062b-0f36-7702-885b-476fd150d9bf; independent real-form and held-transport oracle; Q015 amendment by Franklin 01a1062c-ad31-77c2-8ff2-71c41ee9b5d6, preserving all16 original controls; read truth by Franklin 01a1062c-ad31-77c2-8ff2-71c41ee9b5d6; Faraday independent five-option typing correction,17unchanged controls; Faraday independent three-void Reader lint correction,8names/assertions retained; Faraday independent eight Composer lifecycle controls, original17 unchanged, red6of25; Faraday dated Q015 closed-guard amendment:21original emission hashes and37/12floors retained;44controls pass",
+    "author_session": "Faraday 01a1062b-0f36-7702-885b-476fd150d9bf; independent real-form and held-transport oracle; Q015 amendment by Franklin 01a1062c-ad31-77c2-8ff2-71c41ee9b5d6, preserving all16 original controls; read truth by Franklin 01a1062c-ad31-77c2-8ff2-71c41ee9b5d6; Faraday independent five-option typing correction,17unchanged controls; Faraday independent three-void Reader lint correction,8names/assertions retained; Faraday independent eight Composer lifecycle controls, original17 unchanged, red6of25; Faraday dated Q015 closed-guard amendment:21original emission hashes and37/12floors retained;44controls pass; Faraday independent physical keyboard/monitor readiness amendment, Banach bounded PASS,58names retained",
     "independence_method": "metamorphic"
   }
 }

@@ -50,5 +50,5 @@
       "expires": "2026-10-05T10:03:25.397971+00:00"
     }
   ],
-  "note": "Independent oracle writer released. Coordinator only; T0206 timing remains active/red."
+  "note": "Faraday fixture amendment frozen and independently reviewed; one coordinator writer. Browser replay and entire gate remain required."
 }

@@ -132,3 +132,25 @@ Measured pre-gate source102068(+6against102062), tests151760(+993against150767),
 source repeated windows693(-12), test windows4787 and one-importer103 unchanged.
 Extra test lines protect actual lifecycle defects and narrow closed-oracle
 amendments. Fixed programme targets have not moved. Full gate must repeat.
+
+
+Third complete unchanged-tree gate: lint, app types,8892unit checks, Knip,
+canary, production Turbopack build and two build-purity checks passed.
+Browser510pass/one desktop Composer geometry timeout/24existing skips.
+Censuses not reached. Receipt: tmp/t0193-coordinator-gate-1791113325850/gate/summary.json.
+Tree stamp:0f0a772709cc3c1468c38ade46faac98da86a6bb5806533e5c7cdf2467ee459d.
+Complete failing spec alone:57pass/one different phone Mission focus failure;
+desktop geometry14s and phone geometry10.4s passed. Receipt:
+tmp/t0193-rerun-alone-1791115025482/gate/rerun/summary.rerun.json.
+Neither run is full green. All12new T0193 browser controls passed the full run.
+
+Banach trace diagnosis: geometry used291physical Tabs/nine scans/19.66s;
+all six recorded geometries satisfied their predicates. Phone failure followed
+late setup-notice insertion after wheel navigation. Faraday added only physical
+Shift+Tab before Tab for an already-focused target, and phone monitor response
+plus derived missing-agent notice readiness before wheel navigation. All58names,
+assertions, bounds, screenshots,30s timeout and zero retries retained.
+Banach independently reviewed the exact diff and returned bounded PASS.
+Frozen LF hash:283bc48ad95fadcb4f3536d8a0bbfc22f9737893cf2e5a42384b3d9db7c32a74.
+The amended complete spec and whole gate must repeat; no timing repair or
+release acceptance is claimed. Original reds remain recorded.

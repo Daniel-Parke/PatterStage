@@ -78,3 +78,28 @@ and returning A after B where relevant. Preserve the existing 17 controls.
 Run the added controls red and report causal matcher failures before runtime
 repair. No source edits, full gates, browser runs or commits by the oracle lane.
 Prove identities and report hashes, focused tests and lint/type diagnostics.
+
+
+## Independent browser fixture amendment, 2026-10-04
+
+Faraday owns only component-accessibility-responsive.spec.ts under Q015.
+Third unchanged-tree gate passed8892unit checks/build/two purity checks, then
+510browser pass/one desktop geometry timeout/24existing skips. Failed receipt:
+tmp/t0193-coordinator-gate-1791113325850/gate/summary.json. Complete spec alone:
+57pass/one different phone Mission focus failure, with desktop geometry passing
+14s; tmp/t0193-rerun-alone-1791115025482/gate/rerun/summary.rerun.json.
+Banach independently inspected original archives: geometry helper needlessly
+cycled291physical Tabs/nine scans/19.66s; all six geometry predicates passed.
+Phone focus race is late monitor/setup-notice insertion after wheel navigation.
+Original archives remain in reviewer session; current phone trace copied to
+tmp/t0193-ui-proof/phone-focus-rerun-trace.zip, SHA256
+cff64cc2e83566ad5b31bcd89f073d95f6b068ca99af1ddeb4c7fff7afa07972.
+
+Preserve all58names, assertions, one-pixel bounds, screenshot evidence, zero
+retries,30sbudget and actual physical keyboard navigation. Already-focused
+targets may use physical Shift+Tab then Tab instead of a full-page cycle.
+Establish monitor and rendered notice readiness before the phone mission's
+deliberate wheel navigation; do not hide notices, relax checks, force focus,
+use evaluate-click or add sleeps. Do not claim a runtime regression from these
+traces. Prove names and run the complete58-case spec on the owned build only.
+No runtime edits, complete gate, commits or broad fixture rewrite in the lane.

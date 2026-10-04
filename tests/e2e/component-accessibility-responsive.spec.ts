@@ -370,6 +370,8 @@ async function activate(page: Page, target: Locator) {
 }
 
 async function keyboardFocus(page: Page, target: Locator, info: TestInfo) {
+  // Q015 Faraday, 2026-10-04: re-enter an already-focused target with physical keys.
+  if (await target.evaluate(element => element === document.activeElement)) await page.keyboard.press('Shift+Tab');
   for (let i = 0; i < 150; i++) {
     await page.keyboard.press('Tab');
     if (await target.evaluate(element => element === document.activeElement)) {
@@ -654,7 +656,15 @@ for (const viewport of [{ width: 1440, height: 900 }, { width: 390, height: 844 
 
     test('Mission selected details: distinct long metadata is readable without hovering', async ({ page, oracle }, info) => {
       missionFixture(oracle);
+      const monitorReady = viewport.width === 390 ? page.waitForResponse(response =>
+        new URL(response.url()).pathname === '/api/monitor' && response.request().method() === 'GET') : null;
       await page.goto('/work/missions');
+      if (monitorReady) {
+        const response = await monitorReady;
+        expect(response.ok()).toBe(true);
+        const { data } = await response.json() as { data: { framework?: { name?: string; available?: boolean } } };
+        if (data.framework?.available === false) await expect(page.getByText(`${data.framework.name ?? 'Hermes'} is not installed`, { exact: true })).toBeVisible();
+      }
       const select = page.getByRole('button', { name: /^Observatory mission/ });
       await wheelTo(page, select); await keyboardFocus(page, select, info); await page.keyboard.press('Enter');
       for (const value of Object.values(missionValues)) {
