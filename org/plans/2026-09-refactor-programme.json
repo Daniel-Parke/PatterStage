@@ -907,13 +907,13 @@
         "id": "t0191-real-seed-read-latency",
         "status": "unresolved",
         "evidence": "tmp/t0191-full-gate-1791045503471/test-results/*/trace.zip; safe summary: python tmp/t0191-read-failed-traces.py",
-        "observed": "Three six-worker Models cases: mocked reads200 in150\u2013600ms; real stats/runtime/flags/defaults/drift/fallback-config200 in5.4\u20138.5s. Defaults keeps aggregate page loading.",
-        "qualification": "Root cause unproved. Six separate synchronous Git probes46\u201351ms do not explain stall; cold route loading remains hypothesis. Fixture preload only separates setup from geometry assertions, not a production latency fix.",
+        "observed": "Three six-worker Models cases: mocked reads200 in150–600ms; real stats/runtime/flags/defaults/drift/fallback-config200 in5.4–8.5s. Defaults keeps aggregate page loading.",
+        "qualification": "Root cause unproved. Six separate synchronous Git probes46–51ms do not explain stall; cold route loading remains hypothesis. Fixture preload only separates setup from geometry assertions, not a production latency fix.",
         "verify": "Measure controlled cold and warm built-app endpoint timings and event-loop blocking on Windows and Linux; establish cause before any performance fix. Retain real-route navigation coverage and budgets; no retries or relaxed deadlines."
       },
       "credentialShapeAttribution": {
         "finding": "cross-cutting-18",
-        "evidence": "gap-051.1; models/types13\u201318 and credentials-repository15\u201320",
+        "evidence": "gap-051.1; models/types13–18 and credentials-repository15–20",
         "scope": "Add exact paths at opening; measure public hint-only credential shape convergence, retaining alias if necessary and keeping CredentialWithKey internal."
       }
     },
@@ -1245,7 +1245,7 @@
         "Closed-oracle changes use a different author and a dated amendment."
       ],
       "rollback": "Revert one fixture or suite cohort while keeping behaviour tests that exposed defects.",
-      "verify": "Before/after test-name sets agree except red-first additions; jsdom default and node exceptions match execution needs, source-reading suites converted only where behavioural replacements pass, and e2e flake reruns record both results. Independently prove mock factory, restoreAllMocks and SQLite mapping before critic12 comment correction; preserve restoration and all old identities.",
+      "verify": "Before/after test-name sets agree except red-first additions; the single Node default and explicit jsdom exceptions match execution needs, source-reading suites converted only where behavioural replacements pass, and e2e flake reruns record both results. Independently prove mock factory, restoreAllMocks and SQLite mapping before critic12 comment correction; preserve restoration and all old identities.",
       "reviewed_followups": [
         {
           "id": "t0189-windows-shell-fixture-cleanup",
@@ -1262,6 +1262,13 @@
           "laterVerification": "tmp/t0190-hosted-closure-rerun/snapshot-1791029119234.json",
           "finding": "Closure push attempt1 C02/C05 share a stalled observation: six-second watchdog crossed and final native status did not reach shell completion. Built-in isolated20-case rerun passed. A later full-job pass is verification, not a repair or proven scheduling cause. Attempt2 reran the entire unchanged push workflow, not only macOS; all applicable jobs passed. The PR acceptance path passed separately.",
           "required": "Investigate with measured native timing; preserve21 realcurl calls, all assertions, six-second watchdog,0.2-second kill grace,25-second outer/RPC/lifecycle bounds and every earlier failure. No retries untilgreen, reduced workload or speculative frozen-helper changes."
+        },
+        {
+          "id": "tests06-verify-wording-clarification",
+          "status": "approved-scope-clarified",
+          "originalVerify": "Before/after test-name sets agree except red-first additions; jsdom default and node exceptions match execution needs, source-reading suites converted only where behavioural replacements pass, and e2e flake reruns record both results. Independently prove mock factory, restoreAllMocks and SQLite mapping before critic12 comment correction; preserve restoration and all old identities.",
+          "authority": "Approved tests-06 default-Node route; Parfit independent R2 scope review, Q015. This clarifies internal execution policy, not a target, coverage, deadline or identity change.",
+          "required": "Independent actualresolved environment controls freeze before the exact different-author config-pin amendment. Keep all711 existing pragmas initially; add only the identified DOM exceptions and preserve Next/mappings/workers/floors."
         }
       ],
       "t0191WindowsRenameFollowup": {

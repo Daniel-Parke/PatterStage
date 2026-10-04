@@ -1,6 +1,6 @@
 {
   "id": "T-0206",
-  "intent": "Investigate the recurring macOS full-suite HTTP fixture deadline failure before T0193. Preserve every frozen bound and assertion; identify avoidable overhead by independent phase evidence before authoring a repair oracle or implementation. Adopt independent R2 verification even if the declaration router minimum is R1; invariants and rollback are in org/briefs/T-0206-oracle.md.\nQ-035 permits T-0193 to start after the current selector fix passes the full local gate and every required hosted job while T-0206 stays open; the original timing failures and frozen bounds remain.\nClosure4a9bc63e PR37206142400 repeats C02/C05:21 native statuses but20 shell completions and watchdog expiry. T0194 remains unopened. Instrument the actual failed invocation through an independent Q015 amendment before attempting an overhead repair; preserve every bound and normal coverage concurrency.",
+  "intent": "Investigate the recurring macOS full-suite HTTP fixture deadline failure before T0193. Preserve every frozen bound and assertion; identify avoidable overhead by independent phase evidence before authoring a repair oracle or implementation. Adopt independent R2 verification even if the declaration router minimum is R1; invariants and rollback are in org/briefs/T-0206-oracle.md.\nQ-035 permits T-0193 to start after the current selector fix passes the full local gate and every required hosted job while T-0206 stays open; the original timing failures and frozen bounds remain.\nClosure4a9bc63e PR37206142400 repeats C02/C05:21 native statuses but20 shell completions and watchdog expiry. T0194 remains unopened. Instrument the actual failed invocation through an independent Q015 amendment before attempting an overhead repair; preserve every bound and normal coverage concurrency. Closure6dc4ce15 push37242011425 adds distinct H12 base-stalled HTTP withinDeadline failure. Current observer covers context invocation only, not this base callback. Exact watchdog status and timing cause remain unproved; no common-cause inference from C02/C05. Next diagnostic must capture the same base callback once, preserving all workload/bounds/cleanup, under independently authored Q015/R2 amendment. No timing repair authorised.",
   "declared": {
     "capabilities": [
       "edit-tests",
@@ -44,7 +44,7 @@
   ],
   "timestamps": {
     "opened": "2026-10-04T07:07:12.340680+00:00",
-    "updated": "2026-10-04T22:40:10.977298+00:00"
+    "updated": "2026-10-04T23:15:31.295777+00:00"
   },
   "verdicts": [
     {
@@ -74,6 +74,13 @@
       "verdict": "fail",
       "date": "2026-10-04T22:40:10.977298+00:00",
       "notes": "Exact39f98848 PR37238590551 macOS full suite repeats unchanged C02/C05: missing final shell completion despite native statuses and six-second deadline crossed. Completed log tmp/t0194-hosted-macos-failure.log; all jobs snapshot tmp/t0194-hosted-1791152485929/snapshot.json. Separate20/20 diagnostic does not establish cause or repair. Preserve watchdog, grace, outer/RPC/lifecycle bounds,21 realcurl calls and coverage concurrency. T0194/T0207 remain active until required hosted checks pass; T0206 cause remains open even if a later run passes."
+    },
+    {
+      "role": "REVIEWER",
+      "session": "01a107e1-5ba0-7703-ab13-e23e640dc10b",
+      "verdict": "fail",
+      "date": "2026-10-04T23:15:31.295777+00:00",
+      "notes": "New H12 investigation item: push37242011425 Macjob111552448308 at6dc4ce15,9058pass/onefail/fiveexisting skips. Fail at release-install-http-smoke32/96 withinDeadline; base helper derives flag from statuses124/137 but exact status/timing is not captured. Earlier cleanup/ownership assertions passed; later assertions not reached. PRMacPASS; no currenthead hostedgreen. Retain distinct source-bound signature and no retries, deadline increase or common-cause claim. Log tmp/t0194-closure-macos-failure.log; snapshot tmp/t0194-hosted-1791155151553/snapshot.json. R3 acceptance at72edf3ff remains bounded; release acceptance remains blocked."
     }
   ],
   "tier_ruled": "R2",

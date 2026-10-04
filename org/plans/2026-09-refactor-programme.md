@@ -270,3 +270,14 @@ every miss and explain it in the plan's closing section, with its number.
 Mark every preliminary finding, split decision and atomic obligation done, ruled out or
 deferred with an evidence reference and reason. Do not rewrite targets,
 protected history, or the source ledgers to make a result green.
+
+
+### T0195 internal execution clarification, 5 October
+
+The earlier machine-readable Verify said “jsdom default and node exceptions”.
+The approved tests-06 finding documents the single default-Node route. T0195
+clarifies that internal policy to Node with explicit DOM exceptions, preserving
+all existing pragmas for the initial cohort, Next wrapping, mappings, workers
+and coverage floors. Parfit authorises the exact different-author R2 hash-pin
+amendment only after independent resolved-environment controls freeze. Original
+Verify wording is retained in the batch follow-up; no target or identity moves.

@@ -207,7 +207,7 @@ The records under org/tasks/ are canonical.
 | T-0192 | high-assurance | R2 | done | 2026-10-03-t0192-coordinator |
 | T-0193 | high-assurance | R2 | done | 2026-10-04-t0193-coordinator |
 | T-0194 | high-assurance | R3 | done | 2026-10-04-t0194-coordinator |
-| T-0195 | high-assurance | R2 | proposed | 2026-10-04-t0194-coordinator |
+| T-0195 | high-assurance | R2 | active | 2026-10-04-t0195-coordinator |
 | T-0196 | high-assurance | R2 | proposed | 2026-10-04-t0194-coordinator |
 | T-0197 | standard | R1 | proposed | 2026-10-04-t0194-coordinator |
 | T-0201 | high-assurance | R2 | proposed | 2026-10-04-t0194-coordinator |

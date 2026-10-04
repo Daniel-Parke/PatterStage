@@ -1,0 +1,4235 @@
+{
+  "schemaVersion": 1,
+  "task": "T-0195",
+  "author": "Volta 01a10916-9151-7253-9e90-cf7d4e0168ae",
+  "originalReadinessReceiptSha256": "30b7a8855eb8018afefd1f58d7a7ddb0ae8968e22cf3337f08ac33110f75290c",
+  "snapshot": {
+    "branch": "dev",
+    "head": "72edf3ff9d84e91b35d4ed68f2bcb5d768f3ed34",
+    "trackedStatus": "",
+    "node": "v24.15.0",
+    "typescript": "5.9.3",
+    "jestDocblock": "30.2.0"
+  },
+  "scope": {
+    "manifestCommand": "git ls-files -z; select ^tests/unit/.*\\.test\\.tsx?$",
+    "suiteCount": 869,
+    "trackedUnitFiles": 869,
+    "suiteManifestSha256": "4a5b4849def75ee2538bc44fb7968233abdb7289ed847ab19a4b2004cd422bd1",
+    "excludedTrackedUnitPaths": [],
+    "testsExecuted": false,
+    "providersExecuted": false,
+    "configEvaluated": false,
+    "extensionUsedAsEvidenceOfDomNeed": false
+  },
+  "counts": {
+    "explicitNode": 525,
+    "explicitJsdom": 186,
+    "implicitDefault": 158,
+    "other": 0
+  },
+  "byExtension": {
+    ".ts": {
+      "explicitNode": 523,
+      "explicitJsdom": 6,
+      "implicitDefault": 125,
+      "other": 0
+    },
+    ".tsx": {
+      "explicitNode": 2,
+      "explicitJsdom": 180,
+      "implicitDefault": 33,
+      "other": 0
+    }
+  },
+  "adjudication": {
+    "edgeCases": [
+      {
+        "path": "tests/unit/c4-the-test-harnesses.test.ts",
+        "evidence": "Calls matchMediaMock then window.matchMedia at lines 71-78. Requires jsdom despite .ts and extensive source scanning."
+      },
+      {
+        "path": "tests/unit/set-field.test.ts",
+        "evidence": "Calls Testing Library renderHook at lines 71,84. Installed renderHook delegates to render, which uses document.body/createElement. Hooks require DOM here despite no JSX."
+      },
+      {
+        "path": "tests/unit/u19-the-canvas-waits-for-build.test.tsx",
+        "evidence": "Reads page source and asserts strings/regular expressions. No component import, render, hook mount or DOM operation. Node candidate despite .tsx."
+      },
+      {
+        "path": "tests/unit/u7-the-rail.test.tsx",
+        "evidence": "Reads source and checks module registry data. No DOM mount. Node candidate despite .tsx."
+      },
+      {
+        "path": "tests/unit/t0162-house-control-names.test.tsx",
+        "evidence": "Already explicit Node; JSX is rendered through react-dom/server renderToStaticMarkup. JSX does not establish browser DOM need. Keep pragma."
+      },
+      {
+        "path": "tests/unit/b6-cleared-defaults-stay-cleared.test.ts",
+        "evidence": "Deliberately explicit Node with a local JSDOM harness installed/restored for one block, and real SQLite access. Keep pragma and existing harness."
+      },
+      {
+        "path": "tests/unit/t0156-help-client-boundary.test.tsx",
+        "evidence": "Explicit jsdom but uses SSR renderToStaticMarkup. No direct DOM AST signals. Keep existing declaration; reconsidering this explicit exception is outside the implicit-default cohort."
+      }
+    ],
+    "setupUnderNode": {
+      "path": "tests/jest.setup.ts",
+      "finding": "Unconditional @testing-library/jest-dom import registers matchers through expect.extend. Its entry has no eager document/window access; matcher DOM access is within functions. Source inspection supports keeping the import under Node with Jest's expect available, but no import behaviour proof was executed.",
+      "existingNodeSuites": 525,
+      "caution": "Existing Node declarations establish intended setup compatibility, not a fresh passing result. Setup conditionally supplies TextEncoder/TextDecoder and Request/Response; Node retains its native implementations. Changing defaults can change globals, package export conditions and previously selected branches. No broad setup rewrite justified."
+    },
+    "nextJestAndInvariants": {
+      "finding": "Keep the existing single nextJest({dir:'./'}) / createJestConfig(config) wrapper. Installed Next adds SWC transforms, CSS/image/font/server-only mapping and ignore patterns to that one config. Do not introduce projects or route by extension.",
+      "preserve": [
+        "maxWorkers: 2",
+        "coverageThreshold from scripts/tooling/coverage-floors.cjs and its baseline",
+        "collectCoverageFrom and all coverage floors",
+        "Next SWC transform and generated moduleNameMapper entries",
+        "^@/(.*)$ alias and ^better-sqlite3$ exact mapper",
+        "setupFilesAfterEnv and unit testMatch",
+        "tmp modulePathIgnorePatterns",
+        "all existing tests, identities, assertions and SQLite bypass paths"
+      ],
+      "documentation": "docs/contributing/testing.md documents setup, SQLite mapping, coverage and runner layout, but does not mandate a jsdom default. org/plans/2026-09-refactor-programme.json:1248 still phrases Verify as 'jsdom default and node exceptions'; this stale direction is flagged only. Current operator request proposes default Node. No documents or claims changed."
+    },
+    "critic12": {
+      "actualMiswording": "tests/jest.setup.ts:97-98 says restoreAllMocks may remove the global mock and warns against using it. Installed Jest runtime delegates restoration to jest-mock, which restores registered spies AND jest.replaceProperty restorers; it does not clear module factories. The older review's 'spies only' proposal is also incomplete.",
+      "factoryVsMapper": "Setup's explicit jest.mock('better-sqlite3', factory) supplies an ES-module-shaped default jest.fn returning mockDbMethods. Jest consults the explicit factory registry before loading a mock module. The exact moduleNameMapper separately resolves the package root to tests/__mocks__/better-sqlite3.cjs, whose exports are an object, not that constructor factory. They are distinct mechanisms/shapes. jest.requireActual on the package root bypasses the factory but still resolves through the mapper; existing subpath/absolute-path real-driver bypasses avoid the exact root mapper.",
+      "narrowIndependentBehaviourProofBeforeAnyChange": [
+        "Small Node and jsdom controls using existing setup: matcher registration succeeds; default constructor factory and @/lib/db mock methods retain identity and implementations after restoreAllMocks.",
+        "Create one spy and one replaceProperty control; restoreAllMocks restores their originals while an ordinary jest.fn and explicit module-factory export remain intact.",
+        "Compare ordinary root import/requireMock with requireActual('better-sqlite3'): prove factory constructor versus mapped CJS object semantics, including the exact resolved path. Preserve fs-mocked safety.",
+        "Prove the established subpath/absolute-path bypass still opens and closes a disposable in-memory real SQLite database, without altering the mapper or native-driver fixtures."
+      ],
+      "proofStatus": "Recommended only; no proof file authored or executed, no comment edited. Do not infer run-order safety for every suite from registry semantics alone."
+    }
+  },
+  "restoreAllMocks": {
+    "astCallSuiteCount": 28,
+    "paths": [
+      "tests/unit/api-route-public-contract.test.ts",
+      "tests/unit/b4-emits-scripts-records.test.ts",
+      "tests/unit/bloom-field.test.tsx",
+      "tests/unit/composer-advance-diagnostics.test.ts",
+      "tests/unit/config-sync-atomic-replacement.test.ts",
+      "tests/unit/directory-picker-modal.test.tsx",
+      "tests/unit/lib-domain-helper-parity.test.ts",
+      "tests/unit/lib-domain-queue-admission.test.ts",
+      "tests/unit/lib-domain-queue-confirmation.test.ts",
+      "tests/unit/local-dir-row-branch.test.tsx",
+      "tests/unit/mission-delete-cleans-disk.test.ts",
+      "tests/unit/mission-link-poll-ownership.test.tsx",
+      "tests/unit/model-picker-default.test.tsx",
+      "tests/unit/read-last-category.test.ts",
+      "tests/unit/remember-last-category.test.ts",
+      "tests/unit/research-fetch-dns-pinning.test.ts",
+      "tests/unit/route-local-catch-contract.test.ts",
+      "tests/unit/search-module.test.ts",
+      "tests/unit/search-url-guard.test.ts",
+      "tests/unit/server-log-contract.test.ts",
+      "tests/unit/skill-selector-enabled-filter.test.tsx",
+      "tests/unit/skill-selector-profile-refetch.test.tsx",
+      "tests/unit/stories-timeout-retry.test.ts",
+      "tests/unit/t0163-hermes-env-permissions.test.ts",
+      "tests/unit/t0163-review-regressions.test.ts",
+      "tests/unit/template-create-identifiers.test.ts",
+      "tests/unit/the-run-route-says-which-happened.test.ts",
+      "tests/unit/toolset-selector.test.tsx"
+    ]
+  },
+  "evidenceFiles": [
+    {
+      "path": "jest.config.js",
+      "sha256": "bf164aeed1b461660a038065930aa4e9fcb208c84b34f41d51536c39a872e507"
+    },
+    {
+      "path": "tests/jest.setup.ts",
+      "sha256": "733cb0b44501f9450bc2e51c368dd284878fdaecd76834ee216efb09d5a6b552"
+    },
+    {
+      "path": "tests/__mocks__/better-sqlite3.cjs",
+      "sha256": "b9310f3f5be07d14049074bb3091a36fca4161268ce53da58cc7de974ab67a9c"
+    },
+    {
+      "path": "scripts/tooling/coverage-floors.cjs",
+      "sha256": "02ff9f3397eb3a9d49d7f6b8528266d8fa0f7a265ed776311b80384db7a7bf99"
+    },
+    {
+      "path": "scripts/tooling/coverage-floors.baseline.json",
+      "sha256": "c8f69075a118d7296cecacdee50f0ead6847489a28f9e4b4f44ae476b6f669d4"
+    },
+    {
+      "path": "docs/contributing/testing.md",
+      "sha256": "5bdf97505045367651c5c900061024157d92e13c587eddc931e853e141044c53"
+    },
+    {
+      "path": "org/tasks/T-0195.json",
+      "sha256": "d2a6e49cc5a0d14a544ff3328dd7c4cd4019fdfb730b82a11fe42ffa9b0a3fad"
+    },
+    {
+      "path": "org/plans/2026-09-refactor-programme.json",
+      "sha256": "25d3c480d9ed79e17f5ba6c7079cf89827d9e223253d4788438e0ccc0c88f1c3"
+    },
+    {
+      "path": "tests/unit/dependency-hygiene-contract.test.ts",
+      "sha256": "c867fe930a8b3c7ffbf89fb35154b1f8604107a95a795bd5d2b0b0793dce80ef"
+    }
+  ],
+  "installedEvidenceFiles": [
+    {
+      "path": "node_modules/next/dist/build/jest/jest.js",
+      "sha256": "f414887ccbd66e3a80a623342f0991f85666d085f774eed80daebf19e4586f9c"
+    },
+    {
+      "path": "node_modules/jest-runtime/build/index.js",
+      "sha256": "b5bffe9bb567ccc1832650ebab7a814117933ad327eda071aacb04ba4758eeb1"
+    },
+    {
+      "path": "node_modules/jest-mock/build/index.js",
+      "sha256": "a431e8352f0dcd75a0e3723c8cedef9b666e9a43c1fd9f0b828e3b30549a0ecd"
+    },
+    {
+      "path": "node_modules/jest-resolve/build/index.js",
+      "sha256": "dc4dbd08e33a468787b95c1127c7f4692ca8242f8bb50bc44f7298e7f7ae058d"
+    },
+    {
+      "path": "node_modules/@testing-library/jest-dom/dist/index.js",
+      "sha256": "a3da696cf9c0e5bfc84b7e866f1dded7b3fdba5378173ac3d38eb858374340ff"
+    },
+    {
+      "path": "node_modules/@testing-library/jest-dom/dist/matchers-98b869c1.js",
+      "sha256": "8050989817e236974dd4c62392b46122cbcc84c07a8b15fb395662cd86cdd674"
+    },
+    {
+      "path": "node_modules/@testing-library/react/dist/pure.js",
+      "sha256": "96f6ca07ac9a54db1d9ee17ee34474f9361176102c55870d6d7783afab7539c5"
+    }
+  ],
+  "installedVersions": {
+    "next": "16.3.6",
+    "jest": "30.3.0",
+    "jest-runtime": "30.3.0",
+    "jest-mock": "30.3.0",
+    "jest-environment-node": "30.3.0",
+    "jest-environment-jsdom": "30.3.0",
+    "@testing-library/jest-dom": "6.9.1",
+    "@testing-library/react": "16.3.2"
+  },
+  "frozenConfigConstraint": {
+    "path": "tests/unit/dependency-hygiene-contract.test.ts",
+    "line": 132,
+    "currentExecutableSha256": "3188e6c3935b640ba58aa02c2ebc32913b41ac5ef5eb9dd9b74563942a9a6ba0",
+    "hypotheticalDefaultNodeExecutableSha256": "195fd7a81ab82932f2b0b53c57a5bb1ddaff991a6190534bba71e35ccebae91b",
+    "assertionWouldDiffer": true,
+    "computedWithoutExecutingTest": true,
+    "amendmentMade": false,
+    "implementationReadiness": "blocked within no-frozen-oracle-amendment scope"
+  },
+  "adjudicatedImplicitSummary": {
+    "requiresJsdom": {
+      "count": 33,
+      "ts": 2,
+      "tsx": 31
+    },
+    "nodeCandidates": {
+      "count": 125,
+      "ts": 123,
+      "tsx": 2
+    },
+    "transitiveOnlySignals": "Four manually reviewed false positives; see adjudication. No unresolved local static imports and no suite parse diagnostics.",
+    "parseDiagnosticSuiteCount": 0,
+    "unresolvedImplicitLocalImportCount": 0
+  },
+  "domExceptions": [
+    {
+      "path": "tests/unit/b17-the-parts-the-sweep-found.test.tsx",
+      "sha256": "a8f8dc4d8e820f1213ef94c4a645d36e6b4d6131ed52b08ffdb8bd631854a984",
+      "signals": [
+        {
+          "kind": "dom-library-call",
+          "name": "getByTestId",
+          "line": 152,
+          "module": "@testing-library/react",
+          "code": "screen.getByTestId"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "queryByTestId",
+          "line": 158,
+          "module": "@testing-library/react",
+          "code": "screen.queryByTestId"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "queryByTestId",
+          "line": 164,
+          "module": "@testing-library/react",
+          "code": "screen.queryByTestId"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "render",
+          "line": 174,
+          "module": "@testing-library/react",
+          "code": "render"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "getByText",
+          "line": 183,
+          "module": "@testing-library/react",
+          "code": "screen.getByText"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "queryByText",
+          "line": 184,
+          "module": "@testing-library/react",
+          "code": "screen.queryByText"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "render",
+          "line": 188,
+          "module": "@testing-library/react",
+          "code": "render"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "queryByLabelText",
+          "line": 194,
+          "module": "@testing-library/react",
+          "code": "screen.queryByLabelText"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "render",
+          "line": 198,
+          "module": "@testing-library/react",
+          "code": "render"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "getByText",
+          "line": 207,
+          "module": "@testing-library/react",
+          "code": "screen.getByText"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "render",
+          "line": 211,
+          "module": "@testing-library/react",
+          "code": "render"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "queryByText",
+          "line": 220,
+          "module": "@testing-library/react",
+          "code": "screen.queryByText"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "getByText",
+          "line": 221,
+          "module": "@testing-library/react",
+          "code": "screen.getByText"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "render",
+          "line": 225,
+          "module": "@testing-library/react",
+          "code": "render"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "queryByLabelText",
+          "line": 226,
+          "module": "@testing-library/react",
+          "code": "screen.queryByLabelText"
+        }
+      ],
+      "importClosureSummary": {
+        "reachablePaths": 0,
+        "qualification": "Readiness reachability is conservative, not execution proof; original full traces retained in the bound receipt."
+      }
+    },
+    {
+      "path": "tests/unit/b19-the-memory-provider-can-be-chosen.test.tsx",
+      "sha256": "c693cfdd1e8a3c0faaa2557b4c340ce89719b1778ed349b48735f0d1ed20f764",
+      "signals": [
+        {
+          "kind": "dom-library-call",
+          "name": "waitFor",
+          "line": 67,
+          "module": "@testing-library/react",
+          "code": "waitFor"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "getByRole",
+          "line": 67,
+          "module": "@testing-library/react",
+          "code": "screen.getByRole"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "click",
+          "line": 76,
+          "module": "@testing-library/react",
+          "code": "fireEvent.click"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "getByRole",
+          "line": 76,
+          "module": "@testing-library/react",
+          "code": "screen.getByRole"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "getAllByRole",
+          "line": 77,
+          "module": "@testing-library/react",
+          "code": "screen.getAllByRole"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "getByRole",
+          "line": 85,
+          "module": "@testing-library/react",
+          "code": "screen.getByRole"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "click",
+          "line": 92,
+          "module": "@testing-library/react",
+          "code": "fireEvent.click"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "getByRole",
+          "line": 92,
+          "module": "@testing-library/react",
+          "code": "screen.getByRole"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "click",
+          "line": 93,
+          "module": "@testing-library/react",
+          "code": "fireEvent.click"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "getByRole",
+          "line": 93,
+          "module": "@testing-library/react",
+          "code": "screen.getByRole"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "click",
+          "line": 94,
+          "module": "@testing-library/react",
+          "code": "fireEvent.click"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "getByRole",
+          "line": 94,
+          "module": "@testing-library/react",
+          "code": "screen.getByRole"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "waitFor",
+          "line": 96,
+          "module": "@testing-library/react",
+          "code": "waitFor"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "click",
+          "line": 107,
+          "module": "@testing-library/react",
+          "code": "fireEvent.click"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "getByRole",
+          "line": 107,
+          "module": "@testing-library/react",
+          "code": "screen.getByRole"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "click",
+          "line": 108,
+          "module": "@testing-library/react",
+          "code": "fireEvent.click"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "getByRole",
+          "line": 108,
+          "module": "@testing-library/react",
+          "code": "screen.getByRole"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "click",
+          "line": 109,
+          "module": "@testing-library/react",
+          "code": "fireEvent.click"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "getByRole",
+          "line": 109,
+          "module": "@testing-library/react",
+          "code": "screen.getByRole"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "waitFor",
+          "line": 111,
+          "module": "@testing-library/react",
+          "code": "waitFor"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "click",
+          "line": 119,
+          "module": "@testing-library/react",
+          "code": "fireEvent.click"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "getByRole",
+          "line": 119,
+          "module": "@testing-library/react",
+          "code": "screen.getByRole"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "waitFor",
+          "line": 120,
+          "module": "@testing-library/react",
+          "code": "waitFor"
+        }
+      ],
+      "importClosureSummary": {
+        "reachablePaths": 0,
+        "qualification": "Readiness reachability is conservative, not execution proof; original full traces retained in the bound receipt."
+      }
+    },
+    {
+      "path": "tests/unit/c4-the-test-harnesses.test.ts",
+      "sha256": "07dff9118ba02bb0d3712a3b7b07fbdc6dff972876d909f6d33f453eea343045",
+      "signals": [
+        {
+          "kind": "dom-global",
+          "name": "window",
+          "line": 72,
+          "code": "window.matchMedia"
+        },
+        {
+          "kind": "dom-global",
+          "name": "window",
+          "line": 77,
+          "code": "window.matchMedia"
+        },
+        {
+          "kind": "dom-global",
+          "name": "window",
+          "line": 78,
+          "code": "window.matchMedia"
+        }
+      ],
+      "importClosureSummary": {
+        "reachablePaths": 0,
+        "qualification": "Readiness reachability is conservative, not execution proof; original full traces retained in the bound receipt."
+      }
+    },
+    {
+      "path": "tests/unit/field-kit.test.tsx",
+      "sha256": "13e327b391184269793e490bfffa2cf2d5044d2b7d6fe9c4500bbced1fb18897",
+      "signals": [
+        {
+          "kind": "dom-library-call",
+          "name": "render",
+          "line": 13,
+          "module": "@testing-library/react",
+          "code": "render"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "getByText",
+          "line": 18,
+          "module": "@testing-library/react",
+          "code": "screen.getByText"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "getByText",
+          "line": 19,
+          "module": "@testing-library/react",
+          "code": "screen.getByText"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "render",
+          "line": 23,
+          "module": "@testing-library/react",
+          "code": "render"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "getByText",
+          "line": 28,
+          "module": "@testing-library/react",
+          "code": "screen.getByText"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "queryByText",
+          "line": 29,
+          "module": "@testing-library/react",
+          "code": "screen.queryByText"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "render",
+          "line": 36,
+          "module": "@testing-library/react",
+          "code": "render"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "getByLabelText",
+          "line": 37,
+          "module": "@testing-library/react",
+          "code": "screen.getByLabelText"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "change",
+          "line": 39,
+          "module": "@testing-library/react",
+          "code": "fireEvent.change"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "render",
+          "line": 44,
+          "module": "@testing-library/react",
+          "code": "render"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "getByLabelText",
+          "line": 45,
+          "module": "@testing-library/react",
+          "code": "screen.getByLabelText"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "render",
+          "line": 52,
+          "module": "@testing-library/react",
+          "code": "render"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "getByText",
+          "line": 57,
+          "module": "@testing-library/react",
+          "code": "screen.getByText"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "getByText",
+          "line": 58,
+          "module": "@testing-library/react",
+          "code": "screen.getByText"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "change",
+          "line": 59,
+          "module": "@testing-library/react",
+          "code": "fireEvent.change"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "getByDisplayValue",
+          "line": 59,
+          "module": "@testing-library/react",
+          "code": "screen.getByDisplayValue"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "render",
+          "line": 66,
+          "module": "@testing-library/react",
+          "code": "render"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "getByDisplayValue",
+          "line": 67,
+          "module": "@testing-library/react",
+          "code": "screen.getByDisplayValue"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "render",
+          "line": 74,
+          "module": "@testing-library/react",
+          "code": "render"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "change",
+          "line": 75,
+          "module": "@testing-library/react",
+          "code": "fireEvent.change"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "getByDisplayValue",
+          "line": 75,
+          "module": "@testing-library/react",
+          "code": "screen.getByDisplayValue"
+        }
+      ],
+      "importClosureSummary": {
+        "reachablePaths": 0,
+        "qualification": "Readiness reachability is conservative, not execution proof; original full traces retained in the bound receipt."
+      }
+    },
+    {
+      "path": "tests/unit/field-label-association.test.tsx",
+      "sha256": "06dc3dc9c7bc000f6e8af5adb8a2731cd2480195ca2511e4d11a947d66e7987d",
+      "signals": [
+        {
+          "kind": "dom-library-call",
+          "name": "render",
+          "line": 18,
+          "module": "@testing-library/react",
+          "code": "render"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "getByRole",
+          "line": 24,
+          "module": "@testing-library/react",
+          "code": "screen.getByRole"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "render",
+          "line": 28,
+          "module": "@testing-library/react",
+          "code": "render"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "getByRole",
+          "line": 33,
+          "module": "@testing-library/react",
+          "code": "screen.getByRole"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "render",
+          "line": 38,
+          "module": "@testing-library/react",
+          "code": "render"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "getByRole",
+          "line": 43,
+          "module": "@testing-library/react",
+          "code": "screen.getByRole"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "render",
+          "line": 47,
+          "module": "@testing-library/react",
+          "code": "render"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "getByRole",
+          "line": 52,
+          "module": "@testing-library/react",
+          "code": "screen.getByRole"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "render",
+          "line": 56,
+          "module": "@testing-library/react",
+          "code": "render"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "getByRole",
+          "line": 61,
+          "module": "@testing-library/react",
+          "code": "screen.getByRole"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "render",
+          "line": 68,
+          "module": "@testing-library/react",
+          "code": "render"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "getByText",
+          "line": 69,
+          "module": "@testing-library/react",
+          "code": "screen.getByText"
+        }
+      ],
+      "importClosureSummary": {
+        "reachablePaths": 0,
+        "qualification": "Readiness reachability is conservative, not execution proof; original full traces retained in the bound receipt."
+      }
+    },
+    {
+      "path": "tests/unit/model-bulk-default-feedback.test.tsx",
+      "sha256": "f91bd70cebfe92b56a5c3182f99d072a090abbe543b15963156761de8b0d9a50",
+      "signals": [
+        {
+          "kind": "dom-library-call",
+          "name": "renderHook",
+          "line": 25,
+          "module": "@testing-library/react",
+          "code": "renderHook"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "act",
+          "line": 26,
+          "module": "@testing-library/react",
+          "code": "act"
+        }
+      ],
+      "importClosureSummary": {
+        "reachablePaths": 0,
+        "qualification": "Readiness reachability is conservative, not execution proof; original full traces retained in the bound receipt."
+      }
+    },
+    {
+      "path": "tests/unit/set-field.test.ts",
+      "sha256": "4953aab5cabad3741a67244db4bcacfb5d83ca96ff0f87858726147b7262f406",
+      "signals": [
+        {
+          "kind": "dom-library-call",
+          "name": "renderHook",
+          "line": 71,
+          "module": "@testing-library/react",
+          "code": "renderHook"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "act",
+          "line": 77,
+          "module": "@testing-library/react",
+          "code": "act"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "renderHook",
+          "line": 84,
+          "module": "@testing-library/react",
+          "code": "renderHook"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "act",
+          "line": 93,
+          "module": "@testing-library/react",
+          "code": "act"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "act",
+          "line": 96,
+          "module": "@testing-library/react",
+          "code": "act"
+        }
+      ],
+      "importClosureSummary": {
+        "reachablePaths": 0,
+        "qualification": "Readiness reachability is conservative, not execution proof; original full traces retained in the bound receipt."
+      }
+    },
+    {
+      "path": "tests/unit/settings-save-draft-ownership.test.tsx",
+      "sha256": "bcfe417bce67d68bfe6de8725e47f53eb4836d2b8c72755301a8396a1fcd025a",
+      "signals": [
+        {
+          "kind": "dom-library-call",
+          "name": "renderHook",
+          "line": 32,
+          "module": "@testing-library/react",
+          "code": "renderHook"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "waitFor",
+          "line": 33,
+          "module": "@testing-library/react",
+          "code": "waitFor"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "waitFor",
+          "line": 34,
+          "module": "@testing-library/react",
+          "code": "waitFor"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "act",
+          "line": 41,
+          "module": "@testing-library/react",
+          "code": "act"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "act",
+          "line": 43,
+          "module": "@testing-library/react",
+          "code": "act"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "act",
+          "line": 45,
+          "module": "@testing-library/react",
+          "code": "act"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "act",
+          "line": 46,
+          "module": "@testing-library/react",
+          "code": "act"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "act",
+          "line": 50,
+          "module": "@testing-library/react",
+          "code": "act"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "act",
+          "line": 56,
+          "module": "@testing-library/react",
+          "code": "act"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "act",
+          "line": 58,
+          "module": "@testing-library/react",
+          "code": "act"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "act",
+          "line": 59,
+          "module": "@testing-library/react",
+          "code": "act"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "act",
+          "line": 60,
+          "module": "@testing-library/react",
+          "code": "act"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "act",
+          "line": 61,
+          "module": "@testing-library/react",
+          "code": "act"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "act",
+          "line": 68,
+          "module": "@testing-library/react",
+          "code": "act"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "act",
+          "line": 70,
+          "module": "@testing-library/react",
+          "code": "act"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "act",
+          "line": 71,
+          "module": "@testing-library/react",
+          "code": "act"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "act",
+          "line": 74,
+          "module": "@testing-library/react",
+          "code": "act"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "act",
+          "line": 75,
+          "module": "@testing-library/react",
+          "code": "act"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "act",
+          "line": 83,
+          "module": "@testing-library/react",
+          "code": "act"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "act",
+          "line": 85,
+          "module": "@testing-library/react",
+          "code": "act"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "act",
+          "line": 86,
+          "module": "@testing-library/react",
+          "code": "act"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "act",
+          "line": 87,
+          "module": "@testing-library/react",
+          "code": "act"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "act",
+          "line": 92,
+          "module": "@testing-library/react",
+          "code": "act"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "act",
+          "line": 99,
+          "module": "@testing-library/react",
+          "code": "act"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "act",
+          "line": 101,
+          "module": "@testing-library/react",
+          "code": "act"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "act",
+          "line": 102,
+          "module": "@testing-library/react",
+          "code": "act"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "act",
+          "line": 103,
+          "module": "@testing-library/react",
+          "code": "act"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "act",
+          "line": 106,
+          "module": "@testing-library/react",
+          "code": "act"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "waitFor",
+          "line": 111,
+          "module": "@testing-library/react",
+          "code": "waitFor"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "waitFor",
+          "line": 112,
+          "module": "@testing-library/react",
+          "code": "waitFor"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "act",
+          "line": 120,
+          "module": "@testing-library/react",
+          "code": "act"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "act",
+          "line": 122,
+          "module": "@testing-library/react",
+          "code": "act"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "act",
+          "line": 123,
+          "module": "@testing-library/react",
+          "code": "act"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "act",
+          "line": 124,
+          "module": "@testing-library/react",
+          "code": "act"
+        }
+      ],
+      "importClosureSummary": {
+        "reachablePaths": 0,
+        "qualification": "Readiness reachability is conservative, not execution proof; original full traces retained in the bound receipt."
+      }
+    },
+    {
+      "path": "tests/unit/the-models-page-keeps-its-body.test.tsx",
+      "sha256": "32341b83ef8f876fd90663ca36e5d2cb48eaddebc74ed6d0cc00bde28a03aee0",
+      "signals": [
+        {
+          "kind": "dom-library-call",
+          "name": "findByRole",
+          "line": 102,
+          "module": "@testing-library/react",
+          "code": "screen.findByRole"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "click",
+          "line": 104,
+          "module": "@testing-library/react",
+          "code": "fireEvent.click"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "getByRole",
+          "line": 106,
+          "module": "@testing-library/react",
+          "code": "screen.getByRole"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "click",
+          "line": 111,
+          "module": "@testing-library/react",
+          "code": "fireEvent.click"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "getByRole",
+          "line": 111,
+          "module": "@testing-library/react",
+          "code": "screen.getByRole"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "findByText",
+          "line": 112,
+          "module": "@testing-library/react",
+          "code": "screen.findByText"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "waitFor",
+          "line": 113,
+          "module": "@testing-library/react",
+          "code": "waitFor"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "queryByText",
+          "line": 117,
+          "module": "@testing-library/react",
+          "code": "screen.queryByText"
+        },
+        {
+          "kind": "dom-global",
+          "name": "document",
+          "line": 118,
+          "code": "document.contains"
+        },
+        {
+          "kind": "dom-global",
+          "name": "document",
+          "line": 119,
+          "code": "document.contains"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "act",
+          "line": 123,
+          "module": "@testing-library/react",
+          "code": "act"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "waitFor",
+          "line": 126,
+          "module": "@testing-library/react",
+          "code": "waitFor"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "getByRole",
+          "line": 126,
+          "module": "@testing-library/react",
+          "code": "screen.getByRole"
+        },
+        {
+          "kind": "dom-global",
+          "name": "document",
+          "line": 127,
+          "code": "document.contains"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "getByRole",
+          "line": 135,
+          "module": "@testing-library/react",
+          "code": "screen.getByRole"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "getByText",
+          "line": 136,
+          "module": "@testing-library/react",
+          "code": "screen.getByText"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "act",
+          "line": 137,
+          "module": "@testing-library/react",
+          "code": "act"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "findByRole",
+          "line": 140,
+          "module": "@testing-library/react",
+          "code": "screen.findByRole"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "queryByText",
+          "line": 141,
+          "module": "@testing-library/react",
+          "code": "screen.queryByText"
+        }
+      ],
+      "importClosureSummary": {
+        "reachablePaths": 0,
+        "qualification": "Readiness reachability is conservative, not execution proof; original full traces retained in the bound receipt."
+      }
+    },
+    {
+      "path": "tests/unit/the-restore-page-keeps-its-body.test.tsx",
+      "sha256": "bcf9e5de283eb912ab0629b50ed191574f8489e9f239ac3758f6dde4fd620494",
+      "signals": [
+        {
+          "kind": "dom-library-call",
+          "name": "findByRole",
+          "line": 90,
+          "module": "@testing-library/react",
+          "code": "screen.findByRole"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "getByText",
+          "line": 91,
+          "module": "@testing-library/react",
+          "code": "screen.getByText"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "click",
+          "line": 93,
+          "module": "@testing-library/react",
+          "code": "fireEvent.click"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "getByText",
+          "line": 93,
+          "module": "@testing-library/react",
+          "code": "screen.getByText"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "getByText",
+          "line": 95,
+          "module": "@testing-library/react",
+          "code": "screen.getByText"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "getByRole",
+          "line": 100,
+          "module": "@testing-library/react",
+          "code": "screen.getByRole"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "click",
+          "line": 101,
+          "module": "@testing-library/react",
+          "code": "fireEvent.click"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "click",
+          "line": 102,
+          "module": "@testing-library/react",
+          "code": "fireEvent.click"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "findByTestId",
+          "line": 103,
+          "module": "@testing-library/react",
+          "code": "screen.findByTestId"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "waitFor",
+          "line": 104,
+          "module": "@testing-library/react",
+          "code": "waitFor"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "queryByText",
+          "line": 110,
+          "module": "@testing-library/react",
+          "code": "screen.queryByText"
+        },
+        {
+          "kind": "dom-global",
+          "name": "document",
+          "line": 111,
+          "code": "document.contains"
+        },
+        {
+          "kind": "dom-global",
+          "name": "document",
+          "line": 112,
+          "code": "document.contains"
+        },
+        {
+          "kind": "dom-global",
+          "name": "document",
+          "line": 113,
+          "code": "document.contains"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "waitFor",
+          "line": 118,
+          "module": "@testing-library/react",
+          "code": "waitFor"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "getByRole",
+          "line": 118,
+          "module": "@testing-library/react",
+          "code": "screen.getByRole"
+        },
+        {
+          "kind": "dom-global",
+          "name": "document",
+          "line": 119,
+          "code": "document.contains"
+        },
+        {
+          "kind": "dom-global",
+          "name": "document",
+          "line": 121,
+          "code": "document.contains"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "getByText",
+          "line": 129,
+          "module": "@testing-library/react",
+          "code": "screen.getByText"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "getByText",
+          "line": 130,
+          "module": "@testing-library/react",
+          "code": "screen.getByText"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "findByRole",
+          "line": 132,
+          "module": "@testing-library/react",
+          "code": "screen.findByRole"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "queryByText",
+          "line": 133,
+          "module": "@testing-library/react",
+          "code": "screen.queryByText"
+        }
+      ],
+      "importClosureSummary": {
+        "reachablePaths": 0,
+        "qualification": "Readiness reachability is conservative, not execution proof; original full traces retained in the bound receipt."
+      }
+    },
+    {
+      "path": "tests/unit/the-skills-page-keeps-its-body.test.tsx",
+      "sha256": "ba774895fc4475d14bab372220e12a57de627aaec06849ca00306ca0a8bae342",
+      "signals": [
+        {
+          "kind": "dom-library-call",
+          "name": "queryAllByTestId",
+          "line": 75,
+          "module": "@testing-library/react",
+          "code": "screen.queryAllByTestId"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "waitFor",
+          "line": 82,
+          "module": "@testing-library/react",
+          "code": "waitFor"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "getByRole",
+          "line": 83,
+          "module": "@testing-library/react",
+          "code": "screen.getByRole"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "change",
+          "line": 84,
+          "module": "@testing-library/react",
+          "code": "fireEvent.change"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "click",
+          "line": 91,
+          "module": "@testing-library/react",
+          "code": "fireEvent.click"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "within",
+          "line": 91,
+          "module": "@testing-library/react",
+          "code": "within"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "findByText",
+          "line": 92,
+          "module": "@testing-library/react",
+          "code": "screen.findByText"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "waitFor",
+          "line": 93,
+          "module": "@testing-library/react",
+          "code": "waitFor"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "queryByRole",
+          "line": 97,
+          "module": "@testing-library/react",
+          "code": "screen.queryByRole"
+        },
+        {
+          "kind": "dom-global",
+          "name": "document",
+          "line": 98,
+          "code": "document.contains"
+        },
+        {
+          "kind": "dom-global",
+          "name": "document",
+          "line": 99,
+          "code": "document.contains"
+        },
+        {
+          "kind": "dom-global",
+          "name": "document",
+          "line": 100,
+          "code": "document.contains"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "waitFor",
+          "line": 105,
+          "module": "@testing-library/react",
+          "code": "waitFor"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "within",
+          "line": 105,
+          "module": "@testing-library/react",
+          "code": "within"
+        },
+        {
+          "kind": "dom-global",
+          "name": "document",
+          "line": 106,
+          "code": "document.contains"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "queryByRole",
+          "line": 108,
+          "module": "@testing-library/react",
+          "code": "screen.queryByRole"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "getByRole",
+          "line": 115,
+          "module": "@testing-library/react",
+          "code": "screen.getByRole"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "getByText",
+          "line": 116,
+          "module": "@testing-library/react",
+          "code": "screen.getByText"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "waitFor",
+          "line": 118,
+          "module": "@testing-library/react",
+          "code": "waitFor"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "queryByRole",
+          "line": 119,
+          "module": "@testing-library/react",
+          "code": "screen.queryByRole"
+        }
+      ],
+      "importClosureSummary": {
+        "reachablePaths": 0,
+        "qualification": "Readiness reachability is conservative, not execution proof; original full traces retained in the bound receipt."
+      }
+    },
+    {
+      "path": "tests/unit/u14-a-failed-run-is-an-error.test.tsx",
+      "sha256": "76aec84a0e95a660861c3137a1393240033d86c74584b7f61471813947ca6e7c",
+      "signals": [
+        {
+          "kind": "dom-library-call",
+          "name": "render",
+          "line": 54,
+          "module": "@testing-library/react",
+          "code": "render"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "getByRole",
+          "line": 56,
+          "module": "@testing-library/react",
+          "code": "screen.getByRole"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "click",
+          "line": 60,
+          "module": "@testing-library/react",
+          "code": "fireEvent.click"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "within",
+          "line": 60,
+          "module": "@testing-library/react",
+          "code": "within"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "render",
+          "line": 65,
+          "module": "@testing-library/react",
+          "code": "render"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "getByRole",
+          "line": 66,
+          "module": "@testing-library/react",
+          "code": "screen.getByRole"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "render",
+          "line": 70,
+          "module": "@testing-library/react",
+          "code": "render"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "getByRole",
+          "line": 71,
+          "module": "@testing-library/react",
+          "code": "screen.getByRole"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "within",
+          "line": 72,
+          "module": "@testing-library/react",
+          "code": "within"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "render",
+          "line": 76,
+          "module": "@testing-library/react",
+          "code": "render"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "queryByRole",
+          "line": 77,
+          "module": "@testing-library/react",
+          "code": "screen.queryByRole"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "queryByRole",
+          "line": 78,
+          "module": "@testing-library/react",
+          "code": "screen.queryByRole"
+        }
+      ],
+      "importClosureSummary": {
+        "reachablePaths": 0,
+        "qualification": "Readiness reachability is conservative, not execution proof; original full traces retained in the bound receipt."
+      }
+    },
+    {
+      "path": "tests/unit/u14-retry-resends-the-prompt.test.tsx",
+      "sha256": "a5d51e67a7375d6bdf8b429aaf64c99ada92089bfc589a49a3e9e03dce3157a1",
+      "signals": [
+        {
+          "kind": "dom-library-call",
+          "name": "renderHook",
+          "line": 112,
+          "module": "@testing-library/react",
+          "code": "renderHook"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "waitFor",
+          "line": 113,
+          "module": "@testing-library/react",
+          "code": "waitFor"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "act",
+          "line": 115,
+          "module": "@testing-library/react",
+          "code": "act"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "renderHook",
+          "line": 134,
+          "module": "@testing-library/react",
+          "code": "renderHook"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "waitFor",
+          "line": 135,
+          "module": "@testing-library/react",
+          "code": "waitFor"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "act",
+          "line": 137,
+          "module": "@testing-library/react",
+          "code": "act"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "renderHook",
+          "line": 156,
+          "module": "@testing-library/react",
+          "code": "renderHook"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "waitFor",
+          "line": 157,
+          "module": "@testing-library/react",
+          "code": "waitFor"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "act",
+          "line": 159,
+          "module": "@testing-library/react",
+          "code": "act"
+        }
+      ],
+      "importClosureSummary": {
+        "reachablePaths": 0,
+        "qualification": "Readiness reachability is conservative, not execution proof; original full traces retained in the bound receipt."
+      }
+    },
+    {
+      "path": "tests/unit/u14-the-rail-between-768-and-1024.test.tsx",
+      "sha256": "86d4395acdeec6b5933a1e85e21de63c16fdd44f6eea7eb1aa965c7c15e7abe8",
+      "signals": [
+        {
+          "kind": "dom-global",
+          "name": "document",
+          "line": 74,
+          "code": "document.querySelector"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "waitFor",
+          "line": 83,
+          "module": "@testing-library/react",
+          "code": "waitFor"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "within",
+          "line": 87,
+          "module": "@testing-library/react",
+          "code": "within"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "within",
+          "line": 89,
+          "module": "@testing-library/react",
+          "code": "within"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "waitFor",
+          "line": 95,
+          "module": "@testing-library/react",
+          "code": "waitFor"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "waitFor",
+          "line": 104,
+          "module": "@testing-library/react",
+          "code": "waitFor"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "within",
+          "line": 105,
+          "module": "@testing-library/react",
+          "code": "within"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "waitFor",
+          "line": 112,
+          "module": "@testing-library/react",
+          "code": "waitFor"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "within",
+          "line": 113,
+          "module": "@testing-library/react",
+          "code": "within"
+        }
+      ],
+      "importClosureSummary": {
+        "reachablePaths": 0,
+        "qualification": "Readiness reachability is conservative, not execution proof; original full traces retained in the bound receipt."
+      }
+    },
+    {
+      "path": "tests/unit/u14-the-trap-skips-what-is-not-drawn.test.tsx",
+      "sha256": "749a3eacabe6a401037c1bc18a5fa15c772c6f9ebdf248fa6774aba839fff18d",
+      "signals": [
+        {
+          "kind": "dom-global",
+          "name": "Element",
+          "line": 48,
+          "code": "Element.prototype"
+        },
+        {
+          "kind": "dom-global",
+          "name": "Element",
+          "line": 52,
+          "code": "Element.prototype"
+        },
+        {
+          "kind": "dom-global",
+          "name": "Element",
+          "line": 60,
+          "code": "Element.prototype"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "render",
+          "line": 66,
+          "module": "@testing-library/react",
+          "code": "render"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "getByRole",
+          "line": 67,
+          "module": "@testing-library/react",
+          "code": "screen.getByRole"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "getByRole",
+          "line": 68,
+          "module": "@testing-library/react",
+          "code": "screen.getByRole"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "keyDown",
+          "line": 71,
+          "module": "@testing-library/react",
+          "code": "fireEvent.keyDown"
+        },
+        {
+          "kind": "dom-global",
+          "name": "document",
+          "line": 71,
+          "code": "fireEvent.keyDown(document, { key: \"Tab\" })"
+        },
+        {
+          "kind": "dom-global",
+          "name": "document",
+          "line": 72,
+          "code": "document.activeElement"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "render",
+          "line": 77,
+          "module": "@testing-library/react",
+          "code": "render"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "getByRole",
+          "line": 78,
+          "module": "@testing-library/react",
+          "code": "screen.getByRole"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "getByRole",
+          "line": 79,
+          "module": "@testing-library/react",
+          "code": "screen.getByRole"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "keyDown",
+          "line": 82,
+          "module": "@testing-library/react",
+          "code": "fireEvent.keyDown"
+        },
+        {
+          "kind": "dom-global",
+          "name": "document",
+          "line": 82,
+          "code": "fireEvent.keyDown(document, { key: \"Tab\", shiftKey: true })"
+        },
+        {
+          "kind": "dom-global",
+          "name": "document",
+          "line": 83,
+          "code": "document.activeElement"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "render",
+          "line": 87,
+          "module": "@testing-library/react",
+          "code": "render"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "getByRole",
+          "line": 88,
+          "module": "@testing-library/react",
+          "code": "screen.getByRole"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "getByRole",
+          "line": 89,
+          "module": "@testing-library/react",
+          "code": "screen.getByRole"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "keyDown",
+          "line": 92,
+          "module": "@testing-library/react",
+          "code": "fireEvent.keyDown"
+        },
+        {
+          "kind": "dom-global",
+          "name": "document",
+          "line": 92,
+          "code": "fireEvent.keyDown(document, { key: \"Tab\" })"
+        },
+        {
+          "kind": "dom-global",
+          "name": "document",
+          "line": 93,
+          "code": "document.activeElement"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "keyDown",
+          "line": 95,
+          "module": "@testing-library/react",
+          "code": "fireEvent.keyDown"
+        },
+        {
+          "kind": "dom-global",
+          "name": "document",
+          "line": 95,
+          "code": "fireEvent.keyDown(document, { key: \"Tab\", shiftKey: true })"
+        },
+        {
+          "kind": "dom-global",
+          "name": "document",
+          "line": 96,
+          "code": "document.activeElement"
+        }
+      ],
+      "importClosureSummary": {
+        "reachablePaths": 0,
+        "qualification": "Readiness reachability is conservative, not execution proof; original full traces retained in the bound receipt."
+      }
+    },
+    {
+      "path": "tests/unit/u15-the-dead-are-gone.test.tsx",
+      "sha256": "73e20723fe1fe2098cfd936de844859b3fc01b8b26944940345af2ac242fa6d3",
+      "signals": [
+        {
+          "kind": "dom-library-call",
+          "name": "render",
+          "line": 78,
+          "module": "@testing-library/react",
+          "code": "render"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "getByText",
+          "line": 88,
+          "module": "@testing-library/react",
+          "code": "screen.getByText"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "render",
+          "line": 96,
+          "module": "@testing-library/react",
+          "code": "render"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "queryByText",
+          "line": 101,
+          "module": "@testing-library/react",
+          "code": "screen.queryByText"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "getByText",
+          "line": 107,
+          "module": "@testing-library/react",
+          "code": "screen.getByText"
+        }
+      ],
+      "importClosureSummary": {
+        "reachablePaths": 0,
+        "qualification": "Readiness reachability is conservative, not execution proof; original full traces retained in the bound receipt."
+      }
+    },
+    {
+      "path": "tests/unit/u17-banners-wrap-their-action.test.tsx",
+      "sha256": "0c369a4cc6ab9f2e37cde92134d3d167308841f7e00464c5bf736f7dd68310bb",
+      "signals": [
+        {
+          "kind": "dom-library-call",
+          "name": "render",
+          "line": 58,
+          "module": "@testing-library/react",
+          "code": "render"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "getByRole",
+          "line": 59,
+          "module": "@testing-library/react",
+          "code": "screen.getByRole"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "getByRole",
+          "line": 61,
+          "module": "@testing-library/react",
+          "code": "screen.getByRole"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "render",
+          "line": 67,
+          "module": "@testing-library/react",
+          "code": "render"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "getByRole",
+          "line": 68,
+          "module": "@testing-library/react",
+          "code": "screen.getByRole"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "render",
+          "line": 84,
+          "module": "@testing-library/react",
+          "code": "render"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "getByText",
+          "line": 93,
+          "module": "@testing-library/react",
+          "code": "screen.getByText"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "within",
+          "line": 95,
+          "module": "@testing-library/react",
+          "code": "within"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "render",
+          "line": 99,
+          "module": "@testing-library/react",
+          "code": "render"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "getAllByRole",
+          "line": 100,
+          "module": "@testing-library/react",
+          "code": "screen.getAllByRole"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "getByRole",
+          "line": 105,
+          "module": "@testing-library/react",
+          "code": "screen.getByRole"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "getByRole",
+          "line": 108,
+          "module": "@testing-library/react",
+          "code": "screen.getByRole"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "render",
+          "line": 123,
+          "module": "@testing-library/react",
+          "code": "render"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "getByRole",
+          "line": 124,
+          "module": "@testing-library/react",
+          "code": "screen.getByRole"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "getByRole",
+          "line": 126,
+          "module": "@testing-library/react",
+          "code": "screen.getByRole"
+        }
+      ],
+      "importClosureSummary": {
+        "reachablePaths": 0,
+        "qualification": "Readiness reachability is conservative, not execution proof; original full traces retained in the bound receipt."
+      }
+    },
+    {
+      "path": "tests/unit/u17-split-pane.test.tsx",
+      "sha256": "1eeb3a3f9c1f91ece044417ac39360388bb8cc18aad070484fe0b0ef8983d007",
+      "signals": [
+        {
+          "kind": "dom-library-call",
+          "name": "render",
+          "line": 59,
+          "module": "@testing-library/react",
+          "code": "render"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "getByText",
+          "line": 66,
+          "module": "@testing-library/react",
+          "code": "screen.getByText"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "getByText",
+          "line": 67,
+          "module": "@testing-library/react",
+          "code": "screen.getByText"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "queryByRole",
+          "line": 68,
+          "module": "@testing-library/react",
+          "code": "screen.queryByRole"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "queryByRole",
+          "line": 69,
+          "module": "@testing-library/react",
+          "code": "screen.queryByRole"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "waitFor",
+          "line": 74,
+          "module": "@testing-library/react",
+          "code": "waitFor"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "queryByText",
+          "line": 74,
+          "module": "@testing-library/react",
+          "code": "screen.queryByText"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "getByText",
+          "line": 75,
+          "module": "@testing-library/react",
+          "code": "screen.getByText"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "getByRole",
+          "line": 76,
+          "module": "@testing-library/react",
+          "code": "screen.getByRole"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "click",
+          "line": 79,
+          "module": "@testing-library/react",
+          "code": "fireEvent.click"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "getByRole",
+          "line": 80,
+          "module": "@testing-library/react",
+          "code": "screen.getByRole"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "within",
+          "line": 81,
+          "module": "@testing-library/react",
+          "code": "within"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "waitFor",
+          "line": 87,
+          "module": "@testing-library/react",
+          "code": "waitFor"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "queryByText",
+          "line": 87,
+          "module": "@testing-library/react",
+          "code": "screen.queryByText"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "click",
+          "line": 88,
+          "module": "@testing-library/react",
+          "code": "fireEvent.click"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "getByRole",
+          "line": 88,
+          "module": "@testing-library/react",
+          "code": "screen.getByRole"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "getByRole",
+          "line": 89,
+          "module": "@testing-library/react",
+          "code": "screen.getByRole"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "waitFor",
+          "line": 91,
+          "module": "@testing-library/react",
+          "code": "waitFor"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "queryByRole",
+          "line": 91,
+          "module": "@testing-library/react",
+          "code": "screen.queryByRole"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "click",
+          "line": 94,
+          "module": "@testing-library/react",
+          "code": "fireEvent.click"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "getByRole",
+          "line": 94,
+          "module": "@testing-library/react",
+          "code": "screen.getByRole"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "getByRole",
+          "line": 96,
+          "module": "@testing-library/react",
+          "code": "screen.getByRole"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "waitFor",
+          "line": 101,
+          "module": "@testing-library/react",
+          "code": "waitFor"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "queryByText",
+          "line": 101,
+          "module": "@testing-library/react",
+          "code": "screen.queryByText"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "getByRole",
+          "line": 102,
+          "module": "@testing-library/react",
+          "code": "screen.getByRole"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "click",
+          "line": 104,
+          "module": "@testing-library/react",
+          "code": "fireEvent.click"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "keyDown",
+          "line": 105,
+          "module": "@testing-library/react",
+          "code": "fireEvent.keyDown"
+        },
+        {
+          "kind": "dom-global",
+          "name": "document",
+          "line": 105,
+          "code": "fireEvent.keyDown(document, { key: \"Escape\" })"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "waitFor",
+          "line": 106,
+          "module": "@testing-library/react",
+          "code": "waitFor"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "queryByRole",
+          "line": 106,
+          "module": "@testing-library/react",
+          "code": "screen.queryByRole"
+        },
+        {
+          "kind": "dom-global",
+          "name": "document",
+          "line": 107,
+          "code": "document.activeElement"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "waitFor",
+          "line": 112,
+          "module": "@testing-library/react",
+          "code": "waitFor"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "queryByText",
+          "line": 112,
+          "module": "@testing-library/react",
+          "code": "screen.queryByText"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "getByRole",
+          "line": 113,
+          "module": "@testing-library/react",
+          "code": "screen.getByRole"
+        }
+      ],
+      "importClosureSummary": {
+        "reachablePaths": 0,
+        "qualification": "Readiness reachability is conservative, not execution proof; original full traces retained in the bound receipt."
+      }
+    },
+    {
+      "path": "tests/unit/u17-the-phone-keeps-its-title.test.tsx",
+      "sha256": "93847b2fca3c3b85a8d3bb3d6bf861d1ded08e9bbe4277aa34843744f555ad8c",
+      "signals": [
+        {
+          "kind": "dom-library-call",
+          "name": "render",
+          "line": 43,
+          "module": "@testing-library/react",
+          "code": "render"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "getByRole",
+          "line": 44,
+          "module": "@testing-library/react",
+          "code": "screen.getByRole"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "getByRole",
+          "line": 47,
+          "module": "@testing-library/react",
+          "code": "screen.getByRole"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "render",
+          "line": 54,
+          "module": "@testing-library/react",
+          "code": "render"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "getByRole",
+          "line": 55,
+          "module": "@testing-library/react",
+          "code": "screen.getByRole"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "getByText",
+          "line": 61,
+          "module": "@testing-library/react",
+          "code": "screen.getByText"
+        }
+      ],
+      "importClosureSummary": {
+        "reachablePaths": 0,
+        "qualification": "Readiness reachability is conservative, not execution proof; original full traces retained in the bound receipt."
+      }
+    },
+    {
+      "path": "tests/unit/u18-one-push-all.test.tsx",
+      "sha256": "5dc190d96bee3efbf279d958c19ee907ef5bcaae8e0bb4164791ac85713694bb",
+      "signals": [
+        {
+          "kind": "dom-library-call",
+          "name": "render",
+          "line": 39,
+          "module": "@testing-library/react",
+          "code": "render"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "getByText",
+          "line": 48,
+          "module": "@testing-library/react",
+          "code": "screen.getByText"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "getByText",
+          "line": 50,
+          "module": "@testing-library/react",
+          "code": "screen.getByText"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "within",
+          "line": 52,
+          "module": "@testing-library/react",
+          "code": "within"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "within",
+          "line": 54,
+          "module": "@testing-library/react",
+          "code": "within"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "render",
+          "line": 58,
+          "module": "@testing-library/react",
+          "code": "render"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "getAllByRole",
+          "line": 67,
+          "module": "@testing-library/react",
+          "code": "screen.getAllByRole"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "getByRole",
+          "line": 68,
+          "module": "@testing-library/react",
+          "code": "screen.getByRole"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "getByText",
+          "line": 69,
+          "module": "@testing-library/react",
+          "code": "screen.getByText"
+        }
+      ],
+      "importClosureSummary": {
+        "reachablePaths": 0,
+        "qualification": "Readiness reachability is conservative, not execution proof; original full traces retained in the bound receipt."
+      }
+    },
+    {
+      "path": "tests/unit/u18-prose-is-inter.test.tsx",
+      "sha256": "46152e49bef10e2ec4cc06d4ded0175140f8ba69aa49e286b4649b7cd4d57946",
+      "signals": [
+        {
+          "kind": "dom-library-call",
+          "name": "getByRole",
+          "line": 44,
+          "module": "@testing-library/react",
+          "code": "screen.getByRole"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "render",
+          "line": 52,
+          "module": "@testing-library/react",
+          "code": "render"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "render",
+          "line": 63,
+          "module": "@testing-library/react",
+          "code": "render"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "render",
+          "line": 73,
+          "module": "@testing-library/react",
+          "code": "render"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "queryByText",
+          "line": 76,
+          "module": "@testing-library/react",
+          "code": "screen.queryByText"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "queryByText",
+          "line": 77,
+          "module": "@testing-library/react",
+          "code": "screen.queryByText"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "getByRole",
+          "line": 79,
+          "module": "@testing-library/react",
+          "code": "screen.getByRole"
+        }
+      ],
+      "importClosureSummary": {
+        "reachablePaths": 0,
+        "qualification": "Readiness reachability is conservative, not execution proof; original full traces retained in the bound receipt."
+      }
+    },
+    {
+      "path": "tests/unit/u18-the-header-says-what-the-panel-says.test.tsx",
+      "sha256": "6c801d288eb6ee8a5ee3f9a6527e7766b5e12da5a28e6fe95f5d6c3f2d22860c",
+      "signals": [
+        {
+          "kind": "dom-library-call",
+          "name": "getByText",
+          "line": 125,
+          "module": "@testing-library/react",
+          "code": "screen.getByText"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "render",
+          "line": 134,
+          "module": "@testing-library/react",
+          "code": "render"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "queryByText",
+          "line": 135,
+          "module": "@testing-library/react",
+          "code": "screen.queryByText"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "render",
+          "line": 143,
+          "module": "@testing-library/react",
+          "code": "render"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "render",
+          "line": 151,
+          "module": "@testing-library/react",
+          "code": "render"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "render",
+          "line": 157,
+          "module": "@testing-library/react",
+          "code": "render"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "getByText",
+          "line": 158,
+          "module": "@testing-library/react",
+          "code": "screen.getByText"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "queryByText",
+          "line": 159,
+          "module": "@testing-library/react",
+          "code": "screen.queryByText"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "render",
+          "line": 164,
+          "module": "@testing-library/react",
+          "code": "render"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "queryByText",
+          "line": 165,
+          "module": "@testing-library/react",
+          "code": "screen.queryByText"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "queryByText",
+          "line": 166,
+          "module": "@testing-library/react",
+          "code": "screen.queryByText"
+        }
+      ],
+      "importClosureSummary": {
+        "reachablePaths": 0,
+        "qualification": "Readiness reachability is conservative, not execution proof; original full traces retained in the bound receipt."
+      }
+    },
+    {
+      "path": "tests/unit/u18-the-transcript-says-it-once.test.tsx",
+      "sha256": "e33f66f5e7af878d59f0fcb9c2e03be09aeb7fa2c4004f0e32718c96649b434a",
+      "signals": [
+        {
+          "kind": "dom-library-call",
+          "name": "renderHook",
+          "line": 95,
+          "module": "@testing-library/react",
+          "code": "renderHook"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "waitFor",
+          "line": 98,
+          "module": "@testing-library/react",
+          "code": "waitFor"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "act",
+          "line": 99,
+          "module": "@testing-library/react",
+          "code": "act"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "act",
+          "line": 100,
+          "module": "@testing-library/react",
+          "code": "act"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "renderHook",
+          "line": 120,
+          "module": "@testing-library/react",
+          "code": "renderHook"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "waitFor",
+          "line": 123,
+          "module": "@testing-library/react",
+          "code": "waitFor"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "act",
+          "line": 124,
+          "module": "@testing-library/react",
+          "code": "act"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "act",
+          "line": 125,
+          "module": "@testing-library/react",
+          "code": "act"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "render",
+          "line": 135,
+          "module": "@testing-library/react",
+          "code": "render"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "getByRole",
+          "line": 136,
+          "module": "@testing-library/react",
+          "code": "screen.getByRole"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "render",
+          "line": 145,
+          "module": "@testing-library/react",
+          "code": "render"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "queryByRole",
+          "line": 146,
+          "module": "@testing-library/react",
+          "code": "screen.queryByRole"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "getByText",
+          "line": 147,
+          "module": "@testing-library/react",
+          "code": "screen.getByText"
+        }
+      ],
+      "importClosureSummary": {
+        "reachablePaths": 0,
+        "qualification": "Readiness reachability is conservative, not execution proof; original full traces retained in the bound receipt."
+      }
+    },
+    {
+      "path": "tests/unit/u19-an-empty-page-offers-its-action.test.tsx",
+      "sha256": "e51a2f33734e042eb1c867b486e33f326d759e49889630b5141e27d60fdebe3f",
+      "signals": [
+        {
+          "kind": "dom-library-call",
+          "name": "render",
+          "line": 66,
+          "module": "@testing-library/react",
+          "code": "render"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "getByRole",
+          "line": 67,
+          "module": "@testing-library/react",
+          "code": "screen.getByRole"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "getAllByRole",
+          "line": 69,
+          "module": "@testing-library/react",
+          "code": "screen.getAllByRole"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "click",
+          "line": 71,
+          "module": "@testing-library/react",
+          "code": "fireEvent.click"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "getByLabelText",
+          "line": 72,
+          "module": "@testing-library/react",
+          "code": "screen.getByLabelText"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "render",
+          "line": 77,
+          "module": "@testing-library/react",
+          "code": "render"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "getByRole",
+          "line": 78,
+          "module": "@testing-library/react",
+          "code": "screen.getByRole"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "getByRole",
+          "line": 80,
+          "module": "@testing-library/react",
+          "code": "screen.getByRole"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "getByRole",
+          "line": 81,
+          "module": "@testing-library/react",
+          "code": "screen.getByRole"
+        }
+      ],
+      "importClosureSummary": {
+        "reachablePaths": 0,
+        "qualification": "Readiness reachability is conservative, not execution proof; original full traces retained in the bound receipt."
+      }
+    },
+    {
+      "path": "tests/unit/u19-the-board-comes-first.test.tsx",
+      "sha256": "4caeb9fe3ab8a5bced7c784c2451c3cde1c037b5d6ee759c06a8cefbec94170f",
+      "signals": [
+        {
+          "kind": "dom-library-call",
+          "name": "getByRole",
+          "line": 61,
+          "module": "@testing-library/react",
+          "code": "screen.getByRole"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "render",
+          "line": 66,
+          "module": "@testing-library/react",
+          "code": "render"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "queryByText",
+          "line": 68,
+          "module": "@testing-library/react",
+          "code": "screen.queryByText"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "getByTestId",
+          "line": 69,
+          "module": "@testing-library/react",
+          "code": "screen.getByTestId"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "click",
+          "line": 70,
+          "module": "@testing-library/react",
+          "code": "fireEvent.click"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "getByText",
+          "line": 72,
+          "module": "@testing-library/react",
+          "code": "screen.getByText"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "render",
+          "line": 77,
+          "module": "@testing-library/react",
+          "code": "render"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "render",
+          "line": 83,
+          "module": "@testing-library/react",
+          "code": "render"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "getByText",
+          "line": 84,
+          "module": "@testing-library/react",
+          "code": "screen.getByText"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "click",
+          "line": 85,
+          "module": "@testing-library/react",
+          "code": "fireEvent.click"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "getByRole",
+          "line": 85,
+          "module": "@testing-library/react",
+          "code": "screen.getByRole"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "click",
+          "line": 88,
+          "module": "@testing-library/react",
+          "code": "fireEvent.click"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "getByRole",
+          "line": 88,
+          "module": "@testing-library/react",
+          "code": "screen.getByRole"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "getByText",
+          "line": 90,
+          "module": "@testing-library/react",
+          "code": "screen.getByText"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "render",
+          "line": 95,
+          "module": "@testing-library/react",
+          "code": "render"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "click",
+          "line": 96,
+          "module": "@testing-library/react",
+          "code": "fireEvent.click"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "getByRole",
+          "line": 97,
+          "module": "@testing-library/react",
+          "code": "screen.getByRole"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "getByRole",
+          "line": 98,
+          "module": "@testing-library/react",
+          "code": "screen.getByRole"
+        }
+      ],
+      "importClosureSummary": {
+        "reachablePaths": 0,
+        "qualification": "Readiness reachability is conservative, not execution proof; original full traces retained in the bound receipt."
+      }
+    },
+    {
+      "path": "tests/unit/u19-the-phone-jumps-to-a-section.test.tsx",
+      "sha256": "a5cff5081ec1504c5e16c90c6d0993101273a34c053a7a5f27ebe5a9cc3f823d",
+      "signals": [
+        {
+          "kind": "dom-global",
+          "name": "window",
+          "line": 29,
+          "code": "window.location"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "render",
+          "line": 33,
+          "module": "@testing-library/react",
+          "code": "render"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "getByRole",
+          "line": 34,
+          "module": "@testing-library/react",
+          "code": "screen.getByRole"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "change",
+          "line": 39,
+          "module": "@testing-library/react",
+          "code": "fireEvent.change"
+        },
+        {
+          "kind": "dom-global",
+          "name": "window",
+          "line": 40,
+          "code": "window.location"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "render",
+          "line": 44,
+          "module": "@testing-library/react",
+          "code": "render"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "getByRole",
+          "line": 45,
+          "module": "@testing-library/react",
+          "code": "screen.getByRole"
+        }
+      ],
+      "importClosureSummary": {
+        "reachablePaths": 0,
+        "qualification": "Readiness reachability is conservative, not execution proof; original full traces retained in the bound receipt."
+      }
+    },
+    {
+      "path": "tests/unit/u19-the-strip-fits-a-phone.test.tsx",
+      "sha256": "5471133debf28b0ecd6e6d565c356212ac1c661fd9cf67bced3e32bb039579c2",
+      "signals": [
+        {
+          "kind": "dom-library-call",
+          "name": "render",
+          "line": 23,
+          "module": "@testing-library/react",
+          "code": "render"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "getByTestId",
+          "line": 30,
+          "module": "@testing-library/react",
+          "code": "screen.getByTestId"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "getByTestId",
+          "line": 36,
+          "module": "@testing-library/react",
+          "code": "screen.getByTestId"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "getByTestId",
+          "line": 39,
+          "module": "@testing-library/react",
+          "code": "screen.getByTestId"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "render",
+          "line": 45,
+          "module": "@testing-library/react",
+          "code": "render"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "getByTestId",
+          "line": 46,
+          "module": "@testing-library/react",
+          "code": "screen.getByTestId"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "queryByTestId",
+          "line": 47,
+          "module": "@testing-library/react",
+          "code": "screen.queryByTestId"
+        }
+      ],
+      "importClosureSummary": {
+        "reachablePaths": 0,
+        "qualification": "Readiness reachability is conservative, not execution proof; original full traces retained in the bound receipt."
+      }
+    },
+    {
+      "path": "tests/unit/u19-the-terminal-owns-its-toolbar.test.tsx",
+      "sha256": "0893376205eff382050888eb3145d9114c2dde71bae2dc74df5d3dc00d2a9775",
+      "signals": [
+        {
+          "kind": "dom-library-call",
+          "name": "render",
+          "line": 44,
+          "module": "@testing-library/react",
+          "code": "render"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "getByRole",
+          "line": 50,
+          "module": "@testing-library/react",
+          "code": "screen.getByRole"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "click",
+          "line": 52,
+          "module": "@testing-library/react",
+          "code": "fireEvent.click"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "getByRole",
+          "line": 55,
+          "module": "@testing-library/react",
+          "code": "screen.getByRole"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "change",
+          "line": 57,
+          "module": "@testing-library/react",
+          "code": "fireEvent.change"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "getByText",
+          "line": 66,
+          "module": "@testing-library/react",
+          "code": "screen.getByText"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "render",
+          "line": 70,
+          "module": "@testing-library/react",
+          "code": "render"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "getByRole",
+          "line": 80,
+          "module": "@testing-library/react",
+          "code": "screen.getByRole"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "getByRole",
+          "line": 81,
+          "module": "@testing-library/react",
+          "code": "screen.getByRole"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "queryByRole",
+          "line": 82,
+          "module": "@testing-library/react",
+          "code": "screen.queryByRole"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "queryByRole",
+          "line": 83,
+          "module": "@testing-library/react",
+          "code": "screen.queryByRole"
+        }
+      ],
+      "importClosureSummary": {
+        "reachablePaths": 0,
+        "qualification": "Readiness reachability is conservative, not execution proof; original full traces retained in the bound receipt."
+      }
+    },
+    {
+      "path": "tests/unit/u20-polish.test.tsx",
+      "sha256": "044e18d75c8a87806af17fbbcfbe7c167acc28b3eed98a5490e37b157b10e23e",
+      "signals": [
+        {
+          "kind": "dom-library-call",
+          "name": "render",
+          "line": 63,
+          "module": "@testing-library/react",
+          "code": "render"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "getByText",
+          "line": 64,
+          "module": "@testing-library/react",
+          "code": "screen.getByText"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "render",
+          "line": 85,
+          "module": "@testing-library/react",
+          "code": "render"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "getAllByRole",
+          "line": 86,
+          "module": "@testing-library/react",
+          "code": "screen.getAllByRole"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "getByRole",
+          "line": 87,
+          "module": "@testing-library/react",
+          "code": "screen.getByRole"
+        }
+      ],
+      "importClosureSummary": {
+        "reachablePaths": 0,
+        "qualification": "Readiness reachability is conservative, not execution proof; original full traces retained in the bound receipt."
+      }
+    },
+    {
+      "path": "tests/unit/u3-page-geometry.test.tsx",
+      "sha256": "57b34fc6661e7c9942194baba9a2210a360d36d53e3f6ca361d6a1f757945eee",
+      "signals": [
+        {
+          "kind": "dom-library-call",
+          "name": "render",
+          "line": 60,
+          "module": "@testing-library/react",
+          "code": "render"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "getByRole",
+          "line": 74,
+          "module": "@testing-library/react",
+          "code": "screen.getByRole"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "render",
+          "line": 79,
+          "module": "@testing-library/react",
+          "code": "render"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "render",
+          "line": 87,
+          "module": "@testing-library/react",
+          "code": "render"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "render",
+          "line": 103,
+          "module": "@testing-library/react",
+          "code": "render"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "render",
+          "line": 109,
+          "module": "@testing-library/react",
+          "code": "render"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "render",
+          "line": 118,
+          "module": "@testing-library/react",
+          "code": "render"
+        }
+      ],
+      "importClosureSummary": {
+        "reachablePaths": 0,
+        "qualification": "Readiness reachability is conservative, not execution proof; original full traces retained in the bound receipt."
+      }
+    },
+    {
+      "path": "tests/unit/u8-buttons-and-the-loading-contract.test.tsx",
+      "sha256": "d82d11dde797214901d0ffa9b96791ec87eda6f96c221bcb7f5e019530602c65",
+      "signals": [
+        {
+          "kind": "dom-library-call",
+          "name": "render",
+          "line": 66,
+          "module": "@testing-library/react",
+          "code": "render"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "getByTestId",
+          "line": 71,
+          "module": "@testing-library/react",
+          "code": "screen.getByTestId"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "render",
+          "line": 77,
+          "module": "@testing-library/react",
+          "code": "render"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "render",
+          "line": 87,
+          "module": "@testing-library/react",
+          "code": "render"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "getByRole",
+          "line": 88,
+          "module": "@testing-library/react",
+          "code": "screen.getByRole"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "render",
+          "line": 92,
+          "module": "@testing-library/react",
+          "code": "render"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "getByRole",
+          "line": 93,
+          "module": "@testing-library/react",
+          "code": "screen.getByRole"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "render",
+          "line": 97,
+          "module": "@testing-library/react",
+          "code": "render"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "getByRole",
+          "line": 98,
+          "module": "@testing-library/react",
+          "code": "screen.getByRole"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "render",
+          "line": 103,
+          "module": "@testing-library/react",
+          "code": "render"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "getByRole",
+          "line": 104,
+          "module": "@testing-library/react",
+          "code": "screen.getByRole"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "render",
+          "line": 110,
+          "module": "@testing-library/react",
+          "code": "render"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "getByRole",
+          "line": 111,
+          "module": "@testing-library/react",
+          "code": "screen.getByRole"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "render",
+          "line": 125,
+          "module": "@testing-library/react",
+          "code": "render"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "getByRole",
+          "line": 126,
+          "module": "@testing-library/react",
+          "code": "screen.getByRole"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "render",
+          "line": 137,
+          "module": "@testing-library/react",
+          "code": "render"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "render",
+          "line": 144,
+          "module": "@testing-library/react",
+          "code": "render"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "getByRole",
+          "line": 145,
+          "module": "@testing-library/react",
+          "code": "screen.getByRole"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "render",
+          "line": 150,
+          "module": "@testing-library/react",
+          "code": "render"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "getByRole",
+          "line": 151,
+          "module": "@testing-library/react",
+          "code": "screen.getByRole"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "render",
+          "line": 155,
+          "module": "@testing-library/react",
+          "code": "render"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "render",
+          "line": 166,
+          "module": "@testing-library/react",
+          "code": "render"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "render",
+          "line": 184,
+          "module": "@testing-library/react",
+          "code": "render"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "getByText",
+          "line": 185,
+          "module": "@testing-library/react",
+          "code": "screen.getByText"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "getByText",
+          "line": 186,
+          "module": "@testing-library/react",
+          "code": "screen.getByText"
+        }
+      ],
+      "importClosureSummary": {
+        "reachablePaths": 0,
+        "qualification": "Readiness reachability is conservative, not execution proof; original full traces retained in the bound receipt."
+      }
+    },
+    {
+      "path": "tests/unit/u8-the-card-primitive.test.tsx",
+      "sha256": "317764e2cadb0397128d8dc2a64b885e885d9c099719358f4c0f4f276a171b1b",
+      "signals": [
+        {
+          "kind": "dom-library-call",
+          "name": "render",
+          "line": 88,
+          "module": "@testing-library/react",
+          "code": "render"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "render",
+          "line": 93,
+          "module": "@testing-library/react",
+          "code": "render"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "render",
+          "line": 105,
+          "module": "@testing-library/react",
+          "code": "render"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "render",
+          "line": 116,
+          "module": "@testing-library/react",
+          "code": "render"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "render",
+          "line": 126,
+          "module": "@testing-library/react",
+          "code": "render"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "render",
+          "line": 132,
+          "module": "@testing-library/react",
+          "code": "render"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "render",
+          "line": 133,
+          "module": "@testing-library/react",
+          "code": "render"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "render",
+          "line": 144,
+          "module": "@testing-library/react",
+          "code": "render"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "render",
+          "line": 161,
+          "module": "@testing-library/react",
+          "code": "render"
+        }
+      ],
+      "importClosureSummary": {
+        "reachablePaths": 0,
+        "qualification": "Readiness reachability is conservative, not execution proof; original full traces retained in the bound receipt."
+      }
+    },
+    {
+      "path": "tests/unit/u8-the-interaction-primitives.test.tsx",
+      "sha256": "91f56146901e0919776aa640f48d56325f99c0e0234c723f211d89501088e084",
+      "signals": [
+        {
+          "kind": "dom-library-call",
+          "name": "click",
+          "line": 81,
+          "module": "@testing-library/react",
+          "code": "fireEvent.click"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "getByText",
+          "line": 81,
+          "module": "@testing-library/react",
+          "code": "screen.getByText"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "render",
+          "line": 84,
+          "module": "@testing-library/react",
+          "code": "render"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "getByTestId",
+          "line": 86,
+          "module": "@testing-library/react",
+          "code": "screen.getByTestId"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "pointerDown",
+          "line": 87,
+          "module": "@testing-library/react",
+          "code": "fireEvent.pointerDown"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "getByText",
+          "line": 87,
+          "module": "@testing-library/react",
+          "code": "screen.getByText"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "queryByTestId",
+          "line": 88,
+          "module": "@testing-library/react",
+          "code": "screen.queryByTestId"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "render",
+          "line": 92,
+          "module": "@testing-library/react",
+          "code": "render"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "pointerDown",
+          "line": 94,
+          "module": "@testing-library/react",
+          "code": "fireEvent.pointerDown"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "getByText",
+          "line": 94,
+          "module": "@testing-library/react",
+          "code": "screen.getByText"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "getByTestId",
+          "line": 95,
+          "module": "@testing-library/react",
+          "code": "screen.getByTestId"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "render",
+          "line": 100,
+          "module": "@testing-library/react",
+          "code": "render"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "keyDown",
+          "line": 102,
+          "module": "@testing-library/react",
+          "code": "fireEvent.keyDown"
+        },
+        {
+          "kind": "dom-global",
+          "name": "document",
+          "line": 102,
+          "code": "fireEvent.keyDown(document, { key: \"Escape\" })"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "queryByTestId",
+          "line": 103,
+          "module": "@testing-library/react",
+          "code": "screen.queryByTestId"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "render",
+          "line": 107,
+          "module": "@testing-library/react",
+          "code": "render"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "getByText",
+          "line": 108,
+          "module": "@testing-library/react",
+          "code": "screen.getByText"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "click",
+          "line": 110,
+          "module": "@testing-library/react",
+          "code": "fireEvent.click"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "getByText",
+          "line": 111,
+          "module": "@testing-library/react",
+          "code": "screen.getByText"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "keyDown",
+          "line": 112,
+          "module": "@testing-library/react",
+          "code": "fireEvent.keyDown"
+        },
+        {
+          "kind": "dom-global",
+          "name": "document",
+          "line": 112,
+          "code": "fireEvent.keyDown(document, { key: \"Escape\" })"
+        },
+        {
+          "kind": "dom-global",
+          "name": "document",
+          "line": 113,
+          "code": "document.activeElement"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "render",
+          "line": 122,
+          "module": "@testing-library/react",
+          "code": "render"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "getByText",
+          "line": 129,
+          "module": "@testing-library/react",
+          "code": "screen.getByText"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "click",
+          "line": 131,
+          "module": "@testing-library/react",
+          "code": "fireEvent.click"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "getByText",
+          "line": 132,
+          "module": "@testing-library/react",
+          "code": "screen.getByText"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "pointerDown",
+          "line": 134,
+          "module": "@testing-library/react",
+          "code": "fireEvent.pointerDown"
+        },
+        {
+          "kind": "dom-global",
+          "name": "document",
+          "line": 135,
+          "code": "document.activeElement"
+        },
+        {
+          "kind": "dom-global",
+          "name": "document",
+          "line": 139,
+          "code": "jest.spyOn(document, \"addEventListener\")"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "render",
+          "line": 140,
+          "module": "@testing-library/react",
+          "code": "render"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "click",
+          "line": 143,
+          "module": "@testing-library/react",
+          "code": "fireEvent.click"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "getByText",
+          "line": 143,
+          "module": "@testing-library/react",
+          "code": "screen.getByText"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "render",
+          "line": 153,
+          "module": "@testing-library/react",
+          "code": "render"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "getAllByText",
+          "line": 159,
+          "module": "@testing-library/react",
+          "code": "screen.getAllByText"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "click",
+          "line": 160,
+          "module": "@testing-library/react",
+          "code": "fireEvent.click"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "click",
+          "line": 161,
+          "module": "@testing-library/react",
+          "code": "fireEvent.click"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "keyDown",
+          "line": 162,
+          "module": "@testing-library/react",
+          "code": "fireEvent.keyDown"
+        },
+        {
+          "kind": "dom-global",
+          "name": "document",
+          "line": 162,
+          "code": "fireEvent.keyDown(document, { key: \"Escape\" })"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "render",
+          "line": 189,
+          "module": "@testing-library/react",
+          "code": "render"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "queryByText",
+          "line": 190,
+          "module": "@testing-library/react",
+          "code": "screen.queryByText"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "click",
+          "line": 191,
+          "module": "@testing-library/react",
+          "code": "fireEvent.click"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "getByText",
+          "line": 191,
+          "module": "@testing-library/react",
+          "code": "screen.getByText"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "getByText",
+          "line": 192,
+          "module": "@testing-library/react",
+          "code": "screen.getByText"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "render",
+          "line": 196,
+          "module": "@testing-library/react",
+          "code": "render"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "click",
+          "line": 197,
+          "module": "@testing-library/react",
+          "code": "fireEvent.click"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "getByText",
+          "line": 197,
+          "module": "@testing-library/react",
+          "code": "screen.getByText"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "pointerDown",
+          "line": 200,
+          "module": "@testing-library/react",
+          "code": "fireEvent.pointerDown"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "getByText",
+          "line": 200,
+          "module": "@testing-library/react",
+          "code": "screen.getByText"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "getByText",
+          "line": 201,
+          "module": "@testing-library/react",
+          "code": "screen.getByText"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "render",
+          "line": 205,
+          "module": "@testing-library/react",
+          "code": "render"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "click",
+          "line": 206,
+          "module": "@testing-library/react",
+          "code": "fireEvent.click"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "getByText",
+          "line": 206,
+          "module": "@testing-library/react",
+          "code": "screen.getByText"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "keyDown",
+          "line": 207,
+          "module": "@testing-library/react",
+          "code": "fireEvent.keyDown"
+        },
+        {
+          "kind": "dom-global",
+          "name": "document",
+          "line": 207,
+          "code": "fireEvent.keyDown(document, { key: \"Escape\" })"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "queryByText",
+          "line": 208,
+          "module": "@testing-library/react",
+          "code": "screen.queryByText"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "render",
+          "line": 237,
+          "module": "@testing-library/react",
+          "code": "render"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "getByRole",
+          "line": 238,
+          "module": "@testing-library/react",
+          "code": "screen.getByRole"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "getAllByRole",
+          "line": 239,
+          "module": "@testing-library/react",
+          "code": "screen.getAllByRole"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "render",
+          "line": 243,
+          "module": "@testing-library/react",
+          "code": "render"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "getByRole",
+          "line": 244,
+          "module": "@testing-library/react",
+          "code": "screen.getByRole"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "getByRole",
+          "line": 245,
+          "module": "@testing-library/react",
+          "code": "screen.getByRole"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "render",
+          "line": 253,
+          "module": "@testing-library/react",
+          "code": "render"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "getAllByRole",
+          "line": 254,
+          "module": "@testing-library/react",
+          "code": "screen.getAllByRole"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "click",
+          "line": 262,
+          "module": "@testing-library/react",
+          "code": "fireEvent.click"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "getByRole",
+          "line": 262,
+          "module": "@testing-library/react",
+          "code": "screen.getByRole"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "render",
+          "line": 275,
+          "module": "@testing-library/react",
+          "code": "render"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "getByRole",
+          "line": 276,
+          "module": "@testing-library/react",
+          "code": "screen.getByRole"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "keyDown",
+          "line": 278,
+          "module": "@testing-library/react",
+          "code": "fireEvent.keyDown"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "getByRole",
+          "line": 279,
+          "module": "@testing-library/react",
+          "code": "screen.getByRole"
+        },
+        {
+          "kind": "dom-global",
+          "name": "document",
+          "line": 280,
+          "code": "document.activeElement"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "render",
+          "line": 284,
+          "module": "@testing-library/react",
+          "code": "render"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "getByRole",
+          "line": 285,
+          "module": "@testing-library/react",
+          "code": "screen.getByRole"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "keyDown",
+          "line": 287,
+          "module": "@testing-library/react",
+          "code": "fireEvent.keyDown"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "getByRole",
+          "line": 288,
+          "module": "@testing-library/react",
+          "code": "screen.getByRole"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "keyDown",
+          "line": 289,
+          "module": "@testing-library/react",
+          "code": "fireEvent.keyDown"
+        },
+        {
+          "kind": "dom-global",
+          "name": "document",
+          "line": 289,
+          "code": "document.activeElement"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "getByRole",
+          "line": 290,
+          "module": "@testing-library/react",
+          "code": "screen.getByRole"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "render",
+          "line": 295,
+          "module": "@testing-library/react",
+          "code": "render"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "click",
+          "line": 296,
+          "module": "@testing-library/react",
+          "code": "fireEvent.click"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "getByRole",
+          "line": 296,
+          "module": "@testing-library/react",
+          "code": "screen.getByRole"
+        },
+        {
+          "kind": "dom-library-call",
+          "name": "getByRole",
+          "line": 298,
+          "module": "@testing-library/react",
+          "code": "screen.getByRole"
+        }
+      ],
+      "importClosureSummary": {
+        "reachablePaths": 0,
+        "qualification": "Readiness reachability is conservative, not execution proof; original full traces retained in the bound receipt."
+      }
+    }
+  ],
+  "implicitNodeCandidates": [
+    "tests/unit/a-custom-fallback-keeps-its-name.test.ts",
+    "tests/unit/agentruntime-wire-contract.test.ts",
+    "tests/unit/api-response.test.ts",
+    "tests/unit/api-schemas-narrowing.test.ts",
+    "tests/unit/api-write.test.ts",
+    "tests/unit/b1-api-md-matches-the-route-tree.test.ts",
+    "tests/unit/b1-colour-classes-name-declared-tokens.test.ts",
+    "tests/unit/b15-corpus-moves-under-org.test.ts",
+    "tests/unit/b15-docs-check-refusals.test.ts",
+    "tests/unit/b15-docs-pipeline-is-wired.test.ts",
+    "tests/unit/b15-front-matter-and-manifest.test.ts",
+    "tests/unit/b15-generated-blocks.test.ts",
+    "tests/unit/b15-site-links-are-relative.test.ts",
+    "tests/unit/b18-a-guide-is-finished.test.ts",
+    "tests/unit/b19-a-terminal-stage-runs-nothing.test.ts",
+    "tests/unit/b2-focus-is-visible.test.ts",
+    "tests/unit/b9-tools-and-skills-routes.test.ts",
+    "tests/unit/bloom-paint-rule.test.ts",
+    "tests/unit/build-drift-details.test.ts",
+    "tests/unit/build-mission-prompt-branches.test.ts",
+    "tests/unit/build-mission-prompt-roundtrip.test.ts",
+    "tests/unit/c0-the-line-census.test.ts",
+    "tests/unit/c1-one-route-body.test.ts",
+    "tests/unit/c2-one-type-each.test.ts",
+    "tests/unit/c3-one-way-to-write.test.ts",
+    "tests/unit/c5-comments-that-narrate.test.ts",
+    "tests/unit/c6-the-page-layer.test.ts",
+    "tests/unit/c7-the-lib-root.test.ts",
+    "tests/unit/c8-the-programme-is-closed.test.ts",
+    "tests/unit/chat-run-events.test.ts",
+    "tests/unit/chat-utils-sanitise-filename.test.ts",
+    "tests/unit/commit-local-dir-draft.test.ts",
+    "tests/unit/composer-verdict-reasoning-block.test.ts",
+    "tests/unit/cron-empty-id.test.ts",
+    "tests/unit/cron-populate-collapse.test.ts",
+    "tests/unit/dashboard-helpers-session-174.test.ts",
+    "tests/unit/dashboard-helpers-unit.test.ts",
+    "tests/unit/deploy-action-fallback.test.ts",
+    "tests/unit/deploy-branch-sanitize.test.ts",
+    "tests/unit/deploy-spawn-probe.test.ts",
+    "tests/unit/design-lint-baseline-ratchet.test.ts",
+    "tests/unit/dispatch-mode.test.ts",
+    "tests/unit/dump-yaml-config.test.ts",
+    "tests/unit/env-line.test.ts",
+    "tests/unit/filter-memories-by-age.test.ts",
+    "tests/unit/format-schedule-display.test.ts",
+    "tests/unit/fs-helpers.test.ts",
+    "tests/unit/get-category-id-from-template.test.ts",
+    "tests/unit/get-message-role.test.ts",
+    "tests/unit/health-message.test.ts",
+    "tests/unit/hermes-profile-sync-error-format.test.ts",
+    "tests/unit/hermes-providers.test.ts",
+    "tests/unit/hermes-runtime.test.ts",
+    "tests/unit/hindsight-bridge.test.ts",
+    "tests/unit/hindsight-connection-detect.test.ts",
+    "tests/unit/hindsight-connection-error.test.ts",
+    "tests/unit/hindsight-error-from-catch.test.ts",
+    "tests/unit/hindsight-rederive-safety.test.ts",
+    "tests/unit/hindsight-tag-input.test.ts",
+    "tests/unit/interval-shorthand-to-cron.test.ts",
+    "tests/unit/join-crontab-lines.test.ts",
+    "tests/unit/kit-provenance.test.ts",
+    "tests/unit/legacy-column-repair-migration.test.ts",
+    "tests/unit/local-dir-entry-normalize.test.ts",
+    "tests/unit/log-files.test.ts",
+    "tests/unit/logs-lines-param.test.ts",
+    "tests/unit/message-from-error.test.ts",
+    "tests/unit/mission-board.test.ts",
+    "tests/unit/mission-deep-link.test.ts",
+    "tests/unit/mission-handlers-delete-cancel.test.ts",
+    "tests/unit/mission-prompt-cdata-boundary.test.ts",
+    "tests/unit/mission-prompt-instruction-literal.test.ts",
+    "tests/unit/mission-prompt-reference-boundary.test.ts",
+    "tests/unit/mission-templates.test.ts",
+    "tests/unit/model-key.test.ts",
+    "tests/unit/models-api-style-migration.test.ts",
+    "tests/unit/output-canary.test.ts",
+    "tests/unit/parse-bag-flags.test.ts",
+    "tests/unit/parse-optional-json-body.test.ts",
+    "tests/unit/paths-resolver.test.ts",
+    "tests/unit/platform.test.ts",
+    "tests/unit/pluralise-helper.test.ts",
+    "tests/unit/record-surface-containers.test.ts",
+    "tests/unit/runs-schedules-migration.test.ts",
+    "tests/unit/schedule-day-interval.test.ts",
+    "tests/unit/schedule-next-run.test.ts",
+    "tests/unit/schedule-surface.test.ts",
+    "tests/unit/schedule/presets.test.ts",
+    "tests/unit/schema-json-drift.test.ts",
+    "tests/unit/seed-pack-shipped.test.ts",
+    "tests/unit/server-error-from-catch.test.ts",
+    "tests/unit/server-error-from-error.test.ts",
+    "tests/unit/session-detail-helpers.test.ts",
+    "tests/unit/session-detail-running.test.ts",
+    "tests/unit/session-filters.test.ts",
+    "tests/unit/session-title.test.ts",
+    "tests/unit/set-error-from-caught.test.ts",
+    "tests/unit/sidebar-config-feature-flag.test.ts",
+    "tests/unit/sidebar-config-models-link.test.ts",
+    "tests/unit/status-colors-fallback.test.ts",
+    "tests/unit/string-or.test.ts",
+    "tests/unit/success-message-for-dispatch.test.ts",
+    "tests/unit/t0173-dependabot-pause.test.ts",
+    "tests/unit/template-default-model.test.ts",
+    "tests/unit/toast-error.test.ts",
+    "tests/unit/u0-census-arithmetic.test.ts",
+    "tests/unit/u0-the-gate-sees-what-it-claims.test.ts",
+    "tests/unit/u1-shared-mock-factories.test.ts",
+    "tests/unit/u14-the-ring-paints-and-motion-stops.test.ts",
+    "tests/unit/u15-nothing-lives-only-for-its-test.test.ts",
+    "tests/unit/u16-the-docs-describe-the-system.test.ts",
+    "tests/unit/u19-the-canvas-waits-for-build.test.tsx",
+    "tests/unit/u2-the-contrast-gate-refuses.test.ts",
+    "tests/unit/u2-the-token-layer.test.ts",
+    "tests/unit/u4-surfaces-and-edges.test.ts",
+    "tests/unit/u5-census-pawl.test.ts",
+    "tests/unit/u5-the-type-scale.test.ts",
+    "tests/unit/u6-colour-that-is-there.test.ts",
+    "tests/unit/u6-the-scales.test.ts",
+    "tests/unit/u6-the-status-ladder.test.ts",
+    "tests/unit/u7-the-rail.test.tsx",
+    "tests/unit/u8-the-focus-ring.test.ts",
+    "tests/unit/u9-no-dangling-variant.test.ts",
+    "tests/unit/utils-time-now-param.test.ts",
+    "tests/unit/utils.test.ts"
+  ],
+  "reproduction": {
+    "command": "node tmp/t0195-environment-inventory.cjs",
+    "script": "tmp/t0195-environment-inventory.cjs",
+    "scriptSha256": "403622c95c798abab2a96fd9ef657a90f2ef279e0dedd234a0fe5a941b162900",
+    "method": "TypeScript parse AST excluding type-only nodes, comments and literal source text; Jest first-docblock extract/parse; import/require/requireActual closure excluding explicit factory mocks; no application/test evaluation. Conservative syntactic signals require manual adjudication. Whole-file binding suppression is conservative, not control-flow or symbol analysis; closure is a reachability overapproximation, not execution proof.",
+    "scriptSource": "// Static readiness analysis only. Does not load Jest config, suites or application modules.\n'use strict';\nconst fs = require('node:fs');\nconst path = require('node:path');\nconst crypto = require('node:crypto');\nconst {execFileSync} = require('node:child_process');\nconst ts = require('typescript');\nconst docblock = require('jest-docblock');\nconst root = path.resolve(__dirname, '..');\nconst git = (...args) => execFileSync('git', args, {cwd: root, encoding:'utf8', stdio:['ignore','pipe','ignore']}).trim();\nconst tracked = git('ls-files', '-z').split('\\0').filter(Boolean).sort();\nconst suites = tracked.filter(p => /^tests\\/unit\\/.*\\.test\\.tsx?$/.test(p));\nconst read = p => fs.readFileSync(path.join(root,p),'utf8');\nconst hash = s => crypto.createHash('sha256').update(s).digest('hex');\nconst parsed = new Map();\nconst domNames = new Set(['document','window','localStorage','sessionStorage','navigator','HTMLElement','Element','Node','DOMParser','MutationObserver','ResizeObserver','IntersectionObserver','getComputedStyle','requestAnimationFrame','cancelAnimationFrame','MouseEvent','KeyboardEvent','CustomEvent','Event','FileReader','HTMLInputElement','HTMLButtonElement','StorageEvent','location','history']);\nconst domCalls = new Set(['render','renderHook','hydrate','createRoot','hydrateRoot','fireEvent','waitFor','waitForElementToBeRemoved','userEvent']);\nfunction isType(n) { for(let p=n.parent;p;p=p.parent) { if(ts.isTypeNode(p)||ts.isInterfaceDeclaration(p)||ts.isTypeAliasDeclaration(p))return true; if(ts.isStatement(p)||ts.isExpression(p)) break; } return false; }\nfunction isReference(n) {\n  const p=n.parent;\n  if(!p || isType(n))return false;\n  if((ts.isPropertyAccessExpression(p)&&p.name===n) || ((ts.isPropertyAssignment(p)||ts.isMethodDeclaration(p)||ts.isPropertyDeclaration(p)||ts.isPropertySignature(p))&&p.name===n&&!ts.isComputedPropertyName(p.name)))return false;\n  if(ts.isImportSpecifier(p)||ts.isImportClause(p)||ts.isNamespaceImport(p)||ts.isExportSpecifier(p))return false;\n  if((ts.isVariableDeclaration(p)||ts.isParameter(p)||ts.isFunctionDeclaration(p)||ts.isClassDeclaration(p)||ts.isBindingElement(p))&&p.name===n)return false;\n  if(ts.isJsxAttribute(p)||ts.isJsxOpeningElement(p)||ts.isJsxClosingElement(p)||ts.isJsxSelfClosingElement(p))return false;\n  return true;\n}\nfunction inspect(file) {\n  if(parsed.has(file))return parsed.get(file);\n  const source=read(file), ast=ts.createSourceFile(file,source,ts.ScriptTarget.Latest,true,file.endsWith('x')?ts.ScriptKind.TSX:ts.ScriptKind.TS);\n  const imports=[], mocks=[], actual=[], signals=[], envSignals=[], runtimeGlobalSignals=[], bindings=new Set(), importedNames=new Map(); let jsx=0,restoreAllMocksCalls=0;\n  const line=n=>ast.getLineAndCharacterOfPosition(n.getStart(ast)).line+1;\n  function bind(n){if(ts.isIdentifier(n))bindings.add(n.text);else if(n && (ts.isObjectBindingPattern(n)||ts.isArrayBindingPattern(n)))for(const e of n.elements)if(ts.isBindingElement(e))bind(e.name);}\n  function collect(n){\n    if(ts.isImportDeclaration(n)&&ts.isStringLiteral(n.moduleSpecifier)){\n      const spec=n.moduleSpecifier.text, c=n.importClause;\n      if(!c?.isTypeOnly){imports.push({spec,line:line(n),kind:'import'});if(c?.name){bind(c.name);importedNames.set(c.name.text,{spec,name:'default'});}if(c?.namedBindings){if(ts.isNamespaceImport(c.namedBindings)){bind(c.namedBindings.name);importedNames.set(c.namedBindings.name.text,{spec,name:'*'});}else for(const e of c.namedBindings.elements)if(!e.isTypeOnly){bind(e.name);importedNames.set(e.name.text,{spec,name:e.propertyName?.text||e.name.text});}}}\n    }\n    if(ts.isExportDeclaration(n)&&!n.isTypeOnly&&n.moduleSpecifier&&ts.isStringLiteral(n.moduleSpecifier))imports.push({spec:n.moduleSpecifier.text,line:line(n),kind:'re-export'});\n    if(ts.isVariableDeclaration(n)||ts.isParameter(n)||ts.isFunctionDeclaration(n)||ts.isClassDeclaration(n))if(n.name)bind(n.name);\n    if(ts.isCallExpression(n)&&n.arguments.length&&ts.isStringLiteral(n.arguments[0])){\n      const expr=n.expression.getText(ast),spec=n.arguments[0].text;\n      if(expr==='require'||expr==='import')imports.push({spec,line:line(n),kind:expr});\n      if(/^jest\\.(mock|doMock|unstable_mockModule)$/.test(expr))mocks.push({spec,line:line(n),factory:n.arguments.length>1});\n      if(expr==='jest.requireActual')actual.push({spec,line:line(n),kind:'requireActual'});\n    }\n    ts.forEachChild(n,collect);\n  }\n  collect(ast);\n  function walk(n){\n    if(ts.isJsxElement(n)||ts.isJsxSelfClosingElement(n)||ts.isJsxFragment(n))jsx++;\n    if(ts.isIdentifier(n)&&domNames.has(n.text)&&isReference(n)&&!bindings.has(n.text)){\n      const typeofUse=ts.isTypeOfExpression(n.parent), s={kind:typeofUse?'typeof-global':'dom-global',name:n.text,line:line(n),code:n.parent.getText(ast).slice(0,180)};\n      (typeofUse?envSignals:signals).push(s);\n    }\n    if(ts.isIdentifier(n)&&['fetch','Request','Response','Headers','Blob','FormData','TextEncoder','TextDecoder','ReadableStream','URL','AbortController','navigator'].includes(n.text)&&isReference(n)&&!bindings.has(n.text))runtimeGlobalSignals.push({name:n.text,line:line(n),code:n.parent.getText(ast).slice(0,120)});\n    if(ts.isPropertyAccessExpression(n)&&domNames.has(n.name.text)&&['global','globalThis','self'].includes(n.expression.getText(ast))&&!isType(n))signals.push({kind:'global-property',name:n.name.text,line:line(n),code:n.parent.getText(ast).slice(0,180)});\n    if(ts.isCallExpression(n)){\n      if(n.expression.getText(ast)==='jest.restoreAllMocks')restoreAllMocksCalls++;\n      let base=n.expression, member='';if(ts.isPropertyAccessExpression(base)){member=base.name.text;base=base.expression;}\n      if(ts.isIdentifier(base)){\n        const imported=importedNames.get(base.text);\n        if(imported&&(/^@testing-library\\/(react|dom|user-event)/.test(imported.spec)||/^react-dom(\\/client|\\/test-utils)?$/.test(imported.spec)))signals.push({kind:'dom-library-call',name:member||imported.name,line:line(n),module:imported.spec,code:n.expression.getText(ast)});\n        else if(domCalls.has(base.text)&&!bindings.has(base.text))signals.push({kind:'unbound-dom-call',name:base.text,line:line(n),code:n.expression.getText(ast)});\n      }\n    }\n    ts.forEachChild(n,walk);\n  }\n  walk(ast);\n  const header=docblock.extract(source),declared=docblock.parse(header)['jest-environment']||null;\n  const parsedHeader=docblock.parseWithComments(header);\n  const environmentOnlyHeader=!!declared&&!parsedHeader.comments.trim()&&Object.keys(parsedHeader.pragmas).length===1;\n  const item={path:file,sha256:hash(source),declaredEnvironment:declared,effectiveEnvironment:declared||'jsdom',extension:path.extname(file),headerLines:header?header.split(/\\r?\\n/).length:0,environmentOnlyHeader,environmentLines:source.split(/\\r?\\n/).flatMap((s,i)=>/@jest-environment\\s+\\S+/.test(s)?[{line:i+1,text:s}]:[]),standaloneNodeHeader:/^\\/\\*\\* @jest-environment node \\*\\/$/.test(header),imports,mocks,actual,jsxNodes:jsx,signals,environmentSensitiveSignals:envSignals,runtimeGlobalSignals,restoreAllMocksCalls,parseDiagnostics:ast.parseDiagnostics.map(d=>ts.flattenDiagnosticMessageText(d.messageText,' '))};\n  parsed.set(file,item);return item;\n}\nconst trackedSet=new Set(tracked);\nfunction resolve(from,spec){const base=spec.startsWith('@/')?'src/'+spec.slice(2):spec.startsWith('.')?path.posix.normalize(path.posix.join(path.posix.dirname(from),spec)):null;if(!base)return null;return [base,...['.ts','.tsx','.js','.cjs','.mjs','/index.ts','/index.tsx','/index.js'].map(s=>base+s)].find(p=>trackedSet.has(p))||null;}\nfunction closure(suite){\n  const blocked=new Set(suite.mocks.filter(m=>m.factory).map(m=>m.spec));\n  const seen=new Set([suite.path]), queue=[{item:suite,via:[]}],signals=[],sensitive=[],unresolved=[],external=[];\n  while(queue.length){const {item,via}=queue.shift();if(via.length){for(const s of item.signals)signals.push({path:item.path,via,...s});for(const s of item.environmentSensitiveSignals)sensitive.push({path:item.path,via,...s});}\n    const ownBlocked=new Set(item.mocks.filter(m=>m.factory).map(m=>m.spec));\n    for(const edge of [...item.imports,...item.actual]){\n      if(edge.kind!=='requireActual'&&(blocked.has(edge.spec)||ownBlocked.has(edge.spec)))continue;\n      const target=resolve(item.path,edge.spec);\n      if(target){if(!seen.has(target)&&/\\.(tsx?|[cm]?js)$/.test(target)){seen.add(target);queue.push({item:inspect(target),via:[...via,{from:item.path,spec:edge.spec,line:edge.line}]});}}\n      else if(edge.spec.startsWith('@/')||edge.spec.startsWith('.'))unresolved.push({from:item.path,...edge});\n      else external.push({from:item.path,...edge});\n    }\n  }\n  return {localModules:[...seen].sort(),domSignals:signals,environmentSensitiveSignals:sensitive,unresolvedLocalImports:unresolved,externalImports:external};\n}\nconst inventory=suites.map(inspect);\nfor(const s of inventory)if(!s.declaredEnvironment)s.importClosure=closure(s);\nconst list=fn=>inventory.filter(fn).map(s=>s.path);\nconst groups={explicitNode:list(s=>s.declaredEnvironment==='node'),explicitJsdom:list(s=>s.declaredEnvironment==='jsdom'),implicitDefault:list(s=>!s.declaredEnvironment),other:list(s=>s.declaredEnvironment&&!['node','jsdom'].includes(s.declaredEnvironment))};\nconst result={schemaVersion:1,kind:'read-only-static-environment-readiness',snapshot:{branch:git('branch','--show-current'),head:git('rev-parse','HEAD'),trackedStatus:git('status','--short','--untracked-files=no'),node:process.version,typescript:ts.version,jestDocblock:require('jest-docblock/package.json').version},scope:{manifestCommand:'git ls-files -z; select ^tests/unit/.*\\\\.test\\\\.tsx?$',suiteCount:suites.length,trackedUnitFiles:tracked.filter(p=>p.startsWith('tests/unit/')).length,suiteManifestSha256:hash(suites.join('\\n')+'\\n'),excludedTrackedUnitPaths:tracked.filter(p=>p.startsWith('tests/unit/')&&!suites.includes(p)),testsExecuted:false,providersExecuted:false,configEvaluated:false,extensionUsedAsEvidenceOfDomNeed:false},reproduction:{command:'node tmp/t0195-environment-inventory.cjs',script:'tmp/t0195-environment-inventory.cjs',scriptSha256:hash(fs.readFileSync(__filename)),method:'TypeScript parse AST excluding type-only nodes, comments and literal source text; Jest first-docblock extract/parse; import/require/requireActual closure excluding explicit factory mocks; no application/test evaluation. Conservative syntactic signals require manual adjudication. Whole-file binding suppression is conservative, not control-flow or symbol analysis; closure is a reachability overapproximation, not execution proof.'},counts:Object.fromEntries(Object.entries(groups).map(([k,v])=>[k,v.length])),byExtension:Object.fromEntries(['.ts','.tsx'].map(ext=>[ext,Object.fromEntries(Object.entries(groups).map(([k,v])=>[k,v.filter(p=>p.endsWith(ext)).length]))])),paths:groups,implicitCandidates:{directDom:list(s=>!s.declaredEnvironment&&s.signals.length),transitiveOnlyDom:list(s=>!s.declaredEnvironment&&!s.signals.length&&s.importClosure.domSignals.length),environmentSensitive:list(s=>!s.declaredEnvironment&&(s.environmentSensitiveSignals.length||s.importClosure.environmentSensitiveSignals.length)),noDomSignals:list(s=>!s.declaredEnvironment&&!s.signals.length&&!s.importClosure.domSignals.length)},nodeRemovalCandidates:{standaloneHeader:list(s=>s.declaredEnvironment==='node'&&s.standaloneNodeHeader),mixedHeader:list(s=>s.declaredEnvironment==='node'&&!s.standaloneNodeHeader)},inventory};\nconst notesPath=path.join(root,'tmp/t0195-environment-adjudication.json');if(fs.existsSync(notesPath))result.adjudication=JSON.parse(fs.readFileSync(notesPath,'utf8'));\nconst implicitDom=inventory.filter(s=>!s.declaredEnvironment&&s.signals.length);\nconst implicitNode=inventory.filter(s=>!s.declaredEnvironment&&!s.signals.length);\nconst removal=inventory.filter(s=>s.declaredEnvironment==='node').map(s=>({path:s.path,sha256:s.sha256,action:s.environmentOnlyHeader?'remove-environment-only-header':'remove-node-directive-line-only-preserve-comment',removedLines:s.environmentOnlyHeader?s.headerLines:1}));\nconst removedLines=removal.reduce((n,s)=>n+s.removedLines,0);\nresult.proposedScope={defaultEnvironment:'jest-environment-node',nextJestArchitecture:'Retain single createJestConfig(config); no projects or extension routing',preserveExplicitJsdom:groups.explicitJsdom,addJsdomFirstDocblock:implicitDom.map(s=>s.path),implicitNodeCandidates:implicitNode.map(s=>s.path),allProposedJsdomExceptions:[...groups.explicitJsdom,...implicitDom.map(s=>s.path)].sort(),proposedEffectiveCounts:{node:groups.explicitNode.length+implicitNode.length,jsdom:groups.explicitJsdom.length+implicitDom.length},metadataRemovalCandidates:removal,netLineEstimate:{basis:'Physical LF-normalised lines; no blank-line cleanup, narrative deletion or test-body changes. Replacement of the config line adds one and removes one, net zero.',conservativeStandaloneOnly:{removed:result.nodeRemovalCandidates.standaloneHeader.length,added:implicitDom.length,net:implicitDom.length-result.nodeRemovalCandidates.standaloneHeader.length},allRedundantNodeMetadata:{removed:removedLines,added:implicitDom.length,net:implicitDom.length-removedLines},independentBehaviourProofAllowance:{minimumAdded:60,maximumAdded:100,assumption:'Unimplemented planning allowance, not measured code; covers Node/jsdom setup, module factories, restoration, exact mapper and bypass controls',netAfterProofMinimum:implicitDom.length-removedLines+60,netAfterProofMaximum:implicitDom.length-removedLines+100},excluded:'Any frozen-oracle amendment, documentation delta and runtime timing; no double credit against tests-04 comment savings.'},status:'Static candidate scope only. No behavioural parity, timing or acceptance claim. Existing explicit jsdom declarations retained, not newly proved necessary.'};\nresult.restoreAllMocks={astCallSuiteCount:inventory.filter(s=>s.restoreAllMocksCalls).length,paths:inventory.filter(s=>s.restoreAllMocksCalls).map(s=>s.path)};\nresult.evidenceFiles=['jest.config.js','tests/jest.setup.ts','tests/__mocks__/better-sqlite3.cjs','scripts/tooling/coverage-floors.cjs','scripts/tooling/coverage-floors.baseline.json','docs/contributing/testing.md','org/tasks/T-0195.json','org/plans/2026-09-refactor-programme.json','tests/unit/dependency-hygiene-contract.test.ts'].filter(p=>trackedSet.has(p)).map(p=>({path:p,sha256:hash(read(p))}));\nresult.installedEvidenceFiles=['next/dist/build/jest/jest.js','jest-runtime/build/index.js','jest-mock/build/index.js','jest-resolve/build/index.js','@testing-library/jest-dom/dist/index.js','@testing-library/jest-dom/dist/matchers-98b869c1.js','@testing-library/react/dist/pure.js'].map(p=>({path:'node_modules/'+p,sha256:hash(read('node_modules/'+p))}));\nresult.installedVersions=Object.fromEntries(['next','jest','jest-runtime','jest-mock','jest-environment-node','jest-environment-jsdom','@testing-library/jest-dom','@testing-library/react'].map(p=>[p,JSON.parse(read('node_modules/'+p+'/package.json')).version]));\nconst configPrinted=ts.createPrinter({removeComments:true,newLine:ts.NewLineKind.LineFeed}).printFile(ts.createSourceFile('jest.config.js',read('jest.config.js'),ts.ScriptTarget.Latest,true));\nresult.frozenConfigConstraint={path:'tests/unit/dependency-hygiene-contract.test.ts',line:132,currentExecutableSha256:hash(configPrinted),hypotheticalDefaultNodeExecutableSha256:hash(configPrinted.replace('jest-environment-jsdom','jest-environment-node')),assertionWouldDiffer:true,computedWithoutExecutingTest:true,amendmentMade:false,implementationReadiness:'blocked within no-frozen-oracle-amendment scope'};\nresult.adjudicatedImplicitSummary={requiresJsdom:{count:implicitDom.length,ts:implicitDom.filter(s=>s.extension==='.ts').length,tsx:implicitDom.filter(s=>s.extension==='.tsx').length},nodeCandidates:{count:implicitNode.length,ts:implicitNode.filter(s=>s.extension==='.ts').length,tsx:implicitNode.filter(s=>s.extension==='.tsx').length},transitiveOnlySignals:'Four manually reviewed false positives; see adjudication. No unresolved local static imports and no suite parse diagnostics.',parseDiagnosticSuiteCount:inventory.filter(s=>s.parseDiagnostics.length).length,unresolvedImplicitLocalImportCount:inventory.filter(s=>!s.declaredEnvironment).reduce((n,s)=>n+s.importClosure.unresolvedLocalImports.length,0)};\nfs.writeFileSync(path.join(root,'tmp/t0195-environment-readiness.json'),JSON.stringify(result,null,2)+'\\n');\nconsole.log(JSON.stringify({counts:result.counts,byExtension:result.byExtension,implicitCandidates:result.implicitCandidates,nodeRemovals:Object.fromEntries(Object.entries(result.nodeRemovalCandidates).map(([k,v])=>[k,v.length]))},null,2));\n"
+  },
+  "implementationChoice": "Keep all711 pragmas; add33 explicitDOMexceptions before defaultNode. No netline saving claimed for initial cohort.",
+  "limits": "Static readiness only; new independent oracle and execution proofs pending. Original detailed receipt retained; duplicated869-row AST/import traces omitted here."
+}

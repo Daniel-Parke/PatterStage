@@ -7,6 +7,22 @@ updated: 2026-10-04
 
 # Handover · PatterStage, 2026-10-02
 
+## T0195 opened and current hosted limit, 5 October
+
+T0195 is active under its existing R2 ruling; independent red-first oracle
+authorship is assigned. Current readiness counts869 suites:525 explicitNode,
+186 explicitjsdom and158 implicit. The initial cohort keeps711 pragmas and
+adds33 DOM exceptions before switching the single default. Actual execution
+and net savings are unclaimed. The tests-06 Verify wording discrepancy is
+explicitly preserved and clarified; exact frozen-pin amendment requires a
+different author and independent R2 review.
+
+Library/DNS acceptance at72edf3ff remains bounded and done. Metadata closure
+6dc4ce15 is not hostedgreen: push macOS adds base-fixture H12 withinDeadline,
+distinct from C02/C05. PR macOS passes. T0206 owns this separate uncertainty;
+no retry/common-cause claim/timeout increase. T0195 may continue authorised
+oracle-first work but still needs its complete gate and all exact-head checks.
+
 ## Accepted library and DNS batches, 2026-10-04
 
 T0194 and T0207 are done with Parfit's final bounded R3 acceptance at72edf3ff.

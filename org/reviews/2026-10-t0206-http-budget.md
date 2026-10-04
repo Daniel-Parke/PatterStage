@@ -336,3 +336,10 @@ review accepts the diagnostic checkpoint only. T0206 remains active: original
 macOS timing cause unproved; no repair, whole-product or release acceptance.
 Current-head hosted jobs must be observed after push. T0194 stays unopened;
 accepted ADR0018 has not been added to the protected decisions directory.
+
+
+## Separate base-fixture H12 failure, closure6dc4ce15
+
+Push CI37242011425 Macjob111552448308 has one failed case: release-install-http-smoke H12, withinDeadline at32/96.9058 pass/five existing skips; every other applicable push job passes. PR macOS passes. Actual log tmp/t0194-closure-macos-failure.log and snapshot tmp/t0194-hosted-1791155151553/snapshot.json remain evidence. The helper derives withinDeadline from124/137 supervisor statuses; this run does not capture the exact status or native/parent timing. Earlier cleanup/ownership assertions passed, but later assertions were not reached. Do not label the whole case clean.
+
+The context-only actual observer does not capture this base run_case callback. Parfit assigns this separate signature to T0206; no common cause with C02/C05 or repair is proved. A minimal next diagnostic must observe that same callback once, under different-author Q015/R2 controls and REVIEWER authorisation, keeping workload,21 curl calls, six-second watchdog, grace, all outer/lifecycle bounds and coverage concurrency. No retry or timing repair is authorised by this evidence.

@@ -1,6 +1,6 @@
 {
   "id": "T-0195",
-  "intent": "Simplify test harnesses without losing questions. Approved authority, invariants, dependencies, rollback and exact Verify remain in org/plans/2026-09-refactor-programme.json. Receive the exact unresolved review proofs in org/reviews/2026-10-t0194-review-handoff.md; preserve original evidence and do not treat allocation as completion. Red-first oracle and exact opening claims precede implementation.",
+  "intent": "Simplify test harnesses without losing questions. Approved authority, invariants, dependencies, rollback and exact Verify remain in org/plans/2026-09-refactor-programme.json. Receive the exact unresolved review proofs in org/reviews/2026-10-t0194-review-handoff.md; preserve original evidence and do not treat allocation as completion. Red-first oracle and exact opening claims precede implementation. Opening cohort: single default-Node configuration with explicit DOM exceptions, behaviour-proven restoreAllMocks wording, tests-only comment ratchet and qualified classification evidence. Existing pragmas/closed gates stay unless their independent amendment is authorised. Exact acceptance and rollback: org/briefs/T-0195-oracle.md. T0206 cause remains unresolved; no timing repair is claimed. The canonical Verify formerly said jsdom default and node exceptions; tests-06 documents the default-Node route. Record this internal clarification explicitly: single Node default, explicit DOM exceptions, all existing pragmas and invariants retained. Parfit authorises the exact different-author R2 config-pin amendment; frozen hashes remain until new resolved-environment controls freeze. Closure6dc4ce15 push has a distinct H12 deadline failure owned by T0206; no retry or common-cause claim. T0195 may continue oracle-first work but closure requires every new exact-head hosted check. Initial reasoned test-comment baseline is data-only and must be committed locally before the whole gate so the checker reads HEAD. No source/feature implementation commit precedes its complete gate. The red requirements commit contains13 additions only; all old identities remain. The initial3e0323 freeze and its red receipt are preserved; separate-author preimplementation live-ROOT strengthening yields0c2bdfb4, same12 names. This was a coordinator request, not a human ruling; independent R2 acceptance remains required.",
   "declared": {
     "capabilities": [
       "edit-code",
@@ -16,8 +16,8 @@
   },
   "mode": "high-assurance",
   "tier_proposed": "R2",
-  "status": "proposed",
-  "owner_session": "2026-10-04-t0194-coordinator",
+  "status": "active",
+  "owner_session": "2026-10-04-t0195-coordinator",
   "claims": [
     "tests/helpers/**",
     "tests/unit/**",
@@ -25,13 +25,52 @@
     "tests/e2e/**",
     "tests/jest.setup.ts",
     "org/tasks/T-0195.json",
-    "org/reviews/2026-10-t0194-review-handoff.md"
+    "org/reviews/2026-10-t0194-review-handoff.md",
+    "org/briefs/T-0195-oracle.md",
+    "tests/unit/test-harness-policy.test.ts",
+    "tests/helpers/test-comment-census.mjs",
+    "tests/fixtures/test-comment-census.baseline.json",
+    "tests/fixtures/mutants/T-0195.json",
+    "org/reviews/2026-10-t0195-verification.md",
+    "org/reviews/2026-10-t0195-source-classification.json",
+    "org/reviews/2026-10-t0195-environment-inventory.json",
+    "org/reviews/2026-10-t0195-config-oracle-amendment.md",
+    "scripts/tooling/line-census.baseline.json",
+    "org/HANDOVER.md",
+    "org/claims.json",
+    "org/tasks/T-0206.json",
+    "org/reviews/2026-10-t0206-http-budget.md",
+    "org/plans/2026-09-refactor-programme.json",
+    "org/plans/2026-09-refactor-programme.md",
+    "tests/unit/test-comment-census-live.test.ts"
   ],
   "timestamps": {
     "opened": "2026-10-04T22:00:16.016055+00:00",
-    "updated": "2026-10-04T22:00:16.016055+00:00"
+    "updated": "2026-10-04T23:31:35.094249+00:00"
   },
-  "verdicts": [],
+  "verdicts": [
+    {
+      "role": "REVIEWER",
+      "session": "01a107e1-5ba0-7703-ab13-e23e640dc10b",
+      "verdict": "pass",
+      "date": "2026-10-04T23:15:31.295777+00:00",
+      "notes": "Authorise exact independent R2 proposal org/reviews/2026-10-t0195-config-oracle-amendment.md: reconstruct only single literal Jest testEnvironment Node to historicaljsdom for old hash; preserve both hashes, Next normalisation and all old names/assertions/deadlines. New actualresolved Node/DOM controls freeze first. Reject arbitrary values, duplicate/computed declarations and unrelated mutations. Q015/R2 REVIEWER authority suffices; no extra operator approval needed. Explicitly record stale Verify wording. This is authorisation only, not amendment or implementation acceptance. Distinct H12 closure failure does not invalidate accepted T0194 dependency at72edf3ff; T0195 may continue but every required check still precedes closure."
+    },
+    {
+      "role": "ORACLE",
+      "session": "01a10926-5936-7a71-8406-255d787956f3",
+      "verdict": "pass",
+      "date": "2026-10-04T23:31:35.094249+00:00",
+      "notes": "Red-first acceptance requirements only: independent12-case oracle executes9 matcher failures/3passes/0runtime errors onNode24.21.0, lint/testtyping0. Both ownedNode/jsdom childcohorts4/4pass withfactory restoration and mapped/nativeSQLite separation. Static7355\u21927367 declarations unexpanded;922\u2192923files, not a full-suite runtime count. The13th coordinatorR2 live-corpus oracle independently red1/1 with correctownedcwd; first rootDir-only invocation retained and not claimed ownedcwd. No old tests/config/helpers changed. Currentsourceclassifications221 fully itemised and independently qualified; no retirement authority. Oracle acceptance is not implementation/hosted/release acceptance."
+    },
+    {
+      "role": "REVIEWER",
+      "session": "01a107e1-5ba0-7703-ab13-e23e640dc10b",
+      "verdict": "pass",
+      "date": "2026-10-04T23:36:10.799275+00:00",
+      "notes": "Independent R2 adoption of final strengthened oracle: inverse recovers initial freeze, twelve names retained, nine matcher failures and three passes plus separate live-corpus matcher failure. Both owned environment controls pass four cases. Corrected coordinator provenance retained. Commit red before implementation. Authorise initial reasoned data-only comment baseline local commit before gate because checker reads HEAD; baseline capture is not implementation acceptance."
+    }
+  ],
   "tier_ruled": "R2",
   "reasons": [
     {
@@ -40,5 +79,17 @@
       "source": "declared",
       "evidence": "declared side effect: financial-impact"
     }
-  ]
+  ],
+  "oracle_provenance": {
+    "files": [
+      "tests/unit/test-harness-policy.test.ts",
+      "tests/unit/test-comment-census-live.test.ts"
+    ],
+    "hashes": {
+      "tests/unit/test-harness-policy.test.ts": "0c2bdfb4f08d12d6c2b2fe8c7cba69a929c609454ae262badbedea093651ac4b",
+      "tests/unit/test-comment-census-live.test.ts": "56292a0757e1101b9bd8f6899c69ee71a025f58e64f55514aa219300eee51590"
+    },
+    "author_session": "Galileo 01a10926-5936-7a71-8406-255d787956f3 independent12 controls; coordinator R2 live-corpus13th before implementation",
+    "independence_method": "metamorphic"
+  }
 }
