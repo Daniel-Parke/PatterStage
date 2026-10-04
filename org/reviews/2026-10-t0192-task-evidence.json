@@ -1264,7 +1264,20 @@
     "red": "2 causal metadata failures, 2 passing preservation controls; types/lint0.",
     "builtReproduction": "tmp/t0192-remaining-walk-1791081554941/sign-in-390.json: 390px mobile layout is980px, language empty; form sign-in remainsfunctional.",
     "scope": "Document language and viewport only; authentication responses and policy unchanged. Failed native-form presentation question remains pending.",
-    "focusedGreen": "tmp/t0191-green-validation/tmp/t0192-sign-in-document-green.json:25/25pass including4newcases; browser geometry awaits rebuilt candidate."
+    "focusedGreen": "tmp/t0191-green-validation/tmp/t0192-sign-in-document-green.json:25/25pass including4newcases; browser geometry awaits rebuilt candidate.",
+    "builtGreen": {
+      "receipt": "tmp/t0192-remaining-walk-1791084205199",
+      "passed": 2,
+      "phoneWidths": [
+        390,
+        390,
+        390
+      ],
+      "language": "en",
+      "h1": 1,
+      "screenshotSha256": "b3f43ff094fcb651a335dc241668407062099681d7021ff77e519279ef6bdbc3",
+      "limits": "Public failed-form JSON presentation unchanged, pending operator ruling."
+    }
   },
   "firstCommittedSweep": {
     "head": "31fa54413427e2bde5351f7e17ce48bd1710e1c8",
@@ -1282,5 +1295,97 @@
     "scopeProof": "tmp/t0192-fetch-assertion-receipts/scope-proof.json",
     "fulfilmentProof": "tmp/t0192-fetch-assertion-receipts/fulfilment-proof.json",
     "result": "Before/amended/restored16pass; mutant15pass1causal normalmatcher; allnine amended cases refuse error-shaped fulfilment. Original16names/inputs retained. Runner unchanged."
+  },
+  "remainingWalks": {
+    "initialComplete": "tmp/t0192-remaining-walk-1791081554941",
+    "readerExtended": "tmp/t0192-remaining-walk-1791082478732",
+    "composerChunks": "tmp/t0192-remaining-walk-1791082345183/composer-chunks.json",
+    "results": "Five initial journeys and two extended Reader journeys passed at1440x900/390x844. Actual five Reader font glyph faces verified, preferences persisted/reset, keyboard and outside-pointer dismissal exercised. Actual two-hop legacy redirect and Next error-boundary recovery exercised.",
+    "failedProbes": "Earlier font checks incorrectly required unused fallback faces to load; actual glyph evidence corrected the probe. First extended phone outside-click probe hit the popover; an uncovered coordinate passed. All original failed receipts retained.",
+    "composer": "Initial empty Run did not request Flow chunk1yg0728ycmojj.js; first Build did.228727 raw bytes is the whole chunk, not isolated dependency transfer. No paid/live run tested.",
+    "qualityFollowUps": [
+      {
+        "owner": "T-0193: visible-state scope extension accepted by independent reviewer; explicit plan update still required",
+        "finding": "Reader popover contrast: observed muted text4.041:1 and selected purple2.463:1 (hover2.188:1). Requires independent reproduction/oracle before repair. Functional passes do not establish accessibility acceptance."
+      },
+      {
+        "owner": "T-0192",
+        "finding": "Phone geometry repaired and verified on rebuilt candidate: inner/visual/document widths390px, one h1 and English language.",
+        "status": "repaired; final mutation/independent acceptance pending"
+      },
+      {
+        "owner": "operator ruling pending",
+        "finding": "Wrong browser form token gives401JSON page. Do not change public response presentation without ruling."
+      }
+    ],
+    "limits": "Controlled synthetic data and owned ephemeral listeners; no whole-product or provider acceptance.",
+    "stateMatrix": {
+      "receipt": "tmp/t0192-state-walk-1791084096756",
+      "passed": 22,
+      "widths": [
+        1440,
+        390
+      ],
+      "pageErrors": 0,
+      "horizontalOverflow": 0,
+      "qualification": "Observational assertions passed; Models false emptiness and Skill error/absence conflation remain defects, not accepted behaviour."
+    }
+  },
+  "finalCandidateGate": {
+    "receipt": "tmp/t0192-coordinator-gate-1791083066836/gate/summary.json",
+    "treeHash": "9c8f687b0c6bbbe7e2b152895b3f1d5bfcc7fb63c0e8fcc17edb092b658533a0",
+    "steps": 10,
+    "unitPassed": 8819,
+    "unitSkipped": 9,
+    "browserPassed": 497,
+    "browserSkipped": 24,
+    "limits": "Implementation candidate passed. Additional review walks, committed sweep, disposition reconciliation, final independent acceptance and hosted checks remain open."
+  },
+  "committedJestSweep": {
+    "head": "a21b4ee808681cf51ab46ac861a1bc26087444d3",
+    "receipt": "tmp/t0192-sweep-1791084323557",
+    "exit": 0,
+    "causalKills": 20,
+    "controlsBefore": 297,
+    "controlsAfter": 297,
+    "reviewer": "Laplace",
+    "qualification": "All20 independently accepted; m16 actual edited payload reached. Original17KILLED/1ERROR receipt preserved."
+  },
+  "apiDocumentationChecks": {
+    "receipt": "tmp/t0192-final-api-docs.json",
+    "passed": 13,
+    "limits": "API inventory and caller scope only; subsequent single prose clarification names sanctioned useMutation. Independent source review accepted conventions and exact labels."
+  },
+  "browserB01Qualification": {
+    "receipt": "tmp/t0192-browser-b01-analysis.json",
+    "originalRun": "tmp/t0192-browser-sweep-1791084568922",
+    "originalStatus": "ERROR/exit1: ANSI analyser mismatch",
+    "qualification": "b01 causal kill independently verified; original orchestration failed during analysis. No fresh execution claimed. Four controls before and after; actual SQLite and API description assertions failed.",
+    "reviewer": "Laplace",
+    "restoration": "Source hash matched; restored build0 and four restored controls pass."
+  },
+  "browserB02Qualification": {
+    "receipt": "tmp/t0192-browser-sweep-1791085192516",
+    "exit": 0,
+    "causalKills": 1,
+    "intendedFailures": 3,
+    "unrelatedPasses": 1,
+    "controlsBefore": 4,
+    "controlsAfter": 4,
+    "builds": "Mutant and restored exit0",
+    "sourceRestored": true,
+    "reviewer": "Laplace",
+    "qualification": "Three fallback actions reach actual YAML assertion with stale fallback-one while SQL empty. One mutant, not three independent kills."
+  },
+  "boundaryInvestigation": {
+    "failedHypothesis": [
+      "tmp/t0192-outer-boundary-1791085849752",
+      "tmp/t0192-outer-boundary-1791085952306"
+    ],
+    "observation": "tmp/t0192-next-fallback-1791086086666",
+    "passed": 2,
+    "reviewer": "Laplace",
+    "verdict": "Bounded runtime investigation accepted; retainboth. ActualNextrecovery observed even after injectedNextfallbackeffect error. Classreachability/removalnotproved.",
+    "limits": "Synthetic malformed APIresponse, not corruptedstorage. Failedprobesretained andnotrelabeled."
   }
 }

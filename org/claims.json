@@ -56,7 +56,6 @@
         "org/briefs/T-0192-oracle.md",
         "org/briefs/T-0192-review.md",
         "org/reviews/2026-10-t0192-route-verification.md",
-        "org/reviews/2026-10-t0192-dispositions.json",
         "org/plans/2026-09-refactor-programme.json",
         "org/HANDOVER.md",
         "org/TASKS.md",
@@ -184,11 +183,12 @@
         "src/app/api/cron/hardware/route.ts",
         "src/app/api/config/route.ts",
         "tests/unit/sign-in-document-metadata.test.ts",
-        "tests/unit/api-fetch-error-envelope.test.ts"
+        "tests/unit/api-fetch-error-envelope.test.ts",
+        "org/reviews/2026-10-t0192-dispositions.json"
       ],
       "acquired": "2026-10-03T21:24:24.476320+00:00",
       "expires": "2026-10-04T21:24:24.476320+00:00"
     }
   ],
-  "note": "All independent authors stopped. Coordinator only. Preserve oracle hashes; final full gate and committed sweep remain required."
+  "note": "All independent authors stopped. Coordinator only. Final browser mutation, outer-boundary review, exact-head hosted checks and independent final acceptance remain pending."
 }

@@ -525,3 +525,312 @@ Reader’s early `if` truncates that metric while substantial handlers remain. *
 ## Candidate gate checkpoint, 2026-10-04
 
 All ten stages passed on an unchanged tree in `tmp/t0192-coordinator-gate-1791079520716/gate/summary.json`: 8,815 unit tests and 497 browser tests passed; the existing nine unit and 24 browser skips remain recorded. Both build-purity cases and both censuses passed. This supersedes the earlier gate failures, whose receipts remain preserved. The batch remains active pending mutation evidence, remaining review obligations, independent acceptance and hosted checks.
+
+## Whole stylesheet source assessment, 2026-10-04
+
+**Recommendation: retain the runtime stylesheet and palette.** The review supports a bounded comments cleanup and identifies one unused-animation candidate. It also exposes a reduced-motion verification gap. T0191’s four RGB removals do not establish whole-stylesheet acceptance.
+
+Read-only assessment at `144e1af5df4a0fab316e199f04fb255115b8b416`. All 814 content lines were inspected; PostCSS parsing succeeded. No files changed and no tests, builds or browsers ran.
+
+### Finite stylesheet assessment
+
+| Sections in `globals.css` | Assessment |
+|---|---|
+| 1–16: import and source scanning | Retain the explicit Tailwind source boundary. |
+| 18–337: fonts, palette, semantic colours, surfaces, typography, radii, elevation, status, Reader, visualisation and measures | Retain. These include live component contracts and explicitly preserved token interfaces. Some explanatory comments describe superseded migration states. |
+| 340–377: layer ladder, shell dimensions, durations, RGB mirrors and utilities | Retain. Shell dimensions and overlay layers have live consumers. Some declarations lack current consumers but remain test-pinned interfaces, detailed below. |
+| 379–407: transitions and scrollbars | Retain. Excluding `outline-color` preserves immediate focus indication. Scrollbar styling is browser-specific; source inspection cannot establish its rendered accessibility. |
+| 409–496: flame, entrance/stagger, shimmer, chart draw, rail flow and ReactFlow controls | Live consumers found. ReactFlow controls are mounted in [WorkflowCanvas.tsx:611](../../src/components/composer/WorkflowCanvas.tsx#L611); the rail animation also serves Research. |
+| 498–530: reduced motion | Retain existing contract, but record the delayed-reveal gap below. |
+| 533–619: glow, brand border, pulse, scanlines, grid and slow spinner | Live consumers found for each family **except the slow spinner**. |
+| 621–681: Bloom | Retain pointer capability, reduced-motion, positioning and pointer-event guards. The delegated runtime and CSS form one contract. |
+| 683–798: Help prose | Retain descendant styling and local overflow containment for generated Markdown. |
+| 800–814: global focus ring | Retain the cyan 2 px outline and 2 px offset. Existing focus tests expressly protect this behaviour. |
+
+### T0191 and existing test coverage
+
+The [T0191 preservation suite:5](../../tests/unit/components-token-preservation.test.tsx#L5) only asserts absence of the purple, green, pink and orange RGB mirror declarations. It does **not** prove that every remaining rule is used or that rendered styles are unchanged.
+
+The retained cyan mirror feeds shimmer; the Cherenkov mirror feeds scanlines. Multicolour `GlowSurface` behaviour still obtains its channels from [theme.ts:202](../../src/lib/ui/theme.ts#L202).
+
+Existing tests provide complementary, bounded protection:
+
+- [lockbook-tokens.test.ts:59](../../tests/unit/lockbook-tokens.test.ts#L59): CSS syntax, token/interface consistency and RGB formatting.
+- [u2-the-token-layer.test.ts](../../tests/unit/u2-the-token-layer.test.ts): surface derivation, typography, radii, layers, durations, status and retained measures.
+- [viz-chrome-tokens.test.ts](../../tests/unit/viz-chrome-tokens.test.ts): visualisation alpha values and Reader token preservation.
+- [u6-the-scales.test.ts:104](../../tests/unit/u6-the-scales.test.ts#L104): prior effect retirements and retained cyan text glow.
+- [u14-the-ring-paints-and-motion-stops.test.ts](../../tests/unit/u14-the-ring-paints-and-motion-stops.test.ts), Bloom and focus suites: source-level guard contracts.
+
+These are inspected assertions, not newly observed passes.
+
+### Stale comments and contradictions
+
+The smallest safe cleanup is explanatory text only:
+
+- [globals.css:103](../../src/app/globals.css#L103): “repaints nothing”, zero panel consumers and pending U4 retirement describe an old migration state. Panel classes now have live consumers.
+- [globals.css:201](../../src/app/globals.css#L201): radius counts and the future U6 codemod need historical qualification.
+- [globals.css:304](../../src/app/globals.css#L304): distinguish retained legacy measures from the newer page/prose measures. Both sets remain declared and tested.
+- [globals.css:413](../../src/app/globals.css#L413): “transform/opacity only” is too broad for the following section, which also animates stroke offset and background position.
+- [globals.css:473](../../src/app/globals.css#L473): Composer-only attribution misses the Research rail consumer.
+- [globals.css:602](../../src/app/globals.css#L602): orphan “Slide in” and “Skeleton shimmer” headings precede the grid rule.
+- [globals.css:633](../../src/app/globals.css#L633): qualify the `.glow-cyan` compilation evidence as historical; U6 explicitly protects that class’s removal.
+- [globals.css:689](../../src/app/globals.css#L689): “Every value is a declared token” overstates the rule. Colours use tokens; several dimensions are literals.
+
+The warning at lines 637–639 about declarations inside comments **remains justified**: the lockbook declaration extractor still regexes raw CSS.
+
+### Reference-proven candidates and retention
+
+**Slow spinner:** searches found no consumer outside its declarations and test allowlists. Candidate scope is its reduced-motion exception at line 525 and keyframe/class at lines 613–619. This merits a separately authorised retirement review, not automatic deletion.
+
+**Retain despite absent current consumers:**
+
+- `z-base`: declaration and utility are explicitly pinned.
+- `--ps-duration-fast` / `--ps-duration`: no source use found beyond declaration, but exact values are pinned.
+- `ps-wide` / `ps-full`: referenced by the exported `measureClasses` interface and frozen assertions; no component consumer found. `ps-reading` remains live in Help’s not-found page.
+
+The relevant preservation assertions are [U2:216–252](../../tests/unit/u2-the-token-layer.test.ts#L216) and [U2:289](../../tests/unit/u2-the-token-layer.test.ts#L289). Absence of a literal consumer alone does not authorise removing those interfaces.
+
+### Remaining uncertainty
+
+The concrete motion gap is [stagger delays up to 550 ms](../../src/app/globals.css#L432). Reduced motion shortens duration but leaves delay unchanged; backwards fill can therefore retain the initial transparent state during that delay. This is a source-supported consequence, not a new browser observation.
+
+The [browser motion test:21](../../tests/e2e/motion.spec.ts#L21) checks desktop routes after 1.5 seconds and excludes short one-shot animations. It cannot prove immediate reduced-motion reveal, phone behaviour or every interactive state.
+
+Rendered contrast across composited surfaces, compiled cascade precedence, generated-font resolution and browser-specific scrollbar appearance also remain outside this read-only proof. **Close the finite source assessment separately from those runtime claims; make no palette or timing changes on this evidence alone.**
+
+
+## Remaining controlled state walks
+
+The 22 desktop/phone cases in `tmp/t0192-state-walk-1791084096756` completed with exit0. All captured states had no horizontal overflow or page errors. This is an observational review, not22 new product acceptance contracts. Models displayed both a read-error banner and confirmed empty wording; Skill detail rendered the same not-found heading for500 and404, with no h1 or Retry. Recovery navigation worked. The synthetic successful Skill Markdown contained its own h1, so its second heading is fixture-content dependent, not a universal count claim. Missions kept rows while a refresh was pending, then showed a refusal banner with working Retry. Unknown Help returned404 and recovered through Contents; unknown Settings returned200 with a working known-section link. Repairs are explicitly assigned toT0193; app09 convergence remains open.
+
+Rebuilt standalone sign-in passed both widths in `tmp/t0192-remaining-walk-1791084205199`: phone inner/visual/document widths390, language en, device-width viewport, one h1, successful opaque-cookie form sign-in and unchanged401 invalid-token refusal. The coordinator inspected phone screenshots of sign-in, Models failure and Skill failure.
+
+## Client dependency reachability and deferred Flow
+
+**Recommend closing gap-081.b as bounded client-import and deferred-loading verification, subject to independent review.** Do not close it as an exact current-build package-size measurement.
+
+The [actual obligation](../../org/plans/2026-09-refactor-ownership.json#L4049) asks to recheck client imports and deferred Flow. The evidence now supports that classification without attributing whole chunks to individual packages.
+
+### Dependency attribution
+
+| Dependency | Verified reachability and built evidence | Defensible conclusion |
+|---|---|---|
+| **Zod** | Composer page statically imports runtime helpers from `composer/schema.ts`; `ComposerRunForm` imports `getInputSpec`, which calls `inputSpecSchema.safeParse`. Schema imports `zod` and calls `z.config({jitless:true})`. Older primary client output contains `$ZodError`, Zod schema exports and `safeParse`. | **Real client runtime dependency**, not merely a type import or automatically deferred with Flow. Exact `a21b4ee8` emitted module/chunk assignment is unavailable from the preserved report. |
+| **js-yaml** | No runtime-import path from any inspected client root. All nine direct first-party importers are configuration/Hermes modules outside that closure. The client external-package dependency closure also contains no js-yaml. No YAML signatures found in the older primary client chunks. | **No client reachability established; no defensible client-byte charge.** Strong source/declared-dependency exclusion, not a module-map proof of absence from every generated current-build asset. |
+| **Flow** | Composer dynamically imports both canvases; each imports `@xyflow/react` and its stylesheet. Preserved navigation receipt shows the renderer chunk absent on initial empty Run and requested on first Build. Primary’s copy has the receipt’s exact SHA-256. | **Included and deferred for the observed navigation.** Loaded-run canvas behaviour and every possible navigation were not demonstrated by that receipt. |
+
+Concrete chains:
+
+```text
+src/app/work/composer/page.tsx:39
+  → src/lib/composer/schema.ts:10,16
+  → zod
+
+src/app/work/composer/page.tsx:36
+  → src/components/composer/ComposerRunForm.tsx:25,60
+  → src/lib/composer/schema.ts:257,261
+  → inputSpecSchema.safeParse(...)
+
+src/app/work/composer/page.tsx:47
+  → dynamic WorkflowCanvas
+  → src/components/composer/WorkflowCanvas.tsx:18,35
+  → @xyflow/react + stylesheet
+
+src/app/work/composer/page.tsx:51
+  → dynamic WorkflowRunCanvas
+  → src/components/composer/WorkflowRunCanvas.tsx:14,24
+  → @xyflow/react + stylesheet
+```
+
+These paths are rooted at `C:/Users/Daniel/Documents/Coding/Github/PatterStage/`.
+
+### Source-graph evidence
+
+At `a21b4ee808681cf51ab46ac861a1bc26087444d3`, the read-only TypeScript AST traversal found:
+
+- **815 source files**, **253 `"use client"` roots**, **396 reachable first-party files**.
+- **Zero parse diagnostics, unresolved local imports or nonliteral import/require calls within that client closure.**
+- Runtime edges included static imports, re-exports, literal dynamic imports and `require`; explicit type-only edges were excluded.
+- Composer’s closure contains **57 first-party files**.
+- Following the external package names through lockfile dependencies produced **80 package records**, none named js-yaml. The only non-package names were Node built-ins `os` and `path`.
+
+The nine direct js-yaml importers are:
+
+```text
+src/lib/config/config-cache.ts:11
+src/lib/config/yaml-config.ts:8
+src/modules/hermes/lib/config-import.ts:25
+src/modules/hermes/lib/config-sync.ts:31
+src/modules/hermes/lib/hermes-config-read.ts:20
+src/modules/hermes/lib/hermes-config-write.ts:23
+src/modules/hermes/lib/hermes-fallback-config.ts:26
+src/modules/hermes/lib/profile-config-builder.ts:5
+src/modules/hermes/sync/ConfigSync.ts:22
+```
+
+None entered the client closure. This is stronger than searching only client files for direct package imports, but it remains a source/dependency graph rather than a bundler module map.
+
+### Built evidence and cost limits
+
+The preserved [Composer receipt](../../tmp/t0192-remaining-walk-1791082345183/composer-chunks.json) records build `Du9knS1p-RnT1y8i_o94v`.
+
+Primary `.next` is a **different, older build**: `XaAR7E7fJW0wbeI2jj_bg`. I did not inspect the changing validation output.
+
+| Preserved asset | Observed evidence |
+|---|---|
+| `1yg0728ycmojj.js` | **228,727 raw bytes**; SHA-256 `3150a1dcae2b2a82c200962cc07cc2a92bad4444bc7740523299aeb5a1e833b9`. Primary bytes match the receipt exactly. Its Turbopack registration group contains IDs `54548,30590,86636` and the actual `react-flow__renderer` implementation. |
+| `41gn81xs-ygpo.js` | Older primary chunk: **420,240 raw bytes**, containing Zod implementation under registration ID `64469`. It is **not named in the preserved request roster**. Do not attribute this size to current Zod delivery. |
+
+Primary has **64 JavaScript chunks and no adjacent source maps**. The walkthrough explicitly disabled traces, so it preserved neither response bodies nor a complete module report.
+
+Consequently:
+
+- **228,727 is the whole deferred chunk**, including combined implementation/dependencies and bundler overhead.
+- Neither package-exclusive bytes nor compressed transfer bytes were measured.
+- No removal/replacement build exists, so **net savings are unmeasured**.
+- Current source proves Zod’s runtime use; it does not justify copying the older chunk’s size into current attribution.
+- A marker search alone cannot certify complete package absence.
+
+### Rerunnable method
+
+Use an immutable build snapshot; do not point this at a live build directory.
+
+1. Parse all `src/**/*.{ts,tsx,mts,js,jsx,mjs}` with TypeScript.
+2. Start at actual `"use client"` directive statements. Follow runtime import/re-export/dynamic-import/require edges, resolving `@/*`, relative files and index modules. Exclude explicit type-only declarations/specifiers. Report unresolved/nonliteral edges rather than ignoring them.
+3. Record witness chains to `zod`, `js-yaml`, `@xyflow/react` and its CSS. Follow external package dependencies through `package-lock.json`, resolving nested package locations.
+4. Compare built provenance and positive implementation signatures:
+
+```powershell
+Get-Content .next/BUILD_ID
+Get-Content tmp/t0192-remaining-walk-1791082345183/composer-chunks.json
+
+rg -l 'ZodError|safeParse|react-flow__renderer|YAMLException|tag:yaml.org,2002|js-yaml' `
+  .next/static/chunks -g '*.js'
+
+Get-FileHash .next/static/chunks/1yg0728ycmojj.js
+Get-ChildItem .next/static/chunks -Filter '*.map'
+```
+
+5. Parse matching Turbopack registration arrays to identify the implementation-containing module groups. Preserve chunk hashes and whole-file sizes separately from package attribution.
+
+**Suggested disposition:** client reachability checked; Flow’s observed deferred request verified; Zod retained as a runtime client dependency; js-yaml excluded from the inspected client import/dependency closure; isolated package costs and exact current-build module attribution unclaimed. No code change or dependency removal follows from this evidence.
+
+## Reproduction scripts
+
+These are the executed scripts, packaged as stdout-only PowerShell commands. **No scans were rerun.** Run from the same checkout and dependency snapshot to reproduce the counts.
+
+```powershell
+Set-Location 'C:/Users/Daniel/Documents/Coding/Github/PatterStage'
+$node = 'C:/Users/Daniel/Documents/Coding/Github/PatterStage/tmp/t0203-node24-runtime/node-v24.21.0-win-x64/node.exe'
+
+$graphCode = @'
+const fs=require('fs'),p=require('path'),ts=require('typescript'),crypto=require('crypto');
+const walk=d=>fs.readdirSync(d,{withFileTypes:true}).flatMap(e=>e.isDirectory()?walk(p.join(d,e.name)):/\.(?:[cm]?ts|tsx|[cm]?js|jsx)$/.test(e.name)?[p.join(d,e.name).replaceAll('\\','/')]:[]);
+const files=walk('src'), pool=new Set(files), edges=new Map(), roots=[], unresolved=[], nonliteral=[];let diagnostics=0;
+function resolve(f,s){if(!s.startsWith('.')&&!s.startsWith('@/'))return s;const b=(s.startsWith('@/')?'src/'+s.slice(2):p.join(p.dirname(f),s)).replaceAll('\\','/');return [b,...['.ts','.tsx','.js','.jsx','.mts','.mjs','/index.ts','/index.tsx','/index.js'].map(e=>b+e)].find(x=>pool.has(x))??null;}
+for(const f of files){const text=fs.readFileSync(f,'utf8'),a=ts.createSourceFile(f,text,ts.ScriptTarget.Latest,true);diagnostics+=a.parseDiagnostics.length;
+if(a.statements.some(n=>ts.isExpressionStatement(n)&&ts.isStringLiteral(n.expression)&&n.expression.text==='use client'))roots.push(f);
+const out=[];function add(n,s,k){const to=resolve(f,s);if(to)out.push({to,kind:k,line:a.getLineAndCharacterOfPosition(n.getStart(a)).line+1,specifier:s});else unresolved.push({f,s,k});}
+function v(n){
+if(ts.isImportDeclaration(n)&&ts.isStringLiteral(n.moduleSpecifier)){const c=n.importClause;const typeOnly=c&&(c.isTypeOnly||(!c.name&&c.namedBindings&&ts.isNamedImports(c.namedBindings)&&c.namedBindings.elements.every(x=>x.isTypeOnly)));if(!typeOnly)add(n,n.moduleSpecifier.text,'static');}
+if(ts.isExportDeclaration(n)&&n.moduleSpecifier&&ts.isStringLiteral(n.moduleSpecifier)&&!n.isTypeOnly&&!(n.exportClause&&ts.isNamedExports(n.exportClause)&&n.exportClause.elements.every(x=>x.isTypeOnly)))add(n,n.moduleSpecifier.text,'export');
+if(ts.isCallExpression(n)&&(n.expression.kind===ts.SyntaxKind.ImportKeyword||n.expression.getText(a)==='require')){if(n.arguments[0]&&ts.isStringLiteral(n.arguments[0]))add(n,n.arguments[0].text,n.expression.kind===ts.SyntaxKind.ImportKeyword?'dynamic':'require');else nonliteral.push({f,line:a.getLineAndCharacterOfPosition(n.getStart(a)).line+1});}
+ts.forEachChild(n,v);}v(a);edges.set(f,out);}
+function reachable(start){const q=start.map(f=>({f,chain:[]})),seen=new Set();const packages={};while(q.length){const x=q.shift();if(seen.has(x.f))continue;seen.add(x.f);for(const e of edges.get(x.f)||[]){const chain=[...x.chain,{from:x.f,...e}];if(pool.has(e.to))q.push({f:e.to,chain});else if(/^(zod|js-yaml|@xyflow\/react)(\/|$)/.test(e.to))(packages[e.to]??=[]).push(chain);}}return{visited:seen.size,packages,unresolved:unresolved.filter(x=>seen.has(x.f)),nonliteral:nonliteral.filter(x=>seen.has(x.f))};}
+process.stdout.write(JSON.stringify({files:files.length,roots:roots.length,diagnostics,allClient:reachable(roots),composer:reachable(['src/app/work/composer/page.tsx']),yamlDirectImporters:[...edges].flatMap(([f,e])=>e.filter(x=>x.to==='js-yaml').map(x=>({f,...x})))},null,2));
+'@
+
+& $node -e $graphCode
+```
+
+Observed summary from that command:
+
+```json
+{
+  "files": 815,
+  "roots": 253,
+  "diagnostics": 0,
+  "allClient": {
+    "visited": 396,
+    "unresolved": [],
+    "nonliteral": []
+  },
+  "composer": {
+    "visited": 57,
+    "unresolved": [],
+    "nonliteral": []
+  }
+}
+```
+
+The second execution reused everything before the first script’s final `process.stdout.write`, then appended this exact package traversal:
+
+```powershell
+$packageTail = @'
+const seen=new Set(),q=[...roots],external=new Set();
+while(q.length){const f=q.shift();if(seen.has(f))continue;seen.add(f);for(const e of edges.get(f)||[])pool.has(e.to)?q.push(e.to):external.add(e.to);}
+const packageName=s=>s.startsWith('@')?s.split('/').slice(0,2).join('/'):s.split('/')[0];
+const lock=JSON.parse(fs.readFileSync('package-lock.json','utf8')).packages;
+const unresolvedPackages=[],pkgSeen=new Set(),pkgQueue=[...new Set([...external].filter(s=>!s.startsWith('node:')).map(packageName))].map(name=>({name,parent:''}));
+function locate(name,parent){let base=parent;while(true){const key=(base?base+'/':'')+'node_modules/'+name;if(lock[key])return key;const cut=base.lastIndexOf('/node_modules/');if(cut>=0)base=base.slice(0,cut);else if(base){base='';}else return null;}}
+while(pkgQueue.length){const item=pkgQueue.shift(),key=locate(item.name,item.parent);if(!key){unresolvedPackages.push(item);continue;}if(pkgSeen.has(key))continue;pkgSeen.add(key);const info=lock[key];for(const name of Object.keys({...info.dependencies,...info.optionalDependencies,...info.peerDependencies}).filter(n=>!info.peerDependenciesMeta?.[n]?.optional))pkgQueue.push({name,parent:key});}
+console.log(JSON.stringify({externalSpecifiers:[...external].sort(),packageRecords:pkgSeen.size,jsYaml:[...pkgSeen].filter(k=>/node_modules\/js-yaml$/.test(k)),unresolvedPackages},null,2));
+'@
+
+$packageCode = $graphCode.Substring(
+    0, $graphCode.IndexOf('process.stdout.write')
+) + $packageTail
+
+& $node -e $packageCode
+```
+
+Observed second output:
+
+```json
+{
+  "externalSpecifiers": [
+    "@dagrejs/dagre",
+    "@tanstack/react-query",
+    "@xyflow/react",
+    "@xyflow/react/dist/style.css",
+    "lucide-react",
+    "next/dynamic",
+    "next/link",
+    "next/navigation",
+    "os",
+    "path",
+    "react",
+    "react-dom",
+    "zod"
+  ],
+  "packageRecords": 80,
+  "jsYaml": [],
+  "unresolvedPackages": [
+    {
+      "name": "os",
+      "parent": ""
+    },
+    {
+      "name": "path",
+      "parent": ""
+    }
+  ]
+}
+```
+
+**Preserve these qualifications in the report:**
+
+- Zero unresolved/nonliteral entries applies to the **inspected first-party client closures**, not every source file or package. The package traversal reports `os` and `path`; both are Node built-ins.
+- The source resolver implements the explicit extensions and `@/` alias shown. It is not TypeScript’s full resolver or Turbopack’s resolver. It does not model package exports, browser conditions, tree shaking or runtime execution.
+- Explicit type-only imports/re-exports are excluded. The exact script also treats empty named import/export lists as type-only because `every()` returns true for an empty list. Do not describe the extractor as universally exhaustive.
+- The **80** count is lockfile records reached through declared dependencies, optional dependencies and non-optional peers. Names marked as optional peers are filtered out. It does not prove that 80 packages ship to the browser.
+- `jsYaml: []` establishes absence from **that inspected closure**, not independently verified absence from every emitted current-build module.
+
+
+## Standalone sign-in style comparison
+
+At a21b4ee8 the unauthenticated proxy document uses body #05080d/text #eaf2f8 and16px/1.6 system text; the product ground token is #040b12 and its ordinary body scale14px. Source-colour relative-luminance ratios are17.722:1 for body text,16.210:1 for white input text on #152132,4.010:1 for #68819a input border against its fill and4.962:1 against the body. Reproduce using the sRGB linearisation c<=0.04045 ? c/12.92 : ((c+0.055)/1.055)^2.4, luminance0.2126R+0.7152G+0.0722B, then (lighter+0.05)/(darker+0.05). These are source pairs, not every rendered/hover/focus colour. Native button colours remain browser-dependent. The coordinator inspected the real desktop/phone captures after the metadata repair; Laplace accepted retaining the self-contained proxy styling without an app CSS dependency. This bounded gap060.2 judgement is separate from the pending wrong-token form presentation ruling.
+
+## Error-boundary runtime result
+
+The outer-boundary hypothesis failed at both widths in `tmp/t0192-outer-boundary-1791085849752`. The diagnostic repetition `1791085952306` confirmed injection exactly once but still showed Next Try Again, not class Retry. A separate observation in `tmp/t0192-next-fallback-1791086086666` passed2/2: after removing the synthetic malformed template response, Try Again restored the actual empty Missions board and both creation actions. No page errors or overflow were recorded. Laplace accepted the bounded runtime investigation. Both boundaries remain: class reachability, redundancy and removal safety are not established. These are failed hypotheses preserved alongside a different passing observation, not a weakened acceptance gate.

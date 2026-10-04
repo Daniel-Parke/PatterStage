@@ -7,32 +7,39 @@ updated: 2026-10-04
 
 # Handover · PatterStage, 2026-10-02
 
-## Active batch, 2026-10-03
+## Active batch, 2026-10-04
 
-T-0192 is open at R2 after every T-0191 closure-head hosted job passed. Independent oracles precede implementation. It owns41findings,16operator dispositions and25coverage obligations, plus linked defects and latency investigation. See [record](tasks/T-0192.json) and [opening](reviews/2026-10-t0192-route-verification.md). No new implementation or product acceptance is implied.
+T-0192 has local technical R2 readiness at `a21b4ee8`. The task remains active
+until its exact-head hosted checks and final independent acceptance complete.
+All ten unchanged-tree gate stages passed: 8,819 unit and 497 browser tests,
+with the existing nine unit and 24 browser skips. Build purity and both
+censuses passed. The committed sweep has 20 independently accepted causal
+kills and 297 passing controls before and after restoration.
 
-Candidate verification on 2026-10-04: 815 focused unit cases and 58 browser
-cases passed. Isolated Windows and native Linux builds passed. The independently
-corrected POSIX compiler fixture now passes all 111 cases in its six-suite Linux
-cohort. These are bounded checks, not the full batch gate. Evidence paths and
-qualifications are in `reviews/2026-10-t0192-task-evidence.json`.
+Two additional built-app persistence mutations are independently qualified.
+Each has four passing original and restored controls. The first browser
+orchestrator ended ERROR because its analyser did not strip ANSI colours;
+that receipt remains unchanged alongside the separately verified causal
+SQL/API failure. The second browser run exited zero. Sources and builds
+were restored; all test servers used owned data and were stopped.
 
-The broader comment-cleanup baseline exposed 13 failures. Twelve migration
-failures disappeared with the required shell permissions: all 15 controls pass
-unchanged. An exact Node account-lookup probe reproduced `uv_os_get_passwd ENOMEM`
-only inside the restricted shell. The historical Story case expected false
-success; its independent amendment preserves the identity and expects the
-approved explicit server error. All failed receipts remain preserved. The
-285-file comment amendment and scoped lint policy are integrated: 282 suites,
-2,954 unchanged identities pass, plus nine policy cases. This was not a
-green-before/green-after comparison. Full gate, committed mutation sweep,
-final independent acceptance and hosted checks are still outstanding.
+The review reconciles 82 proposals: 61 done, 13 ruled out and eight deferred.
+This includes bounded investigation, not universal defect resolution.
+Twenty-two controlled desktop/phone state walks exposed Models' false empty
+state after a failed read and Skill detail's error/not-found conflation.
+T-0193 explicitly owns those repairs, Reader contrast, reduced-motion
+reproduction and the remaining source-comment corrections.
 
-The six-endpoint timing investigation completed 228 successful requests on
-each platform using synthetic isolated data and fresh processes. Warm serial
-medians were about 5 ms; first requests ranged from roughly 0.3 to 0.8 seconds.
-These measurements do not establish production performance or database/Git
-causality. All owned listeners and the Linux validation container were stopped.
+The phone sign-in document now has a device-width viewport and English
+language; actual width is 390 pixels on the 390-pixel fixture. Form sign-in
+and existing refusals remain intact. The wrong-token form-presentation
+question still awaits the operator. Both error boundaries remain: Next
+recovery was observed, but class-boundary redundancy was not proved.
+
+See the [task](tasks/T-0192.json), [verification](reviews/2026-10-t0192-route-verification.md)
+and [itemised proposals](reviews/2026-10-t0192-dispositions.json). Preserve all
+failed gates, probes and original mutation receipts. Do not open T-0193 until
+T-0192's required closure-head hosted checks pass.
 
 ## Previous accepted batch, 2026-10-03
 
@@ -56,13 +63,12 @@ The 76 current dispositions are 53 done, 22 ruled out and one deferred history
 gap. Eleven additional findings retain named T-0192/T-0193 owners. The Windows
 rename EPERM remains unresolved under T-0195, despite subsequent passing checks.
 
-Current census: source 102,132; tests 147,076; tooling 13,667; repeated source
-and test windows 807/4,796; one-importer components 103. Fixed targets remain.
-T-0192 must reconcile 41 findings, 16 split rulings and 25 coverage obligations,
-retain route/auth/read-only contracts, and reproduce its focused defects before
-repair. Include real seed-read latency, unread Script Save, Composer graph
-disclosure and the public credential shape. Do not infer a production latency
-fix from the component fixture's seed preloading.
+Current committed census: source 102,062; tests 150,531; tooling 13,597; repeated
+source/test windows 705/4,787; one-importer components 103. Fixed targets remain.
+T-0192 has reasoned proposals for its 41 findings, 16 split rulings and 25
+coverage obligations. Final closure remains pending. The historical long read
+latency was not reproduced; do not infer a production latency fix from the
+component fixture's seed preloading or the bounded timing measurements.
 
 Earlier checkpoints below describe their own revisions and remain as history.
 

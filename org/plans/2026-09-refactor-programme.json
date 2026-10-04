@@ -941,7 +941,11 @@
         "src/components/viz/AreaTrend.tsx",
         "src/components/viz/StackedAreaTrend.tsx",
         "src/components/session/MissionGroupCard.tsx",
-        "src/components/logs/LogFilePicker.tsx"
+        "src/components/logs/LogFilePicker.tsx",
+        "src/app/agent/skills/[...path]/page.tsx",
+        "src/app/agent/models/page.tsx",
+        "src/app/globals.css",
+        "src/app/error.tsx"
       ],
       "dependsOn": [
         "T-0192"
@@ -961,7 +965,7 @@
         "Completion of profile create/edit draft A must not close, clear, overwrite or reselect a later draft B. Preserve distinct cancel/reset/clone/default-profile semantics."
       ],
       "rollback": "Revert one page and its owned hook at a time; preserve the corrected Composer stacking and contrast oracles.",
-      "verify": "Desktop and phone walks of Composer, Missions and Story Weaver show the same route state, controls, dialogs, focus, h1 and no overflow or console errors; moved test names agree and the page-hook net change is measured. Independently authored red-first profile lifecycle cases hold A, close and open B, settle A, and prove B remains intact for create and edit. Cover success, refusal, selected identity and unmount; browser walks confirm the current dialog remains usable. Disposition t0191-composer-output-save-ownership with independent red-first reproduction and explicit failure/ownership controls; preserve the evidence qualifications in T-0191. Disposition t0191-script-tab-navigation with independent red-first reproduction and explicit failure/ownership controls; preserve the evidence qualifications in T-0191. Disposition t0191-research-copy-and-export with independent red-first reproduction and explicit failure/ownership controls; preserve the evidence qualifications in T-0191. Disposition t0191-agent-growth-error-truth with independent red-first reproduction and explicit failure/ownership controls; preserve the evidence qualifications in T-0191. Disposition t0191-skill-search-category-context with independent red-first reproduction and explicit failure/ownership controls; preserve the evidence qualifications in T-0191. Disposition t0191-trend-chart-text-equivalent with independent red-first reproduction and explicit failure/ownership controls; preserve the evidence qualifications in T-0191. Disposition t0191-collection-state-semantics with independent red-first reproduction and explicit failure/ownership controls; preserve the evidence qualifications in T-0191.",
+      "verify": "Desktop and phone walks of Composer, Missions and Story Weaver show the same route state, controls, dialogs, focus, h1 and no overflow or console errors; moved test names agree and the page-hook net change is measured. Independently authored red-first profile lifecycle cases hold A, close and open B, settle A, and prove B remains intact for create and edit. Cover success, refusal, selected identity and unmount; browser walks confirm the current dialog remains usable. Disposition t0191-composer-output-save-ownership with independent red-first reproduction and explicit failure/ownership controls; preserve the evidence qualifications in T-0191. Disposition t0191-script-tab-navigation with independent red-first reproduction and explicit failure/ownership controls; preserve the evidence qualifications in T-0191. Disposition t0191-research-copy-and-export with independent red-first reproduction and explicit failure/ownership controls; preserve the evidence qualifications in T-0191. Disposition t0191-agent-growth-error-truth with independent red-first reproduction and explicit failure/ownership controls; preserve the evidence qualifications in T-0191. Disposition t0191-skill-search-category-context with independent red-first reproduction and explicit failure/ownership controls; preserve the evidence qualifications in T-0191. Disposition t0191-trend-chart-text-equivalent with independent red-first reproduction and explicit failure/ownership controls; preserve the evidence qualifications in T-0191. Disposition t0191-collection-state-semantics with independent red-first reproduction and explicit failure/ownership controls; preserve the evidence qualifications in T-0191. Resolve the four explicit T0192 visible-state follow-ups with independent red-first proof, preserved behaviour and desktop/phone evidence; distinguish source hypotheses from reproduced defects.",
       "t0191ReviewFollowups": [
         {
           "id": "t0191-composer-output-save-ownership",
@@ -1053,6 +1057,43 @@
           }
         ],
         "verify": "Before folding, count replacement/import/adapter/test cost and claim all paths. Retain with measured reason if net benefit is absent."
+      },
+      "t0192VisibleStateFollowups": {
+        "authority": "Approved visible-state programme scope; independent Laplace accepted bounded transfer2026-10-04. T0192 review obligations remain separately accounted.",
+        "evidence": "org/reviews/2026-10-t0192-route-verification.md",
+        "items": [
+          {
+            "id": "skill-detail-error-truth",
+            "status": "reproduced500/404atbothwidths",
+            "verify": "Independent red-first tests distinguish failed read from genuine missing resource; preserve missing-route recovery, restore a named h1 and usable retry where appropriate. Repeat desktop/phone walks."
+          },
+          {
+            "id": "models-error-truth",
+            "status": "reproduced500plusfalseemptyatbothwidths",
+            "verify": "Independent red-first failure/loading/empty/success/stale-refresh controls prevent failed registry reads from claiming zero models. Preserve existing models/disclosures during reload and verify recovery."
+          },
+          {
+            "id": "reader-popover-contrast",
+            "status": "rendered4.041muted/2.463selected/2.188hoverratiosobserved",
+            "verify": "Reproduce composited contrast and add independent red oracle before repair. Preserve all five faces, saved sizes/spacing, keyboard and outside-click behaviour; no palette change inferred."
+          },
+          {
+            "id": "reduced-motion-reveal",
+            "status": "source-supportedonly",
+            "verify": "Reproduce initial opacity during stagger delay under reduced motion atbothwidths; existing late motion snapshot does not prove immediate reveal. No timing change without red-first proof."
+          }
+        ],
+        "commentScope": "Qualify stale globals.css migration comments without changing CSS declarations. Do not remove unused-animation or exported token candidates without applicable ruling."
+      },
+      "t0192CommentFollowup": {
+        "finding": "app-19",
+        "status": "partial repair; remaining comments explicitly deferred",
+        "paths": [
+          "src/app/agent/models/page.tsx:1",
+          "src/app/error.tsx:4"
+        ],
+        "scope": "Qualify the legacy /config/models and PR4/PR5 header; identify the Next route error fallback accurately. Keep the existing component identity; Error versus RootError is optional naming, not a type bug. Preserve runtime emission.",
+        "authority": "Approved programme scope; Laplace accepted bounded comment-only T0193 transfer2026-10-04."
       }
     },
     {
