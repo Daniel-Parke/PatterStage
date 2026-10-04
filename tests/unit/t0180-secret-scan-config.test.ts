@@ -18,10 +18,11 @@ describe("T-0180 full-history secret scan contract", () => {
     if (!existsSync(ignorePath)) return;
     const fingerprints = readFileSync(ignorePath, "utf8").split(/\r?\n/)
       .map((line) => line.trim()).filter((line) => line && !line.startsWith("#"));
-    expect(fingerprints).toHaveLength(12);
-    expect(new Set(fingerprints).size).toBe(12);
+    expect(fingerprints).toHaveLength(13);
+    expect(new Set(fingerprints).size).toBe(13);
     expect(fingerprints).toContain("0705653877e89110ae1a01eb9ccd9d17d699bf53:org/reviews/2026-10-t0192-dispositions.json:generic-api-key:2056");
     expect(fingerprints).toContain("0705653877e89110ae1a01eb9ccd9d17d699bf53:org/reviews/2026-10-t0192-dispositions.json:generic-api-key:2080");
+    expect(fingerprints).toContain("6f12427918c5082d04be8578c1e071140bcd9720:org/tasks/T-0192.json:generic-api-key:590");
     for (const fingerprint of fingerprints) {
       expect(fingerprint).toMatch(/^[a-f0-9]{40}:[^\s:]+:generic-api-key:[1-9]\d*$/);
     }
