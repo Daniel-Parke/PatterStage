@@ -18,6 +18,7 @@ import StackedAreaTrend from "@/components/viz/StackedAreaTrend";
 import MissionGroupCard from "@/components/session/MissionGroupCard";
 import LogFilePicker from "@/components/logs/LogFilePicker";
 import HindsightBrowser from "@/components/memory/HindsightBrowser";
+import { FeedbackContext } from "@/components/ui/feedback-context";
 import type { ComposerNode, ComposerNodeRun } from "@/lib/composer/schema";
 import type { ResearchRun, ResearchStep } from "@/lib/laboratory/deep-research/types";
 import type { MissionGroup } from "@/lib/sessions/sessions-grouping";
@@ -72,6 +73,75 @@ describe("T-0193 Composer output ownership", () => {
     fireEvent.click(saved); expect(h.bodies).toHaveLength(2);
     expect(h.bodies[0]).toEqual(h.bodies[1]);
   });
+});
+
+// Q015 independent lifecycle amendment, Faraday, 2026-10-04; original 17 controls unchanged.
+describe("T-0193 Composer retained save lifecycle", () => {
+  it("same-frame duplicate clicks claim one artifact write synchronously", async () => {
+    const h = composer(), action = screen.getByRole("button", { name: "Save as artifact" });
+    act(() => { fireEvent.click(action); fireEvent.click(action); });
+    await waitFor(() => expect(h.bodies).toHaveLength(1));
+    await h.settle(); expect(h.bodies).toHaveLength(1);
+  });
+
+  it("refused A remains retryable after B and retries the captured A payload", async () => {
+    const h = composer(); fireEvent.click(screen.getByRole("button", { name: "Save as artifact" }));
+    await waitFor(() => expect(h.bodies).toHaveLength(1));
+    h.rerender(<ComposerNodeRunDetail open onClose={() => {}} node={{ ...node, id: "node-b", label: "Draft B" }} nodeRun={{ ...nodeRun, id: "nr-b", nodeId: "node-b", composerRunId: "run-b", output: "Owned output B" }} />);
+    await h.settle(true);
+    h.rerender(<ComposerNodeRunDetail open onClose={() => {}} node={node} nodeRun={nodeRun} />);
+    const action = screen.getByRole("button", { name: /^(Save as artifact|Saving…|Saved)$/ });
+    expect(action).toBeEnabled(); expect(action).toHaveTextContent("Save as artifact");
+    fireEvent.click(action); await waitFor(() => expect(h.bodies).toHaveLength(2));
+    expect(h.bodies[1]).toEqual(h.bodies[0]); expect(await screen.findByRole("button", { name: "Saved" })).toBeDisabled();
+  });
+
+  it("composer run identity separates identical node ID and output while A is held", async () => {
+    const h = composer(); fireEvent.click(screen.getByRole("button", { name: "Save as artifact" }));
+    await waitFor(() => expect(h.bodies).toHaveLength(1));
+    h.rerender(<ComposerNodeRunDetail open onClose={() => {}} node={node} nodeRun={{ ...nodeRun, composerRunId: "run-b" }} />);
+    const action = screen.getByRole("button", { name: /^(Save as artifact|Saving…|Saved)$/ });
+    expect(action).toBeEnabled(); expect(action).toHaveTextContent("Save as artifact");
+    fireEvent.click(action); await waitFor(() => expect(h.bodies).toHaveLength(2));
+    expect(h.bodies[1]).toMatchObject({ sourceRunId: "run-b", sourceNodeId: "nr-a", content: "Owned output A" });
+    await h.settle(); expect(screen.getByRole("button", { name: "Saved" })).toBeDisabled();
+    h.rerender(<ComposerNodeRunDetail open onClose={() => {}} node={node} nodeRun={nodeRun} />);
+    expect(screen.getByRole("button", { name: /^(Save as artifact|Saving…|Saved)$/ })).toBeDisabled();
+    expect(h.bodies).toHaveLength(2);
+  });
+
+  it("parent unmount suppresses held artifact completion feedback", async () => {
+    const h = composer(), feedback = jest.fn();
+    h.rerender(<FeedbackContext.Provider value={{ showToast: feedback }}><ComposerNodeRunDetail open onClose={() => {}} node={node} nodeRun={nodeRun} /></FeedbackContext.Provider>);
+    fireEvent.click(screen.getByRole("button", { name: "Save as artifact" }));
+    await waitFor(() => expect(h.bodies).toHaveLength(1)); h.unmount(); await h.settle();
+    expect(feedback).not.toHaveBeenCalled(); expect(h.bodies).toHaveLength(1);
+  });
+
+  for (const lifecycle of ["close/reopen", "A to B to A"] as const) {
+    for (const state of ["pending", "saved"] as const) {
+      it(`${state} A retains duplicate protection through ${lifecycle}`, async () => {
+        const h = composer(); fireEvent.click(screen.getByRole("button", { name: "Save as artifact" }));
+        await waitFor(() => expect(h.bodies).toHaveLength(1));
+        if (state === "saved") await h.settle();
+        if (lifecycle === "close/reopen") {
+          h.rerender(<ComposerNodeRunDetail open={false} onClose={() => {}} node={node} nodeRun={nodeRun} />);
+        } else {
+          h.rerender(<ComposerNodeRunDetail open onClose={() => {}} node={{ ...node, id: "node-b", label: "Draft B" }} nodeRun={{ ...nodeRun, id: "nr-b", nodeId: "node-b", composerRunId: "run-b", output: "Owned output B" }} />);
+          expect(screen.getByRole("button", { name: "Save as artifact" })).toBeEnabled();
+        }
+        h.rerender(<ComposerNodeRunDetail open onClose={() => {}} node={node} nodeRun={nodeRun} />);
+        const action = screen.getByRole("button", { name: /^(Save as artifact|Saving…|Saved)$/ });
+        expect(action).toBeDisabled(); expect(action).toHaveTextContent(state === "pending" ? "Saving…" : "Saved");
+        fireEvent.click(action); expect(h.bodies).toHaveLength(1);
+        if (state === "pending") await h.settle();
+        const saved = screen.getByRole("button", { name: /^(Save as artifact|Saving…|Saved)$/ });
+        expect(saved).toHaveTextContent("Saved"); expect(saved).toBeDisabled();
+        fireEvent.click(saved); expect(h.bodies).toHaveLength(1);
+        expect(h.bodies[0]).toMatchObject({ sourceRunId: "run-a", sourceNodeId: "nr-a", content: "Owned output A" });
+      });
+    }
+  }
 });
 
 function script() {
