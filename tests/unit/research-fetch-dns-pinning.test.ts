@@ -7,7 +7,7 @@ import { join } from "node:path";
 import { readFileSync } from "node:fs";
 import { createServer, get, type Server, type ServerResponse } from "node:http";
 import { createServer as createSecureServer, get as secureGet } from "node:https";
-import type { Socket, LookupFunction } from "node:net";
+import { Socket, type LookupFunction } from "node:net";
 import type { ConnectionOptions } from "node:tls";
 import { gzipSync, deflateSync, brotliCompressSync } from "node:zlib";
 
@@ -84,6 +84,22 @@ let bodyArrived: (() => void) | undefined;
 const originalFetch = global.fetch;
 const nativeSetTimeout = global.setTimeout;
 const nativeClearTimeout = global.clearTimeout;
+const nativeConnect = Socket.prototype.connect;
+const ownedLookups = new Set<LookupFunction>();
+
+// Fail closed below the module mock: a resolver regression must never dial a
+// public address. Only owned ports and literal loopback or our exact fixture
+// lookup are admitted. TLS still verifies the original hostname/certificate.
+function fencedConnect(this: Socket, ...args: unknown[]): Socket {
+  const options = (Array.isArray(args[0]) ? args[0][0] : args[0]) as
+    { host?: string; port?: string | number; lookup?: LookupFunction } | undefined;
+  if (!options || ![allowedPort, forbiddenPort, securePort].includes(Number(options.port)) ||
+      (options.host !== PRIVATE && (!options.lookup || !ownedLookups.has(options.lookup)))) {
+    violations.push("INFRASTRUCTURE: unowned native connection blocked");
+    throw new Error("INFRASTRUCTURE: unowned native connection blocked");
+  }
+  return Reflect.apply(nativeConnect, this, args);
+}
 
 function port(server: Server): number {
   const address = server.address();
@@ -162,6 +178,7 @@ function fixtureConnector(options: AgentOptions, record?: AgentRecord): Connecto
       const ownedLookup: LookupFunction = (_hostname, lookupOptions, done) => {
         if (lookupOptions.all) done(null, [{ address: PRIVATE, family: 4 }]); else done(null, PRIVATE, 4);
       };
+      ownedLookups.add(ownedLookup);
       const connector = runtime.buildConnector({ ...connect, ca: CERT, lookup: ownedLookup });
       connector({ ...input, port: String(target) }, (connectionError, socket) => {
         if (connectionError) connectorErrors.push(connectionError);
@@ -228,6 +245,7 @@ beforeAll(async () => {
   forbidden = createServer((request, response) => serve("forbidden", request, response));
   secure = createSecureServer({ cert: CERT, key: KEY }, (request, response) => serve("tls", request, response));
   allowedPort = await listen(allowed); forbiddenPort = await listen(forbidden); securePort = await listen(secure);
+  Socket.prototype.connect = fencedConnect as typeof Socket.prototype.connect;
   // A listener or certificate failure is a beforeAll infrastructure failure,
   // never the matcher that establishes the baseline security red.
   expect(await direct(`http://${PRIVATE}:${allowedPort}/`)).toBe(HTML);
@@ -237,12 +255,13 @@ beforeAll(async () => {
   expect(sockets.size).toBe(0);
 }, 10000);
 beforeEach(() => {
+  ownedLookups.clear();
   jest.resetModules(); hits = []; agents = []; fixtureAgents = []; violations = []; connectorErrors = [];
   dnsCalls = []; fetchCalls = []; transportAnswer = PUBLIC; bodyArrived = undefined;
   resolveDns = async hostname => hostname === "mixed.invalid" ? [...admitted, { address: PRIVATE, family: 4 }] : admitted;
   const dns = { lookup: jest.fn(async (hostname: string) => { dnsCalls.push(hostname); return resolveDns(hostname); }) };
   jest.doMock("dns/promises", () => dns); jest.doMock("node:dns/promises", () => dns);
-  jest.doMock("undici", () => ({ ...runtime, Agent: RecordingAgent, fetch: fixtureFetch }), { virtual: true });
+  jest.doMock("undici", () => ({ ...runtime, Agent: RecordingAgent, fetch: fixtureFetch }));
   global.fetch = fixtureFetch as typeof fetch;
 });
 afterEach(async () => {
@@ -255,9 +274,11 @@ afterEach(async () => {
   expect(violations).toEqual([]);
 });
 afterAll(async () => {
-  await Promise.all([allowed, forbidden, secure].filter(Boolean).map(server => new Promise<void>(resolve => {
-    server.closeAllConnections(); server.close(() => resolve());
-  })));
+  try {
+    await Promise.all([allowed, forbidden, secure].filter(Boolean).map(server => new Promise<void>(resolve => {
+      server.closeAllConnections(); server.close(() => resolve());
+    })));
+  } finally { Socket.prototype.connect = nativeConnect; }
 });
 
 describe("T0207 owned research transport oracle", () => {
