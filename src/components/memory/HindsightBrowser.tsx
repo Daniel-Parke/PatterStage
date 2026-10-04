@@ -137,6 +137,7 @@ export default function HindsightBrowser({ onHealthChange, reloadToken = 0 }: Hi
           <button
             key={tab.id}
             onClick={() => setActiveTab(tab.id)}
+            aria-pressed={activeTab === tab.id}
             className={`flex items-center gap-1.5 px-3 py-1.5 rounded-ps-md text-body transition-colors ${
               activeTab === tab.id ? "bg-neon-pink/20 text-neon-pink" : "text-ps-text-muted hover:text-ps-text-secondary"
             }`}

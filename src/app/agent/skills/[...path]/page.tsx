@@ -15,6 +15,7 @@ import {
 import AppPageShell from "@/components/layout/AppPageShell";
 import PageHeader from "@/components/layout/PageHeader";
 import Card from "@/components/ui/Card";
+import LoadErrorBanner from "@/components/ui/LoadErrorBanner";
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 import { SimpleMarkdown } from "@/components/skills/SimpleMarkdown";
 import { useApiResource } from "@/hooks/useApiResource";
@@ -78,12 +79,15 @@ export default function SkillDetailPage() {
     );
   }
 
-  if (error || !data) {
+  if (!data) {
+    const failedRead = Boolean(error && !hasMalformedPath && skill.errorStatus !== 404);
     return (
       <div className="min-h-screen bg-ps-surface-ground grid-bg flex items-center justify-center">
         <div className="text-center">
-          <h2 className="text-title font-bold text-ps-text-primary mb-2">Skill Not Found</h2>
-          <p className="text-ps-text-muted font-mono mb-4">{error}</p>
+          <h1 className="text-title font-bold text-ps-text-primary mb-2">{failedRead ? "Could not load skill" : "Skill Not Found"}</h1>
+          {failedRead ? (
+            <LoadErrorBanner error={error!} onRetry={() => void skill.refetch()} />
+          ) : <p className="text-ps-text-muted font-mono mb-4">{error}</p>}
           <Link
             href="/agent/skills"
             className="text-neon-green text-body font-mono hover:underline"
@@ -129,6 +133,7 @@ export default function SkillDetailPage() {
       }
     >
       <div>
+        {error && <LoadErrorBanner error={error} onRetry={() => void skill.refetch()} />}
         <div className="flex gap-6">
           {/* Main content */}
           <div className="flex-1 min-w-0">

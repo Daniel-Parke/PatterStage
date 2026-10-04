@@ -1,10 +1,10 @@
 {
   "measuredAt": "2026-10-04",
   "counts": {
-    "srcLines": 102062,
-    "testLines": 150767,
+    "srcLines": 102068,
+    "testLines": 151770,
     "scriptsLines": 13597,
-    "srcRepeatedWindowLines": 705,
+    "srcRepeatedWindowLines": 693,
     "testRepeatedWindowLines": 4787,
     "routesWithTryCatch": 11,
     "handRolledReadHooks": 2,
@@ -1255,6 +1255,26 @@
       "measuredAt": "2026-10-04",
       "rise": "testLines rose from 150681 to 150772",
       "reason": "T-0206: independent W01 amendment adds fourteen negative-command and owned-shell exit-preservation controls for the macOS diagnostic; product counts and fixed targets unchanged."
+    },
+    {
+      "measuredAt": "2026-10-04",
+      "rise": "srcLines rose from 102062 to 102077",
+      "reason": "T-0193: 50 independent unit and12 browser regressions; net15source lines for profile ownership, truthful read errors and accessible UI state after Missions41line and shared-label6line savings; fixed programme targets unchanged"
+    },
+    {
+      "measuredAt": "2026-10-04",
+      "rise": "testLines rose from 150767 to 151608",
+      "reason": "T-0193: 50 independent unit and12 browser regressions; net15source lines for profile ownership, truthful read errors and accessible UI state after Missions41line and shared-label6line savings; fixed programme targets unchanged"
+    },
+    {
+      "measuredAt": "2026-10-04",
+      "rise": "testLines rose from 151608 to 151760",
+      "reason": "T-0193: independent Composer lifecycle controls and narrow Q015 amendments preserving all21original hashes and37/12floors; source102068(+6), tests151760(+993), repeated source693(-12); fixed targets unchanged"
+    },
+    {
+      "measuredAt": "2026-10-04",
+      "rise": "testLines rose from 151760 to 151770",
+      "reason": "T-0193 retains59newunit and12browser regressions plus independent closed-oracle amendments; ten fixture-readiness lines preserve58physical keyboard identities. Net source+6 protects draft/save ownership and truthful reads after measured consolidation."
     }
   ]
 }

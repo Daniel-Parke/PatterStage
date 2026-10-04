@@ -81,7 +81,7 @@ function saveSettings(s: ReadingSettings) {
   try { localStorage.setItem(STORAGE_KEY, JSON.stringify(s)); } catch {}
 }
 
-const ROW = "mb-1.5 flex items-center justify-between font-mono text-micro text-ps-text-muted";
+const ROW = "mb-1.5 flex items-center justify-between font-mono text-micro text-ps-text-secondary";
 
 /**
  * A labelled range slider. The reader's two sliders were two copies of the
@@ -157,7 +157,7 @@ export default function ReaderSettings({ settings, onChange }: {
       {/* A non-modal dialog: it holds controls and Escape closes it, but it
           traps nothing and the page behind it stays live. */}
       <div role="dialog" aria-label="Reading settings" className="space-y-4">
-        <div className="font-mono text-micro uppercase tracking-widest text-ps-text-muted">Reading settings</div>
+        <div className="font-mono text-micro uppercase tracking-widest text-ps-text-secondary">Reading settings</div>
 
         <Slider
           label="Font size"
@@ -179,7 +179,7 @@ export default function ReaderSettings({ settings, onChange }: {
 
 
         <div className="space-y-1.5">
-          <span className="block font-mono text-micro text-ps-text-muted">Font</span>
+          <span className="block font-mono text-micro text-ps-text-secondary">Font</span>
           {/* Two-up, so the five faces and Reset fit the popover's height
               without a scroll. */}
           <div className="grid grid-cols-2 gap-1.5">
@@ -189,6 +189,7 @@ export default function ReaderSettings({ settings, onChange }: {
                 variant={settings.fontFamily === f.name ? "primary" : "ghost"}
                 color="purple"
                 size="sm"
+                className="text-ps-text-primary hover:text-ps-text-primary"
                 aria-pressed={settings.fontFamily === f.name}
                 onClick={() => update({ fontFamily: f.name })}
                 style={{ fontFamily: f.family }}

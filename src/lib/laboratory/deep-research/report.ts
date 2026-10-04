@@ -119,7 +119,7 @@ export function renderReportNavHtml(headings: ReportHeading[]): string {
   return `<nav class="dr-nav" aria-label="On this page"><p class="dr-nav-lbl">On this page</p><ol>\n${items}\n</ol></nav>`;
 }
 
-const STEP_LABEL: Record<string, string> = {
+export const STEP_LABEL: Record<string, string> = {
   plan: "Plan",
   search: "Search",
   visit: "Read",

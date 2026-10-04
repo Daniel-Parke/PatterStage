@@ -154,3 +154,47 @@ Banach independently reviewed the exact diff and returned bounded PASS.
 Frozen LF hash:283bc48ad95fadcb4f3536d8a0bbfc22f9737893cf2e5a42384b3d9db7c32a74.
 The amended complete spec and whole gate must repeat; no timing repair or
 release acceptance is claimed. Original reds remain recorded.
+
+
+Independent fixture replay:58/58pass, zero retries, unchanged tree
+ddcd6fcffd2eb9841369149b09de7027394fb944bee7e6ff1a2535bbab466a9a.
+Receipt:tmp/t0193-rerun-alone-1791116441138/gate/rerun/summary.rerun.json.
+This is partial evidence. An earlier launch1791116384981 was stopped by its
+owned PID after sandbox denial prevented validation sync; it is infrastructure
+interruption, not a test result. Sync then succeeded with prior copy hashes
+verified; the amended replay used61a3253b and exact owned runtime copies.
+
+Coordinator personally walked the fresh Turbopack app at127.0.0.1:3999,
+1440x900 and390x844, using only owned synthetic data. Models true-empty state
+and labelled add/cancel dialogs; Profiles cancelled draft retained, creation,
+selection and canonical rename; Reader five faces,18px Inter persisted over
+reload, Escape dismissal, phone chapter overlay dismissal and chapter1→2;
+Research owned report, five labels, truthful Copied feedback and single semantic
+view/download links; Composer Build→Run→Build retained draft, successful owned
+workflow save, Kind dropdown, phone inspector and HIL selection; Script
+Shift+Tab preserved content and focused Filename, Tab inserted two spaces,
+Ctrl+S retained the draft with the expected unauthenticated host-write refusal;
+Skills filtered result retained engineering context and View rendered content;
+Memory rendered unavailable-provider guidance and selected Directives state.
+Inspected Models, Profiles, Reader, Research, Composer and Logs had one h1 and
+zero document horizontal overflow. No captured browser console error occurred.
+
+Qualification: preview usedPS_AUTH_MODE=none and no provider credentials.
+Script successful writes, paid generation, live Hermes dispatch and healthy
+Hindsight service are not claimed by this manual walk. Held save/race/refusal,
+read-error/404, chart full-value naming, Logs/Hindsight state, reduced-motion
+and retained Story/Composer boundaries are covered by their named unit/browser
+controls. Manual coverage is bounded; programme-wide/release acceptance stays
+open. No operator database, installation or listener3333 was used or changed.
+
+Image hashes (owned synthetic fixtures; build from the third full gate,
+runtime stamp0f0a7727, fixture-amendment commit61a3253b; image filenames encode
+the state and viewport):
+- `tmp/t0193-ui-proof/composer-inspector-phone-after.png` SHA256 `81767c3eeaf703fba624ff1c9369c6e2ee7b2411055eae588b4332bf3712bfd7`
+- `tmp/t0193-ui-proof/composer-inspector-phone-clean-after.png` SHA256 `7600d0a8e4db7e3053338a4f6781e235ec12f372cf1382262e74b26567e5fa87`
+- `tmp/t0193-ui-proof/models-phone-after.png` SHA256 `b844374bfe3a7462f9790993eb69a992978226ea451cf8bfece892cdba03d4d5`
+- `tmp/t0193-ui-proof/profile-rename-phone-after.png` SHA256 `e26acff4b779b27483113617b52597e9667047ca1c5957e8c4b741e56592b57d`
+- `tmp/t0193-ui-proof/reader-settings-desktop-after.png` SHA256 `123d93fc6ecb35eec7ed77bc1f5be5b73d17a09ade98268ba6bc0a9b615f6e62`
+- `tmp/t0193-ui-proof/reader-settings-phone-after.png` SHA256 `f1d886d851e6ce132de832efa37fbb4d69bb27c29c2b71e4aa7acf3cefe06b7d`
+- `tmp/t0193-ui-proof/reader-settings-phone-clean-after.png` SHA256 `777099083df0ce4411e57f1cf5a88d73438cb77bdefa5ee6e742ce2f9f595780`
+- `tmp/t0193-ui-proof/research-desktop-after.png` SHA256 `828f5792d5874c6dc6047faef3d2b4d790bc7b8ab30a833093438ebae5e12f3e`

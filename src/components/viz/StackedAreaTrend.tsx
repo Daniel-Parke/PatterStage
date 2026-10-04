@@ -28,7 +28,7 @@ export default function StackedAreaTrend({
 
   if (n === 0) {
     return (
-      <svg viewBox={`0 0 ${W} ${H}`} width="100%" height={H} className={className} preserveAspectRatio="none">
+      <svg role="img" aria-label="No daily activity data" viewBox={`0 0 ${W} ${H}`} width="100%" height={H} className={className} preserveAspectRatio="none">
         <line x1="0" y1={H - 1} x2={W} y2={H - 1} stroke="var(--color-ps-viz-axis)" />
       </svg>
     );
@@ -60,7 +60,7 @@ export default function StackedAreaTrend({
   });
 
   return (
-    <svg viewBox={`0 0 ${W} ${H}`} width="100%" height={H} className={className} preserveAspectRatio="none">
+    <svg role="img" aria-label={`Daily activity: ${data.map((d) => `${d.date}: ${series.map((s) => `${s.label} ${d.values[s.key] ?? 0}`).join(", ")}`).join("; ")}`} viewBox={`0 0 ${W} ${H}`} width="100%" height={H} className={className} preserveAspectRatio="none">
       <defs>
         {bands.map(({ sr, id }) => (
           <linearGradient key={id} id={id} x1="0" y1="0" x2="0" y2="1">

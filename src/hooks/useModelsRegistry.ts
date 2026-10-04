@@ -1,5 +1,5 @@
 // ═══════════════════════════════════════════════════════════════
-// useModelsRegistry — the one read of /config/models
+// useModelsRegistry — six cached registry reads; config import is explicit.
 // ═══════════════════════════════════════════════════════════════
 //
 // Owns every slice the page reads — models, credentials, task defaults,
@@ -98,6 +98,7 @@ export function useModelsRegistry() {
   // is true once the first read has answered, whatever it said.
   const loading = modelsRead.isFetching || credentialsRead.isFetching || defaultsRead.isFetching;
   const settled = modelsRead.settled && credentialsRead.settled && defaultsRead.settled;
+  const hasData = modelsRead.data !== null && credentialsRead.data !== null && defaultsRead.data !== null;
   const error = modelsRead.error ?? credentialsRead.error ?? defaultsRead.error;
 
   const { refetch: refetchModels } = modelsRead;
@@ -149,6 +150,7 @@ export function useModelsRegistry() {
     modelReadiness,
     loading,
     settled,
+    hasData,
     error,
     drift,
     fallbackChain,

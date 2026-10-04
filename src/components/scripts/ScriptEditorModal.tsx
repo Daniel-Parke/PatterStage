@@ -113,7 +113,7 @@ export default function ScriptEditorModal({
               value={content}
               onChange={(e) => onContentChange(e.target.value)}
               onKeyDown={(e) => {
-                if (e.key === "Tab") {
+                if (e.key === "Tab" && !e.shiftKey) {
                   e.preventDefault();
                   const el = e.currentTarget;
                   const s = el.selectionStart;

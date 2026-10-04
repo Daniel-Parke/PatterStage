@@ -3,7 +3,7 @@
 // ═══════════════════════════════════════════════════════════════
 //
 // Four slices, composed in dependency order:
-//   useModelsRegistry        the one read — models, credentials,
+//   useModelsRegistry        cached reads — models, credentials,
 //                            defaults, drift, fallback chain + config
 //   useModelActions          registry writes: push/pull, save, delete,
 //                            the task defaults, refresh
@@ -57,6 +57,7 @@ export function useModelsPage() {
     modelReadiness: registry.modelReadiness,
     loading: registry.loading,
     settled: registry.settled,
+    hasData: registry.hasData,
     error: registry.error,
     drift: registry.drift,
     refreshing: actions.refreshing,
@@ -77,6 +78,7 @@ export function useModelsPage() {
     savingFallbackUrl: chain.savingFallbackUrl,
     toastElement,
     handleRefresh: actions.handleRefresh,
+    retryRead: registry.loadAll,
     handlePush: actions.handlePush,
     handlePull: actions.handlePull,
     handleSaved: actions.handleSaved,

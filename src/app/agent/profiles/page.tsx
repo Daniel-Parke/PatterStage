@@ -34,12 +34,12 @@ import { LastResult, useToast } from "@/components/ui/Toast";
 import type { AgentProfile, ProfileFile } from "@/types/console";
 import { API_FETCH_BULK_TIMEOUT_MS, apiFetch, toastError } from "@/lib/api/api-fetch";
 import { profileSyncBody } from "@/lib/agents/profile-sync-body";
-import { runWrite } from "@/lib/api/api-write";
+import { isApiSuccessFalse, runWrite } from "@/lib/api/api-write";
 import { agentFileUrl } from "@/components/agents/agent-file-url";
-import { DEFAULT_PROFILE_SLUG, slugifyDisplayName } from "@/lib/agents/profile-slug";
+import { DEFAULT_PROFILE_SLUG } from "@/lib/agents/profile-slug";
 import { pluralise } from "@/lib/utils";
 import { useApiResource } from "@/hooks/useApiResource";
-import { useSelectedProfile } from "@/hooks/useSelectedProfile";
+import { getSelectedProfile, useSelectedProfile } from "@/hooks/useSelectedProfile";
 import AgentSetupNotice from "@/components/agents/AgentSetupNotice";
 import AgentProfilesOverview from "@/components/agents/AgentProfilesOverview";
 import AgentProfilesTable from "@/components/agents/AgentProfilesTable";
@@ -138,6 +138,13 @@ export default function BehaviourPage() {
 
   const [editTarget, setEditTarget] = useState<AgentProfile | null>(null);
   const [savingProfile, setSavingProfile] = useState(false);
+  const [editSession, setEditSession] = useState(0);
+  const mounted = useRef(true);
+  const createRevision = useRef(0);
+  const editRevision = useRef(0);
+  const createPending = useRef(false);
+  const editPending = useRef(false);
+  const [pendingRename, setPendingRename] = useState<{ from: string; to: string; name: string; description: string } | null>(null);
 
   // What the operator asked for while an edit was unsaved. Held here rather
   // than acted on: selecting another profile closed the editor and opening
@@ -161,7 +168,9 @@ export default function BehaviourPage() {
   // a component that is gone or a status that has moved on.
   const saveResetTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   useEffect(() => {
+    mounted.current = true;
     return () => {
+      mounted.current = false;
       if (saveResetTimerRef.current) {
         clearTimeout(saveResetTimerRef.current);
         saveResetTimerRef.current = null;
@@ -173,6 +182,9 @@ export default function BehaviourPage() {
   const closeEditor = useCallback(() => setEditor(null), []);
 
   const { showToast, toastElement, lastResult } = useToast();
+  const profileFeedback = (...args: Parameters<typeof showToast>) => {
+    if (mounted.current) showToast(...args);
+  };
 
   const doSync = async (
     url: string,
@@ -243,28 +255,54 @@ export default function BehaviourPage() {
   // is a deliberate SOFT close that keeps in-flight input if the operator
   // cancels by accident.
   const closeCreate = useCallback(() => {
+    createRevision.current++;
     setShowCreate(false);
     setCreateName("");
     setCreateDescription("");
     setCreateCloneFrom("default");
   }, []);
 
-  const openCreate = useCallback(() => setShowCreate(true), []);
+  const openCreate = useCallback(() => {
+    createRevision.current++;
+    setShowCreate(true);
+  }, []);
+  const cancelCreate = () => {
+    createRevision.current++;
+    setShowCreate(false);
+  };
+  const openEdit = (profile: AgentProfile) => {
+    editRevision.current++;
+    setEditSession((session) => session + 1);
+    setEditTarget(profile);
+  };
+  const closeEdit = () => {
+    editRevision.current++;
+    setEditTarget(null);
+  };
 
   // A selection carried in from another screen may name a profile this install
   // no longer has (it was deleted, or the list is from a different machine).
   // This page holds the list, so this page is where it is reconciled.
   useEffect(() => {
     if (profiles.length === 0) return;
+    const rename = pendingRename;
+    if (rename && profiles.some((p) => p.id === rename.to)) setPendingRename(null);
+    // A confirmed rename may precede its list refresh. Retain that identity
+    // while only its old row is cached, including a refused refresh.
+    if (rename?.to === selectedProfileId && profiles.some((p) => p.id === rename.from)) return;
     if (!profiles.some((p) => p.id === selectedProfileId)) setSelectedProfileId(profiles[0].id);
-  }, [profiles, selectedProfileId, setSelectedProfileId]);
+  }, [profiles, selectedProfileId, setSelectedProfileId, pendingRename]);
 
   const handleCreate = async () => {
-    if (creating || !createName.trim()) return;
+    if (createPending.current || !createName.trim()) return;
+    const revision = createRevision.current;
     const name = createName.trim();
     await runWrite({
-      setBusy: setCreating,
-      showToast,
+      setBusy: (busy) => {
+        createPending.current = busy;
+        if (mounted.current) setCreating(busy);
+      },
+      showToast: profileFeedback,
       url: "/api/agent/profiles",
       method: "POST",
       body: {
@@ -274,8 +312,9 @@ export default function BehaviourPage() {
       },
       successMessage: `Profile "${name}" created`,
       errorMessage: "Failed to create profile",
-      onSuccess: async () => {
-        closeCreate();
+      onSuccess: async (response) => {
+        if (!mounted.current || isApiSuccessFalse(response)) return;
+        if (revision === createRevision.current) closeCreate();
         await loadProfiles();
       },
     });
@@ -369,6 +408,9 @@ export default function BehaviourPage() {
   };
 
   const handleSelectProfile = (profile: AgentProfile) => {
+    if (pendingRename?.from === profile.id) {
+      profile = { ...profile, id: pendingRename.to, name: pendingRename.name, description: pendingRename.description };
+    }
     const next: PendingDiscard = { kind: "select", profile };
     if (wouldDiscard(next)) {
       setPendingDiscard(next);
@@ -424,28 +466,44 @@ export default function BehaviourPage() {
 
   const handleSaveProfile = async ({ name, description }: { name: string; description: string }) => {
     const target = editTarget;
-    if (!target || savingProfile) return;
+    if (!target || editPending.current) return;
+    const revision = editRevision.current;
     // The root agent is not a row in agent_profiles, so the profile route
     // refuses its slug outright; it has its own route and its own field name.
-    await runWrite({
-      setBusy: setSavingProfile,
-      showToast,
+    await runWrite<{ data?: { success?: boolean; slug?: string } }>({
+      setBusy: (busy) => {
+        editPending.current = busy;
+        if (mounted.current) setSavingProfile(busy);
+      },
+      showToast: profileFeedback,
       url: target.isDefault ? "/api/agent/root" : `/api/agent/profiles/${target.id}`,
       method: "PUT",
       body: target.isDefault ? { displayName: name, description } : { name, description },
       successMessage: target.isDefault ? `Renamed to "${name}"` : `Profile "${name}" updated`,
       errorMessage: "Failed to update profile",
-      onSuccess: async () => {
-        setEditTarget(null);
-        // A rename moves the slug, so the id on screen is about to stop
-        // existing. Follow it rather than letting the selection fall back to
-        // the first profile in the list.
-        if (!target.isDefault) setSelectedProfileId(slugifyDisplayName(name) || target.id);
+      onSuccess: async (response) => {
+        if (!mounted.current || isApiSuccessFalse(response)) return;
+        if (revision === editRevision.current) closeEdit();
+        if (!target.isDefault && response.data?.slug) {
+          const slug = response.data.slug;
+          setPendingRename((previous) => ({
+            from: previous?.to === target.id ? previous.from : target.id,
+            to: slug,
+            name,
+            description,
+          }));
+          setEditTarget((current) => current?.id === target.id ? { ...current, id: slug } : current);
+          if (getSelectedProfile() === target.id) setSelectedProfileId(slug);
+        }
         await loadProfiles();
       },
     });
   };
-  const selectedProfile = profiles.find((p) => p.id === selectedProfileId) ?? null;
+  const selectedProfile = useMemo(() => {
+    const found = profiles.find((p) => p.id === selectedProfileId);
+    const cached = pendingRename?.to === selectedProfileId ? profiles.find((p) => p.id === pendingRename.from) : null;
+    return found ?? (cached && pendingRename ? { ...cached, id: pendingRename.to, name: pendingRename.name, description: pendingRename.description } : null);
+  }, [profiles, selectedProfileId, pendingRename]);
   // The file open in the editor FOR THE SELECTED PROFILE, or null.
   const openFileKey =
     editor && selectedProfile && editor.profileId === selectedProfile.id ? editor.fileKey : null;
@@ -534,7 +592,7 @@ export default function BehaviourPage() {
       <div className="flex min-h-[520px] flex-col">
         <AgentProfileDetail
           profile={selectedProfile}
-          onEdit={setEditTarget}
+          onEdit={openEdit}
           onDelete={setDeleteTarget}
           tab={tab}
           onTabChange={handleTabChange}
@@ -562,22 +620,24 @@ export default function BehaviourPage() {
         open={showCreate}
         profiles={profiles}
         name={createName}
-        onNameChange={setCreateName}
+        onNameChange={(value) => { createRevision.current++; setCreateName(value); }}
         description={createDescription}
-        onDescriptionChange={setCreateDescription}
+        onDescriptionChange={(value) => { createRevision.current++; setCreateDescription(value); }}
         cloneFrom={createCloneFrom}
-        onCloneFromChange={setCreateCloneFrom}
+        onCloneFromChange={(value) => { createRevision.current++; setCreateCloneFrom(value); }}
         creating={creating}
         onClose={closeCreate}
-        onCancel={() => setShowCreate(false)}
+        onCancel={cancelCreate}
         onCreate={handleCreate}
       />
 
       <EditProfileModal
         open={editTarget !== null}
         profile={editTarget}
+        sessionId={editSession}
+        onDraftChange={() => { editRevision.current++; }}
         saving={savingProfile}
-        onClose={() => setEditTarget(null)}
+        onClose={closeEdit}
         onSave={(values) => void handleSaveProfile(values)}
       />
 

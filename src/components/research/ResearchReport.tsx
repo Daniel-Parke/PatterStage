@@ -16,6 +16,8 @@ import { Check, Copy, Download, ExternalLink, Loader2 } from "lucide-react";
 
 import { Panel } from "@/components/dashboard/Panel";
 import Button from "@/components/ui/Button";
+import { buttonChrome, buttonHeights, buttonPadding } from "@/components/ui/button-chrome";
+import { useToast } from "@/components/ui/Toast";
 import Card from "@/components/ui/Card";
 import { renderReport } from "@/lib/laboratory/deep-research/markdown";
 import {
@@ -23,16 +25,10 @@ import {
   renderInBriefHtml,
   renderReportNavHtml,
   renderSourcesHtml,
+  STEP_LABEL,
 } from "@/lib/laboratory/deep-research/report";
 import type { ResearchRun, ResearchStep } from "@/lib/laboratory/deep-research/types";
 
-const STEP_LABEL: Record<string, string> = {
-  plan: "Plan",
-  search: "Search",
-  visit: "Read",
-  reason: "Reason",
-  synthesize: "Synthesize",
-};
 const STEP_COLOR: Record<string, string> = {
   plan: "text-neon-purple",
   search: "text-neon-cyan",
@@ -98,6 +94,7 @@ const SOURCES =
 
 export default function ResearchReport({ run, steps }: { run: ResearchRun; steps: ResearchStep[] }) {
   const [copied, setCopied] = useState(false);
+  const { showToast, toastElement } = useToast();
 
   const sources = collectSources(steps);
   // A report from before the In brief section existed comes back with an empty
@@ -108,13 +105,19 @@ export default function ResearchReport({ run, steps }: { run: ResearchRun; steps
 
   async function copy() {
     if (!run.report) return;
-    await navigator.clipboard.writeText(run.report);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 1500);
+    try {
+      await navigator.clipboard.writeText(run.report);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1500);
+    } catch {
+      setCopied(false);
+      showToast("Could not copy the report. You can select the text or download it.", "error");
+    }
   }
 
   return (
     <div className="space-y-5">
+      {toastElement}
       {/* Actions */}
       {run.status === "completed" && run.report ? (
         <div className="flex flex-wrap items-center gap-2">
@@ -122,15 +125,11 @@ export default function ResearchReport({ run, steps }: { run: ResearchRun; steps
             {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
             {copied ? "Copied" : "Copy"}
           </Button>
-          <a href={`/api/laboratory/research/${run.id}/export`} target="_blank" rel="noopener noreferrer">
-            <Button variant="secondary" color="cyan" size="sm">
-              <ExternalLink className="h-4 w-4" /> View report
-            </Button>
+          <a className={`${buttonChrome({ variant: "secondary", color: "cyan" })} ${buttonHeights.sm} ${buttonPadding.sm}`} href={`/api/laboratory/research/${run.id}/export`} target="_blank" rel="noopener noreferrer">
+            <ExternalLink className="h-4 w-4" /> View report
           </a>
-          <a href={`/api/laboratory/research/${run.id}/export`} download={`research-${run.id.slice(0, 8)}.html`}>
-            <Button variant="secondary" color="green" size="sm">
-              <Download className="h-4 w-4" /> Download
-            </Button>
+          <a className={`${buttonChrome({ variant: "secondary", color: "green" })} ${buttonHeights.sm} ${buttonPadding.sm}`} href={`/api/laboratory/research/${run.id}/export`} download={`research-${run.id.slice(0, 8)}.html`}>
+            <Download className="h-4 w-4" /> Download
           </a>
         </div>
       ) : null}

@@ -22,47 +22,6 @@ import { mapCategories } from "@/lib/missions/mission-form-utils";
 
 export default function MissionsPage() {
   const vm = useMissionsPage();
-  const {
-    loading,
-    toastElement,
-    fetchData,
-    showCreate,
-    editingId,
-    templates,
-    showTemplateManager,
-    handleEditTemplate,
-    handleDeleteTemplate,
-    categoryFilter,
-    missions,
-    formState,
-    setFormField,
-    handleCreate,
-    handleSaveAsTemplate,
-    overwriteTemplateName,
-    dispatching,
-    dispatchAcknowledged,
-    setDispatchAcknowledged,
-    scheduleDraftError,
-    setScheduleDraftError,
-    categories,
-    newCategoryId,
-    setCategoryId,
-    showCategoryManager,
-    loadCategories,
-    handleCreateCategory,
-    handleUpdateCategory,
-    handleDeleteCategory,
-    categoriesLoadError,
-    handleCreateNewTemplate,
-  } = vm;
-
-  const handleCloseCreate = vm.closeComposer;
-
-  const handleOpenCreate = vm.openCreate;
-
-  const closeCategoryManager = vm.closeCategoryManager;
-  const closeTemplateManager = vm.closeTemplateManager;
-  const openCategoryManager = vm.openCategoryManager;
 
   // One header, both shells. The loading branch used to render none at all, so
   // the busiest screen in the product opened as an unnamed spinner: no title,
@@ -77,13 +36,13 @@ export default function MissionsPage() {
         <>
           <button
             type="button"
-            onClick={() => void fetchData()}
+            onClick={() => void vm.fetchData()}
             className="p-2 rounded-ps-md text-ps-text-muted hover:text-ps-text-secondary hover:bg-ps-surface-raised transition-colors"
             aria-label="Refresh missions"
           >
             <RefreshCw className="w-4 h-4" />
           </button>
-          <Button onClick={handleOpenCreate} size="sm" disabled={loading}>
+          <Button onClick={vm.openCreate} size="sm" disabled={vm.loading}>
             <Plus className="w-3.5 h-3.5" /> New Mission
           </Button>
         </>
@@ -91,7 +50,7 @@ export default function MissionsPage() {
     />
   );
 
-  if (loading) {
+  if (vm.loading) {
     return (
       <AppPageShell variant="scanlines" header={header}>
         <div className="flex flex-1 min-h-[50vh] items-center justify-center">
@@ -102,8 +61,8 @@ export default function MissionsPage() {
   }
 
   const sheetTitle = (() => {
-    if (!editingId) return "New Mission";
-    const m = missions.find((x) => x.id === editingId);
+    if (!vm.editingId) return "New Mission";
+    const m = vm.missions.find((x) => x.id === vm.editingId);
     if (
       m &&
       (m.status === "successful" || m.status === "failed")
@@ -115,7 +74,7 @@ export default function MissionsPage() {
 
   return (
     <AppPageShell variant="scanlines" header={header}>
-      {toastElement}
+      {vm.toastElement}
 
       {/* Renders nothing when an agent is configured. On an install without
           one, this is the only place the page admits that composing a mission
@@ -124,82 +83,82 @@ export default function MissionsPage() {
 
       <div className="space-y-6">
         {vm.templatesLoadError && <LoadErrorBanner error={vm.templatesLoadError} onRetry={() => void vm.loadTemplates()} />}
-        {categoriesLoadError && !showCreate && !showCategoryManager && (
-          <LoadErrorBanner error={categoriesLoadError} onRetry={() => void loadCategories()} />
+        {vm.categoriesLoadError && !vm.showCreate && !vm.showCategoryManager && (
+          <LoadErrorBanner error={vm.categoriesLoadError} onRetry={() => void vm.loadCategories()} />
         )}
-        <MissionInsights missions={missions} />
+        <MissionInsights missions={vm.missions} />
         <MissionsList vm={vm} />
       </div>
 
       <Sheet
-        open={showCreate}
-        onClose={handleCloseCreate}
+        open={vm.showCreate}
+        onClose={vm.closeComposer}
         title={sheetTitle}
         subtitle="Category, task, and dispatch settings"
         footer={
           <MissionComposerActions
-            editingId={editingId}
-            missions={missions}
-            formState={formState}
-            onSubmit={handleCreate}
-            onSaveAsTemplate={handleSaveAsTemplate}
-            overwriteTemplateName={overwriteTemplateName}
-            onClose={handleCloseCreate}
-            dispatching={dispatching}
-            dispatchAcknowledged={dispatchAcknowledged}
+            editingId={vm.editingId}
+            missions={vm.missions}
+            formState={vm.formState}
+            onSubmit={vm.handleCreate}
+            onSaveAsTemplate={vm.handleSaveAsTemplate}
+            overwriteTemplateName={vm.overwriteTemplateName}
+            onClose={vm.closeComposer}
+            dispatching={vm.dispatching}
+            dispatchAcknowledged={vm.dispatchAcknowledged}
           />
         }
       >
         <div>
           <MissionCreateForm
             embedded
-            editingId={editingId}
-            missions={missions}
-            formState={formState}
-            setFormField={setFormField}
-            categories={mapCategories(categories)}
-            categoryId={newCategoryId}
-            onCategoryChange={setCategoryId}
-            onCreateCategory={handleCreateCategory}
-            onManageCategories={openCategoryManager}
-            categoriesLoadError={categoriesLoadError}
-            onRetryCategories={() => void loadCategories()}
-            onSubmit={handleCreate}
-            onSaveAsTemplate={handleSaveAsTemplate}
-            overwriteTemplateName={overwriteTemplateName}
-            onClose={handleCloseCreate}
-            dispatching={dispatching}
-            dispatchAcknowledged={dispatchAcknowledged}
+            editingId={vm.editingId}
+            missions={vm.missions}
+            formState={vm.formState}
+            setFormField={vm.setFormField}
+            categories={mapCategories(vm.categories)}
+            categoryId={vm.newCategoryId}
+            onCategoryChange={vm.setCategoryId}
+            onCreateCategory={vm.handleCreateCategory}
+            onManageCategories={vm.openCategoryManager}
+            categoriesLoadError={vm.categoriesLoadError}
+            onRetryCategories={() => void vm.loadCategories()}
+            onSubmit={vm.handleCreate}
+            onSaveAsTemplate={vm.handleSaveAsTemplate}
+            overwriteTemplateName={vm.overwriteTemplateName}
+            onClose={vm.closeComposer}
+            dispatching={vm.dispatching}
+            dispatchAcknowledged={vm.dispatchAcknowledged}
             // The acknowledgement mirrors the Dispatch step's open state
             // (T-0043). It starts satisfied because the step starts open;
             // collapsing the choice withdraws it and the gate returns.
-            onDispatchOpenChange={(open) => setDispatchAcknowledged(open)}
-            scheduleDraftError={scheduleDraftError}
-            onScheduleDraftError={setScheduleDraftError}
+            onDispatchOpenChange={(open) => vm.setDispatchAcknowledged(open)}
+            scheduleDraftError={vm.scheduleDraftError}
+            onScheduleDraftError={vm.setScheduleDraftError}
           />
         </div>
       </Sheet>
 
       <CategoryManagerModal
-        open={showCategoryManager}
-        onClose={closeCategoryManager}
-        categories={categories}
-        categoriesLoadError={categoriesLoadError}
-        onRefresh={() => void loadCategories()}
-        onCreateCategory={handleCreateCategory}
-        onUpdate={handleUpdateCategory}
-        onDelete={handleDeleteCategory}
+        open={vm.showCategoryManager}
+        onClose={vm.closeCategoryManager}
+        categories={vm.categories}
+        categoriesLoadError={vm.categoriesLoadError}
+        onRefresh={() => void vm.loadCategories()}
+        onCreateCategory={vm.handleCreateCategory}
+        onUpdate={vm.handleUpdateCategory}
+        onDelete={vm.handleDeleteCategory}
       />
 
       <TemplateManagerModal
-        open={showTemplateManager}
-        onClose={closeTemplateManager}
-        templates={templates}
-        categories={categories}
-        categoryFilter={categoryFilter}
-        onEditTemplate={handleEditTemplate}
-        onDeleteTemplate={handleDeleteTemplate}
-        onCreateTemplate={handleCreateNewTemplate}
+        open={vm.showTemplateManager}
+        onClose={vm.closeTemplateManager}
+        templates={vm.templates}
+        categories={vm.categories}
+        categoryFilter={vm.categoryFilter}
+        onEditTemplate={vm.handleEditTemplate}
+        onDeleteTemplate={vm.handleDeleteTemplate}
+        onCreateTemplate={vm.handleCreateNewTemplate}
       />
 
       <TemplateEditorModal {...vm.templateEditorProps} />

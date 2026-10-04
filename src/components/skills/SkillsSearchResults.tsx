@@ -53,6 +53,7 @@ export default function SkillsSearchResults({
         />
       ) : (
         <SkillRowList
+          showCategory
           skills={matches}
           page={page}
           onPageChange={onPageChange}

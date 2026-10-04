@@ -39,6 +39,7 @@ export default function MissionGroupCard({ group }: { group: MissionGroup }) {
           however it likes (T-0105, D32). They are siblings now. */}
       <div className="flex items-center gap-2">
       <LedgerRowButton
+        aria-expanded={expanded}
         padding="block"
         onClick={() => setExpanded(!expanded)}
         className="flex-1 min-w-0 text-left flex items-center justify-between gap-3"

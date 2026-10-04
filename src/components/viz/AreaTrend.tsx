@@ -30,7 +30,7 @@ export default function AreaTrend({
 
   if (n === 0) {
     return (
-      <svg viewBox={`0 0 ${W} ${H}`} className={className} preserveAspectRatio="none" width="100%" height={H}>
+      <svg role="img" aria-label="No daily throughput data" viewBox={`0 0 ${W} ${H}`} className={className} preserveAspectRatio="none" width="100%" height={H}>
         <line x1="0" y1={H - 1} x2={W} y2={H - 1} stroke={neonAlpha(color, 20)} strokeWidth={1} />
       </svg>
     );
@@ -49,7 +49,7 @@ export default function AreaTrend({
   const hasFailures = data.some((d) => (d.failed ?? 0) > 0);
 
   return (
-    <svg viewBox={`0 0 ${W} ${H}`} className={className} preserveAspectRatio="none" width="100%" height={H}>
+    <svg role="img" aria-label={`Daily throughput: ${data.map((d) => `${d.date}: completed ${d.completed}, failed ${d.failed ?? 0}`).join("; ")}`} viewBox={`0 0 ${W} ${H}`} className={className} preserveAspectRatio="none" width="100%" height={H}>
       <defs>
         <linearGradient id={id} x1="0" y1="0" x2="0" y2="1">
           <stop offset="0%" stopColor={neonAlpha(color, 40)} />

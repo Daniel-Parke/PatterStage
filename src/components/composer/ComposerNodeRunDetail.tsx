@@ -11,7 +11,7 @@
 
 import { statusToneClasses } from "@/lib/ui/theme";
 import { sectionHeadingClasses } from "@/lib/ui/theme";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Save, Check } from "lucide-react";
 import { Panel } from "@/components/dashboard/Panel";
 import Button from "@/components/ui/Button";
@@ -46,11 +46,7 @@ function Label({ children }: { children: React.ReactNode }) {
 }
 
 export default function ComposerNodeRunDetail({
-  open,
-  onClose,
-  node,
-  nodeRun,
-  approvals = [],
+  open, onClose, node, nodeRun, approvals = [],
 }: {
   open: boolean;
   onClose: () => void;
@@ -63,17 +59,23 @@ export default function ComposerNodeRunDetail({
   const subtitle = node
     ? `${node.kind} · ${node.gate === "hil" ? "human gate" : "auto"}`
     : undefined;
-
-  // The sheet's own toast, because the composer page has none to hand down:
-  // under the shell's FeedbackProvider the words reach the shell and
-  // `toastElement` is null, and in a bare render they show here.
+  // The Sheet unmounts its children when closed; save ownership outlives it.
   const { showToast, toastElement } = useToast();
-  const [saveState, setSaveState] = useState<"idle" | "saving" | "saved">("idle");
+  const [saveStates, setSaveStates] = useState<Record<string, "saving" | "saved" | undefined>>({});
+  const pending = useRef(new Set<string>());
+  const mounted = useRef(false);
+  useEffect(() => {
+    mounted.current = true;
+    return () => { mounted.current = false; };
+  }, []);
+  const outputKey = JSON.stringify([nodeRun?.composerRunId, nodeRun?.id, nodeRun?.output]);
+  const saveState = saveStates[outputKey] ?? "idle";
   async function saveAsArtifact() {
-    if (!nodeRun?.output || saveState !== "idle") return;
-    setSaveState("saving");
+    if (!nodeRun?.output || pending.current.has(outputKey) || saveStates[outputKey]) return;
+    pending.current.add(outputKey);
+    setSaveStates(states => ({ ...states, [outputKey]: "saving" }));
     const saved = await runWrite({
-      showToast,
+      showToast: (...args) => { if (mounted.current) showToast(...args); },
       url: "/api/artifacts",
       method: "POST",
       body: {
@@ -89,9 +91,8 @@ export default function ComposerNodeRunDetail({
       successMessage: "Saved as an artifact",
       errorMessage: "Could not save the output as an artifact",
     });
-    // `saved` stays: the button reads it, so a second click cannot file the
-    // same output twice.
-    setSaveState(saved ? "saved" : "idle");
+    pending.current.delete(outputKey);
+    if (mounted.current) setSaveStates(states => ({ ...states, [outputKey]: saved ? "saved" : undefined }));
   }
 
   return (
@@ -186,13 +187,8 @@ export default function ComposerNodeRunDetail({
               <div className="space-y-2">
                 <div className="flex items-center justify-between gap-2">
                   <Label>Output</Label>
-                  <Button
-                    size="sm"
-                    variant="ghost"
-                    icon={saveState === "saved" ? Check : Save}
-                    onClick={() => void saveAsArtifact()}
-                    disabled={saveState !== "idle"}
-                  >
+                  <Button size="sm" variant="ghost" icon={saveState === "saved" ? Check : Save}
+                    onClick={() => void saveAsArtifact()} disabled={saveState !== "idle"}>
                     {saveState === "saved" ? "Saved" : saveState === "saving" ? "Saving…" : "Save as artifact"}
                   </Button>
                 </div>

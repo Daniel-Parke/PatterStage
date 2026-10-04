@@ -24,9 +24,10 @@
 
 import { AgentLevelBadge } from "@/components/achievements";
 import { useAgentExperience } from "@/hooks/useAgentExperience";
+import LoadErrorBanner from "@/components/ui/LoadErrorBanner";
 
 export default function AgentGrowthPanel({ profileId }: { profileId: string }) {
-  const { entries, isLoading } = useAgentExperience();
+  const { entries, isLoading, error, refetch } = useAgentExperience();
   const entry = entries.find((e) => e.targetRef === profileId) ?? null;
 
   if (isLoading) {
@@ -34,6 +35,7 @@ export default function AgentGrowthPanel({ profileId }: { profileId: string }) {
   }
 
   if (!entry) {
+    if (error) return <LoadErrorBanner compact error={error} onRetry={() => void refetch()} />;
     return (
       <div className="text-micro font-mono text-ps-text-muted">
         No completed work yet. This agent starts growing on its first finished run.
@@ -51,6 +53,7 @@ export default function AgentGrowthPanel({ profileId }: { profileId: string }) {
 
   return (
     <div className="space-y-4">
+      {error && <LoadErrorBanner compact error={error} onRetry={() => void refetch()} />}
       <AgentLevelBadge experience={entry.experience.level} label={entry.targetLabel} />
       <dl className="grid grid-cols-2 gap-x-4 gap-y-1.5">
         {rows.map(([label, value]) => (

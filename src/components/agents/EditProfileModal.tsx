@@ -13,7 +13,7 @@
 
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Pencil } from "lucide-react";
 import Button from "@/components/ui/Button";
 import Modal from "@/components/ui/Modal";
@@ -26,6 +26,8 @@ export interface EditProfileModalProps {
   saving: boolean;
   onClose: () => void;
   onSave: (values: { name: string; description: string }) => void;
+  sessionId?: number;
+  onDraftChange?: () => void;
 }
 
 /** The list's cosmetic suffix is not part of the stored name. */
@@ -41,18 +43,24 @@ export default function EditProfileModal({
   saving,
   onClose,
   onSave,
+  sessionId,
+  onDraftChange,
 }: EditProfileModalProps) {
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
+  const seeded = useRef<{ open: boolean; sessionId?: number; profileId?: string }>({ open: false });
 
-  // Re-seed whenever the dialog opens on a profile, so it always shows what
-  // is stored rather than the last thing that was typed into it.
+  // A refreshed object or confirmed rename belongs to the same open draft.
+  // Only a new opening/session seeds its fields from persisted values.
   useEffect(() => {
-    if (open && profile) {
+    const previous = seeded.current;
+    if (open && profile && (!previous.open || sessionId !== previous.sessionId ||
+      (sessionId === undefined && profile.id !== previous.profileId))) {
       setName(editableName(profile));
       setDescription(profile.description ?? "");
     }
-  }, [open, profile]);
+    seeded.current = { open: open && profile !== null, sessionId, profileId: profile?.id };
+  }, [open, profile, sessionId]);
 
   return (
     <Modal
@@ -82,7 +90,7 @@ export default function EditProfileModal({
           <Input
             type="text"
             value={name}
-            onChange={(e) => setName(e.target.value)}
+            onChange={(e) => { onDraftChange?.(); setName(e.target.value); }}
             placeholder="e.g. Research Assistant"
           />
         </Field>
@@ -90,7 +98,7 @@ export default function EditProfileModal({
           <Input
             type="text"
             value={description}
-            onChange={(e) => setDescription(e.target.value)}
+            onChange={(e) => { onDraftChange?.(); setDescription(e.target.value); }}
             placeholder="What this agent is for"
           />
         </Field>

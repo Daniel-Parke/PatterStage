@@ -75,6 +75,7 @@ export default function LogFilePicker({
                         // resolve by stylesheet order, not attribute order.
                         hover={false}
                         onClick={() => onSelect(log.name)}
+                        aria-pressed={activeLog === log.name}
                         className={`flex items-start gap-2 text-left rounded-ps-md px-2.5 py-2 text-micro font-mono border ${
                           activeLog === log.name
                             ? "bg-neon-cyan/10 text-neon-cyan border-neon-cyan/35"

@@ -1,12 +1,5 @@
-// ═══════════════════════════════════════════════════════════════
-// /config/models — registry-backed model + credentials manager
-// ═══════════════════════════════════════════════════════════════
-//
-// Replaces the legacy YAML-direct /config/model editor (deleted in PR 4).
-// Two sections:
-//   1. My Models  — table of registry rows + Add Model action
-//   2. Defaults   — 12-slot grid driving model.* + auxiliary.<task>.*
-//                   in ~/.hermes/config.yaml via PR 5's write-through.
+// Models — registry, credentials, defaults and fallback controls.
+// Re-import writes explicitly; Retry only reads the shared registry cache.
 
 "use client";
 
@@ -119,8 +112,8 @@ export default function ModelsPage() {
     credentialOptions,
     defaults,
     modelReadiness,
-    loading,
     settled,
+    hasData,
     error,
     drift,
     handleDriftPull,
@@ -145,6 +138,7 @@ export default function ModelsPage() {
     setEditingFallbackEntry,
     toastElement,
     handleRefresh,
+    retryRead,
     handlePush,
     handlePull,
     handleSaved,
@@ -167,40 +161,10 @@ export default function ModelsPage() {
     handleImportFallbackFromConfig,
   } = useModelsPage();
 
-  // openAddModel — opens the ModelEditor in CREATE mode (`setEditing(null)`).
-  // The "Add Model" button appears in 2 places: the page header (line 99) and
-  // the empty-state CTA inside ModelsTableSection (line 127). Both call sites
-  // do exactly the same thing: `() => setEditing(null)`. Centralising into a
-  // useCallback with empty deps (useState setters are stable) keeps the 2
-  // sites in lockstep if a future "navigate to the Models tab" or "pre-select
-  // a credential" extension lands — a single edit here updates both.
-  // The 3rd `setEditing(...)` site at line 128 (`onEdit={setEditing}`) is
-  // a different shape: it passes a `ModelEditorRecord` (edit mode), not
-  // `null` (create mode). Left as a direct binding — it's the canonical
-  // "open in edit mode" call, not a duplicate.
-  // eslint-disable-next-line react-hooks/exhaustive-deps -- useState setters are stable
-  const openAddModel = useCallback(() => setEditing(null), []);
-
-  // closeModelEditor — closes the ModelEditor modal. Sister to
-  // `openAddModel`; same useState-setter-stability rationale. The
-  // `<ModelEditor onClose={...}>` binding at line 204 is the only call
-  // site today (1-setter close-callback). Extracting now keeps the page's
-  // callback declarations grouped together (all 3 close-callbacks share
-  // the `react-hooks/exhaustive-deps` disable comment + the JSDoc
-  // "sister to" pattern) so a future "reset the form state on close" or
-  // "fire an analytics event" extension lands in one place.
-  // eslint-disable-next-line react-hooks/exhaustive-deps -- useState setters are stable
-  const closeModelEditor = useCallback(() => setEditing(undefined), []);
-  // closeFallbackModal — closes the FallbackUrlEditModal. Sister to
-  // `openAddModel` + `closeModelEditor` (same useState-setter stability
-  // rationale). The `onCloseFallbackModal={...}` binding at line 184 is
-  // the only call site today (1-setter close-callback). The setter
-  // `setEditingFallbackEntry` is exposed from `useModelsPage` as a
-  // close-modal shim (it forwards to `setFallbackEdit({ entry: null,
-  // url: "", saving: false })`), so the call site here is the canonical
-  // "dismiss the modal" form, not a partial-update.
-  // eslint-disable-next-line react-hooks/exhaustive-deps -- useState setters are stable
-  const closeFallbackModal = useCallback(() => setEditingFallbackEntry(null), []);
+  // null opens a new model; undefined closes the editor.
+  const openAddModel = useCallback(() => setEditing(null), [setEditing]);
+  const closeModelEditor = useCallback(() => setEditing(undefined), [setEditing]);
+  const closeFallbackModal = useCallback(() => setEditingFallbackEntry(null), [setEditingFallbackEntry]);
 
   return (
     <AppPageShell
@@ -212,7 +176,7 @@ export default function ModelsPage() {
           // "0 models in registry · 0 credentials", which is not a state this
           // install has ever been in (T-0128).
           subtitle={
-            loading && models.length === 0 && credentials.length === 0
+            !hasData
               ? "The model registry and its credentials"
               : `${models.length} model${pluralise(models.length)} in registry · ${credentials.length} credential${pluralise(credentials.length)}`
           }
@@ -256,7 +220,7 @@ export default function ModelsPage() {
             Seeds never set <code className="text-ps-text-muted">model.default</code>.
           </p>
         </Card>
-        {error && <LoadErrorBanner error={error} />}
+        {error && <LoadErrorBanner error={error} onRetry={() => void retryRead()} />}
 
         {drift && (
           <ModelsDriftBanner
@@ -274,7 +238,7 @@ export default function ModelsPage() {
             (T-0144). */}
         {!settled ? (
           <LoadingSpinner text="Loading models..." />
-        ) : (
+        ) : hasData ? (
           <>
             <ModelInsights models={models} credentialCount={credentials.length} />
             <CredentialsPanel
@@ -344,7 +308,7 @@ export default function ModelsPage() {
             />
 
           </>
-        )}
+        ) : null}
       </div>
 
       {editing !== undefined && (

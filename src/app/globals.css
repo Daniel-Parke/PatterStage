@@ -503,8 +503,9 @@
      T-0120). The reconnaissance then measured 28 animations still running
      under reduce, the logo's flame on every screen among them (WCAG 2.3.3).
      An allowlist can only ever name what its author knew about. Everything
-     halts: one iteration of nothing, so an entrance animation lands on its
-     end state and an infinite one never starts. Two things are put back, the
+     loses its delay and runs once at minimal duration. Staggered entrances
+     are disabled below so their contents are visible on the first frame.
+     Two things are put back, the
      spinners, which say "still working" and are the one motion in the product
      that is information rather than decoration. `.viz-draw` keeps its end
      state pinned because its keyframes draw a line in from nothing, and a
@@ -514,6 +515,7 @@
   *::before,
   *::after {
     animation-duration: 0.01ms !important;
+    animation-delay: 0ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
     scroll-behavior: auto !important;
@@ -527,6 +529,7 @@
     animation-iteration-count: infinite !important;
   }
   .viz-draw { stroke-dasharray: none; stroke-dashoffset: 0; }
+  .ps-stagger > * { animation: none !important; }
 }
 
 /* Variable-driven surface glow (see GlowSurface.tsx); --glow-surface-rgb set inline */
