@@ -44,7 +44,7 @@
   ],
   "timestamps": {
     "opened": "2026-10-04T07:07:12.340680+00:00",
-    "updated": "2026-10-04T15:32:44.129502+00:00"
+    "updated": "2026-10-04T22:40:10.977298+00:00"
   },
   "verdicts": [
     {
@@ -67,6 +67,13 @@
       "verdict": "pass",
       "date": "2026-10-04T15:32:44.129502+00:00",
       "notes": "Bounded diagnostic checkpoint only: full unchanged gate3d62a0d7 all10stages,8902unit/511browser;9b2d140e is manifest-only corrected mutant,7causalmatcherkills/52before-restoredcontrols/exactrestoration. First apparent7killrun rejected for individual fixture infrastructure; preserved. Fullgate not relabeled to latermanifesthead. MacOS cause/repair,hosted currenthead and wholeT0206closure remain open. See HTTP-budget review."
+    },
+    {
+      "role": "REVIEWER",
+      "session": "2026-10-04-t0194-coordinator",
+      "verdict": "fail",
+      "date": "2026-10-04T22:40:10.977298+00:00",
+      "notes": "Exact39f98848 PR37238590551 macOS full suite repeats unchanged C02/C05: missing final shell completion despite native statuses and six-second deadline crossed. Completed log tmp/t0194-hosted-macos-failure.log; all jobs snapshot tmp/t0194-hosted-1791152485929/snapshot.json. Separate20/20 diagnostic does not establish cause or repair. Preserve watchdog, grace, outer/RPC/lifecycle bounds,21 realcurl calls and coverage concurrency. T0194/T0207 remain active until required hosted checks pass; T0206 cause remains open even if a later run passes."
     }
   ],
   "tier_ruled": "R2",

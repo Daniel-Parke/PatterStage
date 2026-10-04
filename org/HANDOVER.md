@@ -7,6 +7,30 @@ updated: 2026-10-04
 
 # Handover · PatterStage, 2026-10-02
 
+## Current correction checkpoint, 2026-10-04
+
+Committed correction `2e7b534c` passes the complete unchanged ten-step gate:
+9,055 unit cases, 513 browser cases and both database-preservation checks.
+Existing skips remain. All 192 owned candidate hashes match. Both clean
+committed sweeps pass: 18 library and nine research mutants, with 98 and 34
+original/restored controls. Five owned Linux install/update smoke scenarios
+pass on Node24.21.0; their existing skip-http profile remains qualified.
+
+First hosted head39f98848 failed: the install harness still used Node20,
+the exact retirement registry omitted the new committed env reader, and
+macOS C02/C05 repeated its timing failure. The first two are repaired without
+changing checks or compatibility dates. T0206 owns the still-unresolved timing
+cause. Earlier failures and all job results remain recorded. Parfit accepts
+the bounded local gate, narrow correction and five Linux smoke scenarios;
+final sweep review and new-head hosted acceptance still precede closure.
+
+No operator data or port3333 was used. The old disposable3999 preview is stopped.
+T0195/T0196/T0197/T0201 are canonical proposed next records; T0198/T0199 and the
+named T0208 defects remain planned. T0200 retirement is deferred throughv1.0.
+The 20 inherited open coverage atoms remain named, not silently completed.
+The worker teardown warning, npm advisory attribution and whole-product walk
+remain outstanding. No release or paid-provider acceptance is claimed.
+
 ## T0194/T0207 implementation checkpoint, 2026-10-04
 
 Joint implementation landed locally as `8daba398` after the complete unchanged

@@ -4544,7 +4544,7 @@
       }
     },
     "sourceManifestSha256": "afd19c903e1854efc024a1df81506adba240a29aae50b411a398b44bcd5ef7b2",
-    "gateStatus": "Full unchanged gate4 and final clean committed18+8 causal sweeps passed. Hosted acceptance and final qualified closure/handoff review pending. Original unresolved coverage atoms remain open; no42-complete claim.",
+    "gateStatus": "Reverified unchanged10-stage gate and clean committed18+9 sweeps pass at2e7b534c. Five owned Linux smoke scenarios pass; hosted exact-head acceptance still pending. Original unresolved coverage atoms and T0206 cause remain open.",
     "acceptance": "Independent bounded LOCAL R3 implementation and exact review-handoff PASS; hosted batch acceptance pending. Future proof remains open in receiving records.",
     "scopeLimit": "Coverage inspection can be complete for named bodies without proof of every branch. Broad corpus obligations remain explicit unresolved reviews.",
     "classificationLimit": "Original classify-only scope historical; 137 candidate classification requires independent sceptic, 86 broader named-reader candidates unclassified.",
@@ -4990,6 +4990,20 @@
         "restoredControls": 32
       },
       "restoration": "Original byte/mode restoration and final clean-tree checks passed."
+    },
+    "correction": {
+      "head": "2e7b534ca95a72fc1ae74c6be3931d5c26a22cb8",
+      "gateReceipt": "tmp/t0194-final-gate-1791152212412/gate/summary.json",
+      "treeStamp": "6b59acc85067381d6c695b2b6f576515de42867abfa21e1544f8eb52ad66aecf",
+      "gateExit": 0,
+      "unitPassed": 9055,
+      "browserPassed": 513,
+      "purityPassed": 2,
+      "sweepReceipt": "tmp/t0194-committed-sweeps-1791153409081/summary.json",
+      "libraryMutantsKilled": 18,
+      "researchMutantsKilled": 9,
+      "linuxSmokeScenariosPassed": 5,
+      "qualification": "HTTP excluded from smoke; exact-head hosted acceptance and final independent sweep review pending. Original42-row coverage handoff is not completed by implementation checks."
     }
   },
   "reviewHandoff": {

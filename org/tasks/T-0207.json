@@ -58,7 +58,7 @@
   ],
   "timestamps": {
     "opened": "2026-10-04T18:37:49.722234+01:00",
-    "updated": "2026-10-04T22:12:41.729286+00:00"
+    "updated": "2026-10-04T22:40:10.977298+00:00"
   },
   "verdicts": [
     {
@@ -116,6 +116,13 @@
       "verdict": "pass",
       "date": "2026-10-04T22:12:41.729286+00:00",
       "notes": "Parfit bounded scope/authority PASS for omitted install-harness Node24 fixture correction under accepted ADR0020, with independent additive red oracle. Hosted39f98848 failures are retained; no final acceptance until owned Linux qualification, unchanged full gate, committed sweep and every required hosted job. The retirement registry must name newly committed alias reader src/lib/config/env.ts explicitly; compatibility remains deferred throughv1.0."
+    },
+    {
+      "role": "REVIEWER",
+      "session": "01a107e1-5ba0-7703-ab13-e23e640dc10b",
+      "verdict": "pass",
+      "date": "2026-10-04T22:40:10.977298+00:00",
+      "notes": "Bounded LOCAL PASS at2e7b534c: complete unchanged10-step gate,9055 unit/513 browser/2 purity;192 owned hashes and narrow11-path correction;five Linux smoke scenarios Node24.21.0 with skip-http held. No mandatory blocker in reviewed correction. Final committed sweep review and exact-head hosted acceptance remain pending; T0206 macOS cause and T0195 worker warning stay unresolved."
     }
   ],
   "tier_ruled": "R3",

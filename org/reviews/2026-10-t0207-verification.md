@@ -121,3 +121,14 @@ Exact pushed head39f988481fa8304f425bf331a500f4d53a4ba21d has failed PR/push ins
 The separately selected docker/TestHarness.dockerfile still usedNode20.20.2; setup correctly refused its22.19 minimum. Production Docker stages had been updated, but this harness was omitted. Independent additive2-case image oracle commits executed matcher red1of2 in f9f30898. The fixture now uses the accepted Node24 Bookworm slim target; no assertion/guard is weakened. Actual owned Linux and full gate verification remain required.
 
 Unchanged T0165 plan contract catches the new committed alias reader src/lib/config/env.ts missing from the exact T0200 claim list. It was untracked during the earlier local gate, so git grep did not enumerate it then. This is a known limitation of that precommit proof, not an Ubuntu-only product defect. The registry now names the single missing actual reader; all other claim paths, compatibility behaviour and post-v1 retirement date stay. No frozen oracle changes.
+
+
+## Reverified correction at 2e7b534c
+
+The exact192-path owned candidate matches the committed correction. Full gate `tmp/t0194-final-gate-1791152212412/gate/summary.json` passes all10 steps with identical before/after content stamp `6b59acc85067381d6c695b2b6f576515de42867abfa21e1544f8eb52ad66aecf`:867 suites/9055 cases pass,2 existing skipped suites/9 existing skipped cases;513 browser cases pass/24 existing skips;2 build-purity checks pass. No tracked edits occurred during the gate. The restricted launch in tmp/t0194-final-gate-1791152148736 failed before docs execution with uv_os_get_passwd ENOMEM. A paired same-binary os.userInfo probe succeeds outside that sandbox. The full gate was rerun there without changing checks; that launch failure is not hidden.
+
+All five owned Linux smoke install/update scenarios pass on actual Node24.21.0: fresh receipt tmp/t0207-owned-install-1791152156109/receipt.json; Hermes, dashboard, both and update receipt tmp/t0207-owned-install-1791152703487/receipt.json. Existing skip-http qualification remains; neither these smoke scenarios nor the build establish HTTP/provider/release acceptance. The independent image oracle retains its two names and frozen bytes; only the selected Docker base changed from Node20 to Node24.
+
+Clean committed sweep `tmp/t0194-committed-sweeps-1791153409081/summary.json` at `2e7b534ca95a72fc1ae74c6be3931d5c26a22cb8` exits0: 9/9 causal kills;34/34 original and restored controls;no infrastructure kills. Structured reports show intended executed matcher failures. Restoration of bytes/modes and clean-tree verification pass. Earlier survivor/ERROR and hosted failures remain recorded.
+
+Parfit independently accepts the completed unchanged gate, all192 hashes, narrow11-path correction and five Linux scenario bounds. Final sweep review and exact-head hosted acceptance remain required. The parallel Jest worker warning and macOS timing cause remain unresolved.
