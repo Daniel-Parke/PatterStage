@@ -16,7 +16,7 @@
   },
   "mode": "high-assurance",
   "tier_proposed": "R3",
-  "status": "in-review",
+  "status": "active",
   "owner_session": "2026-10-04-t0194-coordinator",
   "claims": [
     "org/tasks/T-0207.json",
@@ -51,61 +51,71 @@
     "tests/unit/search-url-guard.test.ts",
     "org/reviews/2026-10-t0207-oracle-resolution-amendment-proposal.md",
     "org/reviews/2026-10-t0207-oracle-resolution-amendment.md",
-    "tests/fixtures/mutants/T-0207.json"
+    "tests/fixtures/mutants/T-0207.json",
+    "docker/TestHarness.dockerfile",
+    "org/briefs/T-0207-install-runtime-oracle.md",
+    "tests/unit/research-install-runtime.test.ts"
   ],
   "timestamps": {
-    "opened": "2026-10-04T17:37:49.722234+00:00",
-    "updated": "2026-10-04T22:03:53.375571+00:00"
+    "opened": "2026-10-04T18:37:49.722234+01:00",
+    "updated": "2026-10-04T22:12:41.729286+00:00"
   },
   "verdicts": [
     {
       "role": "operator",
       "session": "Daniel Parke",
       "verdict": "pass",
-      "date": "2026-10-04T17:42:23.377703+00:00",
+      "date": "2026-10-04T18:42:23.377703+01:00",
       "notes": "Recorded interactive acceptance of exact proposed ADR0020: Undici8.11.2, validated-address research transport, Node minimum22.19+ and held Node24 build target. Design authority only; independent oracle and full verification precede implementation acceptance."
     },
     {
       "role": "ORACLE",
       "session": "01a1062b-0f36-7702-885b-476fd150d9bf",
       "verdict": "pass",
-      "date": "2026-10-04T19:07:26.432438+00:00",
+      "date": "2026-10-04T20:07:26.432438+01:00",
       "notes": "Independent runtime boundary cohort: 13 names, seven executed matcher red, six positive controls, no infrastructure failure. Version simulation is guard proof, not application compatibility."
     },
     {
       "role": "operator",
       "session": "Daniel Parke",
       "verdict": "pass",
-      "date": "2026-10-04T19:09:42.925218+00:00",
+      "date": "2026-10-04T20:09:42.925218+01:00",
       "notes": "Authorise independent Undici fixture module-resolution correction as proposed; preserve all19 names/assertions/timeouts, prevent unowned transport, prove both suite orders. Amendment does not grant implementation acceptance."
     },
     {
       "role": "operator",
       "session": "Daniel Parke",
       "verdict": "pass",
-      "date": "2026-10-04T19:23:24.140939+00:00",
+      "date": "2026-10-04T20:23:24.140939+01:00",
       "notes": "Approve one joint gated implementation landing for T0194/T0207 as proposed. Separate task records, independent oracles, both committed causal sweeps, independent R3 review and every required hosted job remain. No check or target weakened."
     },
     {
       "role": "operator",
       "session": "Daniel Parke",
       "verdict": "pass",
-      "date": "2026-10-04T20:15:36.943382+00:00",
+      "date": "2026-10-04T21:15:36.943382+01:00",
       "notes": "Authorise narrow independent gate amendments as proposed in org/reviews/2026-10-t0194-t0207-gate-amendment-proposal.md. Existing names/behaviour assertions/timeouts/coverage floors held; full gate reruns. This is amendment authority, not implementation acceptance."
     },
     {
       "role": "REVIEWER",
       "session": "01a107e1-5ba0-7703-ab13-e23e640dc10b",
       "verdict": "pass",
-      "date": "2026-10-04T21:51:20.790899+00:00",
+      "date": "2026-10-04T22:51:20.790899+01:00",
       "notes": "Parfit bounded source/authority PASS for joint implementation8daba398; full unchanged gate4 passed10steps,9051unit/513browser/2purity. Independent causal review confirms T0207 eight kills with32 original/restored controls and T0194 sixteen kills with96 controls. T0194 one survivor and one ERROR remain honestly open pending independent supplemental tests. Both records remain active; no joint batch closure or hosted/product/release acceptance. Exact evidence and limits: org/reviews/2026-10-t0207-verification.md."
     },
     {
       "role": "REVIEWER",
       "session": "01a107e1-5ba0-7703-ab13-e23e640dc10b",
       "verdict": "pass",
-      "date": "2026-10-04T22:03:53.375571+00:00",
+      "date": "2026-10-04T23:03:53.375571+01:00",
       "notes": "Parfit bounded LOCAL R3 PASS atf765488a: unchanged full10stage implementation gate,9051unit/513browser/2purity; additive independent2-case test delta types/lint/Knip0;18 library and8 DNS causal committed kills,98/32 original/restored controls, byte/mode and clean-tree restoration. Accept exact T0194 review-handoff allocation:21 qualified,1 confirmed follow-up,20 open atoms with canonical proposed owners, original evidence/limits and accepted plan authority preserved. Future proof remains open; proposed records do not authorise unclaimed repairs. Batch closure awaits all required exact-head hosted checks. T0206/T0195 unresolved warnings held; no whole-product/release acceptance."
+    },
+    {
+      "role": "REVIEWER",
+      "session": "01a107e1-5ba0-7703-ab13-e23e640dc10b",
+      "verdict": "pass",
+      "date": "2026-10-04T22:12:41.729286+00:00",
+      "notes": "Parfit bounded scope/authority PASS for omitted install-harness Node24 fixture correction under accepted ADR0020, with independent additive red oracle. Hosted39f98848 failures are retained; no final acceptance until owned Linux qualification, unchanged full gate, committed sweep and every required hosted job. The retirement registry must name newly committed alias reader src/lib/config/env.ts explicitly; compatibility remains deferred throughv1.0."
     }
   ],
   "tier_ruled": "R3",
@@ -126,13 +136,15 @@
   "oracle_provenance": {
     "files": [
       "tests/unit/research-fetch-dns-pinning.test.ts",
-      "tests/unit/research-runtime-minimum.test.ts"
+      "tests/unit/research-runtime-minimum.test.ts",
+      "tests/unit/research-install-runtime.test.ts"
     ],
     "hashes": {
       "tests/unit/research-fetch-dns-pinning.test.ts": "188e687d9469fb5f4530aaf252151f32b815288dde02af9fea6c027467bc4bfb",
-      "tests/unit/research-runtime-minimum.test.ts": "64323a701248120752e7a46356a9ad650bd31ec6fea881c08e33bff7475d91f5"
+      "tests/unit/research-runtime-minimum.test.ts": "64323a701248120752e7a46356a9ad650bd31ec6fea881c08e33bff7475d91f5",
+      "tests/unit/research-install-runtime.test.ts": "0d3f803dfb71f11c30f6004b7b4c31b33d74350b738732760633fd31b67ac346"
     },
-    "author_session": "01a107e1-5a5d-7e41-aa92-f15b51f76c4d",
+    "author_session": "01a107e1-5a5d-7e41-aa92-f15b51f76c4d; Faraday independent install image2-case oracle, red1of2, f9f30898",
     "independence_method": "metamorphic"
   }
 }

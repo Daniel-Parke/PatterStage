@@ -1527,7 +1527,8 @@
         "src/modules/hermes/lib/agent-runtime.ts",
         "src/modules/hermes/lib/home.ts",
         "src/modules/hermes/lib/profile-paths.ts",
-        "src/instrumentation.ts"
+        "src/instrumentation.ts",
+        "src/lib/config/env.ts"
       ],
       "dependsOn": [
         "T-0199",

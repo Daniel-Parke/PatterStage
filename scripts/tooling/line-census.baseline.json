@@ -2,7 +2,7 @@
   "measuredAt": "2026-10-04",
   "counts": {
     "srcLines": 102409,
-    "testLines": 154359,
+    "testLines": 154382,
     "scriptsLines": 13597,
     "srcRepeatedWindowLines": 655,
     "testRepeatedWindowLines": 4768,
@@ -1320,6 +1320,11 @@
       "measuredAt": "2026-10-04",
       "rise": "testLines rose from 154313 to 154359",
       "reason": "T-0194 committed-sweep follow-up: two independently authored behaviour controls close one survivor and one non-qualifying Promise assertion; existing tests, source and targets unchanged."
+    },
+    {
+      "measuredAt": "2026-10-04",
+      "rise": "testLines rose from 154359 to 154382",
+      "reason": "T-0207 hosted installer failure: two independent build-input controls bind the actual Python-selected harness to accepted Node24; existing tests and runtime minimum guard unchanged."
     }
   ]
 }

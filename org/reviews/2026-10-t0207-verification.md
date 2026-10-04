@@ -112,3 +112,12 @@ At `f765488a63a1244edde327787756c27ad367c9b9`, `tmp/t0194-committed-sweeps-17911
 Hosted exact-head acceptance and final record closure remain pending. T0206 timing cause and T0195 parallel worker warning remain unresolved.
 
 Independent Parfit LOCAL R3 PASS atf765488a accepts the implementation, all26 causal kills and the exact bounded review handoff.21 coverage rows are qualified, one confirmed follow-up and20 open. Canonical proposed receiving records195/196/197/201 preserve future proof. Hosted checks still precede batch closure. The independent test-delta checks do not relabel the earlier9051-case full gate as a9053-case run.
+
+
+## First hosted landing failures and prerequisite correction
+
+Exact pushed head39f988481fa8304f425bf331a500f4d53a4ba21d has failed PR/push install-harness and Ubuntu jobs. The completed job logs are retained in tmp/t0194-hosted-install-failure.log and tmp/t0194-hosted-ubuntu-failure.log; first snapshots in tmp/t0194-hosted-1791151592285 and tmp/t0194-hosted-1791151811489. No hosted green was claimed.
+
+The separately selected docker/TestHarness.dockerfile still usedNode20.20.2; setup correctly refused its22.19 minimum. Production Docker stages had been updated, but this harness was omitted. Independent additive2-case image oracle commits executed matcher red1of2 in f9f30898. The fixture now uses the accepted Node24 Bookworm slim target; no assertion/guard is weakened. Actual owned Linux and full gate verification remain required.
+
+Unchanged T0165 plan contract catches the new committed alias reader src/lib/config/env.ts missing from the exact T0200 claim list. It was untracked during the earlier local gate, so git grep did not enumerate it then. This is a known limitation of that precommit proof, not an Ubuntu-only product defect. The registry now names the single missing actual reader; all other claim paths, compatibility behaviour and post-v1 retirement date stay. No frozen oracle changes.

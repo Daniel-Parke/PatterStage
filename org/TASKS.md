@@ -206,7 +206,7 @@ The records under org/tasks/ are canonical.
 | T-0191 | high-assurance | R2 | done | 2026-10-03-t0191-coordinator |
 | T-0192 | high-assurance | R2 | done | 2026-10-03-t0192-coordinator |
 | T-0193 | high-assurance | R2 | done | 2026-10-04-t0193-coordinator |
-| T-0194 | high-assurance | R3 | in-review | 2026-10-04-t0194-coordinator |
+| T-0194 | high-assurance | R3 | active | 2026-10-04-t0194-coordinator |
 | T-0195 | high-assurance | R2 | proposed | 2026-10-04-t0194-coordinator |
 | T-0196 | high-assurance | R2 | proposed | 2026-10-04-t0194-coordinator |
 | T-0197 | standard | R1 | proposed | 2026-10-04-t0194-coordinator |
@@ -216,5 +216,5 @@ The records under org/tasks/ are canonical.
 | T-0204 | high-assurance | R1 | done | 2026-10-01-deterministic-secret-canary |
 | T-0205 | high-assurance | R1 | done | 2026-10-02-refactor-resume |
 | T-0206 | high-assurance | R2 | active | 2026-10-04-t0206-coordinator |
-| T-0207 | high-assurance | R3 | in-review | 2026-10-04-t0194-coordinator |
+| T-0207 | high-assurance | R3 | active | 2026-10-04-t0194-coordinator |
 | T-0208 | high-assurance | R2 | proposed | 2026-10-04-t0194-coordinator |

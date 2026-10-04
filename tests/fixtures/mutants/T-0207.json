@@ -11,7 +11,9 @@
       "file": "src/lib/search/visit.ts",
       "anchor": "const addresses = verdict.addresses.filter(address => !options.family || address.family === options.family);",
       "replacement": "const addresses = [{ address: '127.0.0.1', family: 4 }].filter(address => !options.family || address.family === options.family);",
-      "tests": ["tests/unit/research-fetch-dns-pinning.test.ts"],
+      "tests": [
+        "tests/unit/research-fetch-dns-pinning.test.ts"
+      ],
       "why": "Owned allowed retrieval must never select the forbidden listener, including after DNS rebinding."
     },
     {
@@ -19,7 +21,9 @@
       "file": "src/lib/search/url-guard.ts",
       "anchor": "if (isPrivateAddress(address)) {",
       "replacement": "if (isPrivateAddress(address) && false) {",
-      "tests": ["tests/unit/research-fetch-dns-pinning.test.ts"],
+      "tests": [
+        "tests/unit/research-fetch-dns-pinning.test.ts"
+      ],
       "why": "Both orders of mixed public/private IPv4 DNS answers must refuse before fetch. Separate retained URL-guard controls cover other address forms."
     },
     {
@@ -27,7 +31,9 @@
       "file": "src/lib/search/url-guard.ts",
       "anchor": "onAbort = () => reject(new Error(\"request aborted\"));",
       "replacement": "onAbort = () => void reject;",
-      "tests": ["tests/unit/research-fetch-dns-pinning.test.ts"],
+      "tests": [
+        "tests/unit/research-fetch-dns-pinning.test.ts"
+      ],
       "why": "The original twelve-second budget must settle a stalled admission lookup and prohibit a late answer."
     },
     {
@@ -35,7 +41,9 @@
       "file": "src/lib/search/url-guard.ts",
       "anchor": "if (url.username || url.password) return { ok: false, reason: \"URL credentials are not permitted\" };",
       "replacement": "if ((url.username || url.password) && false) return { ok: false, reason: \"URL credentials are not permitted\" };",
-      "tests": ["tests/unit/research-fetch-dns-pinning.test.ts"],
+      "tests": [
+        "tests/unit/research-fetch-dns-pinning.test.ts"
+      ],
       "why": "Credential-bearing URLs must refuse at the shape boundary before DNS or transport."
     },
     {
@@ -43,7 +51,9 @@
       "file": "src/lib/search/visit.ts",
       "anchor": "await dispatcher.destroy();",
       "replacement": "void dispatcher.destroy;",
-      "tests": ["tests/unit/research-fetch-dns-pinning.test.ts"],
+      "tests": [
+        "tests/unit/research-fetch-dns-pinning.test.ts"
+      ],
       "why": "Success, redirect and non-text refusal must release their owned dispatcher before fixture teardown."
     },
     {
@@ -51,7 +61,9 @@
       "file": "scripts/bootstrap/setup.mjs",
       "anchor": "if (major < 22 || (major === 22 && minor < 19)) {",
       "replacement": "if (major < 22 || (major === 22 && minor < 18)) {",
-      "tests": ["tests/unit/research-runtime-minimum.test.ts"],
+      "tests": [
+        "tests/unit/research-runtime-minimum.test.ts"
+      ],
       "why": "22.18 must refuse before any setup side effect; 22.19 remains the minimum."
     },
     {
@@ -59,7 +71,9 @@
       "file": "scripts/bootstrap/setup.sh",
       "anchor": "major===22 && minor>=19",
       "replacement": "major===22 && minor>=18",
-      "tests": ["tests/unit/research-runtime-minimum.test.ts"],
+      "tests": [
+        "tests/unit/research-runtime-minimum.test.ts"
+      ],
       "why": "The Git Bash setup boundary must refuse 22.18."
     },
     {
@@ -67,8 +81,20 @@
       "file": "scripts/bootstrap/install.sh",
       "anchor": "major===22 && minor>=19",
       "replacement": "major===22 && minor>=18",
-      "tests": ["tests/unit/research-runtime-minimum.test.ts"],
+      "tests": [
+        "tests/unit/research-runtime-minimum.test.ts"
+      ],
       "why": "The default installer boundary must refuse 22.18."
+    },
+    {
+      "id": "install-image-runtime-target",
+      "file": "docker/TestHarness.dockerfile",
+      "anchor": "FROM node:24-bookworm-slim",
+      "replacement": "FROM node:20-bookworm-slim",
+      "tests": [
+        "tests/unit/research-install-runtime.test.ts"
+      ],
+      "why": "The actual Python-selected install harness image must meet the accepted Node24 build target; the installer guard remains unchanged."
     }
   ]
 }

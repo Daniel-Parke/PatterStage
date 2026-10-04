@@ -74,7 +74,11 @@
         "org/tasks/T-0195.json",
         "org/tasks/T-0196.json",
         "org/tasks/T-0197.json",
-        "org/tasks/T-0201.json"
+        "org/tasks/T-0201.json",
+        "docker/TestHarness.dockerfile",
+        "org/briefs/T-0207-install-runtime-oracle.md",
+        "org/plans/2026-09-refactor-programme.json",
+        "tests/unit/research-install-runtime.test.ts"
       ],
       "acquired": "2026-10-04T19:40:23.974255+01:00",
       "expires": "2026-10-05T19:40:23.974255+01:00"

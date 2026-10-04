@@ -19,7 +19,7 @@
   },
   "mode": "high-assurance",
   "tier_proposed": "R3",
-  "status": "in-review",
+  "status": "active",
   "owner_session": "2026-10-04-t0194-coordinator",
   "claims": [
     "src/lib/",
@@ -179,7 +179,7 @@
   ],
   "timestamps": {
     "opened": "2026-10-04T16:51:49.2632+01:00",
-    "updated": "2026-10-04T22:03:53.375571+00:00"
+    "updated": "2026-10-04T22:12:41.729286+00:00"
   },
   "verdicts": [
     {
@@ -251,6 +251,13 @@
       "verdict": "pass",
       "date": "2026-10-04T22:03:53.375571+00:00",
       "notes": "Parfit bounded LOCAL R3 PASS atf765488a: unchanged full10stage implementation gate,9051unit/513browser/2purity; additive independent2-case test delta types/lint/Knip0;18 library and8 DNS causal committed kills,98/32 original/restored controls, byte/mode and clean-tree restoration. Accept exact T0194 review-handoff allocation:21 qualified,1 confirmed follow-up,20 open atoms with canonical proposed owners, original evidence/limits and accepted plan authority preserved. Future proof remains open; proposed records do not authorise unclaimed repairs. Batch closure awaits all required exact-head hosted checks. T0206/T0195 unresolved warnings held; no whole-product/release acceptance."
+    },
+    {
+      "role": "REVIEWER",
+      "session": "01a107e1-5ba0-7703-ab13-e23e640dc10b",
+      "verdict": "pass",
+      "date": "2026-10-04T22:12:41.729286+00:00",
+      "notes": "Parfit bounded scope/authority PASS for omitted install-harness Node24 fixture correction under accepted ADR0020, with independent additive red oracle. Hosted39f98848 failures are retained; no final acceptance until owned Linux qualification, unchanged full gate, committed sweep and every required hosted job. The retirement registry must name newly committed alias reader src/lib/config/env.ts explicitly; compatibility remains deferred throughv1.0."
     }
   ],
   "tier_ruled": "R3",
