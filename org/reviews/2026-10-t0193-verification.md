@@ -198,3 +198,32 @@ the state and viewport):
 - `tmp/t0193-ui-proof/reader-settings-phone-after.png` SHA256 `f1d886d851e6ce132de832efa37fbb4d69bb27c29c2b71e4aa7acf3cefe06b7d`
 - `tmp/t0193-ui-proof/reader-settings-phone-clean-after.png` SHA256 `777099083df0ce4411e57f1cf5a88d73438cb77bdefa5ee6e742ce2f9f595780`
 - `tmp/t0193-ui-proof/research-desktop-after.png` SHA256 `828f5792d5874c6dc6047faef3d2b4d790bc7b8ab30a833093438ebae5e12f3e`
+
+
+Finished local tree: all10gate stages exit0;8892unit/511browser passes,
+9unit/24browser existing skips unchanged; production build, two database-purity
+checks and both censuses pass. Complete receipt:
+tmp/t0193-coordinator-gate-1791116785371/gate/summary.json.
+Tree before/after:2db823333ea34e2c09a2ca39290f4ba5be7e81ae67c85a87467f0007b857380f.
+Product commit:9ce945ac633e72c8a489812fa287aa31eb15fc5a. Reconstructing the
+precommit HEAD/index with all2692current paths, actual bytes and modes exactly
+reproduces that gate stamp:tmp/t0193-gate-commit-binding.json. Two mixed-CRLF
+files required Git metadata refresh; there was no content or staged change.
+
+Committed isolated sweep:19KILLED/zeroSURVIVED, NOT-APPLIED, INEFFECTIVE or
+infrastructure failures. Structured21calls retain each executed matcher/name:
+tmp/t0191-t0193-sweep-9ce945ac/summary.json and call-0.json throughcall-20.json.
+The existing recorded-run wrapper was reused with the explicit T0193 manifest.
+Original/restored controls58/58pass; actual file/mode stamp7c28f14508f74b8ee7c00263fb324dcd15be006f99caa9e5d9a8a260f6919bba
+matches before/after. Causal names correspond to profile identity, duplicate
+claim/unmount, read-failure truth, artifact content/run identity/claim/unmount,
+clipboard, five labels, daily values and collection selection.
+
+Banach independently accepted the bounded LOCAL evidence; required exact-head
+hosted checks remain pending. All19supplemental rows are locally adjudicated,
+with15implemented repairs/consolidations and four retained cohorts/rollups.
+No foreign child owner is marked done. Final census:source102068(+6),
+tests151770(+1003), repeatedsource693(-12), repeatedtests4787 and one-importer103.
+Growth records explain regression coverage and ownership/accessible-state cost;
+fixed targets remain unchanged. T0193 stays in-review, not done, until hosted
+acceptance and independent final verdict. T0206 remains explicitly red.

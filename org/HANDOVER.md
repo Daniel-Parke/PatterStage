@@ -9,7 +9,29 @@ updated: 2026-10-04
 
 ## Active batch, 2026-10-04
 
-Q-036 permits T-0193 to start at ruled R2 while T-0206 stays active and explicitly red. Current PR macOS job37193334646 failed C02/C05 (18 of21 calls; watchdog exceeded), then passed20/20 alone. No timing repair or acceptance is claimed. T-0193 still requires a full green gate and all required hosted jobs before closure. Independent profile lifecycle oracles precede repair. The complete approved cohort and supplemental transfers remain accountable in [the ledger](reviews/2026-10-t0193-dispositions.json).
+T-0193 is in-review. Product9ce945ac implements profile draft/canonical rename
+ownership, truthful Models/Skill/Growth read states, retained Composer artifact
+save ownership, keyboard and semantic accessibility fixes, Reader contrast and
+reduced motion. Missions removes41lines; shared Research labels remove6.
+The whole unchanged gate passes10stages:8892unit/511browser, with existing
+9unit/24browser skips. Committed19mutants are all causally killed,58original and
+restored controls pass, exact bytes/modes restored. Banach accepts LOCAL scope;
+all required exact-head hosted jobs and final task closure remain pending.
+See [verification](reviews/2026-10-t0193-verification.md) and the19-row
+[disposition ledger](reviews/2026-10-t0193-dispositions.json).
+
+Current census:source102068, tests151770, repeatedwindows693/4787,
+one-importer103. Targets have not moved. Thirteen of22main batches remain
+formally complete pendingT0193hosted acceptance. T0194–T0199 and closingT0201
+remain; T0200retirement stays deferred throughv1.0.0. T0194's exact Settings
+schema exception ADR0018 proposal was accepted as drafted by the operator on
+4October; its protected entry and ruled task still await the batch dependency.
+
+Q036 permits this batch's start whileT0206remains explicitly red: the original
+macOS C02/C05 timing cause is unproved. This is not repaired by a later green
+run, and release acceptance remains blocked. PR157merge/tags/releases remain
+operator actions. Personal controlled walks used127.0.0.1:3999; owned server
+is stopped. Normal app port3333 and operator data were untouched.
 
 ## Previous checkpoint, 2026-10-04
 

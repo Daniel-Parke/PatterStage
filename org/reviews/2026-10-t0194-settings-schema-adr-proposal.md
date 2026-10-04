@@ -6,8 +6,10 @@ tags: [adr, refactor]
 
 # Proposed ADR-0018: Settings field-table exception to ADR-0005
 
-Status: proposed, awaiting operator acceptance. Acceptance permits a new
-protected ADR file; ADR-0005 remains unchanged.
+Status: accepted as drafted by Daniel Parke, 2026-10-04, through the
+interactive operator ruling. Acceptance permits a new protected ADR file
+under T-0194's ruled record; ADR-0005 remains unchanged. The protected entry
+has not yet been created, and T-0194's implementation dependency remains.
 
 ## Context
 
