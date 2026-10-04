@@ -7,6 +7,28 @@ updated: 2026-10-04
 
 # Handover · PatterStage, 2026-10-02
 
+## Accepted library and DNS batches, 2026-10-04
+
+T0194 and T0207 are done with Parfit's final bounded R3 acceptance at72edf3ff.
+All11 PR jobs,9 applicable push jobs and both secret scans pass. Local gate:
+9,055 unit cases,513 browser cases,2 build-purity checks. Committed sweeps:
+18 library and9 research mutants,98/34 original and restored controls. All
+five owned Linux smoke scenarios pass onNode24.21.0. First hosted failures
+and earlier local failures remain evidence, not erased by the latest green.
+
+T0194's20findings/14OP/42coverage handoff is finalised with qualified limits:
+21 coverage atoms qualified,one confirmed follow-up and20 remain open with
+named receiving records. The historical137-suite classification is unchanged;
+new independent classification and environment inventories await T0195 landing.
+T0195 is next. T0196–T0199,T0201 and named T0208 repairs remain planned;
+T0200 compatibility retirement remains deferred throughv1.0.
+
+T0206 still owns the macOS timing cause. The failed invocation returned21
+native statuses but20 shell completions; successful later coverage does not
+prove a cause or repair. Worker teardown, Windows failures and advisory
+attribution remain named. Operator port3333/data are untouched; temporary3999
+preview is stopped. Whole-product pathways and release acceptance remain open.
+
 ## Current correction checkpoint, 2026-10-04
 
 Committed correction `2e7b534c` passes the complete unchanged ten-step gate:

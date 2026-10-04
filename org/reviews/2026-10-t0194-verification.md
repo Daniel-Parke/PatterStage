@@ -317,3 +317,12 @@ All five owned Linux smoke install/update scenarios pass on actual Node24.21.0: 
 Clean committed sweep `tmp/t0194-committed-sweeps-1791153409081/summary.json` at `2e7b534ca95a72fc1ae74c6be3931d5c26a22cb8` exits0: 18/18 causal kills;98/98 original and restored controls;no infrastructure kills. Structured reports show intended executed matcher failures. Restoration of bytes/modes and clean-tree verification pass. Earlier survivor/ERROR and hosted failures remain recorded.
 
 Parfit independently accepts the completed unchanged gate, all192 hashes, narrow11-path correction and five Linux scenario bounds. Final sweep review and exact-head hosted acceptance remain required. The parallel Jest worker warning and macOS timing cause remain unresolved.
+
+
+## Final bounded acceptance
+
+At `72edf3ff9d84e91b35d4ed68f2bcb5d768f3ed34`, every required hosted job passed:11 PR jobs,9 applicable push jobs and both Gitleaks scans. The two push event exclusions remain explicitly skipped and do not replace PR acceptance. Complete per-job snapshot: `tmp/t0194-hosted-1791154420294/snapshot.json`. [PR CI](https://github.com/Daniel-Parke/PatterStage/actions/runs/37240993567) and [push CI](https://github.com/Daniel-Parke/PatterStage/actions/runs/37240988847) both conclude success. First39f98848 failures remain recorded.
+
+Parfit FINAL bounded R3 PASS at72edf3ff: all four exact-head CI/Gitleaks runs green, all11 PR and9 applicable push jobs plus both scans pass. Full unchanged10-stage local gate9055unit/513browser/2purity,18 library and9 research causal kills with98/34 original/restored controls, five owned Linux smoke scenarios onNode24.21.0; original failures preserved. Accept T0194 implementation plus exact qualified42-row handoff and T0207 DNS/install repair for closure.20 future coverage atoms, T0206 macOS timing cause, T0195 worker warning and remaining advisory attribution stay open. No whole-product, paid-provider or release acceptance.
+
+The committed frozen oracles and supplementary tests retain their identities; no coverage floor, timing bound or target changed. Task closure accepts this batch and its named evidence handoff. It does not complete the future proof obligations or release programme.

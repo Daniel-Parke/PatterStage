@@ -1,6 +1,6 @@
 {
   "task": "T-0194",
-  "draft": true,
+  "draft": false,
   "inspectedRevision": "57aad470c161bdf963cb70d86c418e55692be66f",
   "findings": [
     {
@@ -72,7 +72,7 @@
     },
     {
       "id": "lib-domains-05",
-      "outcome": "focused-verified-pending-hosted",
+      "outcome": "implemented-verified",
       "task": "T-0194",
       "reason": "org/reviews/2026-10-t0194-verification.md:197 org/briefs/T-0194-obsolete-exports.md:7 tmp/t0194-obsolete-amended-green.json report:exports = knip --production --include exports --reporter json; added, not run by sidecar. Limits: Only eleven authorised helpers/orphan type retired; constructed/external imports remain unproved. Report command presence does not establish a clean export report.",
       "originalDisposition": {
@@ -140,11 +140,18 @@
         "uncertainty": "Static `rg -l -w <symbol> src scripts` finds the named exports only in defining files, except `truncate`, which needs `rg -n '\\btruncate\\(' src scripts` to exclude SQL uses. Dynamic uses remain unproved. `MODULE_ACCENTS` is lock-book pinned."
       },
       "acceptance": "Focused verified only; unchanged full gate, committed sweep, independent R3 and hosted acceptance outstanding.",
-      "previousVerificationOutcome": "focused-verified-pending-gate"
+      "previousVerificationOutcome": "focused-verified-pending-gate",
+      "previousAcceptanceOutcome": "focused-verified-pending-hosted",
+      "finalAcceptance": {
+        "head": "72edf3ff9d84e91b35d4ed68f2bcb5d768f3ed34",
+        "reviewer": "Parfit 01a107e1-5ba0-7703-ab13-e23e640dc10b",
+        "receipt": "tmp/t0194-hosted-1791154420294/snapshot.json",
+        "limit": "Focused implementation only; original remainingUncertainty and foreign-owned proofs remain."
+      }
     },
     {
       "id": "lib-domains-06",
-      "outcome": "focused-verified-pending-hosted",
+      "outcome": "implemented-verified",
       "task": "T-0194",
       "reason": "org/reviews/2026-10-t0194-verification.md:248 tmp/t0194-type-fold-proof.json Three type-only folds: -49 production lines/-966 printer bytes; emitted JS identical. Limits: Only the three measured folds; no arbitrary shape merger or total-tree reduction.",
       "originalDisposition": {
@@ -210,11 +217,18 @@
         "uncertainty": "Duplicate shapes remain, but message nullability and tool-call types differ. Direct aliasing is unsafe."
       },
       "acceptance": "Focused verified only; unchanged full gate, committed sweep, independent R3 and hosted acceptance outstanding.",
-      "previousVerificationOutcome": "focused-verified-pending-gate"
+      "previousVerificationOutcome": "focused-verified-pending-gate",
+      "previousAcceptanceOutcome": "focused-verified-pending-hosted",
+      "finalAcceptance": {
+        "head": "72edf3ff9d84e91b35d4ed68f2bcb5d768f3ed34",
+        "reviewer": "Parfit 01a107e1-5ba0-7703-ab13-e23e640dc10b",
+        "receipt": "tmp/t0194-hosted-1791154420294/snapshot.json",
+        "limit": "Focused implementation only; original remainingUncertainty and foreign-owned proofs remain."
+      }
     },
     {
       "id": "lib-domains-10",
-      "outcome": "focused-verified-pending-hosted",
+      "outcome": "implemented-verified",
       "task": "T-0194",
       "reason": "org/reviews/2026-10-t0194-verification.md:174 tmp/t0194-helper-parity-green.json Limits: Whole-graph insertion fold verified; optional mission field re-listing retained because schema/default and affected-suite cost is not measured.",
       "originalDisposition": {
@@ -273,7 +287,14 @@
         "uncertainty": "Field re-listing and local insert repeats remain; saving needs fresh measurement."
       },
       "acceptance": "Focused verified only; unchanged full gate, committed sweep, independent R3 and hosted acceptance outstanding.",
-      "previousVerificationOutcome": "focused-verified-pending-gate"
+      "previousVerificationOutcome": "focused-verified-pending-gate",
+      "previousAcceptanceOutcome": "focused-verified-pending-hosted",
+      "finalAcceptance": {
+        "head": "72edf3ff9d84e91b35d4ed68f2bcb5d768f3ed34",
+        "reviewer": "Parfit 01a107e1-5ba0-7703-ab13-e23e640dc10b",
+        "receipt": "tmp/t0194-hosted-1791154420294/snapshot.json",
+        "limit": "Focused implementation only; original remainingUncertainty and foreign-owned proofs remain."
+      }
     },
     {
       "id": "lib-domains-15",
@@ -455,7 +476,7 @@
     },
     {
       "id": "lib-domains-11",
-      "outcome": "focused-verified-pending-hosted",
+      "outcome": "implemented-verified",
       "task": "T-0194",
       "reason": "org/reviews/2026-10-t0194-remaining-rulings.md:9 org/reviews/2026-10-t0194-verification.md:179 tmp/t0194-remaining-rulings-green.json Limits: Four-character Research escaper premise supersedes earlier broader mismatch objection: fold passes. Ruled elapsed days verified; distinct parsers/timeAgo/timeUntil retained. Whole rendered entity surface not universally proved.",
       "originalDisposition": {
@@ -518,7 +539,14 @@
         "uncertainty": "Escapers, JSON fallbacks and duration formats have different semantics. Shared-helper cost is unknown."
       },
       "acceptance": "Focused verified only; unchanged full gate, committed sweep, independent R3 and hosted acceptance outstanding.",
-      "previousVerificationOutcome": "focused-verified-pending-gate"
+      "previousVerificationOutcome": "focused-verified-pending-gate",
+      "previousAcceptanceOutcome": "focused-verified-pending-hosted",
+      "finalAcceptance": {
+        "head": "72edf3ff9d84e91b35d4ed68f2bcb5d768f3ed34",
+        "reviewer": "Parfit 01a107e1-5ba0-7703-ab13-e23e640dc10b",
+        "receipt": "tmp/t0194-hosted-1791154420294/snapshot.json",
+        "limit": "Focused implementation only; original remainingUncertainty and foreign-owned proofs remain."
+      }
     },
     {
       "id": "lib-domains-17",
@@ -654,7 +682,7 @@
     },
     {
       "id": "lib-domains-02",
-      "outcome": "focused-verified-pending-hosted",
+      "outcome": "implemented-verified",
       "task": "T-0194",
       "reason": "org/reviews/2026-10-t0194-verification.md:119 Limits: Hermes root/env ownership and exact five-spelling lint allowlist qualified; hosted/full gate acceptance separate.",
       "originalDisposition": {
@@ -707,7 +735,14 @@
         "uncertainty": "Hermes-specific root record remains in core. Path-bound tests add move cost."
       },
       "acceptance": "Focused verified only; unchanged full gate, committed sweep, independent R3 and hosted acceptance outstanding.",
-      "previousVerificationOutcome": "focused-verified-pending-gate"
+      "previousVerificationOutcome": "focused-verified-pending-gate",
+      "previousAcceptanceOutcome": "focused-verified-pending-hosted",
+      "finalAcceptance": {
+        "head": "72edf3ff9d84e91b35d4ed68f2bcb5d768f3ed34",
+        "reviewer": "Parfit 01a107e1-5ba0-7703-ab13-e23e640dc10b",
+        "receipt": "tmp/t0194-hosted-1791154420294/snapshot.json",
+        "limit": "Focused implementation only; original remainingUncertainty and foreign-owned proofs remain."
+      }
     },
     {
       "id": "lib-domains-04",
@@ -772,7 +807,7 @@
     },
     {
       "id": "lib-domains-14",
-      "outcome": "focused-verified-pending-hosted",
+      "outcome": "implemented-verified",
       "task": "T-0194",
       "reason": "org/reviews/2026-10-t0194-remaining-rulings.md:17 org/reviews/2026-10-t0194-verification.md:252 tmp/t0194-remaining-held-green.json scripts/tooling/design-lint.mjs:253; src/lib/config/env.ts:15 Limits: All thirteen documented alias groups and both raw/trimmed selection semantics, pure imports, exact paths readEnv identity and discovery held. Alias retirement remains post-v1. Pure alias-registry metadata HERMES_HOME: [AGENT_HOME] matches hermes-outside-adapter source predicate at design-lint.mjs:257-265. Independent Parfit review permits only the exact next-line canonical/legacy key metadata suppression at config/env.ts:15-16; no filesystem exemption, predicate change, baseline exemption or broader Settings exception.",
       "originalDisposition": {
@@ -841,11 +876,18 @@
         "uncertainty": "Legacy discovery and inconsistent inline alias reads remain. Removing discovery could hide an existing database."
       },
       "acceptance": "Focused verified only; unchanged full gate, committed sweep, independent R3 and hosted acceptance outstanding.",
-      "previousVerificationOutcome": "focused-verified-pending-gate"
+      "previousVerificationOutcome": "focused-verified-pending-gate",
+      "previousAcceptanceOutcome": "focused-verified-pending-hosted",
+      "finalAcceptance": {
+        "head": "72edf3ff9d84e91b35d4ed68f2bcb5d768f3ed34",
+        "reviewer": "Parfit 01a107e1-5ba0-7703-ab13-e23e640dc10b",
+        "receipt": "tmp/t0194-hosted-1791154420294/snapshot.json",
+        "limit": "Focused implementation only; original remainingUncertainty and foreign-owned proofs remain."
+      }
     },
     {
       "id": "lib-domains-07",
-      "outcome": "focused-verified-pending-hosted",
+      "outcome": "implemented-verified",
       "task": "T-0194",
       "reason": "org/reviews/2026-10-t0194-verification.md:67 org/reviews/2026-10-t0194-verification.md:95 Limits: Four wait sites Stop/cleanup/stoppedError qualified; +20 net lines are defect repair, not reduction. Separately confirmed reported-usage retry loss belongs T0208.",
       "originalDisposition": {
@@ -899,11 +941,18 @@
         "uncertainty": "The gateway 429 waits are 30 and 60 seconds and do not observe Stop mid-sleep. Story Weaver and Deep Research call this path. Mission Stop uses HermesRuntime's separate abortable retry sleep, so it is not evidence for this defect. Empty-response and catch-path sleeps also need review; an abortable replacement inside `catch` must preserve `stoppedError()` rather than leak `signal.reason`. Shared-helper/interface cost makes historical net saving unknown."
       },
       "acceptance": "Focused verified only; unchanged full gate, committed sweep, independent R3 and hosted acceptance outstanding.",
-      "previousVerificationOutcome": "focused-verified-pending-gate"
+      "previousVerificationOutcome": "focused-verified-pending-gate",
+      "previousAcceptanceOutcome": "focused-verified-pending-hosted",
+      "finalAcceptance": {
+        "head": "72edf3ff9d84e91b35d4ed68f2bcb5d768f3ed34",
+        "reviewer": "Parfit 01a107e1-5ba0-7703-ab13-e23e640dc10b",
+        "receipt": "tmp/t0194-hosted-1791154420294/snapshot.json",
+        "limit": "Focused implementation only; original remainingUncertainty and foreign-owned proofs remain."
+      }
     },
     {
       "id": "lib-domains-13",
-      "outcome": "focused-verified-pending-hosted",
+      "outcome": "implemented-verified",
       "task": "T-0194",
       "reason": "org/reviews/2026-10-t0194-remaining-rulings.md:17 org/reviews/2026-10-t0194-verification.md:252 Limits: CHAT_DEFAULT_MODEL import verified; intentional Hermes protocol terminology retained. No broad rename or log/table ownership migration.",
       "originalDisposition": {
@@ -964,11 +1013,18 @@
         "uncertainty": "Some vendor terms are intentional protocol names or recorded exceptions."
       },
       "acceptance": "Focused verified only; unchanged full gate, committed sweep, independent R3 and hosted acceptance outstanding.",
-      "previousVerificationOutcome": "focused-verified-pending-gate"
+      "previousVerificationOutcome": "focused-verified-pending-gate",
+      "previousAcceptanceOutcome": "focused-verified-pending-hosted",
+      "finalAcceptance": {
+        "head": "72edf3ff9d84e91b35d4ed68f2bcb5d768f3ed34",
+        "reviewer": "Parfit 01a107e1-5ba0-7703-ab13-e23e640dc10b",
+        "receipt": "tmp/t0194-hosted-1791154420294/snapshot.json",
+        "limit": "Focused implementation only; original remainingUncertainty and foreign-owned proofs remain."
+      }
     },
     {
       "id": "lib-domains-03",
-      "outcome": "focused-verified-pending-hosted",
+      "outcome": "implemented-verified",
       "task": "T-0194",
       "reason": "org/reviews/2026-10-t0194-verification.md:119 Limits: Settings metadata remains approved core exception; held lint predicate is not a universal plugin ownership judgement.",
       "originalDisposition": {
@@ -1021,7 +1077,14 @@
         "uncertainty": "Protocol field table remains in core. The exception is operator-ruled but needs its durable ADR record."
       },
       "acceptance": "Focused verified only; unchanged full gate, committed sweep, independent R3 and hosted acceptance outstanding.",
-      "previousVerificationOutcome": "focused-verified-pending-gate"
+      "previousVerificationOutcome": "focused-verified-pending-gate",
+      "previousAcceptanceOutcome": "focused-verified-pending-hosted",
+      "finalAcceptance": {
+        "head": "72edf3ff9d84e91b35d4ed68f2bcb5d768f3ed34",
+        "reviewer": "Parfit 01a107e1-5ba0-7703-ab13-e23e640dc10b",
+        "receipt": "tmp/t0194-hosted-1791154420294/snapshot.json",
+        "limit": "Focused implementation only; original remainingUncertainty and foreign-owned proofs remain."
+      }
     },
     {
       "id": "lib-domains-12",
@@ -1381,7 +1444,7 @@
     {
       "id": "cross-cutting-14a",
       "parentId": "cross-cutting-14",
-      "outcome": "focused-verified-pending-hosted",
+      "outcome": "implemented-verified",
       "task": "T-0194",
       "reason": "org/reviews/2026-10-t0194-verification.md:179 tmp/t0194-helper-parity-green.json Limits: Four-character fold verified; earlier escaper mismatch premise obsolete for this fold. Broader five-character/entity-decoding claims not inferred.",
       "originalDisposition": {
@@ -1434,12 +1497,19 @@
         "uncertainty": "Three renderers remain in source, but the later `components-30` ruling supersedes keep-three for chat: chat and skills should share `SimpleMarkdown`, with the link-scheme guard/test and code-block Copy preserved. Research remains separate. The independent escape-helper ruling excludes `proxy.ts`; sink safety and streaming cost require tests after implementation."
       },
       "acceptance": "Focused verified only; unchanged full gate, committed sweep, independent R3 and hosted acceptance outstanding.",
-      "previousVerificationOutcome": "focused-verified-pending-gate"
+      "previousVerificationOutcome": "focused-verified-pending-gate",
+      "previousAcceptanceOutcome": "focused-verified-pending-hosted",
+      "finalAcceptance": {
+        "head": "72edf3ff9d84e91b35d4ed68f2bcb5d768f3ed34",
+        "reviewer": "Parfit 01a107e1-5ba0-7703-ab13-e23e640dc10b",
+        "receipt": "tmp/t0194-hosted-1791154420294/snapshot.json",
+        "limit": "Focused implementation only; original remainingUncertainty and foreign-owned proofs remain."
+      }
     },
     {
       "id": "cross-cutting-03b",
       "parentId": "cross-cutting-03",
-      "outcome": "focused-verified-pending-hosted",
+      "outcome": "implemented-verified",
       "task": "T-0194",
       "reason": "org/reviews/2026-10-t0194-remaining-rulings.md:17 org/reviews/2026-10-t0194-verification.md:252 scripts/tooling/design-lint.mjs:253; src/lib/config/env.ts:15 Limits: Thirteen groups, raw/trimmed selection semantics, pure import and re-export identity proved; future aliases outside table not presumed. Pure alias-registry metadata HERMES_HOME: [AGENT_HOME] matches hermes-outside-adapter source predicate at design-lint.mjs:257-265. Independent Parfit review permits only the exact next-line canonical/legacy key metadata suppression at config/env.ts:15-16; no filesystem exemption, predicate change, baseline exemption or broader Settings exception.",
       "originalDisposition": {
@@ -1494,12 +1564,19 @@
         "uncertainty": "Multiple env readers and boolean vocabularies remain. Registry needs explicit precedence and fail-closed cases."
       },
       "acceptance": "Focused verified only; unchanged full gate, committed sweep, independent R3 and hosted acceptance outstanding.",
-      "previousVerificationOutcome": "focused-verified-pending-gate"
+      "previousVerificationOutcome": "focused-verified-pending-gate",
+      "previousAcceptanceOutcome": "focused-verified-pending-hosted",
+      "finalAcceptance": {
+        "head": "72edf3ff9d84e91b35d4ed68f2bcb5d768f3ed34",
+        "reviewer": "Parfit 01a107e1-5ba0-7703-ab13-e23e640dc10b",
+        "receipt": "tmp/t0194-hosted-1791154420294/snapshot.json",
+        "limit": "Focused implementation only; original remainingUncertainty and foreign-owned proofs remain."
+      }
     },
     {
       "id": "lib-domains-05a",
       "parentId": "lib-domains-05",
-      "outcome": "focused-verified-pending-hosted",
+      "outcome": "implemented-verified",
       "task": "T-0194",
       "reason": "org/reviews/2026-10-t0194-verification.md:197 report:exports command added as report only Limits: Approved unused subset only; report result not run here and dynamic/external uses remain bounded.",
       "originalDisposition": {
@@ -1553,12 +1630,19 @@
         "uncertainty": "Static `rg -l -w <symbol> src scripts` finds the named exports only in defining files, except `truncate`, which needs `rg -n '\\btruncate\\(' src scripts` to exclude SQL uses. Dynamic uses remain unproved. `MODULE_ACCENTS` is lock-book pinned."
       },
       "acceptance": "Focused verified only; unchanged full gate, committed sweep, independent R3 and hosted acceptance outstanding.",
-      "previousVerificationOutcome": "focused-verified-pending-gate"
+      "previousVerificationOutcome": "focused-verified-pending-gate",
+      "previousAcceptanceOutcome": "focused-verified-pending-hosted",
+      "finalAcceptance": {
+        "head": "72edf3ff9d84e91b35d4ed68f2bcb5d768f3ed34",
+        "reviewer": "Parfit 01a107e1-5ba0-7703-ab13-e23e640dc10b",
+        "receipt": "tmp/t0194-hosted-1791154420294/snapshot.json",
+        "limit": "Focused implementation only; original remainingUncertainty and foreign-owned proofs remain."
+      }
     },
     {
       "id": "lib-domains-11a",
       "parentId": "lib-domains-11",
-      "outcome": "focused-verified-pending-hosted",
+      "outcome": "implemented-verified",
       "task": "T-0194",
       "reason": "org/reviews/2026-10-t0194-remaining-rulings.md:17 tmp/t0194-remaining-rulings-green.json Limits: 23h59m/1d0h/2d1h controls verified; no change inferred for timeUntil/timeAgo semantics.",
       "originalDisposition": {
@@ -1607,12 +1691,19 @@
         "uncertainty": "Escapers, JSON fallbacks and duration formats have different semantics. Shared-helper cost is unknown."
       },
       "acceptance": "Focused verified only; unchanged full gate, committed sweep, independent R3 and hosted acceptance outstanding.",
-      "previousVerificationOutcome": "focused-verified-pending-gate"
+      "previousVerificationOutcome": "focused-verified-pending-gate",
+      "previousAcceptanceOutcome": "focused-verified-pending-hosted",
+      "finalAcceptance": {
+        "head": "72edf3ff9d84e91b35d4ed68f2bcb5d768f3ed34",
+        "reviewer": "Parfit 01a107e1-5ba0-7703-ab13-e23e640dc10b",
+        "receipt": "tmp/t0194-hosted-1791154420294/snapshot.json",
+        "limit": "Focused implementation only; original remainingUncertainty and foreign-owned proofs remain."
+      }
     },
     {
       "id": "lib-domains-11b",
       "parentId": "lib-domains-11",
-      "outcome": "focused-verified-pending-hosted",
+      "outcome": "implemented-verified",
       "task": "T-0194",
       "reason": "org/reviews/2026-10-t0194-verification.md:179 tmp/t0194-helper-parity-green.json Limits: Identical four-character escaper fold qualifies; no universal sanitisation/entity decoding guarantee.",
       "originalDisposition": {
@@ -1659,12 +1750,19 @@
         "uncertainty": "Escapers, JSON fallbacks and duration formats have different semantics. Shared-helper cost is unknown."
       },
       "acceptance": "Focused verified only; unchanged full gate, committed sweep, independent R3 and hosted acceptance outstanding.",
-      "previousVerificationOutcome": "focused-verified-pending-gate"
+      "previousVerificationOutcome": "focused-verified-pending-gate",
+      "previousAcceptanceOutcome": "focused-verified-pending-hosted",
+      "finalAcceptance": {
+        "head": "72edf3ff9d84e91b35d4ed68f2bcb5d768f3ed34",
+        "reviewer": "Parfit 01a107e1-5ba0-7703-ab13-e23e640dc10b",
+        "receipt": "tmp/t0194-hosted-1791154420294/snapshot.json",
+        "limit": "Focused implementation only; original remainingUncertainty and foreign-owned proofs remain."
+      }
     },
     {
       "id": "lib-domains-02",
       "parentId": "lib-domains-02",
-      "outcome": "focused-verified-pending-hosted",
+      "outcome": "implemented-verified",
       "task": "T-0194",
       "reason": "org/reviews/2026-10-t0194-verification.md:119 Limits: Exact root ownership move only; full acceptance separate.",
       "originalDisposition": {
@@ -1710,12 +1808,19 @@
         "uncertainty": "Hermes-specific root record remains in core. Path-bound tests add move cost."
       },
       "acceptance": "Focused verified only; unchanged full gate, committed sweep, independent R3 and hosted acceptance outstanding.",
-      "previousVerificationOutcome": "focused-verified-pending-gate"
+      "previousVerificationOutcome": "focused-verified-pending-gate",
+      "previousAcceptanceOutcome": "focused-verified-pending-hosted",
+      "finalAcceptance": {
+        "head": "72edf3ff9d84e91b35d4ed68f2bcb5d768f3ed34",
+        "reviewer": "Parfit 01a107e1-5ba0-7703-ab13-e23e640dc10b",
+        "receipt": "tmp/t0194-hosted-1791154420294/snapshot.json",
+        "limit": "Focused implementation only; original remainingUncertainty and foreign-owned proofs remain."
+      }
     },
     {
       "id": "lib-domains-14b",
       "parentId": "lib-domains-14",
-      "outcome": "focused-verified-pending-hosted",
+      "outcome": "implemented-verified",
       "task": "T-0194",
       "reason": "org/reviews/2026-10-t0194-remaining-rulings.md:17 org/reviews/2026-10-t0194-verification.md:252 scripts/tooling/design-lint.mjs:253; src/lib/config/env.ts:15 Limits: Discovery retained; alias retirement deferred post-v1 and raw whitespace/caller parsing held. Pure alias-registry metadata HERMES_HOME: [AGENT_HOME] matches hermes-outside-adapter source predicate at design-lint.mjs:257-265. Independent Parfit review permits only the exact next-line canonical/legacy key metadata suppression at config/env.ts:15-16; no filesystem exemption, predicate change, baseline exemption or broader Settings exception.",
       "originalDisposition": {
@@ -1770,12 +1875,19 @@
         "uncertainty": "Legacy discovery and inconsistent inline alias reads remain. Removing discovery could hide an existing database."
       },
       "acceptance": "Focused verified only; unchanged full gate, committed sweep, independent R3 and hosted acceptance outstanding.",
-      "previousVerificationOutcome": "focused-verified-pending-gate"
+      "previousVerificationOutcome": "focused-verified-pending-gate",
+      "previousAcceptanceOutcome": "focused-verified-pending-hosted",
+      "finalAcceptance": {
+        "head": "72edf3ff9d84e91b35d4ed68f2bcb5d768f3ed34",
+        "reviewer": "Parfit 01a107e1-5ba0-7703-ab13-e23e640dc10b",
+        "receipt": "tmp/t0194-hosted-1791154420294/snapshot.json",
+        "limit": "Focused implementation only; original remainingUncertainty and foreign-owned proofs remain."
+      }
     },
     {
       "id": "lib-domains-13c",
       "parentId": "lib-domains-13",
-      "outcome": "focused-verified-pending-hosted",
+      "outcome": "implemented-verified",
       "task": "T-0194",
       "reason": "org/reviews/2026-10-t0194-remaining-rulings.md:17 Limits: Only imported Chat default, field/file/protocol names held.",
       "originalDisposition": {
@@ -1827,12 +1939,19 @@
         "uncertainty": "Some vendor terms are intentional protocol names or recorded exceptions."
       },
       "acceptance": "Focused verified only; unchanged full gate, committed sweep, independent R3 and hosted acceptance outstanding.",
-      "previousVerificationOutcome": "focused-verified-pending-gate"
+      "previousVerificationOutcome": "focused-verified-pending-gate",
+      "previousAcceptanceOutcome": "focused-verified-pending-hosted",
+      "finalAcceptance": {
+        "head": "72edf3ff9d84e91b35d4ed68f2bcb5d768f3ed34",
+        "reviewer": "Parfit 01a107e1-5ba0-7703-ab13-e23e640dc10b",
+        "receipt": "tmp/t0194-hosted-1791154420294/snapshot.json",
+        "limit": "Focused implementation only; original remainingUncertainty and foreign-owned proofs remain."
+      }
     },
     {
       "id": "lib-domains-03",
       "parentId": "lib-domains-03",
-      "outcome": "focused-verified-pending-hosted",
+      "outcome": "implemented-verified",
       "task": "T-0194",
       "reason": "org/reviews/2026-10-t0194-verification.md:119 Limits: Exception has durable accepted ADR; no wider core protocol exemption inferred.",
       "originalDisposition": {
@@ -1879,7 +1998,14 @@
         "uncertainty": "Protocol field table remains in core. The exception is operator-ruled but needs its durable ADR record."
       },
       "acceptance": "Focused verified only; unchanged full gate, committed sweep, independent R3 and hosted acceptance outstanding.",
-      "previousVerificationOutcome": "focused-verified-pending-gate"
+      "previousVerificationOutcome": "focused-verified-pending-gate",
+      "previousAcceptanceOutcome": "focused-verified-pending-hosted",
+      "finalAcceptance": {
+        "head": "72edf3ff9d84e91b35d4ed68f2bcb5d768f3ed34",
+        "reviewer": "Parfit 01a107e1-5ba0-7703-ab13-e23e640dc10b",
+        "receipt": "tmp/t0194-hosted-1791154420294/snapshot.json",
+        "limit": "Focused implementation only; original remainingUncertainty and foreign-owned proofs remain."
+      }
     },
     {
       "id": "lib-domains-12",
@@ -3998,7 +4124,7 @@
   ],
   "openingInspectedRevision": "93e425d556f384663fe5715c983d8b0c0c47fd07",
   "reconciliation": {
-    "status": "itemised-pre-gate",
+    "status": "independently-accepted-qualified-handoff",
     "counts": {
       "findings": 20,
       "operatorDispositions": 14,
@@ -4544,7 +4670,7 @@
       }
     },
     "sourceManifestSha256": "afd19c903e1854efc024a1df81506adba240a29aae50b411a398b44bcd5ef7b2",
-    "gateStatus": "Reverified unchanged10-stage gate and clean committed18+9 sweeps pass at2e7b534c. Five owned Linux smoke scenarios pass; hosted exact-head acceptance still pending. Original unresolved coverage atoms and T0206 cause remain open.",
+    "gateStatus": "Complete unchanged gate and27 clean committed causal kills accepted; all required hosted jobs green at72edf3ff.21 coverage atoms qualified, one confirmed follow-up,20 open with canonical receiving records. No42-complete claim.",
     "acceptance": "Independent bounded LOCAL R3 implementation and exact review-handoff PASS; hosted batch acceptance pending. Future proof remains open in receiving records.",
     "scopeLimit": "Coverage inspection can be complete for named bodies without proof of every branch. Broad corpus obligations remain explicit unresolved reviews.",
     "classificationLimit": "Original classify-only scope historical; 137 candidate classification requires independent sceptic, 86 broader named-reader candidates unclassified.",
@@ -5003,7 +5129,227 @@
       "libraryMutantsKilled": 18,
       "researchMutantsKilled": 9,
       "linuxSmokeScenariosPassed": 5,
-      "qualification": "HTTP excluded from smoke; exact-head hosted acceptance and final independent sweep review pending. Original42-row coverage handoff is not completed by implementation checks."
+      "qualification": "Independently accepted local gate and committed sweeps; all exact-head hosted checks pass. Linux smoke excludesHTTP; separate full PR acceptance passes. Original42-row coverage handoff remains qualified."
+    },
+    "hostedAcceptance": {
+      "head": "72edf3ff9d84e91b35d4ed68f2bcb5d768f3ed34",
+      "observedAt": "2026-10-04T22:53:46.2285495+00:00",
+      "reviewer": "Parfit 01a107e1-5ba0-7703-ab13-e23e640dc10b",
+      "runs": [
+        {
+          "id": 37240993584,
+          "event": "pull_request",
+          "name": "Gitleaks",
+          "head": "72edf3ff9d84e91b35d4ed68f2bcb5d768f3ed34",
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/Daniel-Parke/PatterStage/actions/runs/37240993584",
+          "jobs": [
+            {
+              "name": "scan",
+              "status": "completed",
+              "conclusion": "success",
+              "databaseId": 111549517661,
+              "url": "https://github.com/Daniel-Parke/PatterStage/actions/runs/37240993584/job/111549517661"
+            }
+          ]
+        },
+        {
+          "id": 37240993567,
+          "event": "pull_request",
+          "name": "CI",
+          "head": "72edf3ff9d84e91b35d4ed68f2bcb5d768f3ed34",
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/Daniel-Parke/PatterStage/actions/runs/37240993567",
+          "jobs": [
+            {
+              "name": "e2e-smoke",
+              "status": "completed",
+              "conclusion": "success",
+              "databaseId": 111549517822,
+              "url": "https://github.com/Daniel-Parke/PatterStage/actions/runs/37240993567/job/111549517822"
+            },
+            {
+              "name": "build-test-ubuntu",
+              "status": "completed",
+              "conclusion": "success",
+              "databaseId": 111549517946,
+              "url": "https://github.com/Daniel-Parke/PatterStage/actions/runs/37240993567/job/111549517946"
+            },
+            {
+              "name": "build-test-macos",
+              "status": "completed",
+              "conclusion": "success",
+              "databaseId": 111549517948,
+              "url": "https://github.com/Daniel-Parke/PatterStage/actions/runs/37240993567/job/111549517948"
+            },
+            {
+              "name": "shell-custom-scripts",
+              "status": "completed",
+              "conclusion": "success",
+              "databaseId": 111549517987,
+              "url": "https://github.com/Daniel-Parke/PatterStage/actions/runs/37240993567/job/111549517987"
+            },
+            {
+              "name": "docker-image",
+              "status": "completed",
+              "conclusion": "success",
+              "databaseId": 111549517990,
+              "url": "https://github.com/Daniel-Parke/PatterStage/actions/runs/37240993567/job/111549517990"
+            },
+            {
+              "name": "install-harness",
+              "status": "completed",
+              "conclusion": "success",
+              "databaseId": 111549518003,
+              "url": "https://github.com/Daniel-Parke/PatterStage/actions/runs/37240993567/job/111549518003"
+            },
+            {
+              "name": "boot-smoke (macos-latest)",
+              "status": "completed",
+              "conclusion": "success",
+              "databaseId": 111549518022,
+              "url": "https://github.com/Daniel-Parke/PatterStage/actions/runs/37240993567/job/111549518022"
+            },
+            {
+              "name": "real-hermes-integration",
+              "status": "completed",
+              "conclusion": "success",
+              "databaseId": 111549518026,
+              "url": "https://github.com/Daniel-Parke/PatterStage/actions/runs/37240993567/job/111549518026"
+            },
+            {
+              "name": "boot-smoke (ubuntu-latest)",
+              "status": "completed",
+              "conclusion": "success",
+              "databaseId": 111549518078,
+              "url": "https://github.com/Daniel-Parke/PatterStage/actions/runs/37240993567/job/111549518078"
+            },
+            {
+              "name": "e2e-full (PLAYWRIGHT_SMOKE unset)",
+              "status": "completed",
+              "conclusion": "success",
+              "databaseId": 111549518088,
+              "url": "https://github.com/Daniel-Parke/PatterStage/actions/runs/37240993567/job/111549518088"
+            },
+            {
+              "name": "acceptance-gate (full suite + install journey + real Hermes)",
+              "status": "completed",
+              "conclusion": "success",
+              "databaseId": 111550869836,
+              "url": "https://github.com/Daniel-Parke/PatterStage/actions/runs/37240993567/job/111550869836"
+            }
+          ]
+        },
+        {
+          "id": 37240988873,
+          "event": "push",
+          "name": "Gitleaks",
+          "head": "72edf3ff9d84e91b35d4ed68f2bcb5d768f3ed34",
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/Daniel-Parke/PatterStage/actions/runs/37240988873",
+          "jobs": [
+            {
+              "name": "scan",
+              "status": "completed",
+              "conclusion": "success",
+              "databaseId": 111549503621,
+              "url": "https://github.com/Daniel-Parke/PatterStage/actions/runs/37240988873/job/111549503621"
+            }
+          ]
+        },
+        {
+          "id": 37240988847,
+          "event": "push",
+          "name": "CI",
+          "head": "72edf3ff9d84e91b35d4ed68f2bcb5d768f3ed34",
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/Daniel-Parke/PatterStage/actions/runs/37240988847",
+          "jobs": [
+            {
+              "name": "docker-image",
+              "status": "completed",
+              "conclusion": "success",
+              "databaseId": 111549503857,
+              "url": "https://github.com/Daniel-Parke/PatterStage/actions/runs/37240988847/job/111549503857"
+            },
+            {
+              "name": "real-hermes-integration",
+              "status": "completed",
+              "conclusion": "success",
+              "databaseId": 111549503869,
+              "url": "https://github.com/Daniel-Parke/PatterStage/actions/runs/37240988847/job/111549503869"
+            },
+            {
+              "name": "shell-custom-scripts",
+              "status": "completed",
+              "conclusion": "success",
+              "databaseId": 111549503883,
+              "url": "https://github.com/Daniel-Parke/PatterStage/actions/runs/37240988847/job/111549503883"
+            },
+            {
+              "name": "boot-smoke (macos-latest)",
+              "status": "completed",
+              "conclusion": "success",
+              "databaseId": 111549503891,
+              "url": "https://github.com/Daniel-Parke/PatterStage/actions/runs/37240988847/job/111549503891"
+            },
+            {
+              "name": "build-test-macos",
+              "status": "completed",
+              "conclusion": "success",
+              "databaseId": 111549503896,
+              "url": "https://github.com/Daniel-Parke/PatterStage/actions/runs/37240988847/job/111549503896"
+            },
+            {
+              "name": "install-harness",
+              "status": "completed",
+              "conclusion": "success",
+              "databaseId": 111549503905,
+              "url": "https://github.com/Daniel-Parke/PatterStage/actions/runs/37240988847/job/111549503905"
+            },
+            {
+              "name": "e2e-smoke",
+              "status": "completed",
+              "conclusion": "success",
+              "databaseId": 111549503912,
+              "url": "https://github.com/Daniel-Parke/PatterStage/actions/runs/37240988847/job/111549503912"
+            },
+            {
+              "name": "boot-smoke (ubuntu-latest)",
+              "status": "completed",
+              "conclusion": "success",
+              "databaseId": 111549503913,
+              "url": "https://github.com/Daniel-Parke/PatterStage/actions/runs/37240988847/job/111549503913"
+            },
+            {
+              "name": "build-test-ubuntu",
+              "status": "completed",
+              "conclusion": "success",
+              "databaseId": 111549503986,
+              "url": "https://github.com/Daniel-Parke/PatterStage/actions/runs/37240988847/job/111549503986"
+            },
+            {
+              "name": "e2e-full (PLAYWRIGHT_SMOKE unset)",
+              "status": "completed",
+              "conclusion": "skipped",
+              "databaseId": 111549504410,
+              "url": "https://github.com/Daniel-Parke/PatterStage/actions/runs/37240988847/job/111549504410"
+            },
+            {
+              "name": "acceptance-gate (full suite + install journey + real Hermes)",
+              "status": "completed",
+              "conclusion": "skipped",
+              "databaseId": 111550307659,
+              "url": "https://github.com/Daniel-Parke/PatterStage/actions/runs/37240988847/job/111550307659"
+            }
+          ]
+        }
+      ],
+      "limitations": "Historical timing cause/worker warning and20 future coverage proofs remain; no release or paid-provider acceptance."
     }
   },
   "reviewHandoff": {
