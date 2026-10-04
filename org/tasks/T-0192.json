@@ -206,7 +206,10 @@
       "tests/e2e/script-editor-pending-draft.spec.ts",
       "tests/unit/tooling-env-contract.test.ts",
       "tests/unit/scripts-typecheck-contract.test.ts",
-      "tests/unit/mission-template-editor-wiring.test.tsx"
+      "tests/unit/mission-template-editor-wiring.test.tsx",
+      "tests/unit/composer-advance-diagnostics.test.ts",
+      "tests/unit/server-log-contract.test.ts",
+      "tests/unit/server-log-boot-contract.test.ts"
     ],
     "hashes": {
       "tests/unit/api-fetch-error-envelope.test.ts": "f19bdd09a27ac0e4204ed36fe873cfc81adc7946f8b0ffab644a6bfe6135db51",
@@ -232,9 +235,12 @@
       "tests/e2e/script-editor-pending-draft.spec.ts": "a7114aca2e3d0304d5c9401567b217ae5c21c16d8410e0b7604bb074ad258820",
       "tests/unit/tooling-env-contract.test.ts": "c2994435592fbeaa804a53adc2c008927b067824ea3b90f70ad6f5be213e5c43",
       "tests/unit/scripts-typecheck-contract.test.ts": "b7a5b7c81c4e164af788679348179eef0fa1a77f9d3fb6eaeb16ec01386ad650",
-      "tests/unit/mission-template-editor-wiring.test.tsx": "5970075307193edafa251aaa93db6ffaf27c6021b63d1a593052a654944f64ef"
+      "tests/unit/mission-template-editor-wiring.test.tsx": "5970075307193edafa251aaa93db6ffaf27c6021b63d1a593052a654944f64ef",
+      "tests/unit/composer-advance-diagnostics.test.ts": "e6d6c68eb8cd383cf27121bd05f62127b575e53137b7ff5145b3f73c4e9b91cf",
+      "tests/unit/server-log-contract.test.ts": "771fa19b7f496e165c465e33b9609d7af028f908450fd47680fe379b4dbbf6ac",
+      "tests/unit/server-log-boot-contract.test.ts": "2f6e0ad627ab99075866224564484b62a9c1ba3d45911c2923aa497a20bda5ca"
     },
-    "author_session": "Galileo and Sartre original authors; Halley and Sartre independent amendments; full attribution in org/reviews/2026-10-t0192-task-evidence.json; Nash independently corrected diagnostic candidate and authored ConfigSync replacement oracle; coordinator authored schedule persistence characterisation before consolidation; coordinator authored template identifier oracle before correction; Galileo tooling environment oracle independently reviewed by Laplace; Galileo Missions wiring characterisation reviewed by Laplace",
+    "author_session": "Galileo and Sartre original authors; Halley and Sartre independent amendments; full attribution in org/reviews/2026-10-t0192-task-evidence.json; Nash independently corrected diagnostic candidate and authored ConfigSync replacement oracle; coordinator authored schedule persistence characterisation before consolidation; coordinator authored template identifier oracle before correction; Galileo tooling environment oracle independently reviewed by Laplace; Galileo Missions wiring characterisation reviewed by Laplace; coordinator server logging oracles reviewed by Laplace",
     "independence_method": "metamorphic",
     "amendments": [
       {
