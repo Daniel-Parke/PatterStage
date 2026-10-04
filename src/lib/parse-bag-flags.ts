@@ -8,7 +8,7 @@
 //
 // A missing or wrong-typed field reads as absent; nothing here throws or
 // reports. These are NOT a validation layer: a route that requires a body
-// shape uses `parseJsonBody` plus a zod schema (see `lib/api-schemas.ts`).
+// shape uses `parseJsonBody` plus a zod schema (see `src/lib/api/api-schemas.ts`).
 
 /**
  * `body[key]` when it is a string, otherwise `undefined`. With `trim`, the

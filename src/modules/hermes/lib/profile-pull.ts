@@ -26,7 +26,7 @@ import {
   getAgentRoot,
   setAgentRootSyncStatus,
   updateAgentRoot,
-} from "@/lib/agents/agent-root-repository";
+} from "@/modules/hermes/lib/agent-root-repository";
 import {
   assembleConfigYamlForProfile,
   getProfile,

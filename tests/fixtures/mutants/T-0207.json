@@ -1,0 +1,74 @@
+{
+  "task": "T-0207",
+  "notes": [
+    "Clean committed tree and passing unmodified/restored controls required.",
+    "Only executed intended matcher failures are kills; launch, syntax, configuration and fixture failures remain errors.",
+    "The owned DNS oracle must fail closed before any unowned connection. Full socket cleanup assertions remain active."
+  ],
+  "mutants": [
+    {
+      "id": "unvalidated-transport-fallback",
+      "file": "src/lib/search/visit.ts",
+      "anchor": "const addresses = verdict.addresses.filter(address => !options.family || address.family === options.family);",
+      "replacement": "const addresses = [{ address: '127.0.0.1', family: 4 }].filter(address => !options.family || address.family === options.family);",
+      "tests": ["tests/unit/research-fetch-dns-pinning.test.ts"],
+      "why": "Owned allowed retrieval must never select the forbidden listener, including after DNS rebinding."
+    },
+    {
+      "id": "mixed-private-dns-admission",
+      "file": "src/lib/search/url-guard.ts",
+      "anchor": "if (isPrivateAddress(address)) {",
+      "replacement": "if (isPrivateAddress(address) && false) {",
+      "tests": ["tests/unit/research-fetch-dns-pinning.test.ts"],
+      "why": "Both orders of mixed public/private IPv4 DNS answers must refuse before fetch. Separate retained URL-guard controls cover other address forms."
+    },
+    {
+      "id": "quiet-dns-budget",
+      "file": "src/lib/search/url-guard.ts",
+      "anchor": "onAbort = () => reject(new Error(\"request aborted\"));",
+      "replacement": "onAbort = () => void reject;",
+      "tests": ["tests/unit/research-fetch-dns-pinning.test.ts"],
+      "why": "The original twelve-second budget must settle a stalled admission lookup and prohibit a late answer."
+    },
+    {
+      "id": "url-credential-admission",
+      "file": "src/lib/search/url-guard.ts",
+      "anchor": "if (url.username || url.password) return { ok: false, reason: \"URL credentials are not permitted\" };",
+      "replacement": "if ((url.username || url.password) && false) return { ok: false, reason: \"URL credentials are not permitted\" };",
+      "tests": ["tests/unit/research-fetch-dns-pinning.test.ts"],
+      "why": "Credential-bearing URLs must refuse at the shape boundary before DNS or transport."
+    },
+    {
+      "id": "dispatcher-finally-release",
+      "file": "src/lib/search/visit.ts",
+      "anchor": "await dispatcher.destroy();",
+      "replacement": "void dispatcher.destroy;",
+      "tests": ["tests/unit/research-fetch-dns-pinning.test.ts"],
+      "why": "Success, redirect and non-text refusal must release their owned dispatcher before fixture teardown."
+    },
+    {
+      "id": "setup-minimum-minor",
+      "file": "scripts/bootstrap/setup.mjs",
+      "anchor": "if (major < 22 || (major === 22 && minor < 19)) {",
+      "replacement": "if (major < 22 || (major === 22 && minor < 18)) {",
+      "tests": ["tests/unit/research-runtime-minimum.test.ts"],
+      "why": "22.18 must refuse before any setup side effect; 22.19 remains the minimum."
+    },
+    {
+      "id": "bash-setup-minimum-minor",
+      "file": "scripts/bootstrap/setup.sh",
+      "anchor": "major===22 && minor>=19",
+      "replacement": "major===22 && minor>=18",
+      "tests": ["tests/unit/research-runtime-minimum.test.ts"],
+      "why": "The Git Bash setup boundary must refuse 22.18."
+    },
+    {
+      "id": "bash-install-minimum-minor",
+      "file": "scripts/bootstrap/install.sh",
+      "anchor": "major===22 && minor>=19",
+      "replacement": "major===22 && minor>=18",
+      "tests": ["tests/unit/research-runtime-minimum.test.ts"],
+      "why": "The default installer boundary must refuse 22.18."
+    }
+  ]
+}

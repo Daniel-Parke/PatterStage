@@ -37,7 +37,7 @@ export function groupByCategory<T extends HasCategory>(
   items: T[],
   fallback: string = "uncategorized"
 ): Array<[string, T[]]> {
-  const groups: Record<string, T[]> = {};
+  const groups: Record<string, T[]> = Object.create(null);
   for (const item of items) {
     const raw = categoryWords(item.category ?? "").join(" ");
     const key = (raw || categoryWords(fallback).join(" ")).toLowerCase();

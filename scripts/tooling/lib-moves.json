@@ -1,6 +1,6 @@
 {
  "achievements-showcase": "src/lib/ui/achievements-showcase.ts",
- "agent-root-repository": "src/lib/agents/agent-root-repository.ts",
+ "agent-root-repository": "src/modules/hermes/lib/agent-root-repository.ts",
  "api-auth": "src/lib/api/api-auth.ts",
  "api-fetch": "src/lib/api/api-fetch.ts",
  "api-logger": "src/lib/api/api-logger.ts",
@@ -26,7 +26,7 @@
  "deploy-spawn": "src/lib/deploy/deploy-spawn.ts",
  "deploy-status": "src/lib/deploy/deploy-status.ts",
  "dispatch-mode": "src/lib/ui/dispatch-mode.ts",
- "env-file": "src/lib/config/env-file.ts",
+ "env-file": "src/modules/hermes/lib/env-file.ts",
  "env-line": "src/lib/config/env-line.ts",
  "fallback-config-schema": "src/lib/models/fallback-config-schema.ts",
  "fallback-config-yaml": "src/lib/models/fallback-config-yaml.ts",

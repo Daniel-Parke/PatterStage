@@ -1,6 +1,6 @@
 import { existsSync, readFileSync } from "fs";
 
-import { getAgentRoot } from "@/lib/agents/agent-root-repository";
+import { getAgentRoot } from "@/modules/hermes/lib/agent-root-repository";
 import { buildProfileHermesPathBundle } from "./profile-paths";
 import {
   collectSkillDirectoryNames,

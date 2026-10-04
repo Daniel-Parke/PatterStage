@@ -13,14 +13,14 @@
 import { existsSync, readdirSync, statSync } from "fs";
 import { join } from "path";
 
-import { MODULES, allModuleRoutes, getModule } from "@/lib/modules/registry";
+import { MODULES, allModuleRoutes } from "@/lib/modules/registry";
 import { moduleRoutes } from "@/lib/modules/types";
 
 describe("module registry", () => {
   it("registers core, hermes, laboratory and rec-room", () => {
     expect(MODULES.map((m) => m.id)).toEqual(["core", "hermes", "laboratory", "rec-room"]);
-    expect(getModule("rec-room")?.title).toBe("Rec Room");
-    expect(getModule("nope")).toBeUndefined();
+    expect(MODULES.find(module => module.id === "rec-room")?.title).toBe("Rec Room");
+    expect(MODULES.find(module => module.id === "nope")).toBeUndefined();
   });
 
   it("has unique module ids", () => {
@@ -52,7 +52,7 @@ describe("module registry", () => {
   });
 
   it("carries the composer feature flag through to the derived nav", () => {
-    const core = getModule("core")!;
+    const core = MODULES.find(module => module.id === "core")!;
     const composer = core.nav!
       .flatMap((s) => s.links)
       .find((l) => l.href === "/work/composer");

@@ -67,19 +67,23 @@ function isStaleRunning(status: DeployStatus): boolean {
   return Date.now() - started > STALE_RUNNING_MS;
 }
 
+function idleStatus(): DeployStatus {
+  return {
+    state: "idle",
+    action: "",
+    phase: "",
+    message: "Ready",
+    startedAt: "",
+    finishedAt: "",
+    exitCode: "",
+    logHint: "",
+  };
+}
+
 export function readDeployStatus(): DeployStatus {
   const path = deployStatusReadPath();
   if (!existsSync(path)) {
-    return {
-      state: "idle",
-      action: "",
-      phase: "",
-      message: "Ready",
-      startedAt: "",
-      finishedAt: "",
-      exitCode: "",
-      logHint: "",
-    };
+    return idleStatus();
   }
   try {
     const status = parseStatusFile(readFileSync(path, "utf-8"));
@@ -117,16 +121,7 @@ export function readDeployStatus(): DeployStatus {
     }
     return status;
   } catch {
-    return {
-      state: "idle",
-      action: "",
-      phase: "",
-      message: "Ready",
-      startedAt: "",
-      finishedAt: "",
-      exitCode: "",
-      logHint: "",
-    };
+    return idleStatus();
   }
 }
 

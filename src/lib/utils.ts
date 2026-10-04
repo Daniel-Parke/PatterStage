@@ -1,10 +1,8 @@
 // ═══════════════════════════════════════════════════════════════
 // Shared Utility Functions
 //
-// AT THE LIB ROOT ON PURPOSE (C7, T-0144). Four tiny helpers with no
-// subject of their own: every layer uses them, from a route handler to a
-// chart label, and filing them under one domain would say they belong to
-// it. A helper here has to be that: no domain, no dependencies.
+// AT THE LIB ROOT ON PURPOSE: cross-cutting parsing and formatting helpers.
+// Routes and components share these helpers across domains.
 // ═══════════════════════════════════════════════════════════════
 
 /**
@@ -71,7 +69,7 @@ export function timeUntil(iso: string | null, now: number = Date.now()): string 
 
 /**
  * Format the elapsed time since a startedAt ISO timestamp as
- * "Xs / Xm Ys / Xh Ym" — used for active sessions where we want
+ * "Xs / Xm Ys / Xh Ym / Xd Yh" — used for active sessions where we want
  * a live, monotonically-increasing duration. Returns an empty
  * string when the timestamp can't be parsed.
  *
@@ -92,6 +90,7 @@ export function formatElapsed(startedAt: string, now: number = Date.now()): stri
   const minutes = Math.floor(seconds / 60);
   if (minutes < 60) return `${minutes}m ${seconds % 60}s`;
   const hours = Math.floor(minutes / 60);
+  if (hours >= 24) return `${Math.floor(hours / 24)}d ${hours % 24}h`;
   return `${hours}h ${minutes % 60}m`;
 }
 
@@ -106,15 +105,6 @@ export function formatBytes(bytes: number): string {
   const sizes = ["B", "KB", "MB", "GB"];
   const i = Math.min(Math.floor(Math.log(bytes) / Math.log(k)), sizes.length - 1);
   return `${parseFloat((bytes / Math.pow(k, i)).toFixed(1))} ${sizes[i]}`;
-}
-
-/**
- * Truncate a string to a max length with ellipsis
- */
-export function truncate(str: string, maxLen: number): string {
-  if (maxLen <= 0) return "";
-  if (str.length <= maxLen) return str;
-  return str.slice(0, maxLen - 1) + "…";
 }
 
 /**

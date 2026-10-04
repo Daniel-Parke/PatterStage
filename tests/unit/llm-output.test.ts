@@ -10,7 +10,7 @@
 // for a stage that concluded FAIL.
 // ═══════════════════════════════════════════════════════════════
 
-import { stripReasoning, extractAnswerSpan } from "@/lib/models/llm-output";
+import { stripReasoning } from "@/lib/models/llm-output";
 
 describe("stripReasoning", () => {
   it("removes think/thinking blocks", () => {
@@ -43,21 +43,5 @@ describe("stripReasoning", () => {
 
   it("is a no-op on output with no wrapper", () => {
     expect(stripReasoning("plain answer")).toBe("plain answer");
-  });
-});
-
-describe("extractAnswerSpan", () => {
-  it("reads an explicit span", () => {
-    expect(extractAnswerSpan("<answer>Tokyo</answer>")).toBe("Tokyo");
-    expect(extractAnswerSpan("blah blah Final answer: 42")).toBe("42");
-    expect(extractAnswerSpan("Answer: C because ...")).toBe("C because ...");
-  });
-
-  it("returns null with no marker, so callers can fall back", () => {
-    expect(extractAnswerSpan("no marker here")).toBeNull();
-  });
-
-  it("returns null for an empty marked span rather than an empty string", () => {
-    expect(extractAnswerSpan("<answer>   </answer>")).toBeNull();
   });
 });

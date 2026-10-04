@@ -107,7 +107,7 @@ const store = new Map<
 
 jest.mock("@/lib/db", () => require("../helpers/mocks").dbMock());
 
-jest.mock("@/lib/agents/agent-root-repository", () => ({
+jest.mock("@/modules/hermes/lib/agent-root-repository", () => ({
   getAgentRoot: jest.fn(() => ({
     id: 1,
     displayName: "Bob",

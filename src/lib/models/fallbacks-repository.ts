@@ -3,20 +3,9 @@
 // ═══════════════════════════════════════════════════════════════
 
 import { getDb, inTransaction, uuid, now } from "../db/index";
-import type { FallbackConfig } from "@/types/console";
+import type { FallbackConfig, FallbackChainEntry } from "@/types/console";
 
-export interface FallbackEntryRecord {
-  id: string;
-  modelId: string | null;
-  modelName: string;
-  provider: string;
-  modelIdString: string;
-  position: number;
-  enabled: boolean;
-  overrideBaseUrl: string | null;
-  createdAt: string;
-  updatedAt: string;
-}
+export type FallbackEntryRecord = FallbackChainEntry;
 
 export interface CreateFallbackInput {
   modelId: string | null;

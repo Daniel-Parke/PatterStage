@@ -75,7 +75,7 @@ jest.mock("@/lib/analytics/record-event", () => ({ recordEvent: jest.fn() }));
 
 import { NextRequest } from "next/server";
 
-import { getAgentRoot, updateAgentRoot } from "@/lib/agents/agent-root-repository";
+import { getAgentRoot, updateAgentRoot } from "@/modules/hermes/lib/agent-root-repository";
 import { getProfile, upsertProfile } from "@/modules/hermes/lib/profiles-repository";
 
 const BOB_SOUL = "# Bob\n\nBob speaks plainly and finishes what he starts.\n";

@@ -1,4 +1,5 @@
 import { NextRequest } from "next/server";
+import { readAliasedEnv } from "@/lib/config/env";
 
 import { badRequest } from "@/lib/api/api-response";
 import { ensureDb } from "@/lib/db";
@@ -49,7 +50,7 @@ export const POST = route("POST /api/agent/profiles/sync/pull", "pull", "Failed 
   const importDiscovered = booleanFlag(body, "importDiscovered");
   const reconcileDisk =
     booleanFlag(body, "reconcileDisk") ||
-    (process.env.PS_PULL_RECONCILE_DISK || process.env.CH_PULL_RECONCILE_DISK) === "1";
+    readAliasedEnv("PS_PULL_RECONCILE_DISK") === "1";
   ensureDb();
 
   if (skills) {

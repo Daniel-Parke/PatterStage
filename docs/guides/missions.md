@@ -90,8 +90,10 @@ Mission Name, Instruction, and Goals, one per line. Then four numbered steps.
    branch selector when the folder is a git repository), references, recommended
    agent skills, recommended Hermes toolsets, additional context, output format
    and constraints.
-3. **Runtime**: model, agent profile, mission scope, and timeout, which is an
-   inactivity kill switch rather than a total run length.
+3. **Runtime**: model, agent profile, mission scope, and the elapsed run deadline.
+   Elapsed time starts at submission, with a five-minute grace period before
+   reconciliation marks the run failed and requests cancellation. Tool activity
+   does not reset or extend the deadline.
 4. **Assembled agent prompt**: the prompt as it will be stored, with a Human and
    AI toggle and a copy button. The Human view mirrors your form fields; the AI
    view is what the agent is actually sent.
@@ -171,8 +173,11 @@ once late or be skipped.
   agent is genuinely allowed to use comes from its profile, so recommending a
   toolset the profile does not have will not grant it. See
   [Tools](./tools.md) and [Skills](./skills.md).
-- Timeout is an inactivity kill switch, not a budget for the whole job. Mission
-  scope is a planning hint to the agent about how much work to take on.
+- A positive timeout sets the elapsed run deadline. If timeout is absent, the
+  mission scope supplies the declared deadline. An explicit timeout of 0 disables
+  both the declared deadline and that fallback. Mission scope remains a planning
+  hint to the agent about how much work to take on. For a run with no declared
+  deadline, the safety cap applies only when the backend is unreachable.
 - Built-in templates cannot be edited or deleted; only the ones you save can.
   **Save as template** overwrites an existing template of the same name, and
   asks twice before it does.

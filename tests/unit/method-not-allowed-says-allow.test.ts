@@ -31,7 +31,7 @@ describe("the skills toggle answers a stub, not a framework 405", () => {
   jest.mock("@/lib/api/api-logger", () => ({ logApiError: jest.fn(), serverErrorFromCatch: jest.fn() }));
   
   jest.mock("@/lib/db", () => require("../helpers/mocks").dbMock({ now: () => "t", uuid: () => "u" }));
-  jest.mock("@/lib/agents/agent-root-repository", () => ({ getAgentRoot: jest.fn() }));
+  jest.mock("@/modules/hermes/lib/agent-root-repository", () => ({ getAgentRoot: jest.fn() }));
   jest.mock("@/modules/hermes/lib/profiles-repository", () => ({ getDisabledSkills: jest.fn(), getProfile: jest.fn() }));
   jest.mock("@/modules/hermes/handlers/profile-patch", () => ({ applyProfileOrRootPatchOrFail: jest.fn() }));
 

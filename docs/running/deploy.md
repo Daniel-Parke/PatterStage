@@ -117,7 +117,7 @@ Run PatterStage where you trust the network, or place it behind your own reverse
 
 **This is not a way to deploy PatterStage.** The supported model is the native
 host install: `bash scripts/bootstrap/install.sh`, then `npm run start`
-(or `ps-deploy.sh`) and sidebar deploy, on a host with Node 20+. If you are
+(or `ps-deploy.sh`) and sidebar deploy, on a host with Node 22.19.0 or newer. If you are
 reading this to work out how to run the app, you are in the wrong section, and
 [the install path](../README.md) is the one to follow.
 

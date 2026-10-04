@@ -108,6 +108,8 @@ jest.mock("@/lib/composer/composer-repository", () => {
   };
 });
 jest.mock("@/lib/composer/dispatch", () => ({ dispatchComposerNode: jest.fn(async () => ({})) }));
+// These repository doubles have no private gateway responsibility.
+jest.mock("@/lib/composer/queue-cleanup", () => ({ loadComposerQueue: jest.fn(() => null) }));
 // The routes kick the engine and forget it; the engine describe requireActuals it.
 jest.mock("@/lib/composer/engine", () => ({
   advanceComposerRun: jest.fn(async () => undefined),

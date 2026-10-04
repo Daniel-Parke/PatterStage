@@ -49,6 +49,7 @@ describe("SubsystemsPanel", () => {
 describe("GET /api/status/subsystems", () => {
   it("answers the five rows and when it looked", async () => {
     jest.resetModules();
+    jest.doMock("@/lib/sync", () => ({ ensureSyncLayer: jest.fn() }));
     jest.doMock("@/lib/status/subsystems", () => ({
       collectSubsystems: async () => ({ checkedAt: "2026-09-05T10:00:05Z", subsystems: rows }),
       liveSubsystemDeps: () => ({}),

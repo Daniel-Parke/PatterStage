@@ -19,6 +19,7 @@ import { checkUnattendedSpend } from "@/lib/spend/spend-guard";
 import { getResearchRunByComposerNodeRunId } from "@/lib/laboratory/deep-research/research-repository";
 import { isAssessingKind, parseVerdict } from "./verdict";
 import { dispatchComposerNode } from "./dispatch";
+import { loadComposerQueue } from "./queue-cleanup";
 import {
   getComposerRun,
   getComposerRunByParentNodeRunId,
@@ -446,6 +447,10 @@ export async function advanceComposerRun(composerRunId: string): Promise<void> {
   }
 
   let current = latestNodeRun(composerRunId, node.id);
+  if (current?.runId) {
+    const responsibility = loadComposerQueue(current.runId);
+    if (responsibility && responsibility.phase !== "released") return;
+  }
   if (!current) {
     // Node not started yet → dispatch it.
     await dispatchComposerNode(composerRunId, node.id);

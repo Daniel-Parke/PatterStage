@@ -42,3 +42,30 @@ Receipt: tmp/t0194-confirmation-oracle/freeze.json. Raw final Jest receipt: tmp/
 New companion LF SHA-256: 33e09c78ad7f2f5386fceb5e4ff3d8c9e7ec61fb10582c7d330b9e96038e69cc.
 
 Parfit must review these exact files and receipts before further queue patching. Full-gate, causal sweep and hosted acceptance remain pending; this is neither T0194 closure nor a T0206 cause repair.
+
+## Legacy reconciliation fixture amendment, 2026-10-04
+
+Coordinator assigned lane under operator-approved workflow; Q015/ADR0019. Banach owns only run-reconcile-stuck.test.ts, run-reconcile-404-grace.test.ts and this dated amendment. A separate reviewer must judge these author changes.
+
+Each test file receives only one explicit queue-cleanup mock: loadComposerQueue returns null and sweepComposerQueues resolves all seven zero counters. These fixtures have no private queue responsibility. The 404 fixture also contains two legacy Composer cases; the null receipt seam preserves their ordinary-runtime path. No production fallback, shared fixture, runtime mock, timing, failure reason, name or assertion changed. Removing the exact inserted mock/comment block reconstructs each original LF source.
+
+Original tmp/t0194-queue-existing-controls.json recorded 76 pass / 19 individual undefined-getDb.prepare fixture execution errors across 95 cases, with zero suite-runtime errors. Those individual TypeErrors are infrastructure failures, not causal matcher reds. Final focused19.json is 19/19 green; focused95.json is 95/95 green with identical expanded names and all previous 76 green cases retained. Both exit 0, zero skips/failures/runtime-error suites. All nineteen original names and twenty-two assertion expressions remain exact after LF normalisation.
+
+Pinned Node v24.21.0: actual test typecheck (tsc --noEmit -p tsconfig.tests.json) exit 0; ESLint on only the two edited tests exit 0. No further queue controls or full gate were run. All nine captured queue production LF hashes held during this lane. HEAD: 72bfa32860e3392da347b47ed5ca5eca0daf1b49. Before/after hashes, assertion hashes, expanded names, logs and caller checks: tmp/t0194-legacy-fixture-amendment/{before,freeze,focused19,focused95}.json.
+
+| File | Before LF SHA-256 | After LF SHA-256 |
+| --- | --- | --- |
+| tests/unit/run-reconcile-stuck.test.ts | 695242938b12f1a512599e163f13edfb1fec3aef0a207437e611fdf843030ac6 | 63e96c445be1d956f76ed3eb6247db15398b22dee245b1a8c29d20c148f92ce5 |
+| tests/unit/run-reconcile-404-grace.test.ts | bdcc8a1b8f2b727cc524e9ff1c8d8bbbd9e38ad356a8bfaf28dd97efe3196e0c | 668bc54a5264807fa9d999935f8d57d0a8d43647e9da1ab22c60546d16fc7ded |
+
+The other seven reconciliation callers were read-checked without edits or new executions:
+
+- tests/unit/boot-sweeps-stories-too.test.ts:21: No analogous seam required: entire reconciliation module is mocked; real queue recovery is not entered.
+- tests/unit/composer-spend-is-counted.test.ts:128: No further seam required: all three legacy reconciliation fixtures already model loadComposerQueue=null and empty sweep counts.
+- tests/unit/lib-domain-queue-admission.test.ts:117: Retain real responsibility path: real SQLite baseline/meta and Composer migrations; do not mock queue recovery.
+- tests/unit/mission-reconcile-cancellation-race.test.ts:63: No analogous undefined-db gap: real SQLite baseline creates meta; fixture contains no Composer responsibility rows.
+- tests/unit/mission-uncertain-submit.test.ts:27: No analogous undefined-db gap: real SQLite baseline creates meta; fixture contains no Composer responsibility rows.
+- tests/unit/mission-dispatch-race.test.ts:89: No analogous undefined-db gap: real SQLite baseline creates meta; fixture contains no Composer responsibility rows, including restart fixture.
+- tests/unit/mission-dispatch-edge-contract.test.ts:59: No analogous undefined-db gap: real SQLite baseline creates meta; fixture contains no Composer responsibility rows.
+
+No analogous future seam was identified in those seven fixtures. Their read qualification is not a fresh runtime-pass claim. The separate real queue cohort is not replaced by these empty legacy fixtures. Writing paused and lane handed back; independent amendment review/full-gate obligations remain.

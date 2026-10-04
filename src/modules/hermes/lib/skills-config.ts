@@ -145,40 +145,6 @@ export function parseSkillsDisabledFromYaml(content: string): ParsedSkillsDisabl
   return result;
 }
 
-export function buildDisabledYamlLines(
-  disabledSorted: string[],
-  platformDisabled: Record<string, string[]> = {},
-): string[] {
-  const lines: string[] = [];
-  if (disabledSorted.length === 0) {
-    lines.push("  disabled: []");
-  }
-  else {
-    lines.push("  disabled:");
-    for (const skill of disabledSorted) {
-      lines.push(`    - ${skill}`);
-    }
-  }
-
-  const platforms = Object.keys(platformDisabled).sort();
-  if (platforms.length > 0) {
-    lines.push("  platform_disabled:");
-    for (const platform of platforms) {
-      const values = [...new Set(platformDisabled[platform])].sort();
-      if (values.length === 0) {
-        lines.push(`    ${platform}: []`);
-      }
-      else {
-        lines.push(`    ${platform}:`);
-        for (const skill of values) {
-          lines.push(`      - ${skill}`);
-        }
-      }
-    }
-  }
-  return lines;
-}
-
 /**
  * Global skills catalog at HERMES_HOME/skills (shared across all profiles).
  * Per-profile customisation is handled via the disabled-skills config, not via separate roots.

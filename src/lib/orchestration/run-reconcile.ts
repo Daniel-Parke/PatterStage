@@ -20,9 +20,11 @@ import { UNCONFIRMED_SUBMISSION_RESULT } from "@/lib/missions/mission-claim-stat
 import { closeSessionForMission } from "@/lib/sessions/session-repository";
 import { runtime } from "@/lib/runtime";
 import { inTransaction, now } from "@/lib/db";
-import { RuntimeRequestError, type RunStatus, type RunUsage } from "@/lib/runtime/types";
+import { RuntimeRequestError, type RunResult, type RunStatus, type RunUsage } from "@/lib/runtime/types";
 import { recordEvent } from "@/lib/analytics/record-event";
 import { finalizeComposerNodeRun, advanceComposerRun } from "@/lib/composer/engine";
+import { loadComposerQueue, persistComposerTerminal, sweepComposerQueues } from "@/lib/composer/queue-cleanup";
+import { pollComposerRun, stopComposerRun } from "@/lib/runtime/composer-queue";
 import { captureArtifactOnce } from "@/lib/runs/artifacts-repository";
 import { logApiError } from "@/lib/api/api-logger";
 import {
@@ -133,41 +135,34 @@ async function finalizeComposerStage(
   // callers that finalize a stage WITHOUT reaching the gateway genuinely have
   // no tokens to report, and null says that where a missing argument would
   // only mean "leave unchanged".
-  updateRun(run.id, { status, output, error, usage });
-  const composerRunId = finalizeComposerNodeRun(run.id, status, output, error);
-  if (composerRunId) await advanceComposerRun(composerRunId);
+  const composerRunId = inTransaction(() => {
+    if (getLocalRun(run.id)?.status !== "started") return null;
+    updateRun(run.id, { status, output, error, usage });
+    return finalizeComposerNodeRun(run.id, status, output, error);
+  }, "immediate");
+  // A local deadline/404 is not proof of upstream completion. A captured
+  // receipt stays attached; recovery confirms terminal state before draining.
+  if (composerRunId && !loadComposerQueue(run.id)) await advanceComposerRun(composerRunId);
 }
 
 /** Reconcile a run that executes a Composer stage (branch of reconcileOne). */
 async function reconcileComposerRun(run: RunRecord): Promise<boolean> {
   if (!run.runId) {
+    // A tick can observe the durable claim while POST is in flight, or after
+    // an acknowledged submission could not be attached. Neither permits replay.
+    if (run.error?.includes("operator review required")) return false;
     await finalizeComposerStage(run, "failed", null, "stage was never submitted to the backend");
     return true;
   }
   const age = ageMinutes(run);
   const cap = DEFAULT_MAX_RUN_MINUTES + GRACE_MINUTES;
+  const responsibility = loadComposerQueue(run.id);
+  let result: RunResult;
   try {
-    const result = await runtime.getRun(run.runId, run.profileName ?? undefined);
-    // It answered, so it is not missing. A gateway restarting mid-poll can 404
-    // once and reply normally moments later; that run was never lost, and any
-    // future disappearance must start its window from zero (T-0078).
-    clearNotFound(run.id);
-    if (result.status === "started") {
-      if (age > cap) {
-        await runtime.stopRun(run.runId, run.profileName ?? undefined).catch(() => {});
-        await finalizeComposerStage(run, "failed", null, "stage exceeded the max runtime");
-        return true;
-      }
-      return false;
-    }
-    await finalizeComposerStage(
-      run,
-      result.status,
-      result.output ?? null,
-      result.error ?? null,
-      result.usage ?? null,
-    );
-    return true;
+    result = responsibility
+      ? await pollComposerRun({ backendRunId: responsibility.backendRunId, gatewayIdentity: responsibility.gatewayIdentity,
+        profileName: run.profileName ?? undefined, signal: new AbortController().signal })
+      : await runtime.getRun(run.runId, run.profileName ?? undefined);
   } catch (err) {
     if (err instanceof RuntimeRequestError && err.status === 404) {
       // Same shape as the mission branch: inside the grace, fall through to the
@@ -183,6 +178,23 @@ async function reconcileComposerRun(run: RunRecord): Promise<boolean> {
     }
     return false; // transient — retry next tick
   }
+  // Database failures must propagate, not masquerade as transport failures or
+  // trigger a replacement local outcome after an unsuccessful terminal commit.
+  clearNotFound(run.id);
+  if (result.status === "started") {
+    if (age > cap) {
+      await (responsibility
+        ? stopComposerRun({ backendRunId: responsibility.backendRunId, gatewayIdentity: responsibility.gatewayIdentity,
+          profileName: run.profileName ?? undefined, signal: new AbortController().signal })
+        : runtime.stopRun(run.runId, run.profileName ?? undefined)).catch(() => {});
+      await finalizeComposerStage(run, "failed", null, "stage exceeded the max runtime");
+      return true;
+    }
+    return false;
+  }
+  if (responsibility) return persistComposerTerminal(run.id, result as Parameters<typeof persistComposerTerminal>[1]) !== null;
+  await finalizeComposerStage(run, result.status, result.output ?? null, result.error ?? null, result.usage ?? null);
+  return true;
 }
 
 /**
@@ -353,6 +365,7 @@ export async function reconcileActiveRuns(): Promise<number> {
   for (const run of active) {
     if (await reconcileOne(run)) advanced += 1;
   }
+  await sweepComposerQueues({ nowMs: Date.now() });
   return advanced;
 }
 
@@ -371,5 +384,6 @@ export function reconcileRunsOnBoot(): { failed: number } {
       }
     }
   }
+  void sweepComposerQueues({ nowMs: Date.now() }).catch(error => logApiError("composer.queue.boot", "recovery", error));
   return { failed: 0 };
 }

@@ -1,0 +1,35 @@
+{
+  "task": "T-0194",
+  "redCommit": "4d697485fd64afe0953061ccdfa69aa4412fb233",
+  "oracle": {
+    "file": "tests/unit/lib-domain-audit-regressions.test.ts",
+    "bytes": 11735,
+    "lfSha256": "5a98bb45d27e3ca01d7f2d3997548bfcdf1ec10a2e4aab0c52f19cd0649f95fe",
+    "nameSetSha256": "f3da2021392066394f96d167f1a645d963f3afffc8104538c6b621036b0710f7"
+  },
+  "red": {
+    "total": 23,
+    "passed": 8,
+    "failed": 15,
+    "runtimeErrorSuites": 0
+  },
+  "currentGreen": {
+    "receipt": "tmp/t0194-audit-final-green.json",
+    "total": 33,
+    "passed": 33,
+    "failed": 0,
+    "runtimeErrorSuites": 0
+  },
+  "sourceLfSha256": {
+    "src/lib/models/models-repository.ts": "75e603273eef396390a372f0285155dd67bedb50d47c54cad86bbdbdd261fdf4",
+    "src/lib/memory/hindsight-route-helpers.ts": "92f7fbd0f7d0840c48d30d7153cc13db9728081878bb452d8544bee9d53945e2",
+    "src/lib/skills/skills-grouping.ts": "07d139e1bb92185ddefa1bc053ac1fbf02130fb0e64cc68155facb5e0111c097",
+    "src/lib/schedule/next-run.ts": "f9852a05369dd8e1f4458411dbd8abef6c0c1a337be59f2e42d2f5350131bf6f",
+    "src/lib/stats/stats-repository.ts": "cde79bff2dc79efa5629f5c02dafef9c2ef5d81fec2b8bbb150ce4c3e482b04e",
+    "src/lib/analytics/analytics-repository.ts": "c90871694a5486fcf1c2e4a04448b679cd138f276281685c294d0dbc9176042d"
+  },
+  "limitations": [
+    "33 includes23audit and10held next-run controls; no full-gate acceptance.",
+    "Ancillary author freeze exit fields are not independently verified; coordinator separately observed actual focused test, test-type and ESLint exit codes."
+  ]
+}

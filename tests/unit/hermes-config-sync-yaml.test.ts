@@ -171,7 +171,7 @@ describe("finalizeRootConfigOnDisk", () => {
   it("refreshes agent_root.config_yaml with model section after sync", () => {
     const { createModel, setDefaultModel } = require("@/lib/models/models-repository") as typeof import("@/lib/models/models-repository");
     const { finalizeRootConfigOnDisk } = require("@/modules/hermes/lib/config-sync") as typeof import("@/modules/hermes/lib/config-sync");
-    const { getAgentRoot } = require("@/lib/agents/agent-root-repository") as typeof import("@/lib/agents/agent-root-repository");
+    const { getAgentRoot } = require("@/modules/hermes/lib/agent-root-repository") as typeof import("@/modules/hermes/lib/agent-root-repository");
 
     writeFileSync(
       join(fakeRoot, "config.yaml"),

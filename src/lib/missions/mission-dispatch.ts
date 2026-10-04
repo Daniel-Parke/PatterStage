@@ -1,12 +1,8 @@
 // ═══════════════════════════════════════════════════════════════
 // mission-dispatch.ts — shared immediate mission dispatch (API + queue sync)
 //
-// This is now a thin compatibility shim over the orchestration core: the old
-// two-phase bash dispatch (agentBackend.dispatchMission + spawnDispatchedMission
-// + pid/status files + pollForSessionId) is gone. Every caller (the missions
-// god-route, the cron first-run, the queue tick) routes through the runtime
-// (HTTP run) via dispatchMissionRun(). Kept as a seam so existing call sites
-// don't need to change until the Phase 7 god-route split.
+// Apply mission overrides before dispatch and keep the shared
+// { ok, sessionId } result used by immediate and queued callers.
 // ═══════════════════════════════════════════════════════════════
 
 import { getMission, updateMission } from "@/lib/missions/mission-repository";

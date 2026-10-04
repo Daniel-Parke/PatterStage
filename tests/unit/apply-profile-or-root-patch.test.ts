@@ -146,7 +146,7 @@ describe("assertPatchSucceeded", () => {
 // profiles-repository, profile-push). The combined helper then
 // runs the full 3-step pipeline and we assert on the wire output.
 
-jest.mock("@/lib/agents/agent-root-repository", () => ({
+jest.mock("@/modules/hermes/lib/agent-root-repository", () => ({
   updateAgentRoot: jest.fn(),
 }));
 

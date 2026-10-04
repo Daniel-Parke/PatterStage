@@ -13,7 +13,7 @@
 // the two surfaces is a skim layer a reader cannot rely on.
 // ═══════════════════════════════════════════════════════════════
 
-import { renderReport, type ReportHeading } from "./markdown";
+import { escapeHtml as escAttr, renderReport, type ReportHeading } from "./markdown";
 import type { ResearchRun, ResearchStep } from "./types";
 
 /** Citation-ordered source URLs for a run's steps. */
@@ -31,10 +31,6 @@ export function collectSources(steps: ResearchStep[]): string[] {
     }
   }
   return out;
-}
-
-function escAttr(s: string): string {
-  return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
 }
 
 function hostOf(url: string): string {

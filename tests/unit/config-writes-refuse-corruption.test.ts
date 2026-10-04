@@ -43,7 +43,7 @@ jest.mock("@/modules/hermes/lib/profile-paths", () => ({
 }));
 
 const mockUpdateAgentRoot = jest.fn();
-jest.mock("@/lib/agents/agent-root-repository", () => ({
+jest.mock("@/modules/hermes/lib/agent-root-repository", () => ({
   getAgentRoot: jest.fn(),
   updateAgentRoot: (...a: unknown[]) => mockUpdateAgentRoot(...a),
   setAgentRootSyncStatus: jest.fn(),

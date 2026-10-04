@@ -5,6 +5,7 @@
 // buildMissionPromptHuman, and parseMissionPrompt in sync.
 
 import { normalizeLocalDirsInput } from "@/lib/fs/local-dir-entry";
+import { declaredTimeoutMinutes, GRACE_MINUTES } from "@/lib/orchestration/run-deadline";
 import type { LocalDirEntry } from "@/types/console";
 
 // ── Build options ──────────────────────────────────────────────
@@ -73,12 +74,13 @@ function formatMissionScope(minutes: number | undefined): string | null {
   );
 }
 
-function formatSafetyLimits(minutes: number | undefined): string | null {
-  if (minutes == null || minutes <= 0) return null;
+function formatSafetyLimits(opts: BuildPromptOptions): string | null {
+  const minutes = declaredTimeoutMinutes(opts);
+  if (minutes === null) return null;
   return (
-    `Inactivity timeout: ${minutes} minutes. If you stop making API calls or\n` +
-    `tool requests for this duration, your session will be terminated.\n` +
-    `To avoid timeout: stay active. Each tool call resets the timer.`
+    `Elapsed run deadline: ${minutes} minutes. Elapsed time starts at submission,\n` +
+    `with a ${GRACE_MINUTES}-minute grace period before reconciliation marks the run failed\n` +
+    `and requests cancellation. Tool activity does not reset or extend the deadline.`
   );
 }
 
@@ -87,19 +89,17 @@ function wrapCdata(content: string): string {
   return `<![CDATA[\n${safe}\n]]>`;
 }
 
+function xmlAttributes(attrs?: Record<string, string>): string {
+  if (!attrs || Object.keys(attrs).length === 0) return "";
+  return " " + Object.entries(attrs).map(([key, value]) => `${key}="${value}"`).join(" ");
+}
+
 function xmlTag(
   name: string,
   body: string,
   attrs?: Record<string, string>,
 ): string {
-  const attrStr =
-    attrs && Object.keys(attrs).length > 0
-      ? " " +
-        Object.entries(attrs)
-          .map(([k, v]) => `${k}="${v}"`)
-          .join(" ")
-      : "";
-  return `<${name}${attrStr}>\n${body.trim()}\n</${name}>`;
+  return `<${name}${xmlAttributes(attrs)}>\n${body.trim()}\n</${name}>`;
 }
 
 function xmlTagCdata(
@@ -107,14 +107,7 @@ function xmlTagCdata(
   content: string,
   attrs?: Record<string, string>,
 ): string {
-  const attrStr =
-    attrs && Object.keys(attrs).length > 0
-      ? " " +
-        Object.entries(attrs)
-          .map(([k, v]) => `${k}="${v}"`)
-          .join(" ")
-      : "";
-  return `<${name}${attrStr}>${wrapCdata(content)}</${name}>`;
+  return `<${name}${xmlAttributes(attrs)}>${wrapCdata(content)}</${name}>`;
 }
 
 function unescapeCdata(content: string): string {
@@ -210,7 +203,7 @@ export function buildMissionPrompt(opts: BuildPromptOptions): string {
   const scope = formatMissionScope(opts.missionTimeMinutes);
   if (scope) sections.push(xmlTag("mission_scope", scope));
 
-  const safety = formatSafetyLimits(opts.timeoutMinutes);
+  const safety = formatSafetyLimits(opts);
   if (safety) sections.push(xmlTag("safety_limits", safety));
 
   sections.push(
@@ -273,7 +266,7 @@ export function buildMissionPromptHuman(opts: BuildPromptOptions): string {
     parts.push(`## Planning\n\n${scope}`);
   }
 
-  const safety = formatSafetyLimits(opts.timeoutMinutes);
+  const safety = formatSafetyLimits(opts);
   if (safety) {
     parts.push(`## Safety\n\n${safety}`);
   }

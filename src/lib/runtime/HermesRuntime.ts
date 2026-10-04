@@ -9,7 +9,9 @@
 // injectable for unit testing without a live gateway or DB.
 // ═══════════════════════════════════════════════════════════════
 
+import { createHash } from "node:crypto";
 import { GatewayGate, getDefaultGatewayGate, type GateSnapshot } from "./gateway-gate";
+import type { ComposerGatewayReceipt, ComposerQueueRequest, GatewayIdentity } from "./composer-queue";
 import {
   type AgentRuntime,
   type RunSubmit,
@@ -205,8 +207,9 @@ export class HermesRuntime implements AgentRuntime {
     profile: string | undefined,
     path: string,
     opts: RequestOpts = {},
+    endpoint?: RuntimeEndpoint,
   ): Promise<T> {
-    const ep = this.resolve(profile);
+    const ep = endpoint ?? this.resolve(profile);
     // Every request/response call passes the endpoint's admission gate
     // (T-0090). Saturation refuses with a 503 that names the gate; streams
     // (streamRunEvents) do not come through here and hold no slot.
@@ -220,8 +223,7 @@ export class HermesRuntime implements AgentRuntime {
           signal: opts.signal ?? AbortSignal.timeout(this.timeoutMs),
         });
       } catch (err) {
-        // One of the two places in the product where a raw fetch to the gateway
-        // happens, and the only place where `ep.baseUrl` is known. Everything
+        // This adapter knows the endpoint that failed. Everything
         // downstream reads this through `messageFromError`, so translating here
         // fixes all seven storage columns at once (T-0080).
         throw (
@@ -266,6 +268,7 @@ export class HermesRuntime implements AgentRuntime {
   private async submitWithBackoff(
     input: RunSubmit,
     body: Record<string, unknown>,
+    endpoint?: RuntimeEndpoint,
   ): Promise<HermesRunDto> {
     const MAX_ATTEMPTS = 4;
     for (let attempt = 0; ; attempt++) {
@@ -278,7 +281,7 @@ export class HermesRuntime implements AgentRuntime {
           sessionId: input.sessionId,
           sessionKey: input.sessionKey,
           signal: input.signal,
-        });
+        }, endpoint);
       } catch (err) {
         const busy = err instanceof RuntimeRequestError && err.status === 429;
         if (!busy || attempt >= MAX_ATTEMPTS - 1) throw err;
@@ -288,6 +291,10 @@ export class HermesRuntime implements AgentRuntime {
   }
 
   async submitRun(input: RunSubmit): Promise<RunHandle> {
+    return this.submit(input);
+  }
+
+  private async submit(input: RunSubmit, endpoint?: RuntimeEndpoint): Promise<RunHandle> {
     const body: Record<string, unknown> = { input: input.input };
     if (input.instructions) body.instructions = input.instructions;
     if (input.sessionId) body.session_id = input.sessionId;
@@ -305,12 +312,95 @@ export class HermesRuntime implements AgentRuntime {
     // Retrying here is safe precisely because submitRun is idempotent: the
     // Idempotency-Key is PatterStage's own run id, so a coalesced duplicate is
     // already the documented contract of this method.
-    const json = await this.submitWithBackoff(input, body);
+    const json = await this.submitWithBackoff(input, body, endpoint);
     const runId = json.run_id ?? json.id;
     if (!runId) {
       throw new RuntimeRequestError("submitRun: gateway returned no run_id", 502);
     }
     return { runId, status: normalizeRunStatus(json.status), sessionId: json.session_id };
+  }
+
+  private gatewayIdentity(endpoint: RuntimeEndpoint): GatewayIdentity {
+    // URL canonicalisation preserves path/query semantics. Only its digest
+    // leaves the adapter; neither the URL nor bearer credentials are persisted.
+    return `sha256:${createHash("sha256").update(new URL(endpoint.baseUrl).href).digest("hex")}`;
+  }
+
+  async submitComposerRun(input: RunSubmit): Promise<ComposerGatewayReceipt> {
+    const endpoint = { ...this.resolve(input.profileName) };
+    const gatewayIdentity = this.gatewayIdentity(endpoint);
+    const handle = await this.submit(input, endpoint);
+    return { handle, gatewayIdentity };
+  }
+
+  private composerEndpoint(input: ComposerQueueRequest): RuntimeEndpoint {
+    const endpoint = { ...this.resolve(input.profileName) };
+    if (this.gatewayIdentity(endpoint) !== input.gatewayIdentity) {
+      throw new Error("Composer gateway identity mismatch; operator review required");
+    }
+    return endpoint;
+  }
+
+  async pollComposerRun(input: ComposerQueueRequest): Promise<RunResult> {
+    return this.composerAttempt(input, async (endpoint, signal, wait) => {
+      const dto = await wait(this.fetchJson<HermesRunDto>(input.profileName,
+        `/v1/runs/${encodeURIComponent(input.backendRunId)}`, { signal }, endpoint));
+      return mapRunResult(input.backendRunId, dto);
+    });
+  }
+
+  async stopComposerRun(input: ComposerQueueRequest): Promise<void> {
+    return this.composerAttempt(input, async (endpoint, signal, wait) => {
+      try {
+        await wait(this.fetchJson<unknown>(input.profileName,
+          `/v1/runs/${encodeURIComponent(input.backendRunId)}/stop`, { method: "POST", signal }, endpoint));
+      } catch (error) {
+        if (!(error instanceof RuntimeRequestError && error.status === 404)) throw error;
+      }
+    });
+  }
+
+  private async composerAttempt<T>(input: ComposerQueueRequest, operation: (
+    endpoint: RuntimeEndpoint, signal: AbortSignal, wait: <R>(promise: Promise<R>) => Promise<R>,
+  ) => Promise<T>): Promise<T> {
+    input.signal.throwIfAborted();
+    const endpoint = this.composerEndpoint(input);
+    const attempt = new AbortController();
+    const abort = () => attempt.abort(input.signal.reason);
+    input.signal.addEventListener("abort", abort, { once: true });
+    const timer = setTimeout(() => attempt.abort(new Error("Composer queue cleanup timed out")), this.timeoutMs);
+    const wait = <R>(promise: Promise<R>): Promise<R> => new Promise((resolve, reject) => {
+      const stop = () => { attempt.signal.removeEventListener("abort", stop); reject(attempt.signal.reason); };
+      attempt.signal.addEventListener("abort", stop, { once: true });
+      promise.then(resolve, reject).finally(() => attempt.signal.removeEventListener("abort", stop));
+      if (attempt.signal.aborted) stop();
+    });
+    try { return await operation(endpoint, attempt.signal, wait); }
+    finally {
+      clearTimeout(timer);
+      input.signal.removeEventListener("abort", abort);
+    }
+  }
+
+  async drainComposerQueue(input: ComposerQueueRequest): Promise<void> {
+    return this.composerAttempt(input, async (endpoint, signal, wait) => {
+      let reader: ReadableStreamDefaultReader<Uint8Array> | undefined;
+      try {
+        const response = await wait(this.fetchImpl(
+          `${endpoint.baseUrl}/v1/runs/${encodeURIComponent(input.backendRunId)}/events`,
+          { headers: { ...this.buildHeaders(endpoint, {}), Accept: "text/event-stream" }, signal },
+        ));
+        if (response.status === 404) return;
+        if (!response.ok || !response.body) throw new Error("Composer queue cleanup was refused");
+        reader = response.body.getReader();
+        while (!(await wait(reader.read())).done) { /* discard only after durable completion */ }
+      } finally {
+        if (reader) {
+          void reader.cancel().catch(() => {});
+          reader.releaseLock();
+        }
+      }
+    });
   }
 
   async getRun(runId: string, profile?: string): Promise<RunResult> {

@@ -32,6 +32,8 @@ import {
   updateNodeRun,
 } from "./composer-repository";
 import { isTerminalComposerRunStatus } from "./schema";
+import { loadComposerQueue } from "./queue-cleanup";
+import { stopComposerRun, type GatewayIdentity } from "@/lib/runtime/composer-queue";
 
 /**
  * The text every writer uses, so the three tables cannot tell three stories.
@@ -45,6 +47,7 @@ const CANCELLED_BY_USER = "Cancelled by user";
 export interface BackendStop {
   backendRunId: string;
   profileName: string | null;
+  gatewayIdentity?: GatewayIdentity;
 }
 
 /**
@@ -89,12 +92,21 @@ export function cancelComposerRun(composerRunId: string): BackendStop[] | null {
 
       // 3. The agent run behind it, only if still in flight: a finished run
       //    keeps its real ending, as the mission writer does. This is the seam.
-      if (nodeRun.runId) {
-        const agentRun = getRun(nodeRun.runId);
-        if (agentRun?.status === "started") {
+      {
+        // A held submission already owns this row, before its acknowledgement links the stage.
+        const agentRun = getRun(nodeRun.runId ?? `cn_${nodeRun.id}`);
+        if (agentRun?.status === "started" && (nodeRun.runId || agentRun.composerNodeRunId === nodeRun.id)) {
           updateRun(agentRun.id, { status: "cancelled", error: CANCELLED_BY_USER });
           if (agentRun.runId) {
-            stops.push({ backendRunId: agentRun.runId, profileName: agentRun.profileName ?? null });
+            try {
+              const receipt = loadComposerQueue(agentRun.id);
+              stops.push({ backendRunId: agentRun.runId, profileName: agentRun.profileName ?? null,
+                ...(receipt ? { gatewayIdentity: receipt.gatewayIdentity } : {}) });
+            } catch {
+              // Invalid responsibility cannot authorise remote Stop or veto local cancellation.
+              logApiError("composer.cancel", "queue responsibility",
+                new Error("Invalid private Composer queue responsibility; operator review required"));
+            }
           }
         }
       }
@@ -124,7 +136,12 @@ export async function stopBackendRuns(
   await Promise.allSettled(
     stops.map(async (s) => {
       try {
-        await stopRun(s.backendRunId, s.profileName ?? undefined);
+        if (s.gatewayIdentity) {
+          await stopComposerRun({ backendRunId: s.backendRunId, gatewayIdentity: s.gatewayIdentity,
+            profileName: s.profileName ?? undefined, signal: new AbortController().signal });
+        } else {
+          await stopRun(s.backendRunId, s.profileName ?? undefined);
+        }
       } catch (err) {
         logApiError("composer.cancel", `stopRun ${s.backendRunId}`, err);
       }

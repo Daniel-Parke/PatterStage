@@ -56,10 +56,7 @@ jest.mock("@/lib/host/host-scheduler", () => ({
 
 jest.mock("@/lib/host/platform", () => ({
   isWindows: true,
-  isMac: false,
-  isLinux: false,
   tmpDir: () => "/tmp",
-  homeDir: () => "/home/op",
   interpreterFor: (abs: string) => ({ cmd: "/usr/bin/node", args: [abs] }),
 }));
 

@@ -1,7 +1,6 @@
 /** @jest-environment node */
 
 import {
-  buildDisabledYamlLines,
   collectSkillDirectoryNames,
   computeEffectiveDisabledFromYaml,
   normalizeDisabledSkillKeys,
@@ -40,22 +39,6 @@ describe("parseSkillsDisabledFromYaml", () => {
     expect(parsed.disabledNames.has("b")).toBe(true);
     expect(parsed.platformDisabled.telegram.has("c")).toBe(true);
     expect(parsed.platformDisabled.telegram.has("d")).toBe(true);
-  });
-});
-
-describe("buildDisabledYamlLines", () => {
-  it("emits empty disabled list", () => {
-    expect(buildDisabledYamlLines([])).toEqual(["  disabled: []"]);
-  });
-
-  it("emits platform_disabled", () => {
-    expect(buildDisabledYamlLines(["a"], { cli: ["b"] })).toEqual([
-      "  disabled:",
-      "    - a",
-      "  platform_disabled:",
-      "    cli:",
-      "      - b",
-    ]);
   });
 });
 

@@ -51,15 +51,6 @@ export function normalizeLocalDirsInput(raw: unknown): LocalDirEntry[] {
   return out;
 }
 
-/** One bullet line (+ optional branch hint) for Working Directories section. */
-export function formatLocalDirEntryLine(e: LocalDirEntry): string {
-  const b = e.branch && String(e.branch).trim();
-  if (b) {
-    return `  - ${e.path}\n    Use git branch: ${b}`;
-  }
-  return `  - ${e.path}`;
-}
-
 /**
  * Commit the current `draft` into the existing `entries` list.
  *

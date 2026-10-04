@@ -17,17 +17,13 @@ function expandField(field: string, min: number, max: number): Set<number> {
   const out = new Set<number>();
   for (const token of field.split(",")) {
     const trimmed = token.trim();
-    if (!trimmed) continue;
-    let step = 1;
-    let body = trimmed;
-    const slash = trimmed.indexOf("/");
-    if (slash !== -1) {
-      step = parseInt(trimmed.slice(slash + 1), 10) || 1;
-      body = trimmed.slice(0, slash);
-    }
+    const parsed = trimmed.match(/^(\*|\d+(?:-\d+)?)(?:\/(\d+))?$/);
+    if (!parsed) return new Set();
+    const body = parsed[1], step = parsed[2] === undefined ? 1 : Number(parsed[2]);
+    if (!Number.isSafeInteger(step) || step <= 0) return new Set();
     let lo = min;
     let hi = max;
-    if (body === "*" || body === "") {
+    if (body === "*") {
       lo = min;
       hi = max;
     } else if (body.includes("-")) {
@@ -37,9 +33,9 @@ function expandField(field: string, min: number, max: number): Set<number> {
     } else {
       lo = parseInt(body, 10);
       // "N/step" means N..max; a bare "N" is just N.
-      hi = slash !== -1 ? max : lo;
+      hi = parsed[2] !== undefined ? max : lo;
     }
-    if (!Number.isFinite(lo) || !Number.isFinite(hi)) continue;
+    if (!Number.isSafeInteger(lo) || !Number.isSafeInteger(hi) || lo < min || hi > max || lo > hi) return new Set();
     for (let v = lo; v <= hi; v += step) {
       if (v >= min && v <= max) out.add(v);
     }
@@ -126,6 +122,7 @@ export function nextCronAfter(expr: string, from: Date): Date | null {
   const dows = expandDow(dowF);
   const domRestricted = domF.trim() !== "*";
   const dowRestricted = dowF.trim() !== "*";
+  if (!minutes.size || !hours.size || !doms.size || !months.size || !dows.size) return null;
 
   const d = new Date(from.getTime());
   d.setSeconds(0, 0);

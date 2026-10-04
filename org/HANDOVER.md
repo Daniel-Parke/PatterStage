@@ -7,28 +7,82 @@ updated: 2026-10-04
 
 # Handover · PatterStage, 2026-10-02
 
-## T0194 opened, 2026-10-04
+## T0194/T0207 implementation checkpoint, 2026-10-04
 
-All required hosted jobs pass at93e425d556f384663fe5715c983d8b0c0c47fd07:
-11PR jobs,9required push jobs and both Gitleaks scans. Snapshot:
-tmp/t0191-hosted-t0206-actual-ready/snapshot-1791129063547.json.
-The current macOS full coverage and actual receipt pass; this does not
-establish repair of the historical T0206 timing failure. T0206 stays active.
+The first full candidate gate is recorded red: lint/typecheck passed, then
+Jest failed 12 suites/42 tests (9009 passes, nine existing skips). No later
+step ran; before/after tree hashes match. Operator-authorised independent
+fixture amendments now pass 44 Composer and 90 other focused controls
+(one existing skip). Typing/lint/Knip pass. Exact identities, original/new
+hashes and review bounds are in
+[gate amendments](reviews/2026-10-t0194-t0207-gate-amendments.md).
+The second full gate, joint landing, sweeps, R3 acceptance and hosted checks
+remain pending. These focused results do not close either batch.
 
-T0194 is now active, ruledR3 for its accepted ADR0018 protected entry.
-Two disjoint writing lanes: coordinator source/metadata, Faraday independent
-oracle files. No source or protected edit has begun. Independent first controls
-cover four gateway backoff Stop paths and Q027 elapsed-deadline guidance.
-Settings field metadata remains core; parser/root ownership moves remain
-Hermes; Laboratory and v1.0 compatibility retirement remain deferred.
+The second attempt passed9050 unit cases but retained one C4 failure: repeated
+test windows4826 exceeded its fixed4800 cap. The exact shared Composer fixture
+now measures4768 and saves nine total test lines; all39 focused controls pass.
+The cap and coverage floors stay unchanged. Independent final fold review and
+a third complete gate are required. A serial112-case open-handle diagnostic is
+clean but does not explain the parallel worker warning; T0195 retains it.
+Additional complete repository/path-caller reads are filed in
+[body review](reviews/2026-10-t0194-additional-body-review.md), with source-only
+fallback/traversal hypotheses and explicit runtime limits.
 
-The queue readiness trace confirms that upstream Hermes admission counts
-completed undrained queues in its10queue cap. Composer persists results via
-polling; its SQLite SSE does not release upstream queues. Generic run SSE
-has competing readers of the same upstream queue. Blind draining is not
-accepted as a repair. Qualify exclusive cleanup ownership, recovery and late
-subscribers, preserving durable output/usage and the ten-active admission cap.
-No upstream API/image or new public fan-out contract is authorised by this trace.
+The third gate passes9051 unit cases, Knip and canary, then Turbopack rejects
+the isolated checkout's shared dependency junction. This is retained as red.
+The owned junction was archived without traversing its target; real packages
+were copied and four dependency/native hashes match. The isolated build-only
+probe then passes in45.1s. Full gate4 is still required; the partial probe
+cannot replace it. Production configuration and operator data stay unchanged.
+
+The last hosted acceptance remains dev93e425d556f384663fe5715c983d8b0c0c47fd07:
+11 PR jobs, 9 required push jobs and both Gitleaks scans pass. Later commits
+are independent red oracles. No joint implementation/full-gate acceptance yet.
+The operator approved one joint implementation landing for T0194/T0207;
+separate records, sweeps, independent R3 review and all hosted checks remain.
+
+Implemented T0194 cohorts: abortable gateway waits and linked-listener cleanup;
+elapsed mission-deadline wording; Hermes root/parser ownership under ADR0018;
+four measured helper folds; 11 obsolete helper removals and one orphaned type;
+three type-only folds with identical emitted JavaScript; model default owner,
+Hindsight literal PATCH keys, inherited skill categories, bounded cron expansion,
+schedule kinds and mixed timestamp comparisons. Settings metadata remains core.
+Compatibility and Laboratory decisions remain unchanged.
+
+Accepted ADR0019 Composer cleanup is durable and exclusively claimed. It
+persists output/usage before drain, validates terminal upstream state, recovers
+dead owners and continuation, spaces bounded retries, and sends unresolved
+30-day responsibilities to operator review. A malformed private receipt cannot
+roll back local cancellation. The current queue/engine/spend cohort passes
+60/60; 95 retained legacy reconcile controls pass after independent fixture
+adaptation. General run streams remain separate.
+
+The final ruled library cohort passes 14/14, with 83/83 including held controls.
+It provides a pure 13-group environment alias registry, preserves the five raw
+caller selection/parser contracts and paths readEnv export, formats elapsed
+days after 24 hours, and imports Chat's canonical default-model constant.
+The report-only export command is npm run report:exports.
+
+T0207 implements accepted ADR0020 research address pinning with Undici8.11.2,
+fresh per-hop dispatchers and one 12-second budget. The independently corrected
+19-case transport fixture preserves names/assertions/deadlines and passes both
+suite orders with an owned-connection fence. The actual Node22.19 runtime passes
+19 transport controls; installer boundary controls pass 13/13. Node24 remains
+the build target. npm audit still reports 15 vulnerable package records, no
+critical; T0196 owns remaining attribution/remediation. This is not release
+acceptance or a full Node-minimum app matrix.
+
+The coordinator walked Runtime/New Mission at1440x900 and390x844 on disposable
+port3999. No observed overflow/browser errors; image hashes remain in
+tmp/t0194-ui-proof/image-metadata.json. The preview is stopped. Normal3333 and
+operator data were untouched. T0208 owns additional Tools, Story Weaver and
+client read-error hypotheses. Source inspection is not runtime confirmation.
+
+Before landing: final itemised evidence reconciliation, unchanged full gate,
+both committed causal sweeps, independent R3 acceptance and every hosted job.
+T0206's historical macOS timing cause remains open even when later runs pass.
+T0200 retirement remains deferred through v1.0.0; targets never move.
 
 ## Actual HTTP diagnostic checkpoint, 2026-10-04
 
@@ -47,9 +101,9 @@ Test baseline152071includes301independent oracle/assertion lines with the
 written growth reason. Source102068/repeated693, tests repeated4787 and
 one-importer103 remain; targets have not moved. Current-head hosted results
 must be read after the dev push. Original macOS failures still lack a causal
-repair, regardless of later greens. T0194 stays unopened until its start
-dependency is met; ADR0018 accepted proposal is preserved, protected entry
-not yet created. Normal port3333/operator data were untouched. Personal
+repair, regardless of later greens. The T0194 start dependency was subsequently
+met at93e425; its current status is in the checkpoint above. Normal port3333/
+operator data were untouched. Personal
 preview3999 is stopped; full-browser gate used its owned port3000 instance.
 
 ## Accepted batch checkpoint, 2026-10-04
@@ -78,7 +132,8 @@ is unproved. Latest greens do not establish its repair. No whole-product,
 paid-provider or release acceptance is claimed. PR157 merge/tags/releases
 remain operator actions. Owned preview3999 is stopped; normal port3333 and
 operator data were untouched. Closure4a9bc63e has10of11PRjobs passing; macOS C02/C05 failed again,
-while all9required push jobs and both secret scans pass. T0194 is unopened.
+while all9required push jobs and both secret scans pass. At that historical
+closure checkpoint T0194 was unopened; the later93e425 jobs permit its start.
 T0206 resumes actual-invocation diagnostics; see its HTTP-budget review.
 No retry or check relaxation was used.
 

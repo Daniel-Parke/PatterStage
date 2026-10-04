@@ -70,7 +70,7 @@ jobs:
           fetch-depth: 0
       - uses: actions/setup-node@v5
         with:
-          node-version: "20"
+          node-version: "24"
           cache: npm
           cache-dependency-path: package-lock.json
       - name: Install dependencies (with cache reset retry)
@@ -152,7 +152,7 @@ jobs:
         run: bash scripts/tooling/prepare-release-test-tools.sh
       - uses: actions/setup-node@v5
         with:
-          node-version: "20"
+          node-version: "24"
           cache: npm
           cache-dependency-path: package-lock.json
       - name: Install dependencies (with cache reset retry)
@@ -263,7 +263,7 @@ jobs:
           token: ${{ github.token }}
       - uses: actions/setup-node@v5
         with:
-          node-version: "20"
+          node-version: "24"
       - name: Cross-platform operational smoke
         run: node tests/scripts/boot-smoke.mjs
 
@@ -283,7 +283,7 @@ jobs:
           token: ${{ github.token }}
       - uses: actions/setup-node@v5
         with:
-          node-version: "20"
+          node-version: "24"
           cache: npm
           cache-dependency-path: package-lock.json
       - name: Install dependencies (with cache reset retry)
@@ -346,7 +346,7 @@ jobs:
           token: ${{ github.token }}
       - uses: actions/setup-node@v5
         with:
-          node-version: "20"
+          node-version: "24"
           cache: npm
           cache-dependency-path: package-lock.json
       - name: Install dependencies (with cache reset retry)
@@ -488,7 +488,7 @@ jobs:
           token: ${{ github.token }}
       - uses: actions/setup-node@v5
         with:
-          node-version: "20"
+          node-version: "24"
       - name: Real-Hermes integration (contract + full-stack smoke)
         run: npm run test:e2e-hermes
 

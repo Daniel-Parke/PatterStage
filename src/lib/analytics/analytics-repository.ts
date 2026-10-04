@@ -82,7 +82,7 @@ export function countByTypeSince(sinceDays: number): Record<string, number> {
         getDb()
           .prepare(
             `SELECT event_type, COUNT(*) AS c FROM analytics_events
-             WHERE created_at >= datetime('now', ?) GROUP BY event_type`,
+             WHERE julianday(created_at) >= julianday('now', ?) GROUP BY event_type`,
           )
           .all(days(sinceDays)) as { event_type: string; c: number }[],
       ),
@@ -112,7 +112,7 @@ export function timeseries(
       const rows = getDb()
         .prepare(
           `SELECT date(created_at) AS d, COUNT(*) AS c FROM analytics_events
-           WHERE created_at >= datetime('now', ?)${typeClause}
+           WHERE julianday(created_at) >= julianday('now', ?)${typeClause}
            GROUP BY d ORDER BY d`,
         )
         .all(...params) as { d: string; c: number }[];
@@ -131,7 +131,7 @@ export function distinctActiveDays(sinceDays?: number): string[] {
         getDb()
           .prepare(
             `SELECT DISTINCT date(created_at) AS d FROM analytics_events
-             WHERE created_at >= datetime('now', ?) ORDER BY d`,
+             WHERE julianday(created_at) >= julianday('now', ?) ORDER BY d`,
           )
           .all(days(sinceDays)) as { d: string }[]
       ).map((r) => r.d);
@@ -151,7 +151,7 @@ export function maxCountInSingleDay(eventType: AnalyticsEventType, sinceDays = 3
       .prepare(
         `SELECT MAX(c) AS m FROM (
            SELECT COUNT(*) AS c FROM analytics_events
-           WHERE event_type = ? AND created_at >= datetime('now', ?)
+           WHERE event_type = ? AND julianday(created_at) >= julianday('now', ?)
            GROUP BY date(created_at))`,
       )
       .get(eventType, days(sinceDays)) as { m: number | null } | undefined;
@@ -166,7 +166,7 @@ export function countByTypeAndHour(eventType: AnalyticsEventType, sinceDays = 36
       const rows = getDb()
         .prepare(
           `SELECT CAST(strftime('%H', created_at) AS INTEGER) AS h, COUNT(*) AS c
-           FROM analytics_events WHERE event_type = ? AND created_at >= datetime('now', ?)
+           FROM analytics_events WHERE event_type = ? AND julianday(created_at) >= julianday('now', ?)
            GROUP BY h`,
         )
         .all(eventType, days(sinceDays)) as { h: number; c: number }[];
@@ -185,7 +185,7 @@ export function countByHourAllTypes(sinceDays = 365): number[] {
       const rows = getDb()
         .prepare(
           `SELECT CAST(strftime('%H', created_at) AS INTEGER) AS h, COUNT(*) AS c
-           FROM analytics_events WHERE created_at >= datetime('now', ?)
+           FROM analytics_events WHERE julianday(created_at) >= julianday('now', ?)
            GROUP BY h`,
         )
         .all(days(sinceDays)) as { h: number; c: number }[];
@@ -215,7 +215,7 @@ export function dailyCountsByType(sinceDays: number): DailyTypeCounts[] {
       const rows = getDb()
         .prepare(
           `SELECT date(created_at) AS d, event_type AS t, COUNT(*) AS c
-           FROM analytics_events WHERE created_at >= datetime('now', ?)
+           FROM analytics_events WHERE julianday(created_at) >= julianday('now', ?)
            GROUP BY d, t ORDER BY d`,
         )
         .all(days(n)) as { d: string; t: string; c: number }[];
@@ -352,7 +352,7 @@ export function readCompletedRunTimings(
     .prepare(
       `SELECT submitted_at, completed_at FROM runs
          WHERE status = 'completed' AND completed_at IS NOT NULL
-           AND submitted_at >= datetime('now', ?)`,
+           AND julianday(submitted_at) >= julianday('now', ?)`,
     )
     .all(sinceExpr) as { submitted_at: string; completed_at: string }[];
 }
@@ -365,7 +365,7 @@ export function readRunUsageByModel(
     .prepare(
       `SELECT m.model_id AS model, m.provider AS provider, r.usage_json AS usage
          FROM runs r JOIN missions m ON r.mission_id = m.id
-         WHERE r.submitted_at >= datetime('now', ?) AND r.usage_json IS NOT NULL`,
+         WHERE julianday(r.submitted_at) >= julianday('now', ?) AND r.usage_json IS NOT NULL`,
     )
     .all(sinceExpr) as { model: string | null; provider: string | null; usage: string }[];
 }
@@ -378,7 +378,7 @@ export function readCompletedRunCountsByMission(
     .prepare(
       `SELECT r.mission_id AS id, m.name AS name, COUNT(*) AS runs, r.usage_json AS usage
          FROM runs r JOIN missions m ON r.mission_id = m.id
-         WHERE r.status = 'completed' AND r.submitted_at >= datetime('now', ?)
+         WHERE r.status = 'completed' AND julianday(r.submitted_at) >= julianday('now', ?)
          GROUP BY r.mission_id`,
     )
     .all(sinceExpr) as { id: string; name: string; runs: number; usage: string | null }[];
@@ -391,7 +391,7 @@ export function readCompletedRunUsageByMission(
   return getDb()
     .prepare(
       `SELECT mission_id AS id, usage_json AS usage FROM runs
-         WHERE status = 'completed' AND submitted_at >= datetime('now', ?) AND usage_json IS NOT NULL`,
+         WHERE status = 'completed' AND julianday(submitted_at) >= julianday('now', ?) AND usage_json IS NOT NULL`,
     )
     .all(sinceExpr) as { id: string; usage: string }[];
 }

@@ -220,13 +220,31 @@ function stoppedError(message = "The call was stopped."): Error {
 }
 
 /** Abort this path's controller when the caller's signal aborts, now or later. */
-function linkAbort(signal: AbortSignal | undefined, controller: AbortController): void {
-  if (!signal) return;
+function linkAbort(signal: AbortSignal | undefined, controller: AbortController): () => void {
+  if (!signal) return () => {};
   if (signal.aborted) {
     controller.abort();
-    return;
+    return () => {};
   }
-  signal.addEventListener("abort", () => controller.abort(), { once: true });
+  const onAbort = () => controller.abort();
+  signal.addEventListener("abort", onAbort, { once: true });
+  return () => signal.removeEventListener("abort", onAbort);
+}
+
+function waitForGatewayRetry(ms: number, signal?: AbortSignal): Promise<void> {
+  if (signal?.aborted) return Promise.reject(stoppedError());
+  return new Promise((resolve, reject) => {
+    const onAbort = () => {
+      clearTimeout(timer);
+      signal?.removeEventListener("abort", onAbort);
+      reject(stoppedError());
+    };
+    const timer = setTimeout(() => {
+      signal?.removeEventListener("abort", onAbort);
+      resolve();
+    }, ms);
+    signal?.addEventListener("abort", onAbort, { once: true });
+  });
 }
 
 interface CallParams {
@@ -334,8 +352,9 @@ async function callGateway(input: CallGatewayInput): Promise<LLMResponse> {
   let lastError: Error | null = null;
 
   for (let attempt = 1; attempt <= maxRetries; attempt++) {
+    if (input.signal?.aborted) throw stoppedError();
     const controller = new AbortController();
-    linkAbort(input.signal, controller);
+    const unlinkAbort = linkAbort(input.signal, controller);
     const timeout = setTimeout(() => controller.abort(), 300_000); // 5 min
 
     try {
@@ -359,7 +378,7 @@ async function callGateway(input: CallGatewayInput): Promise<LLMResponse> {
 
       if (resp.status === 429) {
         if (attempt < maxRetries) {
-          await new Promise((r) => setTimeout(r, 30_000 * attempt));
+          await waitForGatewayRetry(30_000 * attempt, input.signal);
           continue;
         }
         throw new Error("Rate limit — please wait a minute and try again.");
@@ -374,7 +393,7 @@ async function callGateway(input: CallGatewayInput): Promise<LLMResponse> {
         data.choices?.[0]?.message?.content?.trim() ?? "";
 
       if (!content && attempt < maxRetries) {
-        await new Promise((r) => setTimeout(r, 5_000 * attempt));
+        await waitForGatewayRetry(5_000 * attempt, input.signal);
         continue;
       }
 
@@ -396,17 +415,18 @@ async function callGateway(input: CallGatewayInput): Promise<LLMResponse> {
       if (lastError.name === "AbortError") {
         // Retry on timeout — treat it like any other retryable error
         if (attempt < maxRetries) {
-          await new Promise((r) => setTimeout(r, 3_000 * attempt));
+          await waitForGatewayRetry(3_000 * attempt, input.signal);
           continue;
         }
       }
       if (attempt < maxRetries) {
-        await new Promise((r) => setTimeout(r, 3_000 * attempt));
+        await waitForGatewayRetry(3_000 * attempt, input.signal);
       }
     } finally {
       // Every exit, not just the successful one. A throw used to leave a live
       // 5-minute timer behind holding a controller nobody would read again.
       clearTimeout(timeout);
+      unlinkAbort();
     }
   }
 

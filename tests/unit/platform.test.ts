@@ -7,13 +7,7 @@ import * as platform from "@/lib/host/platform";
 
 describe("platform", () => {
   it("homeDir / tmpDir resolve to non-empty paths", () => {
-    expect(platform.homeDir().length).toBeGreaterThan(0);
     expect(platform.tmpDir().length).toBeGreaterThan(0);
-  });
-
-  it("at most one of isWindows/isMac/isLinux is true", () => {
-    const set = [platform.isWindows, platform.isMac, platform.isLinux].filter(Boolean);
-    expect(set.length).toBeLessThanOrEqual(1);
   });
 
   describe("interpreterFor", () => {

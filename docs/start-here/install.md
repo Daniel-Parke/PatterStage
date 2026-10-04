@@ -18,7 +18,7 @@ is Linux. The reasoning and the support tiers are in
 | You need | Notes |
 |---|---|
 | Linux, macOS, or Windows with WSL2 | See the per-platform steps below. |
-| Node.js 20 or newer | Matches what CI builds against. |
+| Node.js 22.19.0 or newer | The runtime minimum; CI and Docker use Node 24. |
 | git | The installer clones, and the in-app updater pulls. |
 | The Hermes agent | Install it on the same machine. PatterStage boots without it, but nothing can be dispatched until it is there or a gateway is reachable. |
 

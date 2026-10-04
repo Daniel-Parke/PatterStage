@@ -38,7 +38,7 @@ const CLEAN_ROW = {
   userMd: "", memoryMd: "", disabledSkillsJson: "[]", platformToolsetsJson: "{}",
   syncedAt: null, syncError: null, updatedAt: "",
 };
-jest.mock("@/lib/agents/agent-root-repository", () => ({
+jest.mock("@/modules/hermes/lib/agent-root-repository", () => ({
   getAgentRoot: () => CLEAN_ROW,
   updateAgentRoot: jest.fn(),
   setAgentRootSyncStatus: (...a: unknown[]) => mockSetRootStatus(...a),

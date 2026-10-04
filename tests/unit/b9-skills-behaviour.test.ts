@@ -60,7 +60,7 @@ jest.mock("@/lib/analytics/record-event", () => ({ recordEvent: jest.fn() }));
 import { NextRequest } from "next/server";
 
 import { upsertSkill } from "@/lib/skills/skills-repository";
-import { getAgentRoot } from "@/lib/agents/agent-root-repository";
+import { getAgentRoot } from "@/modules/hermes/lib/agent-root-repository";
 
 /** Write a SKILL.md into the agent's own skills tree. */
 function writeDiskSkill(key: string, body: string): void {

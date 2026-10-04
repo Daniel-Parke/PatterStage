@@ -13,7 +13,7 @@ import {
   getProfile,
   defaultConfigYaml,
 } from "@/modules/hermes/lib/profiles-repository";
-import { getAgentRoot } from "@/lib/agents/agent-root-repository";
+import { getAgentRoot } from "@/modules/hermes/lib/agent-root-repository";
 import { pushProfileToHermes } from "@/modules/hermes/lib/profile-push";
 import { recordEvent } from "@/lib/analytics/record-event";
 import { detectProfileDrift, detectRootDrift } from "@/modules/hermes/lib/profile-drift";

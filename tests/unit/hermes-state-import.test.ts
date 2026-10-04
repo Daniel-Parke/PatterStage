@@ -31,7 +31,7 @@ jest.mock("@/modules/hermes/lib/profile-pull", () => ({
   pullRootFromHermes: jest.fn(() => ({ success: true, slug: "default", backupPath: null, error: null })),
 }));
 
-jest.mock("@/lib/agents/agent-root-repository", () => ({
+jest.mock("@/modules/hermes/lib/agent-root-repository", () => ({
   getAgentRoot: jest.fn(() => ({
     soulMd: "existing soul",
     agentsMd: "",

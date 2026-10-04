@@ -24,7 +24,7 @@
 // bullets and nothing else, it stays in the prose exactly where the model put
 // it. A report without one renders as it always did.
 
-function escapeHtml(s: string): string {
+export function escapeHtml(s: string): string {
   return s
     .replace(/&/g, "&amp;")
     .replace(/</g, "&lt;")

@@ -2,7 +2,7 @@
 // agent-root-repository.ts — Bob / default agent at HERMES_HOME root
 // ═══════════════════════════════════════════════════════════════
 
-import { getDb, now } from "../db/index";
+import { getDb, now } from "@/lib/db";
 
 export interface AgentRootRow {
   id: number;

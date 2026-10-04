@@ -202,7 +202,11 @@ function shellPath(path: string): string {
   return result.stdout.trim();
 }
 
-const FAKE_NODE = `#!/usr/bin/env bash\nif [ "$1" = -v ]; then echo v20.0.0; elif [ "$1" = -e ]; then echo ${KEY}; fi\n`;
+const FAKE_NODE = `#!/usr/bin/env bash
+if [ "$1" = -v ]; then echo v24.0.0
+elif [ "$1" = -e ] && [ "$2" = 'const [major,minor]=process.versions.node.split(".").map(Number);process.exit(major>22 || (major===22 && minor>=19) ? 0 : 1)' ]; then exit 0
+elif [ "$1" = -e ]; then echo ${KEY}; fi
+`;
 const FAKE_NPM = "#!/usr/bin/env bash\nprintf 'npm\\n' >> \"$ORACLE_EVENTS\"\nexit 0\n";
 const FAKE_NPX = "#!/usr/bin/env bash\nprintf 'npx\\n' >> \"$ORACLE_EVENTS\"\nexit 0\n";
 

@@ -32,7 +32,7 @@ jest.mock("@/lib/skills/skills-repository", () => ({
 }));
 
 const mockGetAgentRoot = jest.fn<{ disabledSkillsJson: string }, []>();
-jest.mock("@/lib/agents/agent-root-repository", () => ({
+jest.mock("@/modules/hermes/lib/agent-root-repository", () => ({
   getAgentRoot: () => mockGetAgentRoot(),
 }));
 

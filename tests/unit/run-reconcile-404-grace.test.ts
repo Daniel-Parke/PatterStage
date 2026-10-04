@@ -51,6 +51,15 @@ jest.mock("@/lib/sessions/session-repository", () => ({
   closeSessionForMission: jest.fn(),
 }));
 
+// Legacy reconciliation fixtures have no private Composer queue responsibility.
+jest.mock("@/lib/composer/queue-cleanup", () => ({
+  loadComposerQueue: jest.fn(() => null),
+  sweepComposerQueues: jest.fn(async () => ({
+    selected: 0, claimed: 0, released: 0, continued: 0,
+    retired: 0, pending: 0, operatorReview: 0,
+  })),
+}));
+
 jest.mock("@/lib/db", () => require("../helpers/mocks").dbMock({ now: jest.fn(() => new Date().toISOString()) }));
 jest.mock("@/lib/runtime", () => ({
   runtime: { getRun: jest.fn(), stopRun: jest.fn(() => Promise.resolve()) },

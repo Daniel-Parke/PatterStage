@@ -1,0 +1,68 @@
+{
+  "id": "T-0208",
+  "intent": "Reproduce and repair T0194 reconnaissance hypotheses in Tools advanced-JSON feedback, Rec Room validation/completion transitions and four client read-failure surfaces. Preserve drafts, existing valid actions, output, spend and genuine empty-state behaviour. Exact candidates/evidence are in org/reviews/2026-10-t0194-recon-defects.json; no source implementation or runtime acceptance is claimed. Expanded source review also covers response-reported gateway/research usage loss, Skills editor request ownership, stale Sessions pagination, overlapping Logs deletion, partial Sync feedback, unknown Platforms state and clean-preview scope. Confirm each hypothesis independently before implementing; preview scope needs an explicit contract before any deletion test beyond isolated fixtures. The eleven-page body pass also adds controlled delayed-write ownership in Composer/Research/Tools, Chat Stop refusal, Script logs ownership and cached/empty read truth. All remain source hypotheses until independent controlled reproduction.",
+  "declared": {
+    "capabilities": [
+      "edit-code",
+      "edit-tests",
+      "edit-docs",
+      "git",
+      "git-push",
+      "run-isolated-process"
+    ],
+    "side_effects": [
+      "financial-impact",
+      "sends-external"
+    ]
+  },
+  "mode": "high-assurance",
+  "tier_proposed": "R2",
+  "status": "proposed",
+  "owner_session": "2026-10-04-t0194-coordinator",
+  "claims": [
+    "org/tasks/T-0208.json",
+    "src/app/agent/tools/page.tsx",
+    "src/modules/rec-room/handlers/generate.ts",
+    "src/app/results/insights/page.tsx",
+    "src/app/work/research/page.tsx",
+    "src/components/ui/ProfilePicker.tsx",
+    "src/components/missions/ModelPicker.tsx",
+    "org/reviews/2026-10-t0194-recon-defects.json",
+    "src/lib/models/llm.ts",
+    "src/lib/laboratory/deep-research/run-job.ts",
+    "src/app/agent/skills/page.tsx",
+    "src/components/skills/SkillEditorModal.tsx",
+    "src/app/agent/settings/restore/page.tsx",
+    "src/lib/seed/clean-dev-data.ts",
+    "src/app/results/sessions/page.tsx",
+    "src/app/results/logs/page.tsx",
+    "src/components/logs/LogsHeaderActions.tsx",
+    "src/app/page.tsx",
+    "src/modules/hermes/components/PlatformsPanel.tsx",
+    "src/app/work/composer/page.tsx",
+    "src/hooks/useChatSend.ts",
+    "src/app/work/scripts/page.tsx",
+    "src/hooks/useComposer.ts",
+    "src/components/composer/ComposerRunInput.tsx"
+  ],
+  "timestamps": {
+    "opened": "2026-10-04T17:42:23.377703+00:00",
+    "updated": "2026-10-04T17:42:23.377703+00:00"
+  },
+  "verdicts": [],
+  "tier_ruled": "R2",
+  "reasons": [
+    {
+      "factor": "money",
+      "tier_floor": "R2",
+      "source": "declared",
+      "evidence": "declared side effect: financial-impact"
+    },
+    {
+      "factor": "boundary-contact",
+      "tier_floor": "R1",
+      "source": "declared",
+      "evidence": "declared side effect: sends-external"
+    }
+  ]
+}

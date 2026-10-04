@@ -87,8 +87,6 @@ export function extractPreservedSections(content: string): Partial<Record<Preser
 }
 
 
-
-
 function parseJsonToolsets(raw: string): PlatformToolsets {
   try {
     const parsed = JSON.parse(raw) as unknown;

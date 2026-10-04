@@ -2,7 +2,6 @@
 
 import {
   expandUnifiedToAllPlatforms,
-  mergeAdvancedOverrides,
   platformsDiffer,
   unionToolsetsFromPlatforms,
 } from "@/modules/hermes/lib/toolset-unify";
@@ -42,13 +41,5 @@ describe("hermes-toolset-unify", () => {
     for (const list of Object.values(expanded)) {
       expect(list).toEqual(["terminal", "web"]);
     }
-  });
-
-  it("mergeAdvancedOverrides keeps per-platform overrides", () => {
-    const merged = mergeAdvancedOverrides(["terminal", "file"], {
-      discord: ["hermes-discord"],
-    });
-    expect(merged.cli).toEqual(["file", "terminal"]);
-    expect(merged.discord).toEqual(["hermes-discord"]);
   });
 });

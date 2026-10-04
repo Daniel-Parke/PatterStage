@@ -41,6 +41,9 @@ itself. Do not build on a proposed ADR without saying that is what you are doing
 | [ADR-0015](../../org/decisions/ADR-0015-content-security-policy.md) | Enforce a fresh nonce-based browser script policy | accepted |
 | [ADR-0016](../../org/decisions/ADR-0016-global-error-csp-exception.md) | Keep Next's static 500 fallback useful while its un-nonced assets fail closed | accepted |
 | [ADR-0017](../../org/decisions/ADR-0017-single-owner-mission-dispatch.md) | Give unattended mission dispatch one durable owner and hold uncertain submissions for review | accepted |
+| [ADR-0018](../../org/decisions/ADR-0018-settings-schema-exception.md) | Keep the Settings schema in core while Hermes owns its parser and agent root | accepted |
+| [ADR-0019](../../org/decisions/ADR-0019-composer-queue-cleanup.md) | Persist and recover Composer queue cleanup without changing general agent streams | accepted |
+| [ADR-0020](../../org/decisions/ADR-0020-research-fetch-dns-pinning.md) | Pin research connections to validated addresses with Undici and require Node 22.19 or newer | accepted |
 
 ## Relationship to the EOS
 

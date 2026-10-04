@@ -98,7 +98,7 @@ import { NextRequest } from "next/server";
 
 import { openBaselineDb } from "../helpers/baseline-db";
 import { createModel, getModelDefaults, setDefaultModel } from "@/lib/models/models-repository";
-import { getAgentRoot, updateAgentRoot } from "@/lib/agents/agent-root-repository";
+import { getAgentRoot, updateAgentRoot } from "@/modules/hermes/lib/agent-root-repository";
 import {
   finalizeRootConfigOnDisk,
   syncDefaultsToHermesConfig,

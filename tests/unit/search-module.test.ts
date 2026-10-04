@@ -9,6 +9,14 @@ jest.mock("dns/promises", () => ({
   lookup: jest.fn(async () => [{ address: "93.184.216.34", family: 4 }]),
 }));
 
+// Preserve these legacy fetch fixtures without opening a real transport.
+jest.mock("undici", () => ({
+  fetch: (...args: Parameters<typeof global.fetch>) => global.fetch(...args),
+  Agent: class {
+    async destroy() { return undefined; }
+  },
+}));
+
 import { searxngProvider } from "@/lib/search/searxng";
 import { visitPage } from "@/lib/search/visit";
 import { resolveSearchProvider, nullSearchProvider } from "@/lib/search";

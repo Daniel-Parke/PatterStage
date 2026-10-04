@@ -40,7 +40,7 @@ import { AUXILIARY_TASK_TYPES, type TaskType } from "@/lib/models/task-types";
 export interface SyncDefaultsOptions {
   cleared?: TaskType[];
 }
-import { updateAgentRoot } from "@/lib/agents/agent-root-repository";
+import { updateAgentRoot } from "@/modules/hermes/lib/agent-root-repository";
 import { getModelDefaults, getModel } from "@/lib/models/models-repository";
 import { toError } from "@/lib/api/api-fetch";
 import { ensureDir } from "@/lib/fs/fs-helpers";

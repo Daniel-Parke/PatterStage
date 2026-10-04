@@ -178,10 +178,7 @@ function availabilityWhereWindowsIs(isWindows: boolean): Availability {
   jest.resetModules();
   jest.doMock("@/lib/host/platform", () => ({
     isWindows,
-    isMac: false,
-    isLinux: !isWindows,
     tmpDir: () => "/tmp",
-    homeDir: () => "/home/op",
     interpreterFor: () => null,
   }));
   const mod = require("@/lib/host/host-scheduler") as {

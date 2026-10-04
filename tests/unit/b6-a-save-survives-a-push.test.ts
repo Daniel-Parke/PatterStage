@@ -83,10 +83,10 @@ jest.mock("@/modules/hermes/lib/agent-runtime", () => {
 // assemble from it, and the call must be OBSERVABLE for the two "never
 // refreshes" lines.
 const mockUpdateAgentRoot = jest.fn();
-jest.mock("@/lib/agents/agent-root-repository", () => {
+jest.mock("@/modules/hermes/lib/agent-root-repository", () => {
   const actual = jest.requireActual(
-    "@/lib/agents/agent-root-repository",
-  ) as typeof import("@/lib/agents/agent-root-repository");
+    "@/modules/hermes/lib/agent-root-repository",
+  ) as typeof import("@/modules/hermes/lib/agent-root-repository");
   return {
     ...actual,
     updateAgentRoot: (patch: Parameters<typeof actual.updateAgentRoot>[0]) => {
@@ -108,7 +108,7 @@ import { NextRequest } from "next/server";
 
 import { execBaselineSchema } from "../helpers/baseline-db";
 import { PUT } from "@/app/api/config/route";
-import { getAgentRoot, updateAgentRoot } from "@/lib/agents/agent-root-repository";
+import { getAgentRoot, updateAgentRoot } from "@/modules/hermes/lib/agent-root-repository";
 import { pushRootToHermes } from "@/modules/hermes/lib/profile-push";
 import { detectRootDrift } from "@/modules/hermes/lib/profile-drift";
 import { writeHermesConfigFile } from "@/modules/hermes/lib/hermes-config-write";

@@ -14,7 +14,7 @@ const requireInstalled = createRequire(join(repository, "package.json"));
 const jestCli = requireInstalled.resolve("jest/bin/jest");
 const supportFiles = [
   "jest.config.js", "package.json", "next.config.ts", "tsconfig.json",
-  "scripts/tooling/coverage-floors.cjs", "src/lib/config/config-sections.ts",
+  "scripts/tooling/coverage-floors.cjs", "src/lib/config/config-sections.ts", "src/lib/config/env.ts",
   "tests/jest.setup.ts", "tests/__mocks__/better-sqlite3.cjs",
 ];
 const observations = new Map<string, Observation>();

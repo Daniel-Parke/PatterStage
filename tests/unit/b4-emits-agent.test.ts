@@ -138,7 +138,7 @@ jest.mock("@/modules/hermes/lib/profiles-repository", () => ({
   defaultConfigYaml: (p: string) => `agent:\n  personality: ${p}\n`,
   hydratePlatformToolsetsForSlug: jest.fn(),
 }));
-jest.mock("@/lib/agents/agent-root-repository", () => ({
+jest.mock("@/modules/hermes/lib/agent-root-repository", () => ({
   getAgentRoot: jest.fn(() => ({
     id: 1, displayName: "Bob", description: "", personality: "technical",
     configYaml: "", soulMd: "", agentsMd: "", frameworkMd: "", userMd: "", memoryMd: "",

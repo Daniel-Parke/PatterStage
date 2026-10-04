@@ -11,6 +11,7 @@
 // the backend is happily running is long, not stuck.
 
 import { MAX_TIMEOUT_MINUTES } from "@/lib/missions/mission-timeout";
+import { readAliasedEnv } from "@/lib/config/env";
 import type { MissionRunView } from "@/lib/missions/mission-run-state";
 import type { RunRecord } from "@/lib/runs/runs-repository";
 
@@ -20,7 +21,7 @@ export const GRACE_MINUTES = 5;
 /** Safety cap for a mission that declared no timeout of its own. */
 export const DEFAULT_MAX_RUN_MINUTES = Math.max(
   10,
-  Number(process.env.PS_RUN_MAX_MINUTES || process.env.CH_RUN_MAX_MINUTES) || 120,
+  Number(readAliasedEnv("PS_RUN_MAX_MINUTES")) || 120,
 );
 
 /** Parse a run timestamp, tolerating the DB's tz-less form. NaN when unparseable. */

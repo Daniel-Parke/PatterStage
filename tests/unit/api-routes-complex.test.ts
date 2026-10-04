@@ -87,7 +87,7 @@ jest.mock("@/lib/skills/skills-repository", () => ({
   deriveCategory: jest.fn(() => "uncategorized"),
 }));
 
-jest.mock("@/lib/agents/agent-root-repository", () => ({
+jest.mock("@/modules/hermes/lib/agent-root-repository", () => ({
   getAgentRoot: jest.fn(() => ({
     disabledSkillsJson: "[]",
   })),

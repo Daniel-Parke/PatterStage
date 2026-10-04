@@ -55,7 +55,7 @@ jest.mock("fs/promises", () => {
 });
 jest.mock("@/modules/hermes/lib/agent-runtime", () => ({ getActiveHermesPaths: () => ({ config: join(mockRoot, "config.yaml"), soul: join(mockRoot, "SOUL.md") }) }));
 jest.mock("@/lib/system/system-repository", () => ({ setMultipleStats: (row: Record<string, string>) => mockStats.push(row) }));
-jest.mock("@/lib/agents/agent-root-repository", () => ({ updateAgentRoot: jest.fn() }));
+jest.mock("@/modules/hermes/lib/agent-root-repository", () => ({ updateAgentRoot: jest.fn() }));
 jest.mock("@/lib/config/config-cache", () => ({ invalidateConfigCache: jest.fn() }));
 import { ConfigSync } from "@/modules/hermes/sync/ConfigSync";
 import { atomicWriteFile } from "@/modules/hermes/lib/hermes-config-write";

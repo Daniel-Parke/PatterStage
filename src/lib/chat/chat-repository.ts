@@ -10,6 +10,7 @@
 
 import { getDb, inTransaction, now, uuid } from "../db/index";
 import { buildUpdate } from "../db/build-update";
+import type { ChatMessage as ClientChatMessage, ChatConversation as ClientChatConversation, ToolCall } from "@/types/chat";
 
 /** Placeholder title a conversation gets until its first user message names it. */
 export const DEFAULT_CONVERSATION_TITLE = "New Chat";
@@ -25,45 +26,15 @@ export function deriveConversationTitle(content: string): string {
   return cleaned.length > 48 ? `${cleaned.slice(0, 48)}…` : cleaned;
 }
 
-export type ChatRole = "user" | "assistant" | "system";
+export type ChatRole = ClientChatMessage["role"];
 /** pending → streaming → complete | failed | cancelled (validated here, not in SQL). */
-export type ChatMessageStatus = "pending" | "streaming" | "complete" | "failed" | "cancelled";
+export type ChatMessageStatus = ClientChatMessage["status"];
 
-export interface ToolCallRecord {
-  name: string;
-  status: "invoked" | "completed" | "failed" | "approval_required";
-  arguments?: unknown;
-  result?: unknown;
-}
+export type ToolCallRecord = ToolCall;
 
-export interface ChatConversation {
-  id: string;
-  title: string;
-  sessionId: string | null;
-  profileName: string | null;
-  model: string | null;
-  previousResponseId: string | null;
-  createdAt: string;
-  updatedAt: string;
-}
+export type ChatConversation = ClientChatConversation;
 
-export interface ChatMessage {
-  id: string;
-  conversationId: string;
-  role: ChatRole;
-  content: string;
-  reasoning: string | null;
-  toolCalls: ToolCallRecord[] | null;
-  runId: string | null;
-  status: ChatMessageStatus;
-  error: string | null;
-  createdAt: string;
-  updatedAt: string;
-}
-
-export interface ChatConversationWithMessages extends ChatConversation {
-  messages: ChatMessage[];
-}
+export type ChatMessage = Required<ClientChatMessage>;
 
 // ── Row shapes ───────────────────────────────────────────────
 
@@ -179,12 +150,6 @@ export function listConversations(limit = 100): ChatConversation[] {
     .prepare("SELECT * FROM chat_conversations ORDER BY updated_at DESC LIMIT ?")
     .all(limit) as ConversationRow[];
   return rows.map(rowToConversation).filter((c): c is ChatConversation => c !== null);
-}
-
-export function getConversationWithMessages(id: string): ChatConversationWithMessages | null {
-  const conversation = getConversation(id);
-  if (!conversation) return null;
-  return { ...conversation, messages: getMessages(id) };
 }
 
 export function updateConversation(

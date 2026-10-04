@@ -1,12 +1,13 @@
 import type { NextConfig } from "next";
 
 import { settingsSectionIds } from "./src/lib/config/config-sections";
+import { readAliasedEnv } from "./src/lib/config/env";
 
 // Comma-separated full origins (scheme + host + port). scripts/bootstrap/setup.sh generates
 // PS_ALLOWED_DEV_ORIGINS for your chosen PORT (localhost, 127.0.0.1, LAN IPv4s).
 // CH_ALLOWED_DEV_ORIGINS is the legacy alias, kept for already-provisioned installs.
 
-const extraOrigins = (process.env.PS_ALLOWED_DEV_ORIGINS || process.env.CH_ALLOWED_DEV_ORIGINS || "")
+const extraOrigins = (readAliasedEnv("PS_ALLOWED_DEV_ORIGINS") || "")
   .split(",")
   .map((s) => s.trim())
   .filter(Boolean)

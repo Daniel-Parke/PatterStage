@@ -15,6 +15,7 @@ import { tmpdir } from "os";
 import { NextResponse } from "next/server";
 
 import { sanitizeGitBranch } from "@/lib/git/git-branch";
+import { readAliasedEnv } from "@/lib/config/env";
 
 export const APP_DIR = process.cwd();
 // Cross-platform Node deploy runner (Windows/macOS/Linux). The bash
@@ -24,7 +25,7 @@ export const CACHE_FILE = tmpdir() + "/ps-version-cache.json";
 export const CACHE_TTL_MS = 5 * 60 * 1000;
 
 export const UPDATE_BRANCH = sanitizeGitBranch(
-  process.env.PS_UPDATE_GIT_BRANCH || process.env.CH_UPDATE_GIT_BRANCH || "dev"
+  readAliasedEnv("PS_UPDATE_GIT_BRANCH") || "dev"
 );
 
 export function runGit(args: string[]): string {

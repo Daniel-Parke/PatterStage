@@ -25,7 +25,7 @@ jest.mock("@/modules/hermes/lib/profiles-repository", () => ({
   updateProfileContent: (...args: unknown[]) => mockUpdateProfile(...args),
 }));
 
-jest.mock("@/lib/agents/agent-root-repository", () => ({
+jest.mock("@/modules/hermes/lib/agent-root-repository", () => ({
   updateAgentRoot: (...args: unknown[]) => mockUpdateRoot(...args),
 }));
 

@@ -79,10 +79,7 @@ jest.mock("@/lib/host/host-scheduler", () => ({
 // mistaken for the "not a script" refusal D47 is about.
 jest.mock("@/lib/host/platform", () => ({
   isWindows: false,
-  isMac: false,
-  isLinux: true,
   tmpDir: () => "/tmp",
-  homeDir: () => "/home/op",
   interpreterFor: (abs: string) => ({ cmd: "/usr/bin/node", args: [abs] }),
 }));
 
@@ -91,7 +88,6 @@ jest.mock("@/lib/host/hardware-cron", () => ({
   expandHomeInString: (v: string) => v,
   normalizeHardwareCronPath: (p: string) => p,
   HARDWARE_CRON_UI_PRESETS: [],
-  HARDWARE_CRON_PRESET_SCRIPT_FILES: [],
 }));
 
 // The PatterStage-owned script rows (contract 3.1). Empty here: this file is

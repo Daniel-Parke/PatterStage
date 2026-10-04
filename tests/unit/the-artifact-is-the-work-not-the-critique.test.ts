@@ -22,6 +22,7 @@
 // drift apart.
 // ═══════════════════════════════════════════════════════════════
 
+import { legacyComposerTransportMock as mockLegacyComposerTransport, finishStage } from "../helpers/composer-legacy-fixture";
 import { openBaselineDb } from "../helpers/baseline-db";
 import { applyComposerMigration } from "@/lib/db/apply-composer-migration";
 import { applyComposerGroupLinkMigration } from "@/lib/db/apply-composer-group-link-migration";
@@ -33,6 +34,8 @@ jest.mock("@/lib/db", () => require("../helpers/baseline-db").dbSingletonMock(()
 jest.mock("@/lib/runtime", () => ({
   runtime: { submitRun: jest.fn(), getRun: jest.fn(), stopRun: jest.fn() },
 }));
+// Retain the submission double while driving real private receipt settlement.
+jest.mock("@/lib/runtime/composer-queue", () => mockLegacyComposerTransport());
 
 import { runtime } from "@/lib/runtime";
 import { getArtifact, listArtifacts } from "@/lib/runs/artifacts-repository";
@@ -45,8 +48,7 @@ import {
   recordComposerApproval,
   updateComposerRun,
 } from "@/lib/composer/composer-repository";
-import { advanceComposerRun, finalizeComposerNodeRun } from "@/lib/composer/engine";
-import type { ComposerNodeRun } from "@/lib/composer/schema";
+import { advanceComposerRun } from "@/lib/composer/engine";
 
 const mockSubmit = runtime.submitRun as jest.Mock;
 
@@ -101,17 +103,6 @@ afterEach(() => {
   testDb = null;
 });
 
-function runningNodeRun(composerRunId: string): ComposerNodeRun {
-  const nr = listNodeRuns(composerRunId).find((r) => r.status === "running");
-  if (!nr) throw new Error("no running node-run");
-  return nr;
-}
-
-async function finishStage(composerRunId: string, output: string): Promise<void> {
-  const nr = runningNodeRun(composerRunId);
-  finalizeComposerNodeRun(nr.runId!, "completed", output, null);
-  await advanceComposerRun(composerRunId);
-}
 
 /** The one artifact a finished run filed, with its body. */
 function theArtifact() {

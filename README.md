@@ -25,7 +25,7 @@ What you do with it:
 | You need | Notes |
 |---|---|
 | Linux, macOS, or Windows with WSL2 | Linux is the supported and tested target. macOS is a development tier. There is no native-Windows install. |
-| Node.js 20 or newer | What CI builds against, and what `engines.node` requires. |
+| Node.js 22.19.0 or newer | The runtime minimum; CI and Docker use Node 24. |
 | git | The installer clones, and the in-app updater pulls. |
 | The Hermes agent | Installed separately, on the same machine. PatterStage boots without it and tells you what is missing, but nothing can be dispatched until it is there or a gateway is reachable. |
 | A model provider | An API key for a hosted model, or a base URL for one you run yourself. Nothing dispatches successfully until a model is configured, and the provider call is the only thing that costs money. |

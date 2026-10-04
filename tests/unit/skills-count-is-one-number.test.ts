@@ -77,7 +77,7 @@ interface Row {
 }
 const rows = new Map<string, Row>();
 
-jest.mock("@/lib/agents/agent-root-repository", () => ({
+jest.mock("@/modules/hermes/lib/agent-root-repository", () => ({
   getAgentRoot: () => ({
     displayName: "Bob",
     description: "Main agent",

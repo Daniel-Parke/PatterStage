@@ -13,23 +13,10 @@ import { emptyModelDefaults } from "../utils";
 import { inferApiStyle, normalizeApiStyle, type ApiStyle } from "./llm-endpoint";
 // Aliased: this file's own `ModelRow` is the SQLite row in snake_case; the
 // library's is the model as the product sees it (C2, T-0137).
-import type { ModelIdentity, ModelRow as StoredModel } from "./model-types";
+import type { ModelIdentity, ModelRow as StoredModel, ApiModel } from "./model-types";
 // ── Public types ────────────────────────────────────────────────
 
-export interface ModelDefaults {
-  agent: string | null;
-  hindsight: string | null;
-  compression: string | null;
-  vision: string | null;
-  web_extract: string | null;
-  session_search: string | null;
-  title_generation: string | null;
-  skills_hub: string | null;
-  mcp: string | null;
-  triage_specifier: string | null;
-  approval: string | null;
-  delegation: string | null;
-}
+export type ModelDefaults = ApiModel["defaults"];
 
 export interface ModelRecord extends StoredModel {
   /**
@@ -325,8 +312,8 @@ export function updateModel(id: string, input: UpdateModelInput): ModelRecord | 
       for (const [slot, isDefault] of Object.entries(input.defaults)) {
         if (!isTaskType(slot)) continue;
         getDb()
-          .prepare("DELETE FROM model_defaults WHERE task_type = ?")
-          .run(slot);
+          .prepare("DELETE FROM model_defaults WHERE task_type = ? AND (model_id = ? OR ? = 1)")
+          .run(slot, id, isDefault ? 1 : 0);
         if (isDefault) {
           getDb()
             .prepare("INSERT INTO model_defaults (id, task_type, model_id, created_at, updated_at) VALUES (?, ?, ?, ?, ?)")

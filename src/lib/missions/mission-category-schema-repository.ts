@@ -2,13 +2,13 @@
 // missions/mission-category-schema-repository.ts — is the
 // mission_categories table there, and how full is it
 //
-// The two statements behind db.ts's getSchemaHealth(), which reports
+// The two statements behind db/index.ts's getSchemaHealth(), which reports
 // whether a database that claims schema_version >= 2 actually has the
 // table that version added.
 //
 // They take an open database rather than calling getDb(), and that is
 // the whole reason this is a separate file from
-// mission-category-repository.ts: db.ts is the caller, so a repository
+// mission-category-repository.ts: db/index.ts is the caller, so a repository
 // that reached back for getDb() would put a cycle through the
 // connection module every process boots through. With a handle
 // parameter this file imports nothing at runtime at all -- the

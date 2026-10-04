@@ -118,9 +118,9 @@ async function main() {
   log("║       PatterStage — Setup (cross-platform) ║");
   log("╚══════════════════════════════════════════╝");
 
-  const major = Number(process.versions.node.split(".")[0]);
-  if (major < 20) {
-    console.error(`✗ Node.js 20+ required (found ${process.version})`);
+  const [major, minor] = process.versions.node.split(".").map(Number);
+  if (major < 22 || (major === 22 && minor < 19)) {
+    console.error(`✗ Node.js 22.19.0+ required (found ${process.version})`);
     process.exit(1);
   }
   log(`✓ Node.js ${process.version}`);

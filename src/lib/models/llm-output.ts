@@ -35,16 +35,3 @@ const REASONING_BLOCK = /<(think|thinking|reasoning|scratchpad|reflection)>[\s\S
 export function stripReasoning(s: string): string {
   return s.replace(REASONING_BLOCK, " ").replace(/\s+\n/g, "\n").trim();
 }
-
-/**
- * If the output explicitly marks its final answer, return just that span. Covers
- * `<answer>…</answer>`, "Final answer: …", "Answer: …". Returns null when no
- * marker is present, so the caller can fall back to the whole stripped output.
- */
-export function extractAnswerSpan(s: string): string | null {
-  const tag = s.match(/<answer>\s*([\s\S]*?)\s*<\/answer>/i);
-  if (tag) return tag[1].trim() || null;
-  const marker = s.match(/(?:final\s+answer|answer)\s*[:\-]\s*([\s\S]+)/i);
-  if (marker) return marker[1].trim() || null;
-  return null;
-}

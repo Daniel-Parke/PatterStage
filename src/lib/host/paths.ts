@@ -10,18 +10,8 @@
 
 import { homedir } from "os";
 import { existsSync, statSync } from "fs";
-
-// ── Env helper ──────────────────────────────────────────────────
-/** Return the first non-empty value among the given env keys (new name first,
- *  legacy aliases after). Lets PS_ vars supersede the CH_ and CONTROL_HUB_
- *  fallbacks transparently. */
-export function readEnv(...keys: string[]): string | undefined {
-  for (const k of keys) {
-    const v = process.env[k];
-    if (v && String(v).trim()) return String(v).trim();
-  }
-  return undefined;
-}
+import { readEnv } from "@/lib/config/env";
+export { readEnv } from "@/lib/config/env";
 
 // ── PatterStage data root ───────────────────────────────────────
 function normalizeDirPath(dir: string): string {

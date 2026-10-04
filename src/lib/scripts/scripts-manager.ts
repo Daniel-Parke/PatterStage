@@ -137,7 +137,7 @@ export function resolveScriptPath(name: string): string | null {
 }
 
 /**
- * Validate a script NAME's format (no traversal, no slashes, .sh only) WITHOUT
+ * Validate a script NAME's format (no traversal, no slashes, supported script extension) WITHOUT
  * requiring it to exist — used by create. Returns the would-be absolute path
  * under the scripts dir, or null when the name is unsafe.
  */

@@ -45,7 +45,7 @@ export function buildPartialUpdateBody<TUpdates extends Record<string, unknown>>
 }
 
 /** Pass-through field builder for `buildPartialUpdateBody`. */
-const copyField: UpdateBodyBuilder<string> = (raw) => [String(raw), raw];
+const copyField = (key: string): UpdateBodyBuilder<string> => (raw) => [key, raw];
 
 /** String-or-boolean to a real boolean: the directive PATCH expects a typed `is_active`, not the client's string. */
 const boolFromString: UpdateBodyBuilder<string> = (raw) => [
@@ -58,17 +58,17 @@ const boolFromString: UpdateBodyBuilder<string> = (raw) => [
  * interface) and `handleUpdateDirective` picks it up.
  */
 export const DIRECTIVE_UPDATE_FIELDS = {
-  name: copyField,
-  content: copyField,
-  priority: copyField,
+  name: copyField("name"),
+  content: copyField("content"),
+  priority: copyField("priority"),
   is_active: boolFromString,
   // tags handled separately (normalizeTags transform)
 };
 
 /** Mental-model update field builders. `query` maps to the wire field `source_query`. */
 export const MENTAL_MODEL_UPDATE_FIELDS = {
-  name: copyField,
-  query: copyField,
+  name: copyField("name"),
+  query: copyField("source_query"),
   // tags handled separately (normalizeTags transform)
 };
 

@@ -34,6 +34,7 @@ describe("T-0177 Knip proposal", () => {
       next: "16.3.6",
       react: "19.2.8",
       "react-dom": "19.2.8",
+      undici: "8.11.2",
       zod: "^4.3.6",
     });
     expect(Object.fromEntries(Object.entries(manifest.devDependencies).filter(([name]) => name !== "knip"))).toEqual({

@@ -9,7 +9,7 @@
 #   bash scripts/bootstrap/setup.sh
 #
 # Prerequisites:
-#   - Node.js 20+ (matches CI)
+#   - Node.js 22.19.0+ (CI and Docker use Node 24)
 #   - Hermes optional: without ~/.hermes/config.yaml you get a standalone PatterStage
 #     (missions/cron tied to Hermes paths will be limited until Hermes is installed).
 #
@@ -40,12 +40,11 @@ echo ""
 
 # ── Node.js ────────────────────────────────────────────────────
 if ! command -v node &>/dev/null; then
-    echo "✗ Node.js not found. Please install Node.js 20+ first."
+    echo "✗ Node.js not found. Please install Node.js 22.19.0+ first."
     exit 1
 fi
-NODE_VERSION=$(node -v | sed 's/v//' | cut -d. -f1)
-if [ "$NODE_VERSION" -lt 20 ]; then
-    echo "✗ Node.js 20+ required (found v$NODE_VERSION)"
+if ! node -e 'const [major,minor]=process.versions.node.split(".").map(Number);process.exit(major>22 || (major===22 && minor>=19) ? 0 : 1)'; then
+    echo "✗ Node.js 22.19.0+ required (found $(node -v))"
     exit 1
 fi
 echo "✓ Node.js $(node -v)"

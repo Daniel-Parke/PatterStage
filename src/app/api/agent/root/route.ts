@@ -4,7 +4,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { parseJsonBody } from "@/lib/api/parse-json-body";
 import { appendAuditLine } from "@/lib/api/audit-log";
 import { ensureDb } from "@/lib/db";
-import { getAgentRoot, updateAgentRoot } from "@/lib/agents/agent-root-repository";
+import { getAgentRoot, updateAgentRoot } from "@/modules/hermes/lib/agent-root-repository";
 import { badRequest, ok, methodNotAllowed } from "@/lib/api/api-response";
 import { route } from "@/lib/api/api-route";
 

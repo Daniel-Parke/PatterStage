@@ -2,10 +2,8 @@
 // env-file — parse the entire .env file into a key→value Map
 // ══════════════════════════════════════════════════════════════════════════════
 //
-// Sister module to `env-line.ts` (which parses a single line into a
-// discriminated union for the read-only .env preview UI). This module
-// parses the WHOLE file into a `Map<string, string>` for sync/import
-// code that needs the full key→value table.
+// Core env-line.ts handles the read-only preview; this parser preserves raw
+// values for Hermes sync/import code.
 
 /**
  * Match a single .env key=value line. The key must be a valid identifier

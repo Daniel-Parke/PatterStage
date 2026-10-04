@@ -4,7 +4,7 @@
   "private": true,
   "license": "Apache-2.0",
   "engines": {
-    "node": ">=20"
+    "node": ">=22.19.0"
   },
   "scripts": {
     "dev": "next dev",
@@ -22,6 +22,7 @@
     "typecheck:tests": "tsc --noEmit -p tsconfig.tests.json",
     "typecheck:scripts": "tsc --noEmit -p tsconfig.scripts.json",
     "lint:knip": "node scripts/tooling/knip-ratchet.mjs",
+    "report:exports": "knip --production --include exports --reporter json",
     "start:network": "node scripts/tooling/start-network.mjs",
     "test": "jest",
     "test:watch": "jest --watch",
@@ -70,6 +71,7 @@
     "next": "16.3.6",
     "react": "19.2.8",
     "react-dom": "19.2.8",
+    "undici": "8.11.2",
     "zod": "^4.3.6"
   },
   "devDependencies": {

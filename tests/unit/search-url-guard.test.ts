@@ -7,6 +7,19 @@
  * Hermes gateway on localhost, cloud instance metadata, or anything on the
  * operator's LAN, and hand the response to an LLM that wrote it into a report.
  */
+// Preserve these legacy fetch fixtures without opening a real transport.
+jest.mock("undici", () => ({
+  fetch: (...args: Parameters<typeof global.fetch>) => global.fetch(...args),
+  Agent: class {
+    async destroy() { return undefined; }
+  },
+}));
+
+// The public redirect fixture resolves only to an owned synthetic public answer.
+jest.mock("dns/promises", () => ({
+  lookup: jest.fn(async () => [{ address: "93.184.216.34", family: 4 }]),
+}));
+
 import {
   checkUrlShape,
   isPrivateAddress,

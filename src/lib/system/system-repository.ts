@@ -31,6 +31,16 @@ export function getSystemStat(key: string): string | null {
   return row?.value ?? null;
 }
 
+/** Read private responsibilities without treating malformed JSON as absence. */
+export function getMetaByPrefix(prefix: string): Array<{ key: string; value: string }> {
+  return getDb().prepare("SELECT key, value FROM meta WHERE key >= ? AND key < ? ORDER BY key")
+    .all(prefix, `${prefix}\uffff`) as Array<{ key: string; value: string }>;
+}
+
+export function deleteMetaValue(key: string): void {
+  getDb().prepare("DELETE FROM meta WHERE key = ?").run(key);
+}
+
 /** Read two `meta` keys in one query. Missing keys are simply absent from the result. */
 export function getMetaPair(keyA: string, keyB: string): Array<{ key: string; value: string }> {
   return getDb()

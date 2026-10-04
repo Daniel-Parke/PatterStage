@@ -12,8 +12,6 @@ jest.mock("os", () => {
 import {
   crontabLineUsesScriptsDir,
   expandHomeInString,
-  HARDWARE_CRON_PRESET_SCRIPT_FILES,
-  HARDWARE_CRON_UI_PRESETS,
   normalizeHardwareCronPath,
 } from "@/lib/host/hardware-cron";
 
@@ -55,10 +53,6 @@ describe("system-cron path helpers", () => {
     expect(crontabLineUsesScriptsDir("/home/zoe/.hermes/scripts/ps-backup.sh", scriptsDir)).toBe(
       false,
     );
-  });
-
-  it("HARDWARE_CRON_PRESET_SCRIPT_FILES matches UI preset count", () => {
-    expect(HARDWARE_CRON_PRESET_SCRIPT_FILES.length).toBe(HARDWARE_CRON_UI_PRESETS.length);
   });
 
   it("normalizeSystemCronPath trims trailing slashes", () => {

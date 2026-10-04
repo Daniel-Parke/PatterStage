@@ -64,7 +64,7 @@ function readMoves(): Move[] {
     stem,
     before: `src/lib/${stem}.ts`,
     afterPath,
-    after: [afterPath, `@/lib/${afterPath.replace(/^src\/lib\//, "").replace(/\.ts$/, "")}`],
+    after: [afterPath, `@/${afterPath.replace(/^src\//, "").replace(/\.ts$/, "")}`],
   }));
 }
 
@@ -158,7 +158,14 @@ describe("K3-A · a record closed before a move cannot name a path the move crea
 
   it("knows the move table and when the move ran, so nothing below passes vacuously", () => {
     expect(moves.length).toBeGreaterThan(0);
-    expect(moves.every((move) => move.afterPath.startsWith("src/lib/"))).toBe(true);
+    expect(moves.every((move) => move.afterPath.startsWith("src/lib/") ||
+      /^src\/modules\/hermes\/lib\/(?:agent-root-repository|env-file)\.ts$/.test(move.afterPath))).toBe(true);
+    for (const stem of ["agent-root-repository", "env-file"]) {
+      const path = `src/modules/hermes/lib/${stem}.ts`;
+      const alias = `@/modules/hermes/lib/${stem}`;
+      expect(moves.find((move) => move.stem === stem)?.after).toEqual([path, alias]);
+      expect(anachronism(alias, moves)).toBe(alias);
+    }
     // Read from the claiming record, so this stays true when the table grows.
     expect(Number.isFinite(movedAt)).toBe(true);
   });

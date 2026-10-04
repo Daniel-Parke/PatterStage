@@ -14,7 +14,7 @@ async function POSTImpl() {
 }
 import { parseJsonBody } from "@/lib/api/parse-json-body";
 import { ensureDb } from "@/lib/db";
-import { getAgentRoot } from "@/lib/agents/agent-root-repository";
+import { getAgentRoot } from "@/modules/hermes/lib/agent-root-repository";
 import {
   getDisabledSkills,
   getProfile,

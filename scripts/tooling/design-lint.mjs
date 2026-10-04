@@ -251,6 +251,8 @@ export const RULES = [
   },
   {
     id: "hermes-outside-adapter",
+    // ADR-0018 retains declarative Settings field/section metadata in core.
+    // It does not exempt Hermes filesystem or protocol implementations.
     law: "Hermes filesystem layout is an ADAPTER detail. Only src/lib/runtime/, the Hermes adapters and the config-sync layer may know it; orchestration and UI go through the AgentRuntime port (org/decisions/ADR-0002).",
     files: (f) =>
       f.startsWith("src/") &&

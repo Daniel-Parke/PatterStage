@@ -7,12 +7,15 @@
 // the node-run; the engine routes to the next node.
 // ═══════════════════════════════════════════════════════════════
 
-import { now } from "@/lib/db";
-import { runtime } from "@/lib/runtime";
+import { inTransaction, now } from "@/lib/db";
+import { submitComposerRun } from "@/lib/runtime/composer-queue";
+import type { ComposerGatewayReceipt } from "@/lib/runtime/composer-queue";
 import { messageFromError } from "@/lib/api/api-fetch";
 import { logApiError } from "@/lib/api/api-logger";
 import { serverLog } from "@/lib/logs/server-log";
-import { createRun, attachBackendRun, updateRun } from "@/lib/runs/runs-repository";
+import { createRun, updateRun } from "@/lib/runs/runs-repository";
+import { recordComposerGateway } from "./queue-cleanup";
+import { isTerminalComposerRunStatus } from "./schema";
 import { createResearchRun } from "@/lib/laboratory/deep-research/research-repository";
 import { runResearchJob } from "@/lib/laboratory/deep-research/run-job";
 import type { ResearchConfig } from "@/lib/laboratory/deep-research/types";
@@ -173,22 +176,41 @@ export async function dispatchComposerNode(
 
   // PatterStage-owned run id (also the Idempotency-Key); idempotent insert.
   const runId = `cn_${nodeRun.id}`;
-  createRun({ id: runId, composerNodeRunId: nodeRun.id, profileName: run.profileName ?? null });
+  inTransaction(() => {
+    if (createRun({ id: runId, composerNodeRunId: nodeRun.id, profileName: run.profileName ?? null })) {
+      updateRun(runId, { error: "Composer submission unconfirmed; operator review required" });
+    }
+  }, "immediate");
 
+  let receipt: ComposerGatewayReceipt | undefined;
   try {
-    const handle = await runtime.submitRun({
+    receipt = await submitComposerRun({
       input: prompt,
       idempotencyKey: runId,
       profileName: run.profileName ?? undefined,
     });
-    attachBackendRun(runId, { runId: handle.runId, status: handle.status });
-    updateNodeRun(nodeRun.id, { status: "running", runId });
+    inTransaction(() => {
+      recordComposerGateway(runId, receipt!);
+      const current = getComposerRun(composerRunId), stage = getNodeRun(nodeRun.id);
+      if (current && !isTerminalComposerRunStatus(current.status) && stage?.status === "pending") {
+        updateNodeRun(nodeRun.id, { status: "running", runId });
+      }
+    }, "immediate");
     return { ok: true, nodeRunId: nodeRun.id };
   } catch (err) {
     const message = messageFromError(err, "stage dispatch failed");
     logApiError("composer.dispatchComposerNode", composerRunId, err);
-    updateRun(runId, { status: "failed", error: message });
-    updateNodeRun(nodeRun.id, { status: "failed", runId, error: message, completedAt: now() });
+    const current = getComposerRun(composerRunId);
+    if (current && !isTerminalComposerRunStatus(current.status)) {
+      if (receipt) {
+        const diagnostic = `Composer acknowledgement could not be persisted; operator review required; backend ${receipt.handle.runId}, gateway ${receipt.gatewayIdentity}`;
+        updateRun(runId, { error: diagnostic });
+        updateNodeRun(nodeRun.id, { runId, error: diagnostic });
+      } else {
+        updateRun(runId, { status: "failed", error: message });
+        updateNodeRun(nodeRun.id, { status: "failed", runId, error: message, completedAt: now() });
+      }
+    }
     return { ok: false, nodeRunId: nodeRun.id, error: message };
   }
 }

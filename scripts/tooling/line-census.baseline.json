@@ -1,18 +1,18 @@
 {
   "measuredAt": "2026-10-04",
   "counts": {
-    "srcLines": 102068,
-    "testLines": 152071,
+    "srcLines": 102409,
+    "testLines": 154313,
     "scriptsLines": 13597,
-    "srcRepeatedWindowLines": 693,
-    "testRepeatedWindowLines": 4787,
+    "srcRepeatedWindowLines": 655,
+    "testRepeatedWindowLines": 4768,
     "routesWithTryCatch": 11,
     "handRolledReadHooks": 2,
     "writeHooksWithoutMutation": 0,
     "repeatedTypeShapeFiles": 2,
     "oneImporterComponents": 103,
     "libRootFiles": 6,
-    "commentEssays": 9,
+    "commentEssays": 8,
     "suitesMockingDbInline": 15
   },
   "allowed": [
@@ -1280,6 +1280,41 @@
       "measuredAt": "2026-10-04",
       "rise": "testLines rose from 151770 to 152071",
       "reason": "T-0206 independent actual-invocation diagnostic oracle: 10 new controls and additive workflow assertions, +301 test lines; no product growth or target change"
+    },
+    {
+      "measuredAt": "2026-10-04",
+      "rise": "srcLines rose from 102068 to 102407",
+      "reason": "T-0194/T-0207: durable Composer cleanup and address-pinned research transport add bounded production responsibilities; independent red-first queue, library, DNS, runtime and env oracles add regression lines. Existing exact test identities and approved obsolete-helper retirements are preserved; all original targets remain unchanged."
+    },
+    {
+      "measuredAt": "2026-10-04",
+      "rise": "testLines rose from 152071 to 154261",
+      "reason": "T-0194/T-0207: durable Composer cleanup and address-pinned research transport add bounded production responsibilities; independent red-first queue, library, DNS, runtime and env oracles add regression lines. Existing exact test identities and approved obsolete-helper retirements are preserved; all original targets remain unchanged."
+    },
+    {
+      "measuredAt": "2026-10-04",
+      "rise": "testRepeatedWindowLines rose from 4787 to 4795",
+      "reason": "T-0194/T-0207: durable Composer cleanup and address-pinned research transport add bounded production responsibilities; independent red-first queue, library, DNS, runtime and env oracles add regression lines. Existing exact test identities and approved obsolete-helper retirements are preserved; all original targets remain unchanged."
+    },
+    {
+      "measuredAt": "2026-10-04",
+      "rise": "srcLines rose from 102407 to 102408",
+      "reason": "T-0194: one explicit reasoned pragma for canonical/legacy env-key metadata; no filesystem access, predicate change or target change."
+    },
+    {
+      "measuredAt": "2026-10-04",
+      "rise": "srcLines rose from 102408 to 102409",
+      "reason": "T0194/T0207 operator-authorised independent retained-fixture seams, exact config inverse guards and K3 anti-vacuity assertions; all existing names, deadlines and behaviour assertions held. One source line restores the required root-purpose comment. Targets unchanged."
+    },
+    {
+      "measuredAt": "2026-10-04",
+      "rise": "testLines rose from 154261 to 154322",
+      "reason": "T0194/T0207 operator-authorised independent retained-fixture seams, exact config inverse guards and K3 anti-vacuity assertions; all existing names, deadlines and behaviour assertions held. One source line restores the required root-purpose comment. Targets unchanged."
+    },
+    {
+      "measuredAt": "2026-10-04",
+      "rise": "testRepeatedWindowLines rose from 4795 to 4826",
+      "reason": "T0194/T0207 operator-authorised independent retained-fixture seams, exact config inverse guards and K3 anti-vacuity assertions; all existing names, deadlines and behaviour assertions held. One source line restores the required root-purpose comment. Targets unchanged."
     }
   ]
 }

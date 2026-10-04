@@ -54,6 +54,24 @@ function rowToApproval(r: ApprovalRow): ComposerApproval {
 
 // ── Workflows (definitions) ──────────────────────────────────────
 
+function insertWorkflowGraph(workflowId: string, def: ReturnType<typeof workflowDefSchema.parse>, ts: string): void {
+  const nodeIdByKey = new Map<string, string>();
+  def.nodes.forEach((n, i) => {
+    const id = uuid();
+    nodeIdByKey.set(n.key, id);
+    getDb().prepare(`INSERT INTO composer_nodes (id, workflow_id, key, label, kind, gate, is_start, is_terminal, config_json, pos, created_at)
+                  VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`)
+      .run(id, workflowId, n.key, n.label, n.kind, n.gate, n.isStart ? 1 : 0, n.isTerminal ? 1 : 0, n.config ? JSON.stringify(n.config) : null, i, ts);
+  });
+  for (const e of def.edges) {
+    const from = nodeIdByKey.get(e.from);
+    const to = nodeIdByKey.get(e.to);
+    if (!from || !to) throw new Error(`edge references unknown node: ${e.from} -> ${e.to}`);
+    getDb().prepare("INSERT INTO composer_edges (id, workflow_id, from_node_id, to_node_id, condition, label, created_at) VALUES (?, ?, ?, ?, ?, ?, ?)")
+      .run(uuid(), workflowId, from, to, e.condition, e.label ?? null, ts);
+  }
+}
+
 /** Create a workflow graph from a definition. Idempotent by `key`: re-creating
  *  the same key replaces the prior graph (bumping version). */
 export function createWorkflowFromDef(input: WorkflowDef): ComposerWorkflowGraph {
@@ -76,21 +94,7 @@ export function createWorkflowFromDef(input: WorkflowDef): ComposerWorkflowGraph
       getDb().prepare("INSERT INTO composer_workflows (id, key, name, description, version, created_at, updated_at) VALUES (?, NULL, ?, ?, 1, ?, ?)").run(workflowId, def.name, def.description ?? "", ts, ts);
     }
 
-    const nodeIdByKey = new Map<string, string>();
-    def.nodes.forEach((n, i) => {
-      const id = uuid();
-      nodeIdByKey.set(n.key, id);
-      getDb().prepare(`INSERT INTO composer_nodes (id, workflow_id, key, label, kind, gate, is_start, is_terminal, config_json, pos, created_at)
-                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`)
-        .run(id, workflowId, n.key, n.label, n.kind, n.gate, n.isStart ? 1 : 0, n.isTerminal ? 1 : 0, n.config ? JSON.stringify(n.config) : null, i, ts);
-    });
-    for (const e of def.edges) {
-      const from = nodeIdByKey.get(e.from);
-      const to = nodeIdByKey.get(e.to);
-      if (!from || !to) throw new Error(`edge references unknown node: ${e.from} -> ${e.to}`);
-      getDb().prepare("INSERT INTO composer_edges (id, workflow_id, from_node_id, to_node_id, condition, label, created_at) VALUES (?, ?, ?, ?, ?, ?, ?)")
-        .run(uuid(), workflowId, from, to, e.condition, e.label ?? null, ts);
-    }
+    insertWorkflowGraph(workflowId, def, ts);
     return getWorkflowGraph(workflowId)!;
   });
 }
@@ -145,12 +149,6 @@ export function getOutgoingEdges(nodeId: string): ComposerEdge[] {
 
 // ── Workflow mutation (the builder saves the whole graph atomically) ──
 
-/**
- * Replace a workflow's whole graph (name/description + all nodes + edges) in one
- * transaction, bumping its version. The structured builder holds the graph in
- * state and PUTs it wholesale — atomic, with no partial-edit races.
- */
-/** How many completed runs a structural edit would destroy. */
 /** How many runs a structural edit or a delete would destroy. */
 export function countWorkflowRuns(workflowId: string): number {
   const row = getDb()
@@ -204,21 +202,7 @@ export function replaceWorkflowGraph(
     getDb().prepare("UPDATE composer_workflows SET name = ?, description = COALESCE(?, description), version = version + 1, updated_at = ? WHERE id = ?")
       .run(def.name, def.description ?? null, ts, workflowId);
 
-    const nodeIdByKey = new Map<string, string>();
-    def.nodes.forEach((n, i) => {
-      const id = uuid();
-      nodeIdByKey.set(n.key, id);
-      getDb().prepare(`INSERT INTO composer_nodes (id, workflow_id, key, label, kind, gate, is_start, is_terminal, config_json, pos, created_at)
-                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`)
-        .run(id, workflowId, n.key, n.label, n.kind, n.gate, n.isStart ? 1 : 0, n.isTerminal ? 1 : 0, n.config ? JSON.stringify(n.config) : null, i, ts);
-    });
-    for (const e of def.edges) {
-      const from = nodeIdByKey.get(e.from);
-      const to = nodeIdByKey.get(e.to);
-      if (!from || !to) throw new Error(`edge references unknown node: ${e.from} -> ${e.to}`);
-      getDb().prepare("INSERT INTO composer_edges (id, workflow_id, from_node_id, to_node_id, condition, label, created_at) VALUES (?, ?, ?, ?, ?, ?, ?)")
-        .run(uuid(), workflowId, from, to, e.condition, e.label ?? null, ts);
-    }
+    insertWorkflowGraph(workflowId, def, ts);
     return getWorkflowGraph(workflowId)!;
   });
 }

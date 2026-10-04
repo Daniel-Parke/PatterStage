@@ -60,7 +60,8 @@ async function GETImpl(request: NextRequest, ctx: { params: Promise<{ id: string
 
   // One controller for the upstream fetch, pulled by either end going away.
   const upstream = new AbortController();
-  const abortUpstream = () => upstream.abort();
+  let closeLocal: (() => void) | null = null;
+  const abortUpstream = () => { upstream.abort(); closeLocal?.(); };
   const requestSignal = request.signal;
   requestSignal.addEventListener("abort", abortUpstream, { once: true });
   let closed = false;
@@ -73,6 +74,7 @@ async function GETImpl(request: NextRequest, ctx: { params: Promise<{ id: string
         closed = true;
         upstream.abort();
         if (guardInterval) clearInterval(guardInterval);
+        requestSignal.removeEventListener("abort", abortUpstream);
         try { controller.close(); } catch { /* client already closed */ }
       };
       guardInterval = setInterval(() => { if (!authorised()) stop(); }, 1000);
@@ -85,6 +87,28 @@ async function GETImpl(request: NextRequest, ctx: { params: Promise<{ id: string
           stop();
         }
       };
+      if (run.composerNodeRunId) {
+        closeLocal = stop;
+        const tick = () => {
+          if (closed) return;
+          if (!authorised() || requestSignal.aborted) { stop(); return; }
+          try {
+            const current = getRun(id);
+            if (!current) { emit(RUN_ERROR_EVENT, { message: "run not found" }); stop(); return; }
+            if (current.status === "started") return;
+            const data = { run_id: backendRunId, output: current.output, usage: current.usage, error: current.error };
+            emit(current.status === "failed" ? RUN_ERROR_EVENT : `run.${current.status}`,
+              current.status === "failed" ? { ...data, message: current.error ?? "run failed" } : data);
+            emit("done", { runId: id });
+            stop();
+          } catch { emit(RUN_ERROR_EVENT, { message: "run state unavailable" }); stop(); }
+        };
+        if (guardInterval) clearInterval(guardInterval);
+        emit("open", { runId: id, backendRunId });
+        tick();
+        if (!closed) guardInterval = setInterval(tick, 1000);
+        return;
+      }
       try {
         emit("open", { runId: id, backendRunId });
         for await (const ev of runtime.streamRunEvents(backendRunId, profile, upstream.signal)) {
@@ -113,9 +137,11 @@ async function GETImpl(request: NextRequest, ctx: { params: Promise<{ id: string
       }
     },
     cancel() {
+      closeLocal?.();
       closed = true;
       if (guardInterval) clearInterval(guardInterval);
       upstream.abort();
+      requestSignal.removeEventListener("abort", abortUpstream);
     },
   });
 

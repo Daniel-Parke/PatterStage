@@ -71,10 +71,11 @@ describe("chat-repository", () => {
     repo.createMessage({ conversationId: c.id, role: "user", content: "hello" });
     repo.createMessage({ conversationId: c.id, role: "assistant", content: "", status: "pending" });
 
-    const loaded = repo.getConversationWithMessages(c.id);
-    expect(loaded?.messages).toHaveLength(2);
-    expect(loaded?.messages[0]).toMatchObject({ role: "user", content: "hello" });
-    expect(loaded?.messages[1]).toMatchObject({ role: "assistant", status: "pending" });
+    const loaded = repo.getMessages(c.id);
+    expect(repo.getConversation(c.id)?.id).toBe(c.id);
+    expect(loaded).toHaveLength(2);
+    expect(loaded[0]).toMatchObject({ role: "user", content: "hello" });
+    expect(loaded[1]).toMatchObject({ role: "assistant", status: "pending" });
   });
 
   it("auto-titles an untitled conversation from its first user message", () => {

@@ -29,7 +29,7 @@
 # Override: INSTALL_DIR=/path/to/hub bash scripts/bootstrap/install.sh
 # Git branch for initial clone only: BRANCH=dev (default). Ongoing deploy pulls use
 # PS_UPDATE_GIT_BRANCH in .env.local (see scripts/application/ps-deploy.sh), not BRANCH.
-# Prerequisites: Node.js 20+, git. Hermes recommended (see prompts). macOS and Linux only.
+# Prerequisites: Node.js 22.19.0+, git. Hermes recommended (see prompts). macOS and Linux only.
 # ═══════════════════════════════════════════════════════════════
 
 set -e
@@ -82,7 +82,7 @@ ps_print_hermes_install_paths
 
 if [ "$IN_REPO" = true ]; then
     if ! command -v node &>/dev/null; then
-        fail "Node.js not found. Install Node.js 20+ first: https://nodejs.org"
+        fail "Node.js not found. Install Node.js 22.19.0+ first: https://nodejs.org"
     fi
     info "Running in-repo setup from $SCRIPT_REPO_ROOT"
     cd "$SCRIPT_REPO_ROOT"
@@ -138,11 +138,10 @@ if [ "$IN_REPO" = true ]; then
 fi
 
 if ! command -v node &>/dev/null; then
-    fail "Node.js not found. Install Node.js 20+ first: https://nodejs.org"
+    fail "Node.js not found. Install Node.js 22.19.0+ first: https://nodejs.org"
 fi
-NODE_MAJOR=$(node -v | sed 's/v//' | cut -d. -f1)
-if [ "$NODE_MAJOR" -lt 20 ]; then
-    fail "Node.js 20+ required (found $(node -v))"
+if ! node -e 'const [major,minor]=process.versions.node.split(".").map(Number);process.exit(major>22 || (major===22 && minor>=19) ? 0 : 1)'; then
+    fail "Node.js 22.19.0+ required (found $(node -v))"
 fi
 ok "Node.js $(node -v)"
 

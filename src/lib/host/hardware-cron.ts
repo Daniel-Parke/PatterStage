@@ -21,10 +21,6 @@ export const HARDWARE_CRON_UI_PRESETS: readonly { label: string; file: string }[
     ]
   : [{ label: "Backup", file: "ps-backup.sh" }];
 
-/** Filenames only (single source of truth with HARDWARE_CRON_UI_PRESETS). */
-export const HARDWARE_CRON_PRESET_SCRIPT_FILES: readonly string[] =
-  HARDWARE_CRON_UI_PRESETS.map((p) => p.file);
-
 export function expandHomeInString(value: string): string {
   // os.homedir() resolves USERPROFILE on Windows; $HOME is not set there.
   const home = homedir();

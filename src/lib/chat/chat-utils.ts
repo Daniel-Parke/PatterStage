@@ -19,6 +19,7 @@ import type {
 import { messageFromError, safeApiCall } from "@/lib/api/api-fetch";
 import { runWriteResult } from "@/lib/api/api-write";
 import { titleCase } from "@/lib/utils";
+import { CHAT_DEFAULT_MODEL } from "@/types/chat";
 
 // ── Download / export helpers ───────────────────────────────────
 
@@ -76,7 +77,7 @@ export function conversationToCsv(messages: ChatMessage[]): string {
 
 /** Format model ID into human-readable name. */
 export function formatModelName(id: string): string {
-  if (id === "hermes-agent") return "Agent Default";
+  if (id === CHAT_DEFAULT_MODEL) return "Agent Default";
   const parts = id.split("/").pop()?.split(/[-_]+/) || [];
   return parts.map((p) => titleCase(p)).join(" ");
 }

@@ -1,6 +1,6 @@
 {
   "id": "T-0194",
-  "intent": "Align approved library and Hermes ownership; repair abort-insensitive gateway waits and the Q027 elapsed-deadline wording. Reconcile all20 findings,14 OP dispositions and42 coverage obligations individually, plus the accepted T0202 queue transfer. Preserve retained Settings metadata under accepted ADR0018 and all compatibility promises. Exact invariants, rollback and Verify are in org/briefs/T-0194-oracle.md.",
+  "intent": "Align approved library and Hermes ownership; repair abort-insensitive gateway waits and the Q027 elapsed-deadline wording. Reconcile all20 findings,14 OP dispositions and42 coverage obligations individually, plus the accepted T0202 queue transfer. Preserve retained Settings metadata under accepted ADR0018 and all compatibility promises. Exact invariants, rollback and Verify are in org/briefs/T-0194-oracle.md. Verify and repair the newly inspected library ownership, PATCH mapping, category grouping, cron-bound and temporal-query defects through a separate independent oracle cohort.",
   "declared": {
     "capabilities": [
       "edit-code",
@@ -94,11 +94,85 @@
     "scripts/tooling/line-census.baseline.json",
     "tests/fixtures/mutants/T-0194.json",
     "tests/unit/lib-domain-code-copy.test.tsx",
-    "tests/e2e/lib-domain-code-copy.spec.ts"
+    "tests/e2e/lib-domain-code-copy.spec.ts",
+    "org/reviews/2026-10-t0194-composer-queue-adr-proposal.md",
+    "org/decisions/ADR-0019-composer-queue-cleanup.md",
+    "org/briefs/T-0194-queue.md",
+    "src/app/api/runs/[id]/events/route.ts",
+    "src/lib/composer/queue-cleanup.ts",
+    "src/lib/composer/dispatch.ts",
+    "src/lib/composer/engine.ts",
+    "src/lib/runtime/composer-queue.ts",
+    "src/lib/runtime/HermesRuntime.ts",
+    "src/lib/orchestration/run-reconcile.ts",
+    "src/lib/system/system-repository.ts",
+    "tests/unit/lib-domain-obsolete-exports.test.ts",
+    "tests/unit/skills-config.test.ts",
+    "tests/unit/hermes-toolset-unify.test.ts",
+    "tests/unit/llm-output.test.ts",
+    "tests/unit/local-dir-entry-normalize.test.ts",
+    "tests/unit/utils.test.ts",
+    "tests/unit/platform.test.ts",
+    "tests/unit/system-cron.test.ts",
+    "tests/unit/system-cron-backup-preset.test.ts",
+    "tests/unit/module-registry.test.ts",
+    "tests/unit/b3-registry-regroup.test.ts",
+    "tests/unit/chat-repository.test.ts",
+    "tests/unit/b13-scheduler-runs-scripts.test.ts",
+    "tests/unit/b13-script-list-merges-two-sources.test.ts",
+    "tests/unit/b13-script-extensions-are-one-rule.test.ts",
+    "org/briefs/T-0194-queue-implementation.md",
+    "org/briefs/T-0194-obsolete-exports.md",
+    "org/briefs/T-0194-audit-regressions.md",
+    "tests/unit/lib-domain-audit-regressions.test.ts",
+    "org/reviews/2026-10-t0194-recon-defects.json",
+    "org/reviews/2026-10-t0194-source-suite-classification.json",
+    "src/lib/composer/cancel.ts",
+    "tests/unit/lib-domain-queue-confirmation.test.ts",
+    "org/briefs/T-0194-queue-confirmation.md",
+    "org/reviews/2026-10-t0194-queue-fixture-amendment.md",
+    "src/lib/models/models-repository.ts",
+    "src/lib/memory/hindsight-route-helpers.ts",
+    "src/lib/skills/skills-grouping.ts",
+    "src/lib/schedule/next-run.ts",
+    "src/lib/stats/stats-repository.ts",
+    "src/lib/analytics/analytics-repository.ts",
+    "src/lib/chat/chat-repository.ts",
+    "src/lib/models/fallbacks-repository.ts",
+    "tests/unit/run-reconcile-stuck.test.ts",
+    "tests/unit/run-reconcile-404-grace.test.ts",
+    "tests/unit/lib-domain-queue-invalid-cancel.test.ts",
+    "tests/unit/lib-domain-remaining-rulings.test.ts",
+    "src/lib/config/env.ts",
+    "next.config.ts",
+    "src/app/api/agent/profiles/sync/pull/route.ts",
+    "org/reviews/2026-10-t0194-remaining-rulings.md",
+    "org/reviews/2026-10-t0194-completeness.md",
+    "scripts/tooling/output-canary.golden.json",
+    "org/reviews/2026-10-t0207-search-fixture-amendment.md",
+    "org/reviews/2026-10-t0208-spend-omissions-probe.mjs",
+    "tests/unit/b4-emits-research-composer.test.ts",
+    "tests/unit/a-hil-gate-asks-the-human.test.ts",
+    "tests/unit/the-artifact-is-the-work-not-the-critique.test.ts",
+    "docs/adr/README.md",
+    "org/reviews/2026-10-t0194-t0207-gate-amendment-proposal.md",
+    "org/reviews/2026-10-t0194-t0207-gate-amendments.md",
+    "tests/unit/t0163-bootstrap-credentials.test.ts",
+    "tests/unit/release-jest-worker-budget.test.ts",
+    "tests/unit/dependency-hygiene-contract.test.ts",
+    "tests/unit/t0175-dependency-proposals.test.ts",
+    "tests/unit/t0176-visual-dependency-proposals.test.ts",
+    "tests/unit/t0177-knip-proposal.test.ts",
+    "tests/unit/k3-a-closed-record-keeps-its-spelling.test.ts",
+    "tests/unit/subsystems-route-and-panel.test.tsx",
+    "org/reviews/2026-10-t0194-queue-oracle-type-amendment-proposal.md",
+    "tests/helpers/composer-legacy-fixture.ts",
+    "org/briefs/T-0194-composer-fixture-fold.md",
+    "org/reviews/2026-10-t0194-additional-body-review.md"
   ],
   "timestamps": {
     "opened": "2026-10-04T15:51:49.263200+00:00",
-    "updated": "2026-10-04T16:12:04.687458+00:00"
+    "updated": "2026-10-04T19:43:23.702800+00:00"
   },
   "verdicts": [
     {
@@ -107,6 +181,55 @@
       "verdict": "pass",
       "date": "2026-10-04T16:12:04.687458+00:00",
       "notes": "Bounded first-cohort RED freeze only:31cases17pass14causal matcherfail,0runtimeerrors/skips;17existingcontrols green. Four gateway Stop waits and linked-listener leak red; Q027 precedence/zero/submission/grace/guidance qualification.11originalroundtripnames held; exact obsolete wording amendment reconstructs originalbytes and Q027 supplies operatorauthority. Source/currentcontrols unchangedfrom93e425. Hashes/proof in verification. No implementation/fullbatchacceptance."
+    },
+    {
+      "role": "operator",
+      "session": "Daniel Parke",
+      "verdict": "pass",
+      "date": "2026-10-04T17:37:49.722234+00:00",
+      "notes": "Recorded accepted ADR0019 exact drafted Composer-only design on2026-10-04, via interactive reply; proposal org/reviews/2026-10-t0194-composer-queue-adr-proposal.md. Acceptance is design authority only, not implementation or batch acceptance."
+    },
+    {
+      "role": "ORACLE",
+      "session": "01a10610-cd11-7cd1-a83c-bbed065d1f98",
+      "verdict": "pass",
+      "date": "2026-10-04T19:07:26.432438+00:00",
+      "notes": "Independent one-case invalid-receipt cancellation regression frozen red: 1 causal matcher failure, no infrastructure errors or skips; source repair follows red commit."
+    },
+    {
+      "role": "operator",
+      "session": "Daniel Parke",
+      "verdict": "pass",
+      "date": "2026-10-04T19:23:24.140939+00:00",
+      "notes": "Approve one joint gated implementation landing for T0194/T0207 as proposed. Separate task records, independent oracles, both committed causal sweeps, independent R3 review and every required hosted job remain. No check or target weakened."
+    },
+    {
+      "role": "operator",
+      "session": "Daniel Parke",
+      "verdict": "pass",
+      "date": "2026-10-04T20:15:36.943382+00:00",
+      "notes": "Authorise narrow independent gate amendments as proposed in org/reviews/2026-10-t0194-t0207-gate-amendment-proposal.md. Existing names/behaviour assertions/timeouts/coverage floors held; full gate reruns. This is amendment authority, not implementation acceptance."
+    },
+    {
+      "role": "operator",
+      "session": "Daniel Parke",
+      "verdict": "pass",
+      "date": "2026-10-04T20:23:59.225429+00:00",
+      "notes": "Authorise the exact independent typing-only lib-domain-queue-admission.test.ts amendment described in org/reviews/2026-10-t0194-queue-oracle-type-amendment-proposal.md. All 30 names, assertions, deadlines, fixtures and emitted JavaScript remain identical. This is amendment authority, not implementation acceptance."
+    },
+    {
+      "role": "REVIEWER",
+      "session": "01a107e1-5ba0-7703-ab13-e23e640dc10b",
+      "verdict": "pass",
+      "date": "2026-10-04T20:33:21.824958+00:00",
+      "notes": "Bounded independent PASS for the 12 retained-fixture gate amendments under explicit operator authority. Originals/inverse proofs, names, assertions, deadlines and queue emitted-JavaScript identity verified; focused 44 and 90 passes, one existing skip; typing/lint/Knip 0. Evidence: org/reviews/2026-10-t0194-t0207-gate-amendments.md. No full-gate, sweep, hosted, overall R3 or release acceptance."
+    },
+    {
+      "role": "REVIEWER",
+      "session": "01a107e1-5ba0-7703-ab13-e23e640dc10b",
+      "verdict": "pass",
+      "date": "2026-10-04T20:52:59.512847+00:00",
+      "notes": "Scope conformity only: exact unchanged transport/running-node/terminal-settlement helper extraction across the two already authorised Human/artifact fixtures fits existing operator R3 approval. All 15 names, 36 assertions and deadlines held; no broader consumers or production change. Actual candidate checks/review/full gate still required."
     }
   ],
   "tier_ruled": "R3",
@@ -140,12 +263,30 @@
     "files": [
       "tests/unit/lib-domain-retry-stop.test.ts",
       "tests/unit/lib-domain-deadline-guidance.test.tsx",
-      "tests/unit/build-mission-prompt-roundtrip.test.ts"
+      "tests/unit/build-mission-prompt-roundtrip.test.ts",
+      "tests/unit/lib-domain-ownership.test.ts",
+      "tests/unit/lib-domain-helper-parity.test.ts",
+      "tests/e2e/lib-domain-code-copy.spec.ts",
+      "tests/unit/lib-domain-queue-admission.test.ts",
+      "tests/unit/lib-domain-obsolete-exports.test.ts",
+      "tests/unit/lib-domain-audit-regressions.test.ts",
+      "tests/unit/lib-domain-queue-confirmation.test.ts",
+      "tests/unit/lib-domain-queue-invalid-cancel.test.ts",
+      "tests/unit/lib-domain-remaining-rulings.test.ts"
     ],
     "hashes": {
       "tests/unit/lib-domain-retry-stop.test.ts": "98c4f37356f0130b8499e5ae7863ddaeaf6c6f11e3b6d3f65edfbf8694993574",
       "tests/unit/lib-domain-deadline-guidance.test.tsx": "2e11d97dee246755c8d7316e09c3349a9676286189b80862676164ea1fa1bab2",
-      "tests/unit/build-mission-prompt-roundtrip.test.ts": "52866b3dd2d6e2c023fb73bf8331e31a844df724a8b86bbe9022eef4cfa1aed8"
+      "tests/unit/build-mission-prompt-roundtrip.test.ts": "52866b3dd2d6e2c023fb73bf8331e31a844df724a8b86bbe9022eef4cfa1aed8",
+      "tests/unit/lib-domain-ownership.test.ts": "6919e755e447a056e41a2ace99498875a661199edc1fe85ae162f46c24cc3392",
+      "tests/unit/lib-domain-helper-parity.test.ts": "2114347a062420632fc3d4093ec4a9eea61a40ea7ba5a68f37c39a6433ae28ff",
+      "tests/e2e/lib-domain-code-copy.spec.ts": "6f9742330f67346f27453915c57511cc162f97f43884bb8f09d6ca1df90e0030",
+      "tests/unit/lib-domain-queue-admission.test.ts": "7dba48b2bd55a3b0302a99f564d290f3e89be5177964f8724061cf88732dfc21",
+      "tests/unit/lib-domain-obsolete-exports.test.ts": "0f4a678b3cfeed3e21ff6616f6f91c67de60bc31453d5aa3f7c5a27c7104421f",
+      "tests/unit/lib-domain-audit-regressions.test.ts": "5a98bb45d27e3ca01d7f2d3997548bfcdf1ec10a2e4aab0c52f19cd0649f95fe",
+      "tests/unit/lib-domain-queue-confirmation.test.ts": "33e09c78ad7f2f5386fceb5e4ff3d8c9e7ec61fb10582c7d330b9e96038e69cc",
+      "tests/unit/lib-domain-queue-invalid-cancel.test.ts": "e0d3c6b0e0b65d693b8b85d1fac1027b0c22905f843b4edf61ee9f8070c824d1",
+      "tests/unit/lib-domain-remaining-rulings.test.ts": "ebd5e037a14b2596859fc4bc9085ae5b3c971d8e935415d1c6c048c287488286"
     },
     "author_session": "01a1062b-0f36-7702-885b-476fd150d9bf",
     "independence_method": "metamorphic"

@@ -22,7 +22,7 @@ import { randomBytes } from "crypto";
 
 import * as yaml from "js-yaml";
 
-import { updateAgentRoot } from "@/lib/agents/agent-root-repository";
+import { updateAgentRoot } from "@/modules/hermes/lib/agent-root-repository";
 import { messageFromError } from "@/lib/api/api-fetch";
 import { invalidateConfigCache } from "@/lib/config/config-cache";
 import { backupFile as backupFileShared } from "@/lib/fs/fs-helpers";

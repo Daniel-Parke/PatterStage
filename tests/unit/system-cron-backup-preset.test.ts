@@ -2,19 +2,16 @@
 import { existsSync } from "fs";
 import { join } from "path";
 
-import { HARDWARE_CRON_UI_PRESETS, HARDWARE_CRON_PRESET_SCRIPT_FILES } from "@/lib/host/hardware-cron";
+import { HARDWARE_CRON_UI_PRESETS } from "@/lib/host/hardware-cron";
 import { isWindows } from "@/lib/host/platform";
 
 describe("hardware cron presets", () => {
   it("every preset script file is shipped under scripts/hardware", () => {
-    expect(HARDWARE_CRON_PRESET_SCRIPT_FILES.length).toBeGreaterThan(0);
-    for (const file of HARDWARE_CRON_PRESET_SCRIPT_FILES) {
+    const files = HARDWARE_CRON_UI_PRESETS.map(preset => preset.file);
+    expect(files.length).toBeGreaterThan(0);
+    for (const file of files) {
       expect(existsSync(join(process.cwd(), "scripts", "hardware", file))).toBe(true);
     }
-  });
-
-  it("preset script-file list matches the UI preset count", () => {
-    expect(HARDWARE_CRON_PRESET_SCRIPT_FILES.length).toBe(HARDWARE_CRON_UI_PRESETS.length);
   });
 
   it("the Hindsight backup (bash, Linux-only) is offered on Unix only", () => {

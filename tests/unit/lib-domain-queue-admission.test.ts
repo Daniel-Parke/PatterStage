@@ -10,6 +10,7 @@ import { applyComposerMigration } from "@/lib/db/apply-composer-migration";
 import { applyComposerGroupLinkMigration } from "@/lib/db/apply-composer-group-link-migration";
 import { applyComposerNodeCancelledMigration } from "@/lib/db/apply-composer-node-cancelled-migration";
 import type { RunHandle, RunResult, RunSubmit } from "@/lib/runtime/types";
+import type { claimComposerQueue as claimComposerQueueExport } from "@/lib/composer/queue-cleanup";
 import { HermesRuntime } from "@/lib/runtime/HermesRuntime";
 import { inTransaction } from "@/lib/db";
 import { createRun, getRun, attachBackendRun, updateRun } from "@/lib/runs/runs-repository";
@@ -50,7 +51,7 @@ interface QueueModule {
   recordComposerGateway(id: string, receipt: Receipt): QueueRecord;
   loadComposerQueue(id: string): QueueRecord | null;
   persistComposerTerminal(id: string, result: Terminal): QueueRecord | null;
-  claimComposerQueue(id: string, owner: Owner, nowMs: number): QueueRecord | null;
+  claimComposerQueue: typeof claimComposerQueueExport;
   sweepComposerQueues(input: { nowMs: number; signal?: AbortSignal }): Promise<{
     selected: number; claimed: number; released: number; continued: number;
     retired: number; pending: number; operatorReview: number;

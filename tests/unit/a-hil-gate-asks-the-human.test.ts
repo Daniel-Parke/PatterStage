@@ -27,6 +27,7 @@
 // The crashed half is kept, and the last two describes are its controls.
 // ═══════════════════════════════════════════════════════════════
 
+import { legacyComposerTransportMock as mockLegacyComposerTransport, runningNodeRun, finishStage } from "../helpers/composer-legacy-fixture";
 import { openBaselineDb } from "../helpers/baseline-db";
 import { applyComposerMigration } from "@/lib/db/apply-composer-migration";
 import { applyComposerGroupLinkMigration } from "@/lib/db/apply-composer-group-link-migration";
@@ -37,6 +38,8 @@ jest.mock("@/lib/db", () => require("../helpers/baseline-db").dbSingletonMock(()
 jest.mock("@/lib/runtime", () => ({
   runtime: { submitRun: jest.fn(), getRun: jest.fn(), stopRun: jest.fn() },
 }));
+// Retain the submission double while driving real private receipt settlement.
+jest.mock("@/lib/runtime/composer-queue", () => mockLegacyComposerTransport());
 
 import { runtime } from "@/lib/runtime";
 import {
@@ -49,7 +52,9 @@ import {
   recordComposerApproval,
   updateComposerRun,
 } from "@/lib/composer/composer-repository";
-import { advanceComposerRun, finalizeComposerNodeRun } from "@/lib/composer/engine";
+import { advanceComposerRun } from "@/lib/composer/engine";
+import { persistComposerTerminal, sweepComposerQueues } from "@/lib/composer/queue-cleanup";
+import { getRun } from "@/lib/runs/runs-repository";
 import type { ComposerNodeRun } from "@/lib/composer/schema";
 
 const mockSubmit = runtime.submitRun as jest.Mock;
@@ -106,17 +111,6 @@ afterEach(() => {
   testDb = null;
 });
 
-function runningNodeRun(composerRunId: string): ComposerNodeRun {
-  const nr = listNodeRuns(composerRunId).find((r) => r.status === "running");
-  if (!nr) throw new Error("no running node-run");
-  return nr;
-}
-
-async function finishStage(composerRunId: string, output: string): Promise<void> {
-  const nr = runningNodeRun(composerRunId);
-  finalizeComposerNodeRun(nr.runId!, "completed", output, null);
-  await advanceComposerRun(composerRunId);
-}
 
 /** Drive a fresh run up to the gate and settle the gate stage with `output`. */
 async function runToTheGate(output: string, def = GATED) {
@@ -208,8 +202,9 @@ describe("CONTROL: the two cases that must NOT start asking a human", () => {
     await finishStage(run.id, "Some findings."); // → dispatch the gate stage
 
     const gateRun = runningNodeRun(run.id);
-    finalizeComposerNodeRun(gateRun.runId!, "failed", null, "the container died");
-    await advanceComposerRun(run.id);
+    const agentRun = getRun(gateRun.runId!)!;
+    persistComposerTerminal(agentRun.id, { runId: agentRun.runId!, status: "failed", error: "the container died" });
+    await sweepComposerQueues({ nowMs: Date.now() });
 
     const ended = getComposerRun(run.id)!;
     expect(ended.status).toBe("failed");

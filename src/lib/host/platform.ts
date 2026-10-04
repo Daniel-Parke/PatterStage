@@ -8,14 +8,9 @@
 
 import { spawn, execFileSync } from "child_process";
 import { connect } from "net";
-import { homedir, tmpdir } from "os";
+import { tmpdir } from "os";
 
 export const isWindows = process.platform === "win32";
-export const isMac = process.platform === "darwin";
-export const isLinux = process.platform === "linux";
-
-/** User home dir (Windows: USERPROFILE — os.homedir() handles this). */
-export const homeDir = (): string => homedir();
 /** OS temp dir (cross-platform; never hardcode /tmp). */
 export const tmpDir = (): string => tmpdir();
 

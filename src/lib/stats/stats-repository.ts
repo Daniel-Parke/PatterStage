@@ -165,7 +165,7 @@ export function computeDashboard(): { stats: DashboardStats; raw: RawMetrics } {
       return getDb()
         .prepare(
           `SELECT status, usage_json, submitted_at, completed_at
-             FROM runs WHERE submitted_at >= datetime('now', '-91 days')`,
+             FROM runs WHERE julianday(submitted_at) >= julianday('now', '-91 days')`,
         )
         .all() as Array<{
         status: string;
@@ -239,12 +239,12 @@ export function computeDashboard(): { stats: DashboardStats; raw: RawMetrics } {
     try {
       const sched = getDb()
         .prepare(
-          `SELECT name, next_run_at AS at FROM schedules
-             WHERE enabled = 1 AND next_run_at IS NOT NULL AND next_run_at > datetime('now')
-             ORDER BY next_run_at ASC LIMIT 1`,
+          `SELECT name, kind, next_run_at AS at FROM schedules
+             WHERE enabled = 1 AND julianday(next_run_at) > julianday('now')
+             ORDER BY julianday(next_run_at) ASC LIMIT 1`,
         )
-        .get() as { name: string; at: string } | undefined;
-      return sched ? { name: sched.name || "Scheduled mission", at: sched.at, kind: "mission" } : null;
+        .get() as { name: string; kind: NextRun["kind"]; at: string } | undefined;
+      return sched ? { name: sched.name || `Scheduled ${sched.kind}`, at: sched.at, kind: sched.kind } : null;
     } catch {
       return null;
     }
@@ -252,7 +252,7 @@ export function computeDashboard(): { stats: DashboardStats; raw: RawMetrics } {
 
   const stories = scalar("SELECT COUNT(*) AS v FROM stories WHERE deleted_at IS NULL");
   const errors24h = scalar(
-    "SELECT COUNT(*) AS v FROM error_log_entries WHERE ingested_at >= datetime('now', '-1 day')",
+    "SELECT COUNT(*) AS v FROM error_log_entries WHERE julianday(ingested_at) >= julianday('now', '-1 day')",
   );
 
   // ── mission throughput (terminal missions / day, last 30) ──
@@ -262,7 +262,7 @@ export function computeDashboard(): { stats: DashboardStats; raw: RawMetrics } {
       .prepare(
         `SELECT date(updated_at) AS d, status, COUNT(*) AS c FROM missions
            WHERE deleted_at IS NULL AND status IN ('successful','failed')
-             AND updated_at >= datetime('now', '-30 days')
+             AND julianday(updated_at) >= julianday('now', '-30 days')
            GROUP BY d, status`,
       )
       .all() as Array<{ d: string; status: string; c: number }>;

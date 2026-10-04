@@ -15,7 +15,7 @@
  */
 import { CONFIG_SECTIONS } from "@/lib/config/config-schema";
 import { SETTINGS_GROUPS, SETTINGS_TOOLS, settingsSectionIds } from "@/lib/config/config-sections";
-import { MODULES, allModuleRoutes, getModule, labelFor } from "@/lib/modules/registry";
+import { MODULES, allModuleRoutes, labelFor } from "@/lib/modules/registry";
 import { NAV_SECTIONS, moduleRoutes } from "@/lib/modules/types";
 import { mainSections } from "@/components/layout/sidebar-config";
 
@@ -113,7 +113,7 @@ describe("the old addresses are gone from the registry", () => {
   });
 
   it("the config tree is no longer rail data", () => {
-    const hermes = getModule("hermes") as unknown as Record<string, unknown>;
+    const hermes = MODULES.find(module => module.id === "hermes") as unknown as Record<string, unknown>;
     expect(hermes.configPinned).toBeUndefined();
     expect(hermes.configGroups).toBeUndefined();
   });

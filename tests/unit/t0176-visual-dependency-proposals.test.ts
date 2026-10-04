@@ -61,6 +61,7 @@ describe("T-0176 visual dependency proposals", () => {
       next: "16.3.6",
       react: "19.2.8",
       "react-dom": "19.2.8",
+      undici: "8.11.2",
       zod: "^4.3.6",
     });
   });

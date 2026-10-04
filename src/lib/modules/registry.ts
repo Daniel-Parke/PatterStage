@@ -164,10 +164,6 @@ export const MODULES: readonly ProductModule[] = [
   recRoomModule,
 ];
 
-export function getModule(id: string): ProductModule | undefined {
-  return MODULES.find((m) => m.id === id);
-}
-
 /**
  * The module-to-accent map. WG-WEB-009 (B) rules ONE registered map of four
  * entries, ruled at the first-build lock-in sitting of 2026-08-24

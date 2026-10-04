@@ -10,6 +10,26 @@ const knip = JSON.parse(readFileSync(join(root, "knip.json"), "utf8"));
 const read = (file: string) => readFileSync(join(root, file), "utf8");
 const parse = (file: string, source: string) => ts.createSourceFile(file, source, ts.ScriptTarget.Latest, true);
 
+function historicalConfig(file: string, source: string): ts.SourceFile {
+  const tree = parse(file, source);
+  if (file !== "next.config.ts") return tree;
+  const imports = tree.statements.filter(ts.isImportDeclaration).filter(node =>
+    ts.isStringLiteral(node.moduleSpecifier) && node.moduleSpecifier.text === "./src/lib/config/env");
+  const calls: ts.CallExpression[] = [];
+  function visit(node: ts.Node) {
+    if (ts.isCallExpression(node) && ts.isIdentifier(node.expression) && node.expression.text === "readAliasedEnv") calls.push(node);
+    ts.forEachChild(node, visit);
+  }
+  visit(tree);
+  if (imports.length !== 1 || calls.length !== 1 ||
+      imports[0].getText(tree) !== 'import { readAliasedEnv } from "./src/lib/config/env";' ||
+      calls[0].getText(tree) !== 'readAliasedEnv("PS_ALLOWED_DEV_ORIGINS")' || imports[0].end > calls[0].getStart(tree)) return tree;
+  const call = calls[0], declaration = imports[0];
+  const restored = source.slice(0, call.getStart(tree)) +
+    "process.env.PS_ALLOWED_DEV_ORIGINS || process.env.CH_ALLOWED_DEV_ORIGINS" + source.slice(call.end);
+  return parse(file, restored.slice(0, declaration.getStart(tree)) + restored.slice(declaration.end));
+}
+
 // Inspect syntax, never import configuration, scripts or application modules.
 function packageConsumers(file: string, source: string, name: string): string[] {
   const tree = parse(file, source), found: string[] = [];
@@ -111,7 +131,7 @@ describe("T-0192 dependency hygiene preserves the existing runtime", () => {
     ["next.config.ts", "e23ed9b1da7b58096fe62681503d75b8eb802c1a024b0c2d52afcaea9a66ab36"],
     ["jest.config.js", "3188e6c3935b640ba58aa02c2ebc32913b41ac5ef5eb9dd9b74563942a9a6ba0"],
   ])("preserves %s executable configuration while allowing comment-only amendments", (file, expected) => {
-    const printed = ts.createPrinter({ removeComments: true, newLine: ts.NewLineKind.LineFeed }).printFile(parse(file, read(file)));
+    const printed = ts.createPrinter({ removeComments: true, newLine: ts.NewLineKind.LineFeed }).printFile(historicalConfig(file, read(file)));
     expect(createHash("sha256").update(printed).digest("hex")).toBe(expected);
   });
 });

@@ -23,8 +23,11 @@
 // ═══════════════════════════════════════════════════════════════
 
 import { lookup } from "dns/promises";
+import type { LookupAddress } from "node:dns";
+import { isIP } from "node:net";
 
 export type UrlVerdict = { ok: true; url: URL } | { ok: false; reason: string };
+type ResolvedUrlVerdict = { ok: true; url: URL; addresses: LookupAddress[] } | { ok: false; reason: string };
 
 /** Parse an IPv4 dotted quad, or null if it is not one. */
 function parseIpv4(host: string): number[] | null {
@@ -144,6 +147,7 @@ export function checkUrlShape(raw: string): UrlVerdict {
   if (url.protocol !== "http:" && url.protocol !== "https:") {
     return { ok: false, reason: `blocked protocol ${url.protocol}` };
   }
+  if (url.username || url.password) return { ok: false, reason: "URL credentials are not permitted" };
 
   const host = url.hostname.replace(/^\[|\]$/g, "").toLowerCase();
   if (!host) return { ok: false, reason: "no hostname" };
@@ -156,38 +160,45 @@ export function checkUrlShape(raw: string): UrlVerdict {
   return { ok: true, url };
 }
 
-/**
- * Full check, including DNS. Returns the parsed URL when it is safe to fetch.
- *
- * Note the residual race: the name is resolved here and again by fetch(), so a
- * hostile DNS server could answer differently the second time. Closing that
- * needs a pinned-IP fetch with a Host header, which is not worth the complexity
- * for a research fetcher whose output is treated as untrusted text anyway. The
- * realistic attacks (a literal internal URL, a redirect to one, a public name
- * pointed at 127.0.0.1) are all covered.
- */
-export async function checkUrlSafe(raw: string): Promise<UrlVerdict> {
+/** The transport must connect only to this hop's admitted address snapshot. */
+export async function resolvePublicUrl(raw: string, signal?: AbortSignal): Promise<ResolvedUrlVerdict> {
   const shape = checkUrlShape(raw);
   if (!shape.ok) return shape;
-
   const host = shape.url.hostname.replace(/^\[|\]$/g, "");
-  if (isPrivateAddress(host)) return { ok: false, reason: `private address ${host}` };
-
-  // An IP literal needs no lookup; a name does, and every address it returns
-  // must be public or the name is a bypass.
-  if (parseIpv4(host) || host.includes(":")) return shape;
-
+  if (signal?.aborted) return { ok: false, reason: "request aborted" };
+  const family = isIP(host);
+  if (family) return { ...shape, addresses: [{ address: host, family }] };
+  let onAbort: (() => void) | undefined;
   try {
-    const addresses = await lookup(host, { all: true });
+    const resolved = lookup(host, { all: true });
+    const addresses = signal ? await Promise.race([
+      resolved,
+      new Promise<never>((_, reject) => {
+        onAbort = () => reject(new Error("request aborted"));
+        signal.addEventListener("abort", onAbort, { once: true });
+        if (signal.aborted) onAbort();
+      }),
+    ]) : await resolved;
+    if (signal?.aborted) return { ok: false, reason: "request aborted" };
     if (addresses.length === 0) return { ok: false, reason: "hostname did not resolve" };
-    for (const { address } of addresses) {
+    for (const { address, family: resolvedFamily } of addresses) {
+      if (!isIP(address) || isIP(address) !== resolvedFamily) {
+        return { ok: false, reason: "hostname returned an invalid address" };
+      }
       if (isPrivateAddress(address)) {
         return { ok: false, reason: `${host} resolves to private address ${address}` };
       }
     }
+    return { ...shape, addresses: addresses.map(({ address, family }) => ({ address, family })) };
   } catch {
     return { ok: false, reason: "hostname did not resolve" };
+  } finally {
+    if (signal && onAbort) signal.removeEventListener("abort", onAbort);
   }
+}
 
-  return shape;
+/** Admission-only callers retain their existing verdict shape. */
+export async function checkUrlSafe(raw: string): Promise<UrlVerdict> {
+  const verdict = await resolvePublicUrl(raw);
+  return verdict.ok ? { ok: true, url: verdict.url } : verdict;
 }

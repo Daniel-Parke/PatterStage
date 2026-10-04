@@ -28,7 +28,7 @@ const MISSION_TIME_PRESETS = [
   { minutes: 60, label: "Sprint", devHours: "16h" },
 ];
 
-/** The inactivity kill switch. 0 is unlimited. */
+/** Elapsed deadline presets. 0 disables the declared deadline. */
 const TIMEOUT_PRESETS = [
   { minutes: 5, label: "5m" },
   { minutes: 10, label: "10m (recommended)" },
@@ -138,7 +138,7 @@ export default function AgentRuntimeDefaultsCard({
           <span className={LABEL}>
             {timeoutHeading}{" "}
             <span className="text-ps-text-faint font-normal normal-case">
-              — Inactivity kill switch
+              Elapsed run deadline
             </span>
           </span>
           <Picker
@@ -151,6 +151,12 @@ export default function AgentRuntimeDefaultsCard({
           />
         </div>
       </div>
+
+      <p className="text-micro text-ps-text-muted font-mono leading-relaxed">
+        Elapsed time starts at submission, with a five-minute grace period. Tool
+        activity does not reset the deadline. 0 disables the declared deadline
+        and scope fallback.
+      </p>
 
       {showSkills && (
         <div className="space-y-1.5">

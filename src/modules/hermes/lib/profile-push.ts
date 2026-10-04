@@ -22,7 +22,7 @@ import { getHermesDefaultRoot } from "./profile-paths";
 import {
   getAgentRoot,
   setAgentRootSyncStatus,
-} from "@/lib/agents/agent-root-repository";
+} from "@/modules/hermes/lib/agent-root-repository";
 import {
   assembleConfigYamlForProfile,
   getProfile,

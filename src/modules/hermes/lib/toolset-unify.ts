@@ -57,21 +57,3 @@ export function expandUnifiedToAllPlatforms(enabledIds: string[]): PlatformTools
   }
   return out;
 }
-
-/**
- * When advanced per-platform edits exist, start from unified expansion then
- * overlay platform-specific lists from `perPlatform`.
- */
-export function mergeAdvancedOverrides(
-  unifiedEnabled: string[],
-  perPlatform: PlatformToolsets,
-): PlatformToolsets {
-  const base = expandUnifiedToAllPlatforms(unifiedEnabled);
-  for (const platform of HERMES_PLATFORMS) {
-    const override = perPlatform[platform.id];
-    if (override && override.length > 0) {
-      base[platform.id] = sortedUnique(override);
-    }
-  }
-  return base;
-}
