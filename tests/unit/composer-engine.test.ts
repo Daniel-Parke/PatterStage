@@ -13,6 +13,13 @@ jest.mock("@/lib/db", () => require("../helpers/baseline-db").dbSingletonMock(()
 jest.mock("@/lib/runtime", () => ({
   runtime: { submitRun: jest.fn(), getRun: jest.fn(), stopRun: jest.fn() },
 }));
+jest.mock("@/lib/runtime/composer-queue", () => ({
+  submitComposerRun: async (input: unknown) => ({
+    handle: await require("@/lib/runtime").runtime.submitRun(input),
+    gatewayIdentity: `sha256:${"a".repeat(64)}`,
+  }),
+  drainComposerQueue: jest.fn(async () => undefined),
+}));
 
 import { runtime } from "@/lib/runtime";
 import {
@@ -25,8 +32,10 @@ import {
   recordComposerApproval,
   updateComposerRun,
 } from "@/lib/composer/composer-repository";
-import { advanceComposerRun, finalizeComposerNodeRun, resolveNext } from "@/lib/composer/engine";
+import { advanceComposerRun, resolveNext } from "@/lib/composer/engine";
 import { dispatchComposerNode } from "@/lib/composer/dispatch";
+import { persistComposerTerminal, sweepComposerQueues } from "@/lib/composer/queue-cleanup";
+import { getRun } from "@/lib/runs/runs-repository";
 import type { ComposerNodeRun } from "@/lib/composer/schema";
 
 const mockSubmit = runtime.submitRun as jest.Mock;
@@ -69,8 +78,9 @@ function runningNodeRun(composerRunId: string): ComposerNodeRun {
 }
 async function finishStage(composerRunId: string, output: string): Promise<void> {
   const nr = runningNodeRun(composerRunId);
-  finalizeComposerNodeRun(nr.runId!, "completed", output, null);
-  await advanceComposerRun(composerRunId);
+  const run = getRun(nr.runId!)!;
+  persistComposerTerminal(run.id, { runId: run.runId!, status: "completed", output });
+  await sweepComposerQueues({ nowMs: Date.now() });
 }
 
 describe("composer engine", () => {
@@ -150,8 +160,7 @@ describe("composer engine", () => {
       const nr = runningNodeRun(run.id);
       const key = graph.nodes.find((n) => n.id === nr.nodeId)!.key;
       const output = key === "check" ? "broken\nVERDICT: FAIL\nREASONS: still wrong" : "did a";
-      finalizeComposerNodeRun(nr.runId!, "completed", output, null);
-      await advanceComposerRun(run.id);
+      await finishStage(run.id, output);
     }
 
     const failed = getComposerRun(run.id)!;

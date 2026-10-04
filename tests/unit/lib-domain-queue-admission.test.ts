@@ -8,6 +8,7 @@ import { NextRequest } from "next/server";
 import { openBaselineDb } from "../helpers/baseline-db";
 import { applyComposerMigration } from "@/lib/db/apply-composer-migration";
 import { applyComposerGroupLinkMigration } from "@/lib/db/apply-composer-group-link-migration";
+import { applyComposerNodeCancelledMigration } from "@/lib/db/apply-composer-node-cancelled-migration";
 import type { RunHandle, RunResult, RunSubmit } from "@/lib/runtime/types";
 import { HermesRuntime } from "@/lib/runtime/HermesRuntime";
 import { inTransaction } from "@/lib/db";
@@ -113,7 +114,7 @@ function held<T>() {
 
 beforeEach(() => {
   jest.useFakeTimers({ now: NOW });
-  testDb = openBaselineDb([applyComposerMigration, applyComposerGroupLinkMigration]);
+  testDb = openBaselineDb([applyComposerMigration, applyComposerGroupLinkMigration, applyComposerNodeCancelledMigration]);
   workflowId = createWorkflowFromDef({ name: "Owned queue", nodes: [
     { key: "stage", label: "Stage", kind: "custom", gate: "auto", isStart: true },
     { key: "done", label: "Done", kind: "custom", gate: "auto", isTerminal: true },
