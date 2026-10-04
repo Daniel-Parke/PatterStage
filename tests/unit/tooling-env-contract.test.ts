@@ -38,16 +38,25 @@ function child(dir: string, args: string[], overrides: Record<string, string> = 
   return result;
 }
 function copy(dir: string, name: string) { copyFileSync(join(tooling, name), join(dir, "scripts/tooling", name)); }
+function copyTypeScript(dir: string, name: string, source = readFileSync(join(tooling, name + ".ts"), "utf8")) {
+  // Preserve ESM evaluation order, re-exports and import.meta; only erase TypeScript syntax.
+  const emitted = ts.transpileModule(source, { fileName: name + ".ts", compilerOptions: {
+    target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.ESNext, verbatimModuleSyntax: true,
+  } });
+  const entry = join(dir, "scripts/tooling", name + ".mjs");
+  writeFileSync(entry, emitted.outputText);
+  return entry;
+}
 function load(kind: "TS" | "deploy", contents: string | null, inherited: Record<string, string> = {}, refuseRead = false): Snapshot[] {
   const name = kind === "TS" ? "load-env-local.ts" : "_env-local.mjs";
   if (!existsSync(join(tooling, name))) throw new Error(`MISSING INTERFACE: proposed ${name} is absent`);
   const dir = fixture();
-  copy(dir, name);
+  if (kind === "TS") copyTypeScript(dir, "load-env-local"); else copy(dir, name);
   if (contents !== null) writeFileSync(join(dir, ".env.local"), contents);
   const script = `
     import fs from 'node:fs'; import {syncBuiltinESMExports} from 'node:module';
     if (${refuseRead}) { const read=fs.readFileSync; fs.readFileSync=(p,...a)=>{if(String(p).endsWith('.env.local')) throw Object.assign(new Error('owned refusal'),{code:'EACCES'});return read(p,...a)};syncBuiltinESMExports(); }
-    const loader=await import('./scripts/tooling/${name}'); const warnings=[];
+    const loader=await import('./scripts/tooling/${kind === "TS" ? "load-env-local.mjs" : name}'); const warnings=[];
     console.warn=(...args)=>warnings.push(args.join(' ')); const snapshots=[];
     for(let i=0;i<2;i++) {
       let error; try { loader.loadEnvLocal(process.cwd()); } catch(e) {error=e.code ?? e.message;}
@@ -131,22 +140,64 @@ describe("T-0192 tooling environment precedence", () => {
 });
 
 const callers = ["ensure-hermes-model-sync", "import-hermes-state", "migrate-db", "seed-catalog", "retention-prune"];
-// Node24 synchronous hooks cover ESM imports, re-exports and require. Stop BEFORE any application evaluation.
-const importProbe = String.raw`
-  import {registerHooks,isBuiltin} from 'node:module'; import {writeSync,existsSync} from 'node:fs';
-  import {fileURLToPath} from 'node:url';
-  registerHooks({resolve(specifier,context,next) {
-    if(specifier.startsWith('@/') || specifier.includes('/src/')) {
-      writeSync(1,'ORACLE:'+JSON.stringify({specifier,marker:process.env.PS_ORACLE_MARKER,home:process.env.HERMES_HOME,data:process.env.PS_DATA_DIR})+'\n');
-      process.exit(0);
+// Node20-compatible ESM hooks run in a loader thread. The barrier observes the APP thread
+// at evaluation time; createRequire needs a separate synchronous interception in that thread.
+const importBoundary = String.raw`
+  import {existsSync,realpathSync,writeSync} from 'node:fs';
+  import {relative,isAbsolute,sep} from 'node:path'; import {fileURLToPath} from 'node:url';
+  export function confined(url) {
+    if(url.protocol!=='file:') throw Error('IMPORT ESCAPED FIXTURE');
+    const file=fileURLToPath(url), root=realpathSync(process.cwd());
+    for(const candidate of [file, ...(existsSync(file) ? [realpathSync(file)] : [])]) {
+      const rel=relative(root,candidate);
+      if(rel==='..' || rel.startsWith('..'+sep) || isAbsolute(rel)) throw Error('IMPORT ESCAPED FIXTURE');
     }
-    if(specifier==='better-sqlite3') return {url:'data:text/javascript,export default class {constructor(){throw Error("DATABASE EXECUTION FORBIDDEN")}}',shortCircuit:true};
+    return url;
+  }
+  export function observe(specifier) {
+    writeSync(1,'ORACLE:'+JSON.stringify({specifier,marker:process.env.PS_ORACLE_MARKER,home:process.env.HERMES_HOME,data:process.env.PS_DATA_DIR})+'\n');
+    process.exit(0);
+  }
+  export class ForbiddenDatabase {constructor(){throw Error('DATABASE EXECUTION FORBIDDEN')}}
+`;
+const esmProbe = String.raw`
+  import {isBuiltin} from 'node:module'; import {existsSync} from 'node:fs';
+  import {fileURLToPath} from 'node:url'; import {confined} from './boundary.mjs';
+  export function resolve(specifier,context,next) {
     if(isBuiltin(specifier)) return next(specifier,context);
-    let url; try {url=new URL(specifier,context.parentURL);} catch {throw Error('UNAPPROVED IMPORT '+specifier);}
-    if(url.protocol!=='file:' || !fileURLToPath(url).startsWith(process.cwd())) throw Error('IMPORT ESCAPED FIXTURE');
-    if(!existsSync(fileURLToPath(url)) && existsSync(fileURLToPath(url)+'.ts')) url=new URL(url.href+'.ts');
+    if(specifier==='better-sqlite3') return {url:new URL('./database.mjs',import.meta.url).href,shortCircuit:true};
+    let url;
+    if(!specifier.startsWith('@/')) {
+      if(!specifier.startsWith('.') && !specifier.startsWith('file:') && !specifier.startsWith('/')) throw Error('UNAPPROVED IMPORT '+specifier);
+      url=confined(new URL(specifier,context.parentURL));
+    }
+    if(specifier.startsWith('@/') || specifier.includes('/src/')) {
+      const barrier=new URL('./barrier.mjs',import.meta.url); barrier.searchParams.set('specifier',specifier);
+      return {url:barrier.href,shortCircuit:true};
+    }
+    if(url.pathname.endsWith('.ts')) url=new URL(url.href.slice(0,-3)+'.mjs');
+    else if(!existsSync(fileURLToPath(url)) && existsSync(fileURLToPath(url)+'.mjs')) url=new URL(url.href+'.mjs');
+    confined(url);
     return next(url.href,context);
-  }});
+  }
+`;
+const importProbe = String.raw`
+  import Module,{register,isBuiltin} from 'node:module'; import {pathToFileURL} from 'node:url';
+  import {confined,observe,ForbiddenDatabase} from './boundary.mjs';
+  const original=Module._load;
+  Module._load=function(specifier,parent,...rest) {
+    if(isBuiltin(specifier)) return original.call(this,specifier,parent,...rest);
+    if(specifier==='better-sqlite3') return ForbiddenDatabase;
+    if(!specifier.startsWith('@/')) {
+      if(!specifier.startsWith('.') && !specifier.startsWith('file:') && !specifier.startsWith('/')) throw Error('UNAPPROVED IMPORT '+specifier);
+      confined(new URL(specifier,pathToFileURL(parent.filename)));
+    }
+    if(specifier.startsWith('@/') || specifier.includes('/src/')) observe(specifier);
+    const resolved=Module._resolveFilename(specifier,parent);
+    confined(pathToFileURL(resolved));
+    return original.call(this,specifier,parent,...rest);
+  };
+  register('./loader.mjs',import.meta.url);
 `;
 function probe(name: string, source?: string, cliHome = false) {
   const dir = fixture();
@@ -154,9 +205,12 @@ function probe(name: string, source?: string, cliHome = false) {
   const overrideHome = join(dir, "override-home");
   writeFileSync(join(fileHome, "config.yaml"), "model: owned-fixture\n");
   writeFileSync(join(dir, ".env.local"), `PS_ORACLE_MARKER=loaded-before-app\nPS_DATA_DIR=${join(dir, "data")}\nHERMES_HOME=${fileHome}\n`);
-  const entry = join(dir, "scripts/tooling", name + ".ts");
-  writeFileSync(entry, source ?? readFileSync(join(tooling, name + ".ts"), "utf8"));
-  if (existsSync(join(tooling, "load-env-local.ts"))) copy(dir, "load-env-local.ts");
+  const entry = copyTypeScript(dir, name, source);
+  if (existsSync(join(tooling, "load-env-local.ts"))) copyTypeScript(dir, "load-env-local");
+  writeFileSync(join(dir, "boundary.mjs"), importBoundary);
+  writeFileSync(join(dir, "loader.mjs"), esmProbe);
+  writeFileSync(join(dir, "barrier.mjs"), "import {observe} from './boundary.mjs'; observe(new URL(import.meta.url).searchParams.get('specifier'));");
+  writeFileSync(join(dir, "database.mjs"), "export {ForbiddenDatabase as default} from './boundary.mjs';");
   writeFileSync(join(dir, "probe.mjs"), importProbe);
   expect(existsSync(join(dir, "src"))).toBe(false);
   const result = child(dir, ["--import", pathToFileURL(join(dir, "probe.mjs")).href, entry, ...(cliHome ? ["--hermes-home", overrideHome + "/"] : [])]);
