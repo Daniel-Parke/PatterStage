@@ -92,3 +92,43 @@ supersedes the earlier browser red receipt at the same output path. Frozen LF
 hash:`9737b028b3f37669c010247a248c65563db195f216883d3ce2d9fd25b0f2d80b`. Full gate must repeat on the amended tree.
 After correcting the stale Models header, source102070(+8), tests151608(+841),
 source repeated windows693(−12). Fixed targets remain unchanged.
+
+
+Second unchanged-tree full gate stopped at Jest, 8880pass/3fail/9existing skips,
+850passing suites/twofailed/twoexisting skipped. Lint and app types passed.
+Receipt: tmp/t0193-coordinator-gate-1791111981141/gate/summary.json.
+Three failures are two historical chart emission assertions and the C5 directive
+floor after three unnecessary Models suppressions were removed with correct
+callback dependencies. Independent Q015 amendment is required; no green claimed.
+
+Banach independently found a real Composer regression in the keyed child:
+closing/reopening the Sheet lost pending/saved protection. Faraday independently
+added eight held-transport controls; original17 case bodies/names retained.
+25controls:19pass/6causal matcher failures, zero runtime errors. Receipt:
+tmp/t0193-composer-lifecycle-red-final.json. Frozen LF hash: 959c9091b94fd29c88eca0a1f03fe6e8bd3721ada6ab2e3b0e25c9fba13262d0.
+Controls cover close/reopen, A to B to A, run identity, synchronous claim,
+refusal retry and unmounted feedback. Parent-local repair follows this red commit.
+The cached-reselect mutant was independently found type-invalid; its replacement
+now retains pendingRename null narrowing while bypassing stale-row correction.
+No mutation kill is claimed until the committed sweep runs.
+
+
+Faraday's dated Q015 historical-guard amendment passes44/44, zero runtime
+errors: tmp/t0193-historical-guards-amended-final.json. All21baseline hashes,
+compiler/options, type contracts and original names remain. Only four exact
+approved chart role/label pairs are validated and excluded from old emission;
+one new negative control rejects missing, duplicated and changed attributes.
+C5 retains37/12floors. Exactly three retired Models suppressions earn credit
+only after their replacement callback dependencies are independently checked;
+the remaining nine lexical matches, including the existing documentation
+marker, are individually pinned. No expected hash or floor has been blessed.
+Focused ESLint and targeted typecheck pass. The writer released its lane.
+
+Composer lifecycle25/25passes; Banach independently accepts the bounded parent
+ledger repair, original17identities intact and no other P1/P2 runtime findings.
+Three new mutation cases challenge run ownership, synchronous duplicate claims
+and unmounted feedback. These join the16representative cases;19total.
+Measured pre-gate source102068(+6against102062), tests151760(+993against150767),
+source repeated windows693(-12), test windows4787 and one-importer103 unchanged.
+Extra test lines protect actual lifecycle defects and narrow closed-oracle
+amendments. Fixed programme targets have not moved. Full gate must repeat.

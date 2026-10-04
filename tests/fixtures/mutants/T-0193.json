@@ -20,7 +20,7 @@
       "id": "cached-reselect",
       "file": "src/app/agent/profiles/page.tsx",
       "anchor": "if (pendingRename?.from === profile.id) {",
-      "replacement": "if (false) {",
+      "replacement": "if (pendingRename?.to === profile.id) {",
       "tests": [
         "tests/unit/profile-draft-ownership.test.tsx"
       ],
@@ -105,6 +105,30 @@
         "tests/unit/page-state-followups.test.tsx"
       ],
       "why": "The actual artifact request must retain A and B output content."
+    },
+    {
+      "id": "artifact-run-owner",
+      "file": "src/components/composer/ComposerNodeRunDetail.tsx",
+      "anchor": "JSON.stringify([nodeRun?.composerRunId, nodeRun?.id, nodeRun?.output])",
+      "replacement": "JSON.stringify([nodeRun?.id, nodeRun?.output])",
+      "tests": ["tests/unit/page-state-followups.test.tsx"],
+      "why": "Identical node/output in a different Composer run must remain independently saveable."
+    },
+    {
+      "id": "artifact-synchronous-claim",
+      "file": "src/components/composer/ComposerNodeRunDetail.tsx",
+      "anchor": "if (!nodeRun?.output || pending.current.has(outputKey) || saveStates[outputKey]) return;",
+      "replacement": "if (!nodeRun?.output || saveStates[outputKey]) return;",
+      "tests": ["tests/unit/page-state-followups.test.tsx"],
+      "why": "Two clicks before React commits must produce exactly one artifact POST."
+    },
+    {
+      "id": "artifact-unmount-feedback",
+      "file": "src/components/composer/ComposerNodeRunDetail.tsx",
+      "anchor": "showToast: (...args) => { if (mounted.current) showToast(...args); },",
+      "replacement": "showToast: (...args) => { showToast(...args); },",
+      "tests": ["tests/unit/page-state-followups.test.tsx"],
+      "why": "Held artifact completion after parent unmount must not publish feedback."
     },
     {
       "id": "clipboard-false-success",

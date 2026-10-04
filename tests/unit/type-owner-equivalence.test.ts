@@ -128,7 +128,40 @@ export interface FeedbackContextValue {
 }`;
 
 function read(file: string): string { return readFileSync(resolve(root, file), "utf8"); }
+// Q015 independent amendment, Faraday, 2026-10-04: four approved SVG attribute pairs only.
+const approvedChartAttributes: Record<string, string[]> = {
+  "src/components/viz/AreaTrend.tsx": [
+    'role="img" aria-label="No daily throughput data"',
+    'role="img" aria-label={`Daily throughput: ${data.map((d) => `${d.date}: completed ${d.completed}, failed ${d.failed ?? 0}`).join("; ")}`}',
+  ],
+  "src/components/viz/StackedAreaTrend.tsx": [
+    'role="img" aria-label="No daily activity data"',
+    'role="img" aria-label={`Daily activity: ${data.map((d) => `${d.date}: ${series.map((s) => `${s.label} ${d.values[s.key] ?? 0}`).join(", ")}`).join("; ")}`}',
+  ],
+};
+function normaliseApprovedChartAttributes(file: string, text: string): string {
+  const approved = approvedChartAttributes[file];
+  if (!approved) return text;
+  const parsed = ts.createSourceFile(file, text, ts.ScriptTarget.Latest, true);
+  const openings: string[] = [];
+  function visit(node: ts.Node): void {
+    if ((ts.isJsxOpeningElement(node) || ts.isJsxSelfClosingElement(node)) && node.tagName.getText(parsed) === "svg") {
+      expect(node.attributes.properties.filter(attribute => ts.isJsxAttribute(attribute) &&
+        ["role", "aria-label"].includes(attribute.name.getText(parsed)))).toHaveLength(2);
+      openings.push(node.attributes.properties.slice(0, 2).map(attribute => attribute.getText(parsed)).join(" "));
+    }
+    ts.forEachChild(node, visit);
+  }
+  visit(parsed);
+  expect(openings).toEqual(approved);
+  for (const attributes of approved) {
+    expect(text.split(`<svg ${attributes} `)).toHaveLength(2);
+    text = text.replace(`<svg ${attributes} `, "<svg ");
+  }
+  return text;
+}
 function emittedHash(file: string, source = read(file)): string {
+  source = normaliseApprovedChartAttributes(file, source);
   const result = ts.transpileModule(source, { fileName: file, compilerOptions: emitOptions, reportDiagnostics: true });
   expect(result.diagnostics).toEqual([]);
   return createHash("sha256").update(result.outputText).digest("hex");
@@ -201,4 +234,14 @@ it.each([
 it("detects an executable-statement change without executing application code", () => {
   const entry = baseline.find(row => row.file === "src/components/viz/colors.ts")!;
   expect(emittedHash(entry.file, read(entry.file) + '\nthrow new Error("oracle-only executable control");\n')).not.toBe(entry.emitted);
+});
+it("rejects missing, duplicate or changed approved chart attributes", () => {
+  for (const [file, pairs] of Object.entries(approvedChartAttributes)) {
+    const source = read(file);
+    for (const pair of pairs) {
+      for (const changed of ["", `${pair} ${pair}`, pair.replace('role="img"', 'role="presentation"'), pair.replace("aria-label=", "aria-description=")]) {
+        expect(() => normaliseApprovedChartAttributes(file, source.replace(pair, changed))).toThrow();
+      }
+    }
+  }
 });

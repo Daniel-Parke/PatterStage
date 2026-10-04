@@ -50,5 +50,5 @@
       "expires": "2026-10-05T10:03:25.397971+00:00"
     }
   ],
-  "note": "All independent oracle writers released; coordinator only. T0206 active/red."
+  "note": "Independent oracle writer released. Coordinator only; T0206 timing remains active/red."
 }

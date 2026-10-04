@@ -61,7 +61,9 @@
     "tests/unit/page-read-failure-truth.test.tsx",
     "tests/unit/page-state-followups.test.tsx",
     "tests/e2e/page-state-reader-motion.spec.ts",
-    "src/app/work/missions/page.tsx"
+    "src/app/work/missions/page.tsx",
+    "tests/unit/type-owner-equivalence.test.ts",
+    "tests/unit/c5-comments-that-narrate.test.ts"
   ],
   "timestamps": {
     "opened": "2026-10-04T10:03:25.397971+00:00",
@@ -93,20 +95,24 @@
       "tests/unit/mission-template-editor-wiring.test.tsx",
       "tests/e2e/missions-flows.spec.ts",
       "tests/e2e/missions-compose.spec.ts",
-      "tests/e2e/page-state-reader-motion.spec.ts"
+      "tests/e2e/page-state-reader-motion.spec.ts",
+      "tests/unit/type-owner-equivalence.test.ts",
+      "tests/unit/c5-comments-that-narrate.test.ts"
     ],
     "hashes": {
       "tests/unit/profile-draft-ownership.test.tsx": "9f6003bb94a453ea3c33495e8f37488e2700b9c10987b439dcf412b8ff46a977",
       "tests/e2e/page-state-profile-ownership.spec.ts": "acf9c71fa7450adb062d6e451a68cb7db740c7d3de66aef3e8d2df1c144a7886",
       "tests/unit/page-read-failure-truth.test.tsx": "ceba024fdee96317882e56fcff6bfaad2f04debce3ff61b4a3b728e42abef97b",
-      "tests/unit/page-state-followups.test.tsx": "4c5d809f641c01a7dce3db995bac078d88e6269e314fa7764a0d7ecbf4ca144e",
+      "tests/unit/page-state-followups.test.tsx": "959c9091b94fd29c88eca0a1f03fe6e8bd3721ada6ab2e3b0e25c9fba13262d0",
       "tests/unit/mission-query-ownership.test.tsx": "645d7bcf373803a83a7b3e0e674d767f71f8c8a848730de9cde27443e6ce1b5a",
       "tests/unit/mission-template-editor-wiring.test.tsx": "5970075307193edafa251aaa93db6ffaf27c6021b63d1a593052a654944f64ef",
       "tests/e2e/missions-flows.spec.ts": "0b6b72b33bd9f717b4feaba08b78ce3cfa36ba23e65f2561429fd1683ff4170c",
       "tests/e2e/missions-compose.spec.ts": "b03c3daa0ead65eeaa49538f6f8ae1fc96c0e30fdc9b7f8bccae7d3a044e5caa",
-      "tests/e2e/page-state-reader-motion.spec.ts": "9737b028b3f37669c010247a248c65563db195f216883d3ce2d9fd25b0f2d80b"
+      "tests/e2e/page-state-reader-motion.spec.ts": "9737b028b3f37669c010247a248c65563db195f216883d3ce2d9fd25b0f2d80b",
+      "tests/unit/type-owner-equivalence.test.ts": "8ad507d737d5a84621976ed3f707941166d8c4c17cfb9bf85f0fbf9d6d7db06b",
+      "tests/unit/c5-comments-that-narrate.test.ts": "7704d220dc79ee0512da3254fd0450a30680406241a323424c37a14728efa671"
     },
-    "author_session": "Faraday 01a1062b-0f36-7702-885b-476fd150d9bf; independent real-form and held-transport oracle; Q015 amendment by Franklin 01a1062c-ad31-77c2-8ff2-71c41ee9b5d6, preserving all16 original controls; read truth by Franklin 01a1062c-ad31-77c2-8ff2-71c41ee9b5d6; Faraday independent five-option typing correction,17unchanged controls; Faraday independent three-void Reader lint correction,8names/assertions retained",
+    "author_session": "Faraday 01a1062b-0f36-7702-885b-476fd150d9bf; independent real-form and held-transport oracle; Q015 amendment by Franklin 01a1062c-ad31-77c2-8ff2-71c41ee9b5d6, preserving all16 original controls; read truth by Franklin 01a1062c-ad31-77c2-8ff2-71c41ee9b5d6; Faraday independent five-option typing correction,17unchanged controls; Faraday independent three-void Reader lint correction,8names/assertions retained; Faraday independent eight Composer lifecycle controls, original17 unchanged, red6of25; Faraday dated Q015 closed-guard amendment:21original emission hashes and37/12floors retained;44controls pass",
     "independence_method": "metamorphic"
   }
 }

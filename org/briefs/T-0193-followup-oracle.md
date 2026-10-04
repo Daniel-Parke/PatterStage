@@ -55,3 +55,26 @@ computed-style property read with `void`; retain the same forced style flush,
 all eight names/assertions and zero retries. Run focused ESLint and record
 the diff/hash. Coordinator replays the exact amended file on old production
 CSS before the new-build gate. No lint disable or source/runtime edit.
+
+
+## Independent closed-guard and lifecycle amendment, 2026-10-04
+
+Full gate stopped unchanged at unit tests: 8880 pass, three assertion failures
+in two historical suites. Faraday owns only type-owner-equivalence,
+c5-comments-that-narrate and page-state-followups. Q015 authorises a dated,
+narrow amendment for the exact ruled change by a different session.
+Preserve all names, original 21 emission hashes, compiler pin, type contracts,
+negative controls, 37 pragma floor and 12 directive floor. Strictly validate
+only the approved four SVG role/img and aria-label attribute pairs in the two
+exact chart files before excluding their spans from historical emission.
+Reject missing/duplicate/changed attributes; never change hashes or strip ARIA
+broadly. For C5, credit only the three independently identified retired Models
+exhaustive-deps suppressions, with exact dependency correctness proof and all
+remaining directives protected. Propose a method if that cannot be proven.
+No lint disables, floor reduction or unrelated source changes.
+
+Add held-transport Composer lifecycle controls for pending/saved close-reopen,
+and returning A after B where relevant. Preserve the existing 17 controls.
+Run the added controls red and report causal matcher failures before runtime
+repair. No source edits, full gates, browser runs or commits by the oracle lane.
+Prove identities and report hashes, focused tests and lint/type diagnostics.
