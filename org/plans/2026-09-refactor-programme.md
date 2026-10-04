@@ -76,6 +76,10 @@ The decisions binding this programme are:
    and every required hosted job. Preserve failed runs and all frozen bounds;
    carry the investigation into T-0195 without claiming a timing repair.
 
+9. **Q-036:** Start T-0193 while the current macOS timing failure stays
+   open and red. This changes Q-035's start dependency only; a full green
+   gate and all hosted jobs remain necessary for closure and release.
+
 No feature, route, URL, CLI command, config key, environment variable or
 documented behaviour is removed without its item ruling. The five dev-only
 `ch-*` hardware shims have a specific pre-1.0 deletion ruling; `ch-backup.sh`

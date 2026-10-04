@@ -1,0 +1,178 @@
+{
+  "task": "T-0193",
+  "draft": true,
+  "inspectedRevision": "9e55c5a34c10094a11930a5f4024c69a6d5a71d1",
+  "historical": {
+    "findings": [],
+    "operatorDispositions": [],
+    "coverage": [
+      {
+        "id": "gap-059.2",
+        "outcome": "planned",
+        "task": "T-0193",
+        "reason": "Run this T-0164 atomic next proof before closing its owner batch: In an isolated or authorised fixture, Review favicon source and rendered output. Starting check: rg --files src/app public | rg 'favicon|icon'. Record command/exit or exact file:line, revision and independent review."
+      }
+    ]
+  },
+  "historicalCounts": {
+    "findings": 0,
+    "operatorDispositions": 0,
+    "coverage": 1
+  },
+  "supplemental": [
+    {
+      "id": "composer-cohort",
+      "status": "pending",
+      "evidence": [],
+      "scepticVerdict": "Not yet reviewed",
+      "authority": "org/plans/2026-09-refactor-programme.json#T-0193"
+    },
+    {
+      "id": "story-cohort",
+      "status": "pending",
+      "evidence": [],
+      "scepticVerdict": "Not yet reviewed",
+      "authority": "org/plans/2026-09-refactor-programme.json#T-0193",
+      "scope": "Approved Story cohort includes both Create and Reader."
+    },
+    {
+      "id": "missions-cohort",
+      "status": "pending",
+      "evidence": [],
+      "scepticVerdict": "Not yet reviewed",
+      "authority": "org/plans/2026-09-refactor-programme.json#T-0193"
+    },
+    {
+      "id": "profile-draft-ownership",
+      "status": "pending",
+      "evidence": [],
+      "scepticVerdict": "Not yet reviewed",
+      "authority": "org/plans/2026-09-refactor-programme.json#T-0193"
+    },
+    {
+      "id": "t0191-composer-output-save-ownership",
+      "status": "pending",
+      "source": "t0191ReviewFollowups",
+      "evidence": [],
+      "scepticVerdict": "Source hypothesis; independent reproduction required",
+      "authority": "org/plans/2026-09-refactor-programme.json#T-0193"
+    },
+    {
+      "id": "t0191-script-tab-navigation",
+      "status": "pending",
+      "source": "t0191ReviewFollowups",
+      "evidence": [],
+      "scepticVerdict": "Source hypothesis; independent reproduction required",
+      "authority": "org/plans/2026-09-refactor-programme.json#T-0193"
+    },
+    {
+      "id": "t0191-research-copy-and-export",
+      "status": "pending",
+      "source": "t0191ReviewFollowups",
+      "evidence": [],
+      "scepticVerdict": "Source hypothesis; independent reproduction required",
+      "authority": "org/plans/2026-09-refactor-programme.json#T-0193"
+    },
+    {
+      "id": "t0191-agent-growth-error-truth",
+      "status": "pending",
+      "source": "t0191ReviewFollowups",
+      "evidence": [],
+      "scepticVerdict": "Source hypothesis; independent reproduction required",
+      "authority": "org/plans/2026-09-refactor-programme.json#T-0193"
+    },
+    {
+      "id": "t0191-skill-search-category-context",
+      "status": "pending",
+      "source": "t0191ReviewFollowups",
+      "evidence": [],
+      "scepticVerdict": "Source hypothesis; independent reproduction required",
+      "authority": "org/plans/2026-09-refactor-programme.json#T-0193"
+    },
+    {
+      "id": "t0191-trend-chart-text-equivalent",
+      "status": "pending",
+      "source": "t0191ReviewFollowups",
+      "evidence": [],
+      "scepticVerdict": "Source hypothesis; independent reproduction required",
+      "authority": "org/plans/2026-09-refactor-programme.json#T-0193"
+    },
+    {
+      "id": "t0191-collection-state-semantics",
+      "status": "pending",
+      "source": "t0191ReviewFollowups",
+      "evidence": [],
+      "scepticVerdict": "Source hypothesis; independent reproduction required",
+      "authority": "org/plans/2026-09-refactor-programme.json#T-0193"
+    },
+    {
+      "id": "skill-detail-error-truth",
+      "status": "pending",
+      "source": "t0192VisibleStateFollowups",
+      "inheritedEvidenceStatus": "reproduced500/404atbothwidths",
+      "evidence": [],
+      "scepticVerdict": "Not yet reviewed",
+      "authority": "org/plans/2026-09-refactor-programme.json#T-0193"
+    },
+    {
+      "id": "models-error-truth",
+      "status": "pending",
+      "source": "t0192VisibleStateFollowups",
+      "inheritedEvidenceStatus": "reproduced500plusfalseemptyatbothwidths",
+      "evidence": [],
+      "scepticVerdict": "Not yet reviewed",
+      "authority": "org/plans/2026-09-refactor-programme.json#T-0193"
+    },
+    {
+      "id": "reader-popover-contrast",
+      "status": "pending",
+      "source": "t0192VisibleStateFollowups",
+      "inheritedEvidenceStatus": "rendered4.041muted/2.463selected/2.188hoverratiosobserved",
+      "evidence": [],
+      "scepticVerdict": "Not yet reviewed",
+      "authority": "org/plans/2026-09-refactor-programme.json#T-0193"
+    },
+    {
+      "id": "reduced-motion-reveal",
+      "status": "pending",
+      "source": "t0192VisibleStateFollowups",
+      "inheritedEvidenceStatus": "source-supportedonly",
+      "evidence": [],
+      "scepticVerdict": "Not yet reviewed",
+      "authority": "org/plans/2026-09-refactor-programme.json#T-0193"
+    },
+    {
+      "id": "verdict-reasons-consolidation",
+      "status": "pending",
+      "evidence": [],
+      "scepticVerdict": "Not yet reviewed",
+      "authority": "org/plans/2026-09-refactor-programme.json#T-0193",
+      "scope": "t0191AttributedConsolidationCandidates.cohorts[0]: ComposerGatePrompt and ComposerNodeRunDetail."
+    },
+    {
+      "id": "step-label-consolidation",
+      "status": "pending",
+      "evidence": [],
+      "scepticVerdict": "Not yet reviewed",
+      "authority": "org/plans/2026-09-refactor-programme.json#T-0193",
+      "scope": "t0191AttributedConsolidationCandidates.cohorts[1]: ResearchReport and laboratory/deep-research/report."
+    },
+    {
+      "id": "comment-qualification",
+      "status": "pending",
+      "evidence": [],
+      "scepticVerdict": "Not yet reviewed",
+      "authority": "org/plans/2026-09-refactor-programme.json#T-0193",
+      "scope": "Both t0192VisibleStateFollowups.commentScope (globals.css) and t0192CommentFollowup (Models/error headers)."
+    },
+    {
+      "id": "parent-child-rollups",
+      "status": "pending",
+      "evidence": [],
+      "scepticVerdict": "Not yet reviewed",
+      "authority": "org/plans/2026-09-refactor-programme.json#T-0193",
+      "scope": "cross-cutting-03, cross-cutting-04, cross-cutting-14, cross-cutting-21, cross-cutting-23: preserve each child owner and explicit parent reconciliation."
+    }
+  ],
+  "qualification": "Supplemental programme accountability is excluded from historical finding and coverage totals."
+}

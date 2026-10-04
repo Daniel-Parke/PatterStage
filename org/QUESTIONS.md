@@ -268,3 +268,11 @@ are recorded in `org/reviews/2026-09-refactor-addendum.md`.
   required hosted job. T-0206 remains active; its cause and repair are unproved.
   Preserve the original failed runs, every timeout and assertion, and the
   T-0195 follow-up. No failing check or other dependency is waived.
+
+- Q-036 (programme sequence): may T-0193 start while the current macOS
+  timing failure remains open and red? Answer, from the operator on
+  2026-10-04: "Start T-0193; retain the red timing blocker". This supersedes
+  Q-035's all-hosted-green start condition only. T-0206 remains active and
+  explicitly red. T-0193 still requires its full gate and every required
+  hosted job before closure; release acceptance remains blocked until the
+  macOS failure is resolved. No timeout, assertion or check is waived.

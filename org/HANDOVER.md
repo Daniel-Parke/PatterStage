@@ -7,7 +7,11 @@ updated: 2026-10-04
 
 # Handover · PatterStage, 2026-10-02
 
-## Current programme, 2026-10-04
+## Active batch, 2026-10-04
+
+Q-036 permits T-0193 to start at ruled R2 while T-0206 stays active and explicitly red. Current PR macOS job37193334646 failed C02/C05 (18 of21 calls; watchdog exceeded), then passed20/20 alone. No timing repair or acceptance is claimed. T-0193 still requires a full green gate and all required hosted jobs before closure. Independent profile lifecycle oracles precede repair. The complete approved cohort and supplemental transfers remain accountable in [the ledger](reviews/2026-10-t0193-dispositions.json).
+
+## Previous checkpoint, 2026-10-04
 
 Q-035 permits T-0193 after the independently corrected Missions selector
 passes the full local gate and every required hosted job. T-0206 remains
@@ -21,7 +25,7 @@ tmp/t0206-coordinator-gate-1791105254756/gate/summary.json. The committed sweep
 detected all3mutants with42original/restored controls and exact restoration.
 Exact-head hosted checks follow. See the T-0206 review for earlier failures.
 
-Thirteen of22main batches are complete. T-0193 is not yet open; T-0200 stays
+At the previous checkpoint, thirteen of22main batches were complete and T-0193 was unopened; T-0200 stays
 deferred throughv1.0.0. Source102,062; tests150,767; repeated windows705/4,787;
 one-importer components103. No target moved and no whole-product acceptance.
 

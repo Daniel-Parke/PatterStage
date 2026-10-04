@@ -3,28 +3,44 @@
   "assigned": "2026-10-04",
   "lanes": [
     {
-      "lane_id": "T-0206-coordinator",
-      "task_id": "T-0206",
-      "session_id": "2026-10-04-t0206-coordinator",
+      "lane_id": "T-0193-coordinator",
+      "task_id": "T-0193",
+      "session_id": "2026-10-04-t0193-coordinator",
       "host": "local",
       "path_claims": [
-        "org/tasks/T-0206.json",
+        "src/app/agent/profiles/page.tsx",
+        "src/components/agents/EditProfileModal.tsx",
+        "org/tasks/T-0193.json",
         "org/claims.json",
-        "org/briefs/T-0206-oracle.md",
-        "org/reviews/2026-10-t0206-http-budget.md",
+        "org/briefs/T-0193-oracle.md",
+        "org/briefs/T-0193-review.md",
+        "org/reviews/2026-10-t0193-verification.md",
+        "org/reviews/2026-10-t0193-dispositions.json",
+        "org/plans/2026-09-refactor-programme.json",
         "org/HANDOVER.md",
         "org/TASKS.md",
         "org/STATE.md",
         "docs/manifest.json",
-        ".github/workflows/ci.yml",
         "scripts/tooling/line-census.baseline.json",
+        "tests/fixtures/mutants/T-0193.json",
         "org/QUESTIONS.md",
-        "org/plans/2026-09-refactor-programme.json",
         "org/plans/2026-09-refactor-programme.md"
       ],
-      "acquired": "2026-10-04T07:07:12.340680+00:00",
-      "expires": "2026-10-05T07:07:12.340680+00:00"
+      "acquired": "2026-10-04T10:03:25.397971+00:00",
+      "expires": "2026-10-05T10:03:25.397971+00:00"
+    },
+    {
+      "lane_id": "T-0193-oracle",
+      "task_id": "T-0193",
+      "session_id": "Faraday-01a1062b-0f36-7702-885b-476fd150d9bf",
+      "host": "local",
+      "path_claims": [
+        "tests/unit/profile-draft-ownership.test.tsx",
+        "tests/e2e/page-state-profile-ownership.spec.ts"
+      ],
+      "acquired": "2026-10-04T10:04:07.008352+00:00",
+      "expires": "2026-10-05T10:04:07.008352+00:00"
     }
   ],
-  "note": "One coordinator writer. Faraday completed the independently authored Q-015 exact header selector amendment; Franklin reviewed phase evidence read-only. Timing investigation remains open."
+  "note": "Two disjoint writers: coordinator owns runtime and metadata; Faraday owns only independent profile oracles. T0206 remains active and red without an active writer lane."
 }

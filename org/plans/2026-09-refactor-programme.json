@@ -31,7 +31,8 @@
     "Q-032",
     "Q-033",
     "Q-034",
-    "Q-035"
+    "Q-035",
+    "Q-036"
   ],
   "evidence": [
     "org/reviews/2026-09-t0164-refactor-recon.md",
@@ -946,7 +947,8 @@
         "src/app/agent/skills/[...path]/page.tsx",
         "src/app/agent/models/page.tsx",
         "src/app/globals.css",
-        "src/app/error.tsx"
+        "src/app/error.tsx",
+        "tests/e2e/page-state-profile-ownership.spec.ts"
       ],
       "dependsOn": [
         "T-0192"
@@ -959,7 +961,8 @@
         "T-0164 44-state route walk",
         "Q-032",
         "T-0191 gap-054.1 review: profile-draft late-settlement defect; independent transfer accepted by Laplace on 2026-10-03",
-        "Q-035"
+        "Q-035",
+        "Q-036"
       ],
       "invariants": [
         "URL state, deep links, errors, dropdowns, inspector and dialogs survive the hook move.",
@@ -1100,8 +1103,10 @@
       "t0206Followup": {
         "authority": "Q-035, operator approved 2026-10-04",
         "disposition": "T-0206 remains open and does not block T-0193 after the selector correction passes the full local gate and every required hosted job.",
-        "qualification": "Both latest macOS full runs passed; no cause or timing repair is claimed. Retain the original failures and frozen limits; T-0195 carries the eventual verdict."
-      }
+        "qualification": "Both latest macOS full runs passed; no cause or timing repair is claimed. Retain the original failures and frozen limits; T-0195 carries the eventual verdict.",
+        "startAmendment": "Q-036 permits starting while current timing failure is red; closure and release checks remain unchanged."
+      },
+      "accountability": "org/reviews/2026-10-t0193-dispositions.json; supplemental programme rows are excluded from historical counts."
     },
     {
       "id": "T-0194",
