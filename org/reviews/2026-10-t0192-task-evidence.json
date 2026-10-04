@@ -789,7 +789,22 @@
     "historicalControls": {
       "receipt": "tmp/t0192-defects-env-controls-1791071610677",
       "result": "49/49in10suites,exit0 before lone-quote guard; more alias controls remain for final gate."
-    }
+    },
+    "postImplementation": {
+      "environment": {
+        "receipt": "tmp/t0192-defects-env-1791072309277",
+        "passed": 48,
+        "suites": 1,
+        "pending": 0
+      },
+      "historical": {
+        "receipt": "tmp/t0192-defects-env-controls-1791072319872",
+        "passed": 115,
+        "suites": 20,
+        "pending": 0
+      }
+    },
+    "sourceReview": "Laplace verified five actual helper calls, duplicate-body removal and unchanged precedence/import ordering. Deploy-only lone-quote guard preserves unmatched values; TS historical behaviour remains unchanged. Source subtotal minus71 lines before final census. Docker copies all scripts; installer clones repo; new helper must be included at implementation commit."
   },
   "scriptTypecheckOracle": {
     "file": "tests/unit/scripts-typecheck-contract.test.ts",
@@ -804,6 +819,17 @@
       "reviewer": "Laplace",
       "receipt": "tmp/t0192-defects-script-types-1791072029868",
       "result": "8/8exit0, real scripts program and both plantedTS/MTS refusal/correction controls. No CLI execution or emitted files. Mandatory lint retains prior checks."
-    }
+    },
+    "copyError": "Initial coordinator config-copy command used wrong working-directory-relative source and reported TS5058. Retried with absolute source; strict real scripts compilation exit0. This was setup failure, not a product failure or mutant kill."
+  },
+  "missionEditorWiringOracle": {
+    "file": "tests/unit/mission-template-editor-wiring.test.tsx",
+    "sha256": "5970075307193edafa251aaa93db6ffaf27c6021b63d1a593052a654944f64ef",
+    "author": "Galileo",
+    "reviewer": "Laplace",
+    "receipt": "tmp/t0191-green-validation/tmp/t0192-mission-wiring-1791072294398",
+    "result": "37/37before consolidation:6new43prop-boundary/UI cases,7B10,24mission-query controls. Historical identities and source unchanged; explicit tests types/lint0.",
+    "cost": "182new testlines; projected37source-line reduction remains unmeasured. Not a whole-cohort line saving.",
+    "limits": "Mocked HTTP/jsdom; real persistence, focus and responsive geometry remain separate built-walk obligations."
   }
 }
