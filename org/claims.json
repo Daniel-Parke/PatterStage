@@ -16,7 +16,8 @@
         "org/TASKS.md",
         "org/STATE.md",
         "docs/manifest.json",
-        ".github/workflows/ci.yml"
+        ".github/workflows/ci.yml",
+        "scripts/tooling/line-census.baseline.json"
       ],
       "acquired": "2026-10-04T07:07:12.340680+00:00",
       "expires": "2026-10-05T07:07:12.340680+00:00"

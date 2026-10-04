@@ -8,7 +8,9 @@
       "run-isolated-process",
       "owned-container",
       "git",
-      "git-push"
+      "git-push",
+      "edit-ci",
+      "edit-tooling"
     ],
     "side_effects": [
       "sends-external"
@@ -29,11 +31,12 @@
     "docs/manifest.json",
     "tests/helpers/release-http-phase-observer.py",
     ".github/workflows/ci.yml",
-    "tests/unit/release-test-tools.test.ts"
+    "tests/unit/release-test-tools.test.ts",
+    "scripts/tooling/line-census.baseline.json"
   ],
   "timestamps": {
     "opened": "2026-10-04T07:07:12.340680+00:00",
-    "updated": "2026-10-04T07:31:47.907790+00:00"
+    "updated": "2026-10-04T07:45:32.889345+00:00"
   },
   "verdicts": [],
   "tier_ruled": "R1",
@@ -44,5 +47,17 @@
       "source": "declared",
       "evidence": "declared side effect: sends-external"
     }
-  ]
+  ],
+  "oracle_provenance": {
+    "files": [
+      "tests/unit/release-test-tools.test.ts",
+      "tests/helpers/release-http-phase-observer.py"
+    ],
+    "hashes": {
+      "tests/unit/release-test-tools.test.ts": "d82fa3722b6855ce02e889e0f517b88c1dfab978a1894aa61c59405bedf217fb",
+      "tests/helpers/release-http-phase-observer.py": "5df60fd8f6c59216107b9634eea615d7b86311871cccfb36a510c2704110364f"
+    },
+    "author_session": "Nash 01a10198-6b4f-7593-aa19-e0b3c8facad8; separate-author Q-015 diagnostic amendment reviewed by Laplace; original T-0203 and frozen HTTP records untouched",
+    "independence_method": "metamorphic"
+  }
 }

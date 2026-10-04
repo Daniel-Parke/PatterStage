@@ -11,6 +11,66 @@ import { load } from "js-yaml";
 import { launch, quote, roots, shellPath, timerCheck, tools } from "../helpers/release-test-tools-harness";
 
 const script = resolve("scripts/tooling/prepare-release-test-tools.sh");
+type WorkflowStep = { name?: string; run?: string; shell?: string; env?: Record<string, string>; if?: string; "continue-on-error"?: boolean };
+const readWorkflow = () => load(readFileSync(resolve(".github/workflows/ci.yml"), "utf8")) as {
+  jobs: Record<string, { "runs-on": string; steps: WorkflowStep[] }>;
+};
+// Deliberately narrow shell form; behavioural controls below execute the real step.
+const coverageLine = "if npm run test:coverage; then coverage_status=0; else coverage_status=$?; fi";
+function hasExactCoverage(run: string) {
+  const lines = run.split(/\r?\n/).map((line) => line.trim());
+  return lines.filter((line) => line.includes("npm")).length === 1 &&
+    lines.filter((line) => line === "npm run test:coverage" || line === coverageLine).length === 1;
+}
+
+// T-0206 independently amended W01: real workflow shell, owned functions only.
+function runCoverageStep(coverage: number, observer: number, reporting: "ok" | "json" | "cat" | "output") {
+  const root = mkdtempSync(join(tmpdir(), "t0206 workflow "));
+  roots.push(root);
+  const run = readWorkflow().jobs["build-test-macos"].steps.find((step) => step.name === "Unit tests with coverage")!.run!;
+  const env: NodeJS.ProcessEnv = { NODE_ENV: "test" };
+  for (const key of Object.keys(process.env)) {
+    if (/^(SYSTEMROOT|WINDIR|COMSPEC|SYSTEMDRIVE|PATHEXT)$/i.test(key)) env[key] = process.env[key];
+  }
+  Object.assign(env, {
+    PATH: shellPath(root), HOME: shellPath(root), USERPROFILE: root, TMP: root, TEMP: root,
+    RUNNER_TEMP: shellPath(root), GITHUB_OUTPUT: shellPath(reporting === "output" ? root : join(root, "output")),
+    PYTHON: "python", T0203_CALLS: join(root, "unused"),
+    PS_DATA_DIR: shellPath(join(root, "data")), HERMES_HOME: shellPath(join(root, "hermes")),
+  });
+  const result = launch(["-c", `
+event() { printf '%s\n' "$1" >> "$RUNNER_TEMP/events"; }
+npm() {
+  [[ "$#" == 2 && "$1" == run && "$2" == test:coverage ]] || return 91
+  event coverage
+  : > "$RUNNER_TEMP/coverage-done"
+  return ${coverage}
+}
+python() {
+  if [[ "$1" == tests/helpers/release-http-phase-observer.py ]]; then
+    [[ "$#" == 4 && "$3" == --workload && "$4" == coverage-concurrent ]] || return 92
+    event observer-start
+    for ((attempt=0; attempt<100; attempt++)); do
+      [[ -f "$RUNNER_TEMP/coverage-done" ]] && break
+      ${quote(tools.sleep)} 0.01
+    done
+    ${quote(tools.sleep)} 0.05
+    printf '{}\n' > "$2"
+    event observer-finished
+    return ${observer}
+  fi
+  [[ "$1" == -c ]] || return 93
+  if [[ "$2" == 'import time; print(time.monotonic())' ]]; then printf '1.0\n'; return 0; fi
+  event report
+  [[ -f "$RUNNER_TEMP/t0206-http-phases.json" ]] || return 94
+  return ${reporting === "json" ? 71 : 0}
+}
+cat() { event cat; return ${reporting === "cat" ? 72 : 0}; }
+set -e -o pipefail
+${run}`], env);
+  const events = readFileSync(join(root, "events"), "utf8").trim().split("\n");
+  return { result, events };
+}
 type Options = {
   os?: "Darwin" | "Linux" | "MINGW64_NT-10.0";
   coreutils?: boolean;
@@ -379,21 +439,52 @@ describe("T-0203 release test prerequisites", () => {
   }, 20_000);
 
   it("W01 prepares release tools before unchanged coverage only in the macOS job", () => {
-    type Step = { run?: string; shell?: string; if?: string; "continue-on-error"?: boolean };
-    const workflow = load(readFileSync(resolve(".github/workflows/ci.yml"), "utf8")) as {
-      jobs: Record<string, { "runs-on": string; steps: Step[] }>;
-    };
+    const workflow = readWorkflow();
     const macos = workflow.jobs["build-test-macos"];
     const setup = macos.steps.findIndex((step) => step.run?.trim() === "bash scripts/tooling/prepare-release-test-tools.sh");
-    const coverage = macos.steps.findIndex((step) => step.run?.trim() === "npm run test:coverage");
+    const coverage = macos.steps.findIndex((step) => step.name === "Unit tests with coverage");
     expect(setup).toBeGreaterThanOrEqual(0);
     expect(coverage).toBeGreaterThan(setup);
+    expect(macos.steps.filter((step) => step.name === "Unit tests with coverage")).toHaveLength(1);
+    expect(hasExactCoverage(macos.steps[coverage].run!)).toBe(true);
+    expect(macos.steps[coverage].shell).toBe("bash");
+    expect(macos.steps[coverage].env).toEqual({
+      PS_DATA_DIR: "${{ runner.temp }}/patterstage-ci-data",
+      HERMES_HOME: "${{ runner.temp }}/patterstage-ci-hermes",
+    });
+    expect(macos.steps[coverage]["continue-on-error"]).not.toBe(true);
+    expect(macos.steps[coverage].if).toBeUndefined();
     expect(macos["runs-on"]).toMatch(/^macos-/);
     expect(macos.steps[setup]["continue-on-error"]).not.toBe(true);
     expect(macos.steps[setup].if).toBeUndefined();
     expect(macos.steps[setup].shell).toBe("bash");
     const owners = Object.entries(workflow.jobs).filter(([, job]) => job.steps.some((step) => step.run?.includes("prepare-release-test-tools.sh"))).map(([name]) => name);
     expect(owners).toEqual(["build-test-macos"]);
+  });
+
+  it.each([
+    ["missing", "echo missing"],
+    ["duplicated", `${coverageLine}\n${coverageLine}`],
+    ["commented", `# ${coverageLine}`],
+    ["altered", coverageLine.replace("test:coverage", "test:coverage -- --maxWorkers=1")],
+  ])("W02 rejects %s coverage command", (_label, run) => {
+    expect(hasExactCoverage(run)).toBe(false);
+  });
+
+  it.each([
+    [0, 0, "ok", 0], [37, 0, "ok", 37], [37, 43, "ok", 37],
+    [37, 0, "json", 37], [37, 43, "cat", 37], [37, 43, "output", 37],
+    [0, 43, "ok", 43], [0, 0, "json", 90], [0, 0, "cat", 90], [0, 0, "output", 90],
+  ] as const)("W03 coverage=%i observer=%i reporting=%s preserves exit=%i and waits without retry", (coverage, observer, reporting, exit) => {
+    const { result, events } = runCoverageStep(coverage, observer, reporting);
+    expect(result.status).toBe(exit);
+    expect(events.filter((event) => event === "coverage")).toHaveLength(1);
+    expect(events.filter((event) => event === "observer-start")).toHaveLength(1);
+    expect(events.filter((event) => event === "observer-finished")).toHaveLength(1);
+    expect(events.filter((event) => event === "report")).toHaveLength(1);
+    expect(events.filter((event) => event === "cat")).toHaveLength(1);
+    expect(events.indexOf("observer-finished")).toBeGreaterThan(events.indexOf("coverage"));
+    expect(events.indexOf("report")).toBeGreaterThan(events.indexOf("observer-finished"));
   });
 
 
