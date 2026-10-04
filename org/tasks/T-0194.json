@@ -92,13 +92,23 @@
     "org/STATE.md",
     "docs/manifest.json",
     "scripts/tooling/line-census.baseline.json",
-    "tests/fixtures/mutants/T-0194.json"
+    "tests/fixtures/mutants/T-0194.json",
+    "tests/unit/lib-domain-code-copy.test.tsx",
+    "tests/e2e/lib-domain-code-copy.spec.ts"
   ],
   "timestamps": {
     "opened": "2026-10-04T15:51:49.263200+00:00",
-    "updated": "2026-10-04T15:51:49.263200+00:00"
+    "updated": "2026-10-04T16:12:04.687458+00:00"
   },
-  "verdicts": [],
+  "verdicts": [
+    {
+      "role": "REVIEWER",
+      "session": "01a10610-cd11-7cd1-a83c-bbed065d1f98",
+      "verdict": "pass",
+      "date": "2026-10-04T16:12:04.687458+00:00",
+      "notes": "Bounded first-cohort RED freeze only:31cases17pass14causal matcherfail,0runtimeerrors/skips;17existingcontrols green. Four gateway Stop waits and linked-listener leak red; Q027 precedence/zero/submission/grace/guidance qualification.11originalroundtripnames held; exact obsolete wording amendment reconstructs originalbytes and Q027 supplies operatorauthority. Source/currentcontrols unchangedfrom93e425. Hashes/proof in verification. No implementation/fullbatchacceptance."
+    }
+  ],
   "tier_ruled": "R3",
   "reasons": [
     {
@@ -125,5 +135,19 @@
       "source": "declared",
       "evidence": "declared side effect: sends-external"
     }
-  ]
+  ],
+  "oracle_provenance": {
+    "files": [
+      "tests/unit/lib-domain-retry-stop.test.ts",
+      "tests/unit/lib-domain-deadline-guidance.test.tsx",
+      "tests/unit/build-mission-prompt-roundtrip.test.ts"
+    ],
+    "hashes": {
+      "tests/unit/lib-domain-retry-stop.test.ts": "98c4f37356f0130b8499e5ae7863ddaeaf6c6f11e3b6d3f65edfbf8694993574",
+      "tests/unit/lib-domain-deadline-guidance.test.tsx": "2e11d97dee246755c8d7316e09c3349a9676286189b80862676164ea1fa1bab2",
+      "tests/unit/build-mission-prompt-roundtrip.test.ts": "52866b3dd2d6e2c023fb73bf8331e31a844df724a8b86bbe9022eef4cfa1aed8"
+    },
+    "author_session": "01a1062b-0f36-7702-885b-476fd150d9bf",
+    "independence_method": "metamorphic"
+  }
 }

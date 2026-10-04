@@ -101,9 +101,16 @@
     },
     {
       "id": "lib-domains-12",
-      "outcome": "planned",
+      "outcome": "verified-existing",
       "task": "T-0194",
-      "reason": "Reverify this T-0164 source-level observation and its item ruling before any edit: Fence content enters `data-code` before inline replacements and newline-to-`<br />`; the Copy handler reads that attribute, so a multiline block can yield markup instead of raw code. This is source-level evidence, not a current browser/clipboard result. Both cited chat suites mock `renderMarkdown`; a focused real-renderer/browser assertion remains due. The research renderer is not a drop-in, and an in-place fix has unmeasured line cost."
+      "reason": "T0191 already replaced the defective renderer; real fenced-code Copy units and causal m03 payload mutant prove exact whitespace/refusal. Reconciled at93e425d5; no reimplementation or duplicate savings credit. Browser qualification remains separate.",
+      "evidence": [
+        "src/components/chat/MessageBubble.tsx:105",
+        "src/components/skills/SimpleMarkdown.tsx:43",
+        "tests/unit/components-chat-markdown.test.tsx:50",
+        "tests/fixtures/mutants/T-0191.json:31",
+        "org/reviews/2026-10-t0191-final-acceptance.md"
+      ]
     },
     {
       "id": "lib-domains-01",

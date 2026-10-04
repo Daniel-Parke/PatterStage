@@ -88,7 +88,9 @@
         "tests/unit/lib-domain-ownership.test.ts",
         "tests/unit/lib-domain-helper-parity.test.ts",
         "tests/e2e/lib-domain-deadline-guidance.spec.ts",
-        "tests/unit/build-mission-prompt-roundtrip.test.ts"
+        "tests/unit/build-mission-prompt-roundtrip.test.ts",
+        "tests/unit/lib-domain-code-copy.test.tsx",
+        "tests/e2e/lib-domain-code-copy.spec.ts"
       ],
       "acquired": "2026-10-04T15:51:49.263200+00:00",
       "expires": "2026-10-05T15:51:49.263200+00:00"

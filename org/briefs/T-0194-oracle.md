@@ -52,3 +52,14 @@ module ownership/imports without dropping behaviour or tests; retain oracle
 controls/evidence. Reversing the accepted ADR requires operator change control.
 Never reset unrelated work or touch operator data/processes. All validation
 uses owned checkout/data/listeners; no paid providers or dispatch.
+
+
+Lib-domains12 qualification: T0191 already removed renderMarkdown/data-code
+and Chat uses SimpleMarkdown. The complete existing components-chat-markdown
+fixture50-76 seeds fenced code, not a whole-response Copy action. Its exact
+whitespace/refusal assertions and qualified m03-exact-code-payload mutant
+already prove fenced-code copying. Reuse them; do not duplicate those units
+or repeat the renderer rewrite. Add only a focused owned browser code-Copy
+assertion at both required widths to close the browser evidence. Existing
+correct implementation can be green before source work; do not invent a red.
+Scope the button to its code block so another Copy action is not selected.
