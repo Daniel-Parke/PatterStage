@@ -46,3 +46,12 @@ String accessible names already match exactly by default. Remove only those
 five unsupported properties, preserve17names and assertions, prove the prior
 and new names agree, run the17controls and the test typecheck. No other edits.
 Runtime authored by coordinator; frozen original oracle authored by Franklin.
+
+## Independent browser lint amendment
+
+The first complete gate stopped with three no-unused-expressions warnings in
+Reader oracle lines69/72/104. Faraday owns this file only. Prefix each deliberate
+computed-style property read with `void`; retain the same forced style flush,
+all eight names/assertions and zero retries. Run focused ESLint and record
+the diff/hash. Coordinator replays the exact amended file on old production
+CSS before the new-build gate. No lint disable or source/runtime edit.

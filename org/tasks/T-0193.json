@@ -104,9 +104,9 @@
       "tests/unit/mission-template-editor-wiring.test.tsx": "5970075307193edafa251aaa93db6ffaf27c6021b63d1a593052a654944f64ef",
       "tests/e2e/missions-flows.spec.ts": "0b6b72b33bd9f717b4feaba08b78ce3cfa36ba23e65f2561429fd1683ff4170c",
       "tests/e2e/missions-compose.spec.ts": "b03c3daa0ead65eeaa49538f6f8ae1fc96c0e30fdc9b7f8bccae7d3a044e5caa",
-      "tests/e2e/page-state-reader-motion.spec.ts": "4eed73564270643e4849b4ef9ee005a6a5c4c1d11698d99de99e2b4b801a3aa2"
+      "tests/e2e/page-state-reader-motion.spec.ts": "9737b028b3f37669c010247a248c65563db195f216883d3ce2d9fd25b0f2d80b"
     },
-    "author_session": "Faraday 01a1062b-0f36-7702-885b-476fd150d9bf; independent real-form and held-transport oracle; Q015 amendment by Franklin 01a1062c-ad31-77c2-8ff2-71c41ee9b5d6, preserving all16 original controls; read truth by Franklin 01a1062c-ad31-77c2-8ff2-71c41ee9b5d6; Faraday independent five-option typing correction,17unchanged controls",
+    "author_session": "Faraday 01a1062b-0f36-7702-885b-476fd150d9bf; independent real-form and held-transport oracle; Q015 amendment by Franklin 01a1062c-ad31-77c2-8ff2-71c41ee9b5d6, preserving all16 original controls; read truth by Franklin 01a1062c-ad31-77c2-8ff2-71c41ee9b5d6; Faraday independent five-option typing correction,17unchanged controls; Faraday independent three-void Reader lint correction,8names/assertions retained",
     "independence_method": "metamorphic"
   }
 }

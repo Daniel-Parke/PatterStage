@@ -80,3 +80,15 @@ net cost of draft ownership, truthful read errors and accessible state after
 Missions−41, label-map−6 and narration cleanup. Targets remain unchanged.
 Reader production green, controlled walks, full gate, sweep and acceptance
 remain pending. No batch closure or macOS repair is claimed.
+
+First full gate stopped at lint, unchanged tree406bf8ab7384899e74b317ccc6d7f8d165b04a908de888539a296c3bd4b59d97:
+`tmp/t0193-coordinator-gate-1791111618337/gate/summary.json`. Three deliberate
+computed-style reads in the frozen browser oracle violated no-unused-expressions.
+Faraday independently prefixed those reads with `void`, preserving all eight
+names/assertions/style flushes. Focused ESLint passes without a rule change.
+The exact amended file was replayed on the old compiled Reader/CSS:4pass4fail,
+zero flaky retries; `tmp/t0193-reader-lint-amendment-red.json`. This replay
+supersedes the earlier browser red receipt at the same output path. Frozen LF
+hash:`9737b028b3f37669c010247a248c65563db195f216883d3ce2d9fd25b0f2d80b`. Full gate must repeat on the amended tree.
+After correcting the stale Models header, source102070(+8), tests151608(+841),
+source repeated windows693(−12). Fixed targets remain unchanged.

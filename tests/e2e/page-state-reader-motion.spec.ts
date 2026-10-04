@@ -66,10 +66,10 @@ for (const viewport of [{ width: 1440, height: 900 }, { width: 390, height: 844 
       const selected = dialog.getByRole("button", { name: "EB Garamond", exact: true });
       await expect(selected).toHaveAttribute("aria-pressed", "true"); samples.push(await contrast(selected));
       const hovered = dialog.getByRole("button", { name: "Literata", exact: true }); await hovered.hover();
-      await hovered.evaluate(async element => { getComputedStyle(element).color; await Promise.all(element.getAnimations().map(animation => animation.finished)); });
+      await hovered.evaluate(async element => { void getComputedStyle(element).color; await Promise.all(element.getAnimations().map(animation => animation.finished)); });
       samples.push(await contrast(hovered));
       await selected.hover();
-      await selected.evaluate(async element => { getComputedStyle(element).color; await Promise.all(element.getAnimations().map(animation => animation.finished)); });
+      await selected.evaluate(async element => { void getComputedStyle(element).color; await Promise.all(element.getAnimations().map(animation => animation.finished)); });
       samples.push({ ...await contrast(selected), text: "EB Garamond (hover)" });
       await attach(info, "Reader contrast samples", samples);
       for (const sample of samples) expect.soft(sample.ratio, `${sample.text}: ${JSON.stringify(sample)}`).toBeGreaterThanOrEqual(4.5);
@@ -101,7 +101,7 @@ for (const viewport of [{ width: 1440, height: 900 }, { width: 390, height: 844 
           for (let i = 0; i < 12; i++) { const child = document.createElement("div"); child.textContent = `Owned stagger ${i + 1}`; host.append(child); }
           document.querySelector("main")!.append(host);
           // Flush the actual entrance styles before the next animation frame. No seeking or CSS override.
-          getComputedStyle(host.lastElementChild!).opacity;
+          void getComputedStyle(host.lastElementChild!).opacity;
           const started = performance.now();
           // A task queued from rAF samples after that first render, rather than inside the pre-paint callback.
           return new Promise<{ elapsed: number; children: { opacity: number; delay: string; duration: string }[] }>(resolve => requestAnimationFrame(() => setTimeout(() => {
