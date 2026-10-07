@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "title": "MissionV1",
-  "description": "Mission record under CH_DATA_DIR/missions/{id}.json. Generated from missionV1Schema (Zod).",
+  "description": "Mission record under PS_DATA_DIR/missions/{id}.json. Generated from missionV1Schema (Zod).",
   "type": "object",
   "properties": {
     "schemaVersion": {
@@ -50,13 +50,9 @@
       "type": "string"
     },
     "templateId": {
-      "anyOf": [
-        {
-          "type": "string"
-        },
-        {
-          "type": "null"
-        }
+      "type": [
+        "string",
+        "null"
       ]
     },
     "status": {
@@ -73,7 +69,8 @@
       "enum": [
         "save",
         "now",
-        "cron"
+        "cron",
+        "queue"
       ]
     },
     "createdAt": {
@@ -83,33 +80,21 @@
       "type": "string"
     },
     "results": {
-      "anyOf": [
-        {
-          "type": "string"
-        },
-        {
-          "type": "null"
-        }
+      "type": [
+        "string",
+        "null"
       ]
     },
     "duration": {
-      "anyOf": [
-        {
-          "type": "number"
-        },
-        {
-          "type": "null"
-        }
+      "type": [
+        "number",
+        "null"
       ]
     },
     "error": {
-      "anyOf": [
-        {
-          "type": "string"
-        },
-        {
-          "type": "null"
-        }
+      "type": [
+        "string",
+        "null"
       ]
     },
     "cronJobId": {
@@ -125,23 +110,15 @@
           "type": "boolean"
         },
         "lastRun": {
-          "anyOf": [
-            {
-              "type": "string"
-            },
-            {
-              "type": "null"
-            }
+          "type": [
+            "string",
+            "null"
           ]
         },
         "lastStatus": {
-          "anyOf": [
-            {
-              "type": "string"
-            },
-            {
-              "type": "null"
-            }
+          "type": [
+            "string",
+            "null"
           ]
         },
         "schedule": {

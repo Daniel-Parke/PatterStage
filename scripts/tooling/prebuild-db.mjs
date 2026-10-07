@@ -16,7 +16,11 @@ import {
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const ROOT = join(__dirname, "..", "..");
 const DB_DIR = join(ROOT, "data");
-const DB_PATH = join(DB_DIR, "control-hub.db");
+// Prefer the canonical patterstage.db; fall back to an existing legacy
+// control-hub.db so an un-migrated checkout isn't handed a duplicate empty DB.
+const NEXT_DB = join(DB_DIR, "patterstage.db");
+const LEGACY_DB = join(DB_DIR, "control-hub.db");
+const DB_PATH = !existsSync(NEXT_DB) && existsSync(LEGACY_DB) ? LEGACY_DB : NEXT_DB;
 const MIGRATIONS_DIR = join(ROOT, "src/lib/db/migrations");
 const SEEDS_DIR = join(ROOT, "src/lib/db/seeds");
 
@@ -132,7 +136,7 @@ const seedCatalog = spawnSync(
   {
     cwd: ROOT,
     stdio: "inherit",
-    env: { ...process.env, CH_DATA_DIR: DB_DIR },
+    env: { ...process.env, PS_DATA_DIR: DB_DIR },
     shell: process.platform === "win32",
   },
 );

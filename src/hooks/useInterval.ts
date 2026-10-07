@@ -1,73 +1,79 @@
-// ═══════════════════════════════════════════════════════════════
-// useInterval — Declarative setInterval wrapper for React
-// ═══════════════════════════════════════════════════════════════
+// useInterval — declarative setInterval for React.
 //
-// Multiple Control Hub pages run a `setInterval` for polling or
-// live-tick re-renders. The pattern is identical in every one:
-//
-//   useEffect(() => {
-//     if (!enabled) return;
-//     const id = setInterval(() => fn(), ms);
-//     return () => clearInterval(id);
-//   }, [enabled, ms]);
-//
-// This hook centralises the pattern so the call sites are one-liners:
-//
-//   useInterval(refetch, { ms: 10000 });
-//   useInterval(() => setNowTick(n => n + 1), { ms: 1000 });
-//   useInterval(refetch, { ms: 5000, enabled: autoRefresh });
-//
-// The callback is stored in a ref so changing its identity doesn't
-// restart the interval (otherwise the dashboard's polls would re-arm
-// on every render of the parent).
-//
-// On unmount the timer is cleared (the effect's cleanup runs). The
-// `enabled: false` path also doesn't register the interval, so a
-// "polling paused" toggle costs zero timers in the browser.
-//
-// Scope note: this hook fits the simple single-interval case
-// (logs auto-refresh, sessions live-tick, etc.). The dashboard's
-// 3-way polling block needs to share one AbortController across
-// all three fetches, so it intentionally uses raw setInterval +
-// forEach cleanup. If a future call site needs a shared signal,
-// extract a `usePollWithAbort` variant.
+// The callback lives in a ref so a changed identity does not restart the
+// interval; `enabled: false` registers no timer. By default the timer is also
+// suspended while the document is hidden and fires once on return: a console
+// left on a background tab should not spend the night re-querying its own
+// database, and TanStack Query gates `refetchInterval` on the same
+// `visibilitychange`, so the hand-rolled timers match the query layer. The
+// catch-up tick is what keeps the operator from reading a full period stale.
 
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 
 export interface UseIntervalOptions {
   /** Interval duration in milliseconds. */
   ms: number;
   /** When false, the interval is not registered (paused). Default true. */
   enabled?: boolean;
+  /** Default true: suspend while hidden, one catch-up tick on return. */
+  pauseWhenHidden?: boolean;
 }
 
 /**
- * Run `fn` every `ms` milliseconds while `enabled` is true.
- *
- * @param fn   - The callback to run on each tick. May return a Promise;
- *               the return value is ignored (use a fire-and-forget API).
- * @param opts - `{ ms, enabled }`. When `enabled` is false the interval
- *               is not started at all. `ms` must be > 0.
+ * Whether the document is visible; true unconditionally when `active` is
+ * false, so an opted-out caller never subscribes. SSR-safe: initial `true`,
+ * listener registered from an effect.
+ */
+function useDocumentVisible(active: boolean): boolean {
+  const [visible, setVisible] = useState(true);
+
+  useEffect(() => {
+    if (!active || typeof document === "undefined") return;
+    const read = () => setVisible(document.visibilityState !== "hidden");
+    read();
+    document.addEventListener("visibilitychange", read);
+    return () => document.removeEventListener("visibilitychange", read);
+  }, [active]);
+
+  return active ? visible : true;
+}
+
+/**
+ * Run `fn` every `ms` while `enabled`.
+ * @param fn   - Run on each tick; a returned Promise is ignored.
+ * @param opts - `{ ms, enabled, pauseWhenHidden }`. `ms` must be > 0; hidden
+ *               tabs suspend unless `pauseWhenHidden` is false, then catch up once.
  */
 export function useInterval(
   fn: () => void | Promise<void>,
-  { ms, enabled = true }: UseIntervalOptions,
+  { ms, enabled = true, pauseWhenHidden = true }: UseIntervalOptions,
 ): void {
   const fnRef = useRef(fn);
-  // Keep the latest callback in the ref so callers don't need to memoize.
-  // Without this, every parent re-render would restart the interval
-  // (because the effect's dep would change).
+  // The latest callback in a ref, so callers need not memoize and re-renders do not restart the interval.
   useEffect(() => {
     fnRef.current = fn;
   });
 
+  const visible = useDocumentVisible(pauseWhenHidden);
+  // Set while suspended for a hidden tab, so "we just came back" is told from
+  // mount; mount must NOT tick, since the caller loads its own initial data.
+  const missedTicksRef = useRef(false);
+
   useEffect(() => {
     if (!enabled || ms <= 0) return;
+    if (!visible) {
+      missedTicksRef.current = true;
+      return;
+    }
+    if (missedTicksRef.current) {
+      missedTicksRef.current = false;
+      void fnRef.current();
+    }
     const id = setInterval(() => {
       void fnRef.current();
     }, ms);
     return () => clearInterval(id);
-  }, [ms, enabled]);
+  }, [ms, enabled, visible]);
 }

@@ -1,0 +1,22 @@
+{
+  "task": "T-0150",
+  "why": "A test harness can be green while silently using the developer's Hermes data; the fixture's identity and completed state must be held by the oracle.",
+  "mutants": [
+    {
+      "id": "m1-the-session-is-left-active",
+      "file": "tests/e2e/prepare-data-dir.mjs",
+      "anchor": "VALUES (?, 'hermes', 'cli', 'E2E fixture session', ?, ?, 'completed')",
+      "replacement": "VALUES (?, 'hermes', 'cli', 'E2E fixture session', ?, ?, 'active')",
+      "tests": ["tests/unit/e2e-sessions-fixture.test.ts"],
+      "why": "The fixture must be a stable completed row, not an in-flight session changed by background reconciliation."
+    },
+    {
+      "id": "m2-the-fixture-identity-changes",
+      "file": "tests/e2e/prepare-data-dir.mjs",
+      "anchor": "const fixtureId = \"e2e-session-fixture\";",
+      "replacement": "const fixtureId = \"another-session-fixture\";",
+      "tests": ["tests/unit/e2e-sessions-fixture.test.ts"],
+      "why": "Global setup and the phone journey depend on the same named session created before boot."
+    }
+  ]
+}

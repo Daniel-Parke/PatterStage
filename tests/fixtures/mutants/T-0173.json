@@ -1,0 +1,22 @@
+{
+  "task": "T-0173",
+  "why": "Both version-update limits must be held independently while the temporary pause is in force.",
+  "mutants": [
+    {
+      "id": "m1-reopen-npm",
+      "file": ".github/dependabot.yml",
+      "anchor": "    open-pull-requests-limit: 0\n    ignore:",
+      "replacement": "    open-pull-requests-limit: 10\n    ignore:",
+      "tests": ["tests/unit/t0173-dependabot-pause.test.ts"],
+      "why": "A resumed npm version-update stream must fail the temporary-pause oracle."
+    },
+    {
+      "id": "m2-reopen-actions",
+      "file": ".github/dependabot.yml",
+      "anchor": "  - package-ecosystem: github-actions\n    directory: \"/\"\n    target-branch: dev\n    schedule:\n      interval: weekly\n    open-pull-requests-limit: 0",
+      "replacement": "  - package-ecosystem: github-actions\n    directory: \"/\"\n    target-branch: dev\n    schedule:\n      interval: weekly\n    open-pull-requests-limit: 10",
+      "tests": ["tests/unit/t0173-dependabot-pause.test.ts"],
+      "why": "A resumed Actions version-update stream must fail the temporary-pause oracle."
+    }
+  ]
+}

@@ -1,0 +1,38 @@
+{
+  "id": "T-0168",
+  "intent": "Repair the closed T-0163 Node bootstrap credential oracle for symlinked temporary directories on macOS and Linux. Preserve its first-write and before-read mode assertions and all six named tests.",
+  "declared": {"capabilities": ["edit-tests", "edit-docs", "git-push"], "side_effects": ["sends-external"]},
+  "mode": "high-assurance",
+  "tier_proposed": "R2",
+  "tier_ruled": "R2",
+  "reasons": [
+    {"factor": "operator-plan-conservative-tier", "tier_floor": "R2", "source": "Q-015 and hosted macOS failure", "evidence": "A closed security oracle needs a separate author and an explicit path-alias regression."}
+  ],
+  "status": "done",
+  "owner_session": "2026-09-27-refactor-foundations",
+  "claims": ["org/tasks/T-0168.json", "org/claims.json", "org/briefs/T-0168-independent-amendment.md", "org/HANDOVER.md", "org/TASKS.md", "org/STATE.md", "tests/unit/t0163-bootstrap-credentials.test.ts", "tests/fixtures/mutants/T-0168.json"],
+  "programme": "Hosted repair of T-0167's macOS path-alias fixture. The separate Settings anchor PR E2E failure also needs resolution before the next prerequisite batch.",
+  "timestamps": {"opened": "2026-09-27T10:06:16Z", "updated": "2026-09-27T10:25:57Z", "closed": "2026-09-27T10:25:57Z"},
+  "invariants": [
+    "The six bootstrap credential test names and every first-write, before-read, fail-closed and secrecy assertion remain.",
+    "The instrumented Node fixture accepts a symlinked TMPDIR without silently losing event coverage; a path outside the disposable fixture remains excluded.",
+    "A separate author makes the Q-015 closed-oracle amendment; no production source or protected file changes.",
+    "All hosted push and PR jobs, including macOS and PR acceptance, are observed before the next prerequisite batch."
+  ],
+  "notes": "Hosted push macOS CI 36310868105 at dev@baebb0ee failed two T-0163 bootstrap tests: created and read event counts were zero at literal fixture paths. A native-Linux clean-clone reproduction with TMPDIR symlinked to a real temporary directory produced the same two failures, with four other tests passing. The existing local full gate had passed without that symlink. PR full E2E at the same commit failed one unrelated Settings env anchor visibility assertion, which also needs investigation. T-0167 is closed history and is not rewritten.",
+  "rollback": "Revert only the independently authored fixture path-normalisation if its tests or mutation proof fail; retain both hosted and symlinked-TMPDIR red evidence.",
+  "oracle_provenance": {
+    "file": "tests/unit/t0163-bootstrap-credentials.test.ts",
+    "old_lf_sha256": "75c7c4f6b1d924560d0eeeaca25186699e1a92413965112ee1985848f3c8d9e0",
+    "new_lf_sha256": "174196b79960ad9ec7b01f22cc4733cef36e69e53bcb8a6846152de7606f6cf3",
+    "author_session": "01a0e212-5616-7eb1-b58e-ad9206ab4e83",
+    "author_commit": "c05ebc59",
+    "authorised_by": "Q-015 independently authored closed-oracle amendment after hosted macOS failure, 2026-09-27",
+    "identity": "The same six original named tests and security assertions before and after; one added symlinked-TMPDIR test was red before the fixture change and passes afterwards."
+  },
+  "commits": "a0d8d0af opened the record and brief; 50349dad assigned the verified independent lane; d14f889c added the mutant; c05ebc59 amended the closed test; 2881c601 held measured census growth with reason.",
+  "verification": "Hosted push macOS at baebb0ee failed two T-0163 event-count assertions. The same two of six failed in a native-Linux clean clone with a symlinked TMPDIR before the amendment. After the amendment, the independent author's Linux focused run passed 7/7 and Windows passed the six original tests with the POSIX-only regression skipped. Coordinator's native-Linux symlinked-TMPDIR run passed all 23 tests across three credential suites. First complete isolated gate at c05ebc59 failed only census-lines: testLines rose 129719 to 129770. With explicit reason committed in the baseline, the second full ten-step gate at 2881c601 exited 0, treeBefore=treeAfter=d1160317bb1cd7aece925e74977faea6b2af9fdfd6db67f2d8f01ad79abb8c8a: 726 Jest suites, 7213 passed and 4 skipped; 282 Playwright passed and 24 skipped. No visual product change. Hosted macOS and all other jobs must be observed after push.",
+  "review": "Coordinator reviewed the one-file independent amendment. Canonical path containment excludes outsiders, and event comparison now identifies the same file under lexical and physical temporary paths. No production or protected file changed.",
+  "mutation": "Native-Linux committed-tree sweep with symlinked TMPDIR at c05ebc59 exited 0: m1-public-first-write-under-symlinked-temp KILLED by structured assertion-failed evidence; clean controls before and after and exact restoration.",
+  "deviation": "The existing closed test and a new symlinked-TMPDIR regression provided the red-first evidence. The new test is POSIX-only and skips on Windows; the six original names and checks stay. The first complete gate was red for 51 net test lines; the reason was recorded through --allow-growth and the unchanged full gate was rerun, rather than weakening or skipping the census."
+}

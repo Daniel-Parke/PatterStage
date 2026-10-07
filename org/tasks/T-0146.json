@@ -1,0 +1,50 @@
+{
+  "id": "T-0146",
+  "intent": "K0 of the refactor and clean-up programme: put the review's 110 operator decisions where they can be ruled. The register is rendered from the verification run that re-checked every one of them read-only against ce4ac1fd, with each option's consequence, a recommendation and a ruling line; the eight questions it groups them into are raised in the repository's own decision queue. Nothing marked OP is acted on until it carries a ruling.",
+  "declared": {
+    "capabilities": [
+      "edit-docs",
+      "edit-tests"
+    ],
+    "side_effects": []
+  },
+  "mode": "standard",
+  "tier_proposed": "R1",
+  "tier_ruled": "R1",
+  "reasons": [
+    {
+      "factor": "size-threshold",
+      "tier_floor": "R1",
+      "source": "derived:diff-size",
+      "evidence": "the register is 3,165 generated lines, over the express limit of 100; no source file, no protected path and no sensitive path is touched"
+    }
+  ],
+  "status": "done",
+  "owner_session": "t0146-k0-the-register-2026-09-12",
+  "claims": [
+    "org/reviews/2026-09-decision-register.md",
+    "org/QUESTIONS.md",
+    "org/claims.json",
+    "org/tasks/T-0146.json",
+    "tests/unit/k0-the-register-is-complete.test.ts",
+    "tests/fixtures/mutants/T-0146.json",
+    "scripts/tooling/line-census.baseline.json",
+    "tests/unit/c8-the-programme-is-closed.test.ts (claimed by the ORACLE lane, not by this session)"
+  ],
+  "programme": "K0 of the refactor and clean-up programme (K0 to K19), which follows org/plans/2026-09-consolidation.md. The plan itself is filed at Phase 2, after the full review; this batch only records what the operator must rule before any of it is acted on.",
+  "timestamps": {
+    "opened": "2026-09-12T09:00:00Z",
+    "updated": "2026-09-12T11:15:00Z",
+    "closed": "2026-09-12T11:15:00Z"
+  },
+  "invariants": [
+    "I1 NOTHING OP IS ACTED ON WITHOUT ITS RULING. Every one of the review's 110 operator-decision findings has a disposition in the register: an entry with a ruling line, or a recorded return to the executor's free band with its reason. The oracle fails if one is silent.",
+    "I2 A RECOMMENDATION IS NOT A RULING. Every entry carries a ruling line; the oracle checks the line exists, never its wording, so it holds equally before and after the operator answers.",
+    "I3 THE QUESTIONS ARE WHERE THE REPOSITORY KEEPS THEM. The eight batched questions are entries in org/QUESTIONS.md, the queue org/START.md names, and a folded one carries its answer.",
+    "I4 NO FINDING IS RE-PROPOSED THAT THE REVIEW REFUTED. The eight refuted findings and the five marked leave-as-is carry no entry."
+  ],
+  "commits": "2c91b5f4 the K0 oracle, red at 0 of 3; dce02f69 the claims lane; 8c0e6299 c8 re-anchored (ORACLE session); e24c28b6 the register and the answered questions; the chore commit that carries this record and the derived views.",
+  "verification": "Gate by exit code on the finished tree, nothing edited while it ran (the runner stamps HEAD, the status and both diffs before and after; the stamp did not move): lint 0 (57.5s), tsc 0 (4.4s), jest 0 (56.7s: 6924 tests, 685 suites), knip 0 (12.0s), canary 0 (0.7s), build 0 (36.9s), e2e 0 (154.6s: 272 passed, two projects), census 0 (50.5s), census:lines 0 (2.8s). The census rise is 145 test lines, this batch's own oracle (4 tests) and the c8 amendment its growth forced; held in the baseline's growth log with that reason, never blessed. The register covers 110 of 110 OP ids: 121 ruled entries plus 54 recorded as the executor's free band, with 23 verified rows beside them.",
+  "mutation": "Four mutants against the committed tree at e24c28b6, all killed: a finding's entry heading renamed, an entry's ruling line removed, a question dropped from the queue, and a folded question's answer removed. The sweep found a defect in itself on the first run and it was fixed before K1 lands the tool: it treated a markdown '####' heading as a comment and reported INEFFECTIVE for the mutant that mattered, so the hash comment form now counts only outside markdown. The mutants are committed as tests/fixtures/mutants/T-0146.json.",
+  "deviation": "Three worth recording. (1) The batch's own oracle raised testLines, and the census baseline update turned the CLOSED c8 oracle red, because c8 compared the live baseline against numbers a closed plan recorded at C8. That is org-15, and it blocked every later batch, so it was put to the operator on its own: POLICY-closed-oracles was ruled on 2026-09-12, c8 was re-anchored to frozen numbers by a separate ORACLE session under org/claims.json's first lane, and the implementer did not author it. (2) The sweep ran from a scratchpad copy of the script K1 lands, because the tool is not in the repository yet; its mutants are committed as data so the run is reproducible the moment it is. (3) The ORACLE session found a weakness beyond its ruled scope: c8's plan check searches the whole closing section rather than the measure's own row, so a miss restated as met can pass if the number survives elsewhere in the prose. It is raised as Q-017 rather than fixed, because a second amendment to a closed oracle needs its own ruling."
+}

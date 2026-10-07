@@ -1,0 +1,59 @@
+{
+  "id": "T-0132",
+  "intent": "U18, the review's P2 batch: six things a screen said twice, in the wrong register or in the wrong place. The dashboard's badge read ONLINE beside a Subsystems row reading Not running; the profiles drift banner carried a Push all sixty pixels above the bar's Push all; every page's subtitle was prose set in mono; every Skills row said Active beside a switch that said active; a failed chat run was toasted over the composer as well as shown in the transcript; and the gateway-offline notice floated as a card in the transcript while the composer accepted messages it could not send.",
+  "declared": {
+    "capabilities": [
+      "edit-source",
+      "edit-tests",
+      "edit-docs"
+    ],
+    "side_effects": []
+  },
+  "mode": "standard",
+  "tier_proposed": "R1",
+  "tier_ruled": "R1",
+  "reasons": [
+    {
+      "factor": "size-threshold",
+      "tier_floor": "R1",
+      "source": "derived:diff-size",
+      "evidence": "one page's badge, one banner's control removed, one header's register, one row's word, one hook's two toasts, one banner's shape, one composer's disabled state, one toast offset; no route, no schema, no protected path; four oracle suites new, five suites amended at the changed line, four guides and the CHANGELOG"
+    }
+  ],
+  "status": "done",
+  "owner_session": "t0132-u18-p2-2026-09-09",
+  "claims": [
+    "src/app/page.tsx",
+    "src/app/work/chat/page.tsx",
+    "src/components/profiles/ProfilesDriftBanner.tsx",
+    "src/components/agents/AgentProfilesOverview.tsx",
+    "src/components/layout/PageHeader.tsx",
+    "src/components/skills/SkillRow.tsx",
+    "src/components/chat/GatewayBanner.tsx",
+    "src/components/ui/Toast.tsx",
+    "src/hooks/useChatSend.ts",
+    "tests/e2e/phone.spec.ts",
+    "tests/unit/",
+    "docs/guides/dashboard.md",
+    "docs/guides/agents.md",
+    "docs/guides/skills.md",
+    "docs/guides/chat.md",
+    "CHANGELOG.md"
+  ],
+  "programme": "U18, the review's P2 batch; follows U17 (T-0131). U19 (P3) and U20 (P4) follow.",
+  "timestamps": {
+    "opened": "2026-09-09T21:45:00Z",
+    "updated": "2026-09-09T23:30:00Z",
+    "closed": "2026-09-09T23:30:00Z"
+  },
+  "invariants": [
+    "I1 A FACT IS SAID ONCE, WHERE IT IS BEST SAID. The dashboard badge carries the Subsystems row's own word and tone for the gateway, with the row's reason as its tooltip; NOT INSTALLED only when there is no agent and no reachable gateway, read from the settled facts (D57).",
+    "I2 ONE CONTROL PER ACTION. The drift banner states the drift and names Push all; the bar has the button.",
+    "I3 PROSE IS INTER; A COUNT IS MONO. The header subtitle is body prose; a token that is digits (with the dots, commas and colons a number or a clock carries) is font-mono tabular-nums; a digit inside a word stays in the word. No state word beside a switch.",
+    "I4 THE TRANSCRIPT SAYS IT ONCE. A failed send is the bubble's alert and no toast; a fast-mode stream error is the bubble's reason; the gateway-offline notice is a full-width alert and the composer is disabled with the reason; the toast stack rests above the composer while chat is mounted."
+  ],
+  "commits": "8f02b019 the U18 oracles, red at 17 of 19; 5f3c672e the implementation; the census baseline re-cut in the same commit (mono share 0.68 to 0.67, 12px share 0.52 to 0.50, card chromes 64 to 63, button chromes 57 to 56); the chore commit that carries this record and the derived views.",
+  "verification": "Gate by exit code on the finished tree: lint 0, tsc 0, jest 0 (6838 tests, 668 suites), knip 0, canary 0, build 0, Playwright 0 (269 passed, 24 skipped, two projects), census 0, and the baseline re-cut in the same commit: mono share 0.68 to 0.67 (the review predicted two to three points; the census counts text nodes, and the counts inside the subtitles are still mono), 12px share 0.52 to 0.50, card chromes 64 to 63, button chromes 57 to 56; design-lint 355 baselined violations. The walk on the isolated instance, six routes at 1440x900 and 390x844 with a screenshot of each: the dashboard badge reads \"Gateway · Not running [http://127.0.0.1:8642 answered the health probe with ok=false]\" against a Subsystems row that says the same; Agents offers 1 Push all control (Push all); 78 Skills rows carry 0 state words; every subtitle renders in inter/14px with its counts in mono (78, 20, 78 on Skills); at 390 the offline notice is 326px of a 358px column (91%) and the composer is disabled with \"The gateway is offline. Start it with: hermes gateway start\". With a stub gateway that refuses every run, a send raised 1 alert and 0 toasts. Screenshots regenerated.",
+  "mutation": "Fourteen mutants against the committed tree (5f3c672e), each aimed at one decision: the badge's vocabulary, its tooltip, the NOT INSTALLED guard, the drift sentence naming Push all, the subtitle's register, the count token's shape, its tabular figures, the send toast, the fast-mode toast, the offline notice's role and its width, the composer's disabled state, the toast lift's cleanup, and the Skills row's word. Fourteen of fourteen killed on the first pass. The phone spec's subtitle ceiling is live-only and was not swept.",
+  "deviation": "The review's fix for the badge said 'follows the gateway row's status word and tone, or goes'; it follows, and it names its subject ('Gateway · Not running') because a bare 'Not running' beside the ? said nothing about what. D57's ruling that a blip must not claim the agent is absent is kept in the settled facts; the badge itself now shows the blip, in step with the panel, because agreement between the two is the point. The review's fix for the subtitle asked for mono counts; the tokeniser is the component's, not each page's, so the twenty-one call sites did not change."
+}

@@ -1,36 +1,8 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
-import { safeApiCall } from "@/lib/api-fetch";
-
-/** Minimal shape of a model returned by /api/models. */
-interface ApiModel {
-  id: string;
-  name: string;
-  provider: string;
-  modelId: string;
-  baseUrl: string | null;
-  contextLength: number | null;
-  credentialsId: string | null;
-  createdAt: string;
-  updatedAt: string;
-}
-
-/** Shape of defaults returned by /api/models/defaults. */
-interface ApiDefaults {
-  agent: string | null;
-  hindsight: string | null;
-  compression: string | null;
-  vision: string | null;
-  web_extract: string | null;
-  session_search: string | null;
-  title_generation: string | null;
-  skills_hub: string | null;
-  mcp: string | null;
-  triage_specifier: string | null;
-  approval: string | null;
-  delegation: string | null;
-}
+import { useEffect, useMemo, useRef } from "react";
+import { useModels, useModelDefaults } from "@/hooks/useModels";
+import { InlineSelect } from "@/components/ui/Select";
 
 interface ModelPickerProps {
   /** Hermes CLI model id (e.g. anthropic/claude-sonnet-4). */
@@ -52,7 +24,7 @@ interface ModelPickerProps {
  * (same shape as built-in templates and dispatch).
  */
 const EMPTY_DEFAULT_HINT =
-  "Configure models under Config → Models. Dispatch falls back to Hermes config when none selected.";
+  "Configure models under Agent → Models. Dispatch falls back to Hermes config when none selected.";
 
 export default function ModelPicker({
   modelId,
@@ -61,10 +33,10 @@ export default function ModelPicker({
   id = "mission-model-picker",
   helperPlacement = "below",
 }: ModelPickerProps) {
-  const [models, setModels] = useState<ApiModel[]>([]);
-  const [defaults, setDefaults] = useState<ApiDefaults | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const { data: modelsData, isLoading: modelsLoading, error } = useModels();
+  const { data: defaults, isLoading: defaultsLoading } = useModelDefaults();
+  const models = useMemo(() => modelsData ?? [], [modelsData]);
+  const loading = modelsLoading || defaultsLoading;
   const didAutoFill = useRef(false);
   const onChangeRef = useRef(onChange);
 
@@ -77,29 +49,6 @@ export default function ModelPicker({
       didAutoFill.current = false;
     }
   }, [modelId, provider]);
-
-  const load = useCallback(() => {
-    setLoading(true);
-    setError(null);
-    Promise.all([
-      safeApiCall<{ data: { models?: ApiModel[] } }>("/api/models"),
-      safeApiCall<{ data: { defaults?: ApiDefaults } }>("/api/models/defaults"),
-    ])
-      .then(([mRes, dRes]) => {
-        const list = mRes.data?.data?.models ?? [];
-        const def = dRes.data?.data?.defaults ?? null;
-        setModels(list);
-        setDefaults(def);
-      })
-      .catch(() => {
-        setError("Failed to load models");
-      })
-      .finally(() => setLoading(false));
-  }, []);
-
-  useEffect(() => {
-    void load();
-  }, [load]);
 
   const selectedValue = (() => {
     const m = models.find((x) => x.modelId === modelId && x.provider === provider);
@@ -128,66 +77,50 @@ export default function ModelPicker({
     if (row) onChange(row.modelId, row.provider);
   };
 
-  if (loading) {
-    return (
-      <select
-        id={id}
-        disabled
-        className="w-full bg-dark-800/50 border border-white/10 rounded-lg px-3 py-2 text-xs text-white/40 font-mono"
-      >
-        <option>Loading models…</option>
-      </select>
-    );
-  }
+  // One select in three states, where there were three selects. While it is
+  // loading or has nothing to offer it is disabled and its only option says
+  // why; the tooltip placement says the rest through `title`, so the row
+  // stays the height of the loaded one.
+  const empty = models.length === 0;
+  const unavailable = !loading && (Boolean(error) || empty);
+  const placeholder = loading
+    ? "Loading models…"
+    : empty
+      ? "No models registered — Hermes default will be used"
+      : String(error ?? "Models unavailable");
+  const tooltip =
+    unavailable && helperPlacement === "tooltip"
+      ? empty
+        ? `${placeholder}\n\n${EMPTY_DEFAULT_HINT}`
+        : placeholder
+      : undefined;
 
-  if (error || models.length === 0) {
-    const optionLabel =
-      models.length === 0
-        ? "No models registered — Hermes default will be used"
-        : error ?? "Models unavailable";
-    if (helperPlacement === "tooltip") {
-      return (
-        <select
-          id={id}
-          disabled
-          title={
-            models.length === 0
-              ? `${optionLabel}\n\n${EMPTY_DEFAULT_HINT}`
-              : String(error ?? "Models unavailable")
-          }
-          className="w-full bg-dark-800/50 border border-white/10 rounded-lg px-3 py-2 text-xs text-white/40 font-mono"
-        >
-          <option>{optionLabel}</option>
-        </select>
-      );
-    }
+  const options =
+    loading || unavailable
+      ? [{ value: "", label: placeholder }]
+      : [
+          { value: "", label: "Default (registry / Hermes)" },
+          ...models.map((m) => ({ value: m.id, label: `${m.name} — ${m.modelId}` })),
+        ];
+  const select = (
+    <InlineSelect
+      ariaLabel="Model"
+      id={id}
+      disabled={loading || unavailable}
+      title={tooltip}
+      value={loading || unavailable ? "" : selectedValue}
+      onChange={handleSelect}
+      options={options}
+    />
+  );
+
+  if (unavailable && helperPlacement === "below") {
     return (
       <div className="space-y-1">
-        <select
-          id={id}
-          disabled
-          className="w-full bg-dark-800/50 border border-white/10 rounded-lg px-3 py-2 text-xs text-white/40 font-mono"
-        >
-          <option>{optionLabel}</option>
-        </select>
-        <p className="text-[10px] text-white/25 font-mono">{EMPTY_DEFAULT_HINT}</p>
+        {select}
+        <p className="text-micro text-ps-text-faint font-mono">{EMPTY_DEFAULT_HINT}</p>
       </div>
     );
   }
-
-  return (
-    <select
-      id={id}
-      value={selectedValue}
-      onChange={(e) => handleSelect(e.target.value)}
-      className="w-full bg-dark-800/50 border border-white/10 rounded-lg px-3 py-2 text-xs text-white outline-none focus:border-neon-cyan/50 font-mono"
-    >
-      <option value="">Default (registry / Hermes)</option>
-      {models.map((m) => (
-        <option key={m.id} value={m.id}>
-          {m.name} — {m.modelId}
-        </option>
-      ))}
-    </select>
-  );
+  return select;
 }

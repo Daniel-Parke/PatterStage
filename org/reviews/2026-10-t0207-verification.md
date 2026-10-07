@@ -1,0 +1,143 @@
+---
+summary: Source-bound research DNS repair evidence and remaining acceptance work
+type: review
+tags: [security, testing, runtime]
+---
+
+# T0207 verification
+
+Status: active. ADR0020 design accepted; implementation acceptance remains open.
+
+## Independent controls and source repair
+
+The owned DNS-rebinding probe records public admission followed by private
+transport resolution and one forbidden listener hit. It accesses no operator
+database or service. The independent 19-case oracle was committed in fa17377a:
+ten passing controls, nine executed matcher failures, zero runtime errors.
+Parfit independently reviewed its frozen bytes, causal reds and bounded limits.
+
+The repair validates every returned address, refuses invalid/mixed results and
+URL credentials, and supplies a fresh Undici Agent lookup snapshot per hop.
+Original URL, Host and default HTTPS verification remain. One twelve-second
+controller covers admission, redirects and response reading. Admission races
+abort and removes its listener; response cancellation and dispatcher destruction
+run in nested finally blocks. The native resolver may finish after cancellation,
+but that result cannot authorise a connection.
+
+The first combined run failed 14 DNS cases; it remains recorded in
+`tmp/t0194-t0207-repair-green.json`. The subsequent reverse-order selection passed
+20/20 in `tmp/t0194-t0207-repair-repeat.json`. The forced original order reproduced
+the failure in `tmp/t0207-queue-first-control.json`; neither repeat is substituted
+for the original failure.
+
+The ordered trace and independent in-memory Jest resolver probe identify the
+fixture defect: a virtual Undici mock misses the installed module ID after the
+preceding cancellation import chain primes Jest's shared resolver cache. The
+trace reaches production lookup without the owned fixture connector. Faraday independently applied the operator-authorised installed-module mock
+correction and owned-connection fence. The fenced original fails 14 cases
+before unowned connections; the amended fixture passes 20/20 in both orders.
+All 19 original test names, 128 assertion expressions and deadlines remain.
+The amendment is committed in 11c2588c and independently reviewed by Parfit.
+Evidence: tmp/t0207-resolution-amendment/freeze.json.
+
+## Runtime and dependency contract
+
+Faraday's independent 13-case runtime oracle was committed in ac1efbd0:
+seven matcher failures and six positive controls. After implementation all 13
+pass in `tmp/t0207-runtime-green.json`, with actual exit zero. Version simulation
+proves installer decisions before side effects, not application compatibility.
+
+Package and lockfile require Node >=22.19.0. CI and all Docker stages use Node24.
+The three bootstrap guards refuse older versions; Windows, Git Bash and existing
+installation paths remain. Documentation states the minimum and build target.
+The official Node22.19 Windows archive checksum was checked before extraction
+into the owned runtime directory. The actual Node22.19 runtime passes all19 owned transport controls in
+`tmp/t0207-node22-transport.json`, with observed exit zero. This is transport
+qualification, not a full minimum-version application matrix.
+
+Undici8.11.2 is an exact direct runtime dependency. The lockfile adds only that
+package and the new root engine requirement; npm removed 16 local install
+artefacts without deleting any other lockfile entries. Existing SQLite controls
+ran successfully under pinned Node24.21. The distributed dependency includes
+its MIT licence; Docker copies node_modules. Final image/licence tracing remains
+part of broader acceptance.
+
+The actual npm audit exits one and reports 15 vulnerable package records:
+two low, three moderate, ten high, zero critical. Undici is not a named record.
+`tmp/t0207-audit.json` preserves the raw report, including existing npm-config
+warnings. The remaining records concern Babel, humanfs, Next ESLint/plugin
+transitives, baseline-browser-mapping, brace-expansion/braces, browserslist,
+esbuild, fast-glob, js-yaml, micromatch, minimatch, postcss and ws. T0196 must
+reverify and resolve or explicitly account for them. Do not apply the suggested
+Next ESLint downgrade as an automatic fix.
+
+## Required acceptance
+
+Complete unchanged-tree gate, committed causal mutation sweep, independent R3
+verdict and every required hosted job remain outstanding. Scalar/family lookup
+and native dual-stack branches currently have source inspection rather than
+owned-listener behavioural proof. The operator approved the exact joint implementation landing on2026-10-04;
+separate records, sweeps, R3 review and all hosted checks remain required. No release acceptance is claimed.
+
+## Historical diagnostic safety
+
+The original observed evidence and probeSha256 remain unchanged. The checked-in
+diagnostic now refuses before loading transport if either source differs from
+the original measured LF hashes. This prevents the obsolete fixture from
+dialling a newly pinned public address. The current-source refusal control
+passes with zero connection attempts in tmp/t0207-diagnostic-refusal.json.
+The diagnostic's current bytes differ from the historical probeSha256; that
+hash binds the original execution, not this safety guard. Use the independent
+19-case owned transport oracle for current-source regression evidence.
+
+
+## Committed implementation and complete gate
+
+Joint operator-authorised implementation commit: `8daba39805eec79f2a32043a946ec17b1c9a748c`. All183 overlay paths matched the isolated gate candidate byte for byte before staging; protected changes were limited to accepted ADR0018/0019/0020. Historical task records were excluded.
+
+Full gate4 `tmp/t0194-final-gate-1791149030291/gate/summary.json` exited0 with all10 steps green and identical before/after stamp `974c88039e0d6a00b204f35b6dd7bcbd6483b1c2c06d111a8231e32e6ae0ee84`. Lint, typecheck, Jest coverage, Knip, canary, Turbopack build, database-free build checks, browser acceptance and both censuses passed. Jest:865 suites/9051 tests passed,2 existing skipped suites/9 existing skipped cases. Browser:513 passed/24 existing skipped, configured retries0. Build-purity:2/2 passed. No operator repository data was used.
+
+Earlier failed gates remain evidence: gate1 had42 failing unit cases; gate2 exceeded the unchanged C4 repeated-window ceiling; gate3 rejected an isolated dependency junction. Independent fixture repair and a net-saving helper fold resolved the first two. Real owned dependency materialisation resolved the third without production configuration changes. The build-only probe was partial and never replaced the full gate.
+
+The full parallel Jest run still warns that a worker required forceful shutdown. The separate112-case serial open-handle diagnostic is clean and does not explain that warning. T0195 owns the uncertainty. Build-purity emits Node DEP0190. Route census observes offline owned Hindsight/gateway services, so it does not establish service availability. No whole-product or release acceptance.
+
+Committed T0207 sweep `tmp/t0194-committed-sweeps-1791150413350/summary.json` exits0:8/8 killed through executed matcher failures,0 runtime errors. Original and restored32-case controls pass. All mutation files restore bytes/modes and tree is clean at8daba398. Structured per-run reports are retained for independent causal review.
+
+
+## Final committed causal sweep
+
+At `f765488a63a1244edde327787756c27ad367c9b9`, `tmp/t0194-committed-sweeps-1791150805524/summary.json` reports exit0 for both manifests. T-0207: 8/8 mutants killed, 32/32 original and restored controls passed, zero runtime errors or invalid-mutant kills. The production runner restores bytes/modes in finally and refuses a dirty restored tree; both checks passed. All per-run structured reports and logs remain in the receipt directory.
+
+
+Hosted exact-head acceptance and final record closure remain pending. T0206 timing cause and T0195 parallel worker warning remain unresolved.
+
+Independent Parfit LOCAL R3 PASS atf765488a accepts the implementation, all26 causal kills and the exact bounded review handoff.21 coverage rows are qualified, one confirmed follow-up and20 open. Canonical proposed receiving records195/196/197/201 preserve future proof. Hosted checks still precede batch closure. The independent test-delta checks do not relabel the earlier9051-case full gate as a9053-case run.
+
+
+## First hosted landing failures and prerequisite correction
+
+Exact pushed head39f988481fa8304f425bf331a500f4d53a4ba21d has failed PR/push install-harness and Ubuntu jobs. The completed job logs are retained in tmp/t0194-hosted-install-failure.log and tmp/t0194-hosted-ubuntu-failure.log; first snapshots in tmp/t0194-hosted-1791151592285 and tmp/t0194-hosted-1791151811489. No hosted green was claimed.
+
+The separately selected docker/TestHarness.dockerfile still usedNode20.20.2; setup correctly refused its22.19 minimum. Production Docker stages had been updated, but this harness was omitted. Independent additive2-case image oracle commits executed matcher red1of2 in f9f30898. The fixture now uses the accepted Node24 Bookworm slim target; no assertion/guard is weakened. Actual owned Linux and full gate verification remain required.
+
+Unchanged T0165 plan contract catches the new committed alias reader src/lib/config/env.ts missing from the exact T0200 claim list. It was untracked during the earlier local gate, so git grep did not enumerate it then. This is a known limitation of that precommit proof, not an Ubuntu-only product defect. The registry now names the single missing actual reader; all other claim paths, compatibility behaviour and post-v1 retirement date stay. No frozen oracle changes.
+
+
+## Reverified correction at 2e7b534c
+
+The exact192-path owned candidate matches the committed correction. Full gate `tmp/t0194-final-gate-1791152212412/gate/summary.json` passes all10 steps with identical before/after content stamp `6b59acc85067381d6c695b2b6f576515de42867abfa21e1544f8eb52ad66aecf`:867 suites/9055 cases pass,2 existing skipped suites/9 existing skipped cases;513 browser cases pass/24 existing skips;2 build-purity checks pass. No tracked edits occurred during the gate. The restricted launch in tmp/t0194-final-gate-1791152148736 failed before docs execution with uv_os_get_passwd ENOMEM. A paired same-binary os.userInfo probe succeeds outside that sandbox. The full gate was rerun there without changing checks; that launch failure is not hidden.
+
+All five owned Linux smoke install/update scenarios pass on actual Node24.21.0: fresh receipt tmp/t0207-owned-install-1791152156109/receipt.json; Hermes, dashboard, both and update receipt tmp/t0207-owned-install-1791152703487/receipt.json. Existing skip-http qualification remains; neither these smoke scenarios nor the build establish HTTP/provider/release acceptance. The independent image oracle retains its two names and frozen bytes; only the selected Docker base changed from Node20 to Node24.
+
+Clean committed sweep `tmp/t0194-committed-sweeps-1791153409081/summary.json` at `2e7b534ca95a72fc1ae74c6be3931d5c26a22cb8` exits0: 9/9 causal kills;34/34 original and restored controls;no infrastructure kills. Structured reports show intended executed matcher failures. Restoration of bytes/modes and clean-tree verification pass. Earlier survivor/ERROR and hosted failures remain recorded.
+
+Parfit independently accepts the completed unchanged gate, all192 hashes, narrow11-path correction and five Linux scenario bounds. Final sweep review and exact-head hosted acceptance remain required. The parallel Jest worker warning and macOS timing cause remain unresolved.
+
+
+## Final bounded acceptance
+
+At `72edf3ff9d84e91b35d4ed68f2bcb5d768f3ed34`, every required hosted job passed:11 PR jobs,9 applicable push jobs and both Gitleaks scans. The two push event exclusions remain explicitly skipped and do not replace PR acceptance. Complete per-job snapshot: `tmp/t0194-hosted-1791154420294/snapshot.json`. [PR CI](https://github.com/Daniel-Parke/PatterStage/actions/runs/37240993567) and [push CI](https://github.com/Daniel-Parke/PatterStage/actions/runs/37240988847) both conclude success. First39f98848 failures remain recorded.
+
+Parfit FINAL bounded R3 PASS at72edf3ff: all four exact-head CI/Gitleaks runs green, all11 PR and9 applicable push jobs plus both scans pass. Full unchanged10-stage local gate9055unit/513browser/2purity,18 library and9 research causal kills with98/34 original/restored controls, five owned Linux smoke scenarios onNode24.21.0; original failures preserved. Accept T0194 implementation plus exact qualified42-row handoff and T0207 DNS/install repair for closure.20 future coverage atoms, T0206 macOS timing cause, T0195 worker warning and remaining advisory attribution stay open. No whole-product, paid-provider or release acceptance.
+
+The committed frozen oracles and supplementary tests retain their identities; no coverage floor, timing bound or target changed. Task closure accepts this batch and its named evidence handoff. It does not complete the future proof obligations or release programme.

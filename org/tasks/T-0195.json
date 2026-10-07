@@ -1,0 +1,148 @@
+{
+  "id": "T-0195",
+  "intent": "Simplify test harnesses without losing questions. Approved authority, invariants, dependencies, rollback and exact Verify remain in org/plans/2026-09-refactor-programme.json. Receive the exact unresolved review proofs in org/reviews/2026-10-t0194-review-handoff.md; preserve original evidence and do not treat allocation as completion. Red-first oracle and exact opening claims precede implementation. Opening cohort: single default-Node configuration with explicit DOM exceptions, behaviour-proven restoreAllMocks wording, tests-only comment ratchet and qualified classification evidence. Existing pragmas/closed gates stay unless their independent amendment is authorised. Exact acceptance and rollback: org/briefs/T-0195-oracle.md. T0206 cause remains unresolved; no timing repair is claimed. The canonical Verify formerly said jsdom default and node exceptions; tests-06 documents the default-Node route. Record this internal clarification explicitly: single Node default, explicit DOM exceptions, all existing pragmas and invariants retained. Parfit authorises the exact different-author R2 config-pin amendment; frozen hashes remain until new resolved-environment controls freeze. Closure6dc4ce15 push has a distinct H12 deadline failure owned by T0206; no retry or common-cause claim. T0195 may continue oracle-first work but closure requires every new exact-head hosted check. Initial reasoned test-comment baseline is data-only and must be committed locally before the whole gate so the checker reads HEAD. No source/feature implementation commit precedes its complete gate. The red requirements commit contains13 additions only; all old identities remain. The initial3e0323 freeze and its red receipt are preserved; separate-author preimplementation live-ROOT strengthening yields0c2bdfb4, same12 names. This was a coordinator request, not a human ruling; independent R2 acceptance remains required. Declare already resolved jest-environment-node30.3.0 and jest-docblock30.2.0 as direct development dependencies: required by the default configuration and independent oracle; keep every installed version and runtime dependency unchanged. Actual bounded opening checks and retained failures are recorded in org/reviews/2026-10-t0195-verification.md, Resumed evidence7October; this record stays active until complete acceptance. Operator7October explicitly authorises the six exact expected dependency-map additions in the R3 historical oracles, per org/reviews/2026-10-t0195-dependency-oracle-amendment.md. Different author and independent adoption precede the full gate. Secondwholegate1791363282661 stops on ownedfallbackDELETE HTTP500: EPERM atomicconfigrename. Tenunchangedcasespassalone1791364475450; this is intermittencynotrepair. IndependentR2review permits only nativeownedWindows sharing calibration; no productionretry orrepair authorised before actualinvocationevidence. Latest local acceptance: whole owned gate1791367787825 passes all10steps with9074unit/513browser cases,9/24 existing skips and unchanged tree. Prior red attempts and partial rerun retained. Source implementation may land in separate T0195/T0208 commits; complete-task closure awaits committed causal sweep and exact-head hosted jobs. No full-product or release acceptance. Committed causal sweep at c251319e is green: 11of11 intended mutants killed,35unmodified controls pass before/after. All16structured runs have0runtime-error suites and restoration leaves a clean tree. Implementation commits978ddd93 andc251319e remain separately revertable. Exact-head hosted jobs still pending; no whole-task closure. Latest prerequisite integration is locally green at ba85d4c5: complete owned gate1791376312504, all10steps0,9075unit/523browser passes,9/24existing skips,2build-purity controls, unchanged stamp4ec3a994db1cfd0d9543aa2163813be78d72e824eda3dda1662be9d9d58e9d31. Main and owned committed trees match46ae635b5d1a7f832f48aab7dfe6a8a1ad5ca07b. Independent R2 adoption:tmp/t0195-combined-gate-adoption-20261007.json. Prior PRmacOS SIGSEGV remains red at f1f9162c; no rerun or cause claim. Status remains in-review pending every final exact-head hosted job. Closed the landed harness cohort on7October after independent R2 adoption at exactffd9608c. All4hosted workflows completed success on attempt1:PR11jobs including fullbrowser/install/Hermes/acceptance;push9applicable jobs plus2existingevent skips;bothGitleaks. ActualPRmacOS image macos26arm64 usesNodev24.21.0 and passes9079cases/5existing skips,874suites. Local9075/523/full10stepgate,1833preservedcohort names and11committedharness mutation kills remain adopted. Closure receipt:tmp/t0195-closure-review-ffd9608c.json. Previous failedf1SIGSEGV, earlier gates/partialrerun, worker shutdown warning andread-onlyAPI502 are preserved. T0206cause/T0208others/T0209integration stayopen. No programme,provider or release acceptance. Closingmetadatahead jobs remain independently observed before downstreamimplementation.",
+  "declared": {
+    "capabilities": [
+      "edit-code",
+      "edit-tests",
+      "edit-docs",
+      "git",
+      "git-push",
+      "run-isolated-process"
+    ],
+    "side_effects": [
+      "financial-impact"
+    ]
+  },
+  "mode": "high-assurance",
+  "tier_proposed": "R2",
+  "status": "done",
+  "owner_session": "2026-10-04-t0195-coordinator",
+  "claims": [
+    "tests/helpers/**",
+    "tests/unit/**",
+    "jest.config.*",
+    "tests/e2e/**",
+    "tests/jest.setup.ts",
+    "org/tasks/T-0195.json",
+    "org/reviews/2026-10-t0194-review-handoff.md",
+    "org/briefs/T-0195-oracle.md",
+    "tests/unit/test-harness-policy.test.ts",
+    "tests/helpers/test-comment-census.mjs",
+    "tests/fixtures/test-comment-census.baseline.json",
+    "tests/fixtures/mutants/T-0195.json",
+    "org/reviews/2026-10-t0195-verification.md",
+    "org/reviews/2026-10-t0195-source-classification.json",
+    "org/reviews/2026-10-t0195-environment-inventory.json",
+    "org/reviews/2026-10-t0195-config-oracle-amendment.md",
+    "scripts/tooling/line-census.baseline.json",
+    "org/HANDOVER.md",
+    "org/claims.json",
+    "org/tasks/T-0206.json",
+    "org/reviews/2026-10-t0206-http-budget.md",
+    "org/plans/2026-09-refactor-programme.json",
+    "org/plans/2026-09-refactor-programme.md",
+    "tests/unit/test-comment-census-live.test.ts",
+    "package.json",
+    "package-lock.json",
+    "tests/unit/test-comment-census-history.test.ts",
+    "tests/unit/test-comment-census-pending-capture.test.ts",
+    "org/reviews/2026-10-t0195-fixture-oracle-amendment.md",
+    "tests/helpers/comment-census-fixture.ts",
+    "org/reviews/2026-10-t0195-dependency-oracle-amendment.md",
+    "tests/unit/t0175-dependency-proposals.test.ts",
+    "tests/unit/t0176-visual-dependency-proposals.test.ts",
+    "tests/unit/t0177-knip-proposal.test.ts",
+    "tmp/t0195-windows-sharing-probe/**"
+  ],
+  "timestamps": {
+    "opened": "2026-10-04T22:00:16.016055+00:00",
+    "updated": "2026-10-07T13:38:59.275404+00:00",
+    "closed": "2026-10-07T13:38:59.275404+00:00"
+  },
+  "verdicts": [
+    {
+      "role": "REVIEWER",
+      "session": "01a107e1-5ba0-7703-ab13-e23e640dc10b",
+      "verdict": "pass",
+      "date": "2026-10-04T23:15:31.295777+00:00",
+      "notes": "Authorise exact independent R2 proposal org/reviews/2026-10-t0195-config-oracle-amendment.md: reconstruct only single literal Jest testEnvironment Node to historicaljsdom for old hash; preserve both hashes, Next normalisation and all old names/assertions/deadlines. New actualresolved Node/DOM controls freeze first. Reject arbitrary values, duplicate/computed declarations and unrelated mutations. Q015/R2 REVIEWER authority suffices; no extra operator approval needed. Explicitly record stale Verify wording. This is authorisation only, not amendment or implementation acceptance. Distinct H12 closure failure does not invalidate accepted T0194 dependency at72edf3ff; T0195 may continue but every required check still precedes closure."
+    },
+    {
+      "role": "ORACLE",
+      "session": "01a10926-5936-7a71-8406-255d787956f3",
+      "verdict": "pass",
+      "date": "2026-10-04T23:31:35.094249+00:00",
+      "notes": "Red-first acceptance requirements only: independent12-case oracle executes9 matcher failures/3passes/0runtime errors onNode24.21.0, lint/testtyping0. Both ownedNode/jsdom childcohorts4/4pass withfactory restoration and mapped/nativeSQLite separation. Static7355\u21927367 declarations unexpanded;922\u2192923files, not a full-suite runtime count. The13th coordinatorR2 live-corpus oracle independently red1/1 with correctownedcwd; first rootDir-only invocation retained and not claimed ownedcwd. No old tests/config/helpers changed. Currentsourceclassifications221 fully itemised and independently qualified; no retirement authority. Oracle acceptance is not implementation/hosted/release acceptance."
+    },
+    {
+      "role": "REVIEWER",
+      "session": "01a107e1-5ba0-7703-ab13-e23e640dc10b",
+      "verdict": "pass",
+      "date": "2026-10-04T23:36:10.799275+00:00",
+      "notes": "Independent R2 adoption of final strengthened oracle: inverse recovers initial freeze, twelve names retained, nine matcher failures and three passes plus separate live-corpus matcher failure. Both owned environment controls pass four cases. Corrected coordinator provenance retained. Commit red before implementation. Authorise initial reasoned data-only comment baseline local commit before gate because checker reads HEAD; baseline capture is not implementation acceptance."
+    },
+    {
+      "role": "REVIEWER",
+      "session": "01a11562-421e-72f1-bce4-668d08db7c2f",
+      "verdict": "pass",
+      "date": "2026-10-07T08:31:27.583194+00:00",
+      "notes": "Adopt exact Newton fixture amendment bound to receipt3ec3d098fefeddb75bab0a222b12113b84635e07d8ce4ee893027bf77f03d998: original/current hashes and independent inverse verified, two names26assertions30s unchanged, both controls before/aftergreen and each intended mutant toEqual red0runtime. Net21test lines and44windows saved,4768belowfixed4800. Lint/types0. Primary13andchecker unchanged. Narrow amendment acceptance only; fullgate/sweep/hosted pending."
+    },
+    {
+      "role": "REVIEWER",
+      "session": "01a11562-421e-72f1-bce4-668d08db7c2f",
+      "verdict": "pass",
+      "date": "2026-10-07T08:54:41.990300+00:00",
+      "notes": "Adopt Tesla operator-authorised six additions bound to receipt39a02ac2931762b1728f65dac175a73677393b7cd22330b2356afe778609faa5. Exactlysix additions0removed, byteinverse/ASTmaps recovered,21namespass0runtime/skips, ownedcontrol4pass eachkeydrift3toEqualfail0runtime with17explicitdeselections. TargetR3operatorapproval7Oct recorded. Narrowamendmentonly;fullgate/sweep/hostedpending, priorforce-exitwarningunresolved."
+    },
+    {
+      "role": "REVIEWER",
+      "session": "01a11562-421e-72f1-bce4-668d08db7c2f",
+      "verdict": "pass",
+      "date": "2026-10-07T10:25:47.196785+00:00",
+      "notes": "Bounded independent source adoption on 7October: 711 old pragmas unchanged;33 header inverses exact;158 suites1833 identical names/pass; only two root dev declarations; no historical file missing. Source adoption only, not whole-task closure. Complete owned gate1791367787825 has all10steps0,9074unit/513browserpasses,2buildpurity controls, unchanged stampc2365f0ebb0119abd7c39ac13ab197ce7bff6a1c5213aaa9a3fa2458483d84da. Committed sweep and exact-head hosted results pending."
+    },
+    {
+      "role": "REVIEWER",
+      "session": "01a11562-421e-72f1-bce4-668d08db7c2f",
+      "verdict": "pass",
+      "date": "2026-10-07T13:04:03.273076+00:00",
+      "notes": "Latest prerequisite integration is locally green at ba85d4c5: complete owned gate1791376312504, all10steps0,9075unit/523browser passes,9/24existing skips,2build-purity controls, unchanged stamp4ec3a994db1cfd0d9543aa2163813be78d72e824eda3dda1662be9d9d58e9d31. Main and owned committed trees match46ae635b5d1a7f832f48aab7dfe6a8a1ad5ca07b. Independent R2 adoption:tmp/t0195-combined-gate-adoption-20261007.json. Prior PRmacOS SIGSEGV remains red at f1f9162c; no rerun or cause claim. Status remains in-review pending every final exact-head hosted job."
+    },
+    {
+      "role": "REVIEWER",
+      "session": "01a11562-421e-72f1-bce4-668d08db7c2f",
+      "verdict": "pass",
+      "date": "2026-10-07T13:38:59.275404+00:00",
+      "notes": "Closed the landed harness cohort on7October after independent R2 adoption at exactffd9608c. All4hosted workflows completed success on attempt1:PR11jobs including fullbrowser/install/Hermes/acceptance;push9applicable jobs plus2existingevent skips;bothGitleaks. ActualPRmacOS image macos26arm64 usesNodev24.21.0 and passes9079cases/5existing skips,874suites. Local9075/523/full10stepgate,1833preservedcohort names and11committedharness mutation kills remain adopted. Closure receipt:tmp/t0195-closure-review-ffd9608c.json. Previous failedf1SIGSEGV, earlier gates/partialrerun, worker shutdown warning andread-onlyAPI502 are preserved. T0206cause/T0208others/T0209integration stayopen. No programme,provider or release acceptance. Closingmetadatahead jobs remain independently observed before downstreamimplementation."
+    }
+  ],
+  "tier_ruled": "R2",
+  "reasons": [
+    {
+      "factor": "money",
+      "tier_floor": "R2",
+      "source": "declared",
+      "evidence": "declared side effect: financial-impact"
+    }
+  ],
+  "oracle_provenance": {
+    "files": [
+      "tests/unit/test-harness-policy.test.ts",
+      "tests/unit/test-comment-census-live.test.ts",
+      "tests/unit/test-comment-census-history.test.ts",
+      "tests/unit/test-comment-census-pending-capture.test.ts",
+      "tests/helpers/comment-census-fixture.ts"
+    ],
+    "hashes": {
+      "tests/unit/test-harness-policy.test.ts": "383a0bb8ed5d29ad8ed3bb8233335089e2d00ec990b175a7057387d2df3f8b55",
+      "tests/unit/test-comment-census-live.test.ts": "56292a0757e1101b9bd8f6899c69ee71a025f58e64f55514aa219300eee51590",
+      "tests/unit/test-comment-census-history.test.ts": "0ab598c5fddf93f31f6666e713e446813b1ca7650cc194e97442241e6bffbb9c",
+      "tests/unit/test-comment-census-pending-capture.test.ts": "2a87f709b7fc148fa64c1dc119b3c6d13c624fff47ccfac8111f48ed86bdfe1c",
+      "tests/helpers/comment-census-fixture.ts": "ffdbc340fa31d5ad8f1c8e72eac0152dd6369948647d478e91e70198a26802f8"
+    },
+    "author_session": "Galileo 01a10926-5936-7a71-8406-255d787956f3 independent12 controls; coordinator R2 live-corpus13th before implementation; Sartre history-regression author, Mill pending-capture author, Newton independently authorised shared-fixture amendment01a1156f-7c0f-7bf0-a078-806432b01ebb",
+    "independence_method": "metamorphic"
+  }
+}

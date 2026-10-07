@@ -1,0 +1,829 @@
+{
+  "id": "T-0189",
+  "intent": "Centralise stored-usage parsing, guard story JSON boundaries and repair partial sync transactions; account for all twenty owned findings, six split rulings and thirty-one coverage obligations before closure.",
+  "declared": {
+    "capabilities": [
+      "edit-code",
+      "edit-tests",
+      "edit-docs",
+      "git",
+      "git-push",
+      "run-isolated-process",
+      "owned-temporary-git"
+    ],
+    "side_effects": [
+      "financial-impact",
+      "sends-external",
+      "migrates-schema"
+    ]
+  },
+  "mode": "high-assurance",
+  "tier_proposed": "R2",
+  "status": "done",
+  "owner_session": "2026-10-02-t0189-coordinator",
+  "claims": [
+    "src/lib/runs/parse-stored-usage.ts",
+    "src/lib/runs/runs-repository.ts",
+    "src/lib/stats/stats-repository.ts",
+    "src/lib/stats/agent-stats.ts",
+    "src/lib/analytics/run-aggregates.ts",
+    "src/lib/spend/spend-window.ts",
+    "src/modules/rec-room/lib/story-repository.ts",
+    "src/lib/sync/sync-repository.ts",
+    "src/lib/sync/sources/ProcessSync.ts",
+    "src/lib/sync/sources/LogSync.ts",
+    "tests/unit/data-transaction-usage.test.ts",
+    "tests/unit/data-transaction-stories.test.ts",
+    "tests/unit/data-transaction-sync.test.ts",
+    "org/tasks/T-0189.json",
+    "org/claims.json",
+    "org/briefs/T-0189-oracle.md",
+    "org/briefs/T-0189-review.md",
+    "org/reviews/2026-10-t0189-data-verification.md",
+    "org/reviews/2026-10-t0189-dispositions.json",
+    "org/plans/2026-09-refactor-programme.json",
+    "org/HANDOVER.md",
+    "org/TASKS.md",
+    "org/STATE.md",
+    "docs/manifest.json",
+    "scripts/tooling/line-census.baseline.json",
+    "tests/fixtures/mutants/T-0189.json",
+    "src/lib/sync/sources/SessionSync.ts",
+    "src/lib/sync/sources/EnvSync.ts",
+    "src/lib/sync/env-token-presence.ts",
+    "src/lib/models/models-repository.ts",
+    "src/lib/sync/SyncScheduler.ts",
+    "tests/unit/data-transaction-models.test.ts",
+    "tests/unit/data-transaction-scheduler.test.ts",
+    "tests/unit/data-transaction-migration-parity.test.ts",
+    "tests/unit/data-transaction-schema-health.test.ts",
+    "tests/unit/data-transaction-repository-contracts.test.ts",
+    "src/lib/db/apply-mission-repeat-migration.ts",
+    "scripts/tooling/migrate-db.ts",
+    "docs/running/migration.md",
+    "src/lib/sessions/session-repository.ts",
+    "src/lib/sessions/session-sync.ts",
+    "src/lib/db/safe-read.ts",
+    "src/lib/analytics/analytics-repository.ts",
+    "src/lib/spend/spend-summary.ts",
+    "src/lib/sessions/sessions-api-helpers.ts",
+    "org/briefs/T-0189-oracle-amendment.md",
+    "src/lib/db/sql-migrations.ts",
+    "src/lib/db/index.ts",
+    "src/lib/db/apply-sql.ts",
+    "org/briefs/T-0189-sync-implementation.md",
+    "org/reviews/2026-10-t0189-final-acceptance.md"
+  ],
+  "timestamps": {
+    "opened": "2026-10-02T14:10:33.645498+00:00",
+    "updated": "2026-10-02T17:32:47.993155+00:00",
+    "closed": "2026-10-02T17:32:47.993155+00:00"
+  },
+  "tier_ruled": "R2",
+  "reasons": [
+    {
+      "factor": "money",
+      "tier_floor": "R2",
+      "source": "declared",
+      "evidence": "declared side effect: financial-impact"
+    },
+    {
+      "factor": "schema-change",
+      "tier_floor": "R2",
+      "source": "declared",
+      "evidence": "declared side effect: migrates-schema"
+    },
+    {
+      "factor": "boundary-contact",
+      "tier_floor": "R1",
+      "source": "declared",
+      "evidence": "declared side effect: sends-external"
+    }
+  ],
+  "authority": "Approved Phase2, Q032 before-release consolidation, Q014 and item-specific lib-data rulings. Q033 compatibility retirement remains deferred. No public feature, table, column, schema, protected file or historical oracle removal is authorised by this record.",
+  "prerequisite": {
+    "head": "d6989a30d9ce0f2e04ed024d953595be4951a9d2",
+    "snapshot": "tmp/t0188-hosted-root-context-closure/snapshot-1790950075533.json",
+    "sha256": "cd6f62ebe719fda92876343227bcb008bcb7504acce47bc296db60be12176130",
+    "allRequiredJobsPassed": true,
+    "runs": [
+      {
+        "conclusion": "success",
+        "databaseId": 37016036475,
+        "event": "pull_request",
+        "headSha": "d6989a30d9ce0f2e04ed024d953595be4951a9d2",
+        "status": "completed",
+        "url": "https://github.com/Daniel-Parke/PatterStage/actions/runs/37016036475",
+        "workflowName": "CI",
+        "receipt": "tmp/t0188-hosted-root-context-closure/pull_request-ci-37016036475-1790950072255.json",
+        "jobs": [
+          {
+            "id": 110867007454,
+            "name": "build-test-macos",
+            "status": "completed",
+            "conclusion": "success"
+          },
+          {
+            "id": 110867007723,
+            "name": "boot-smoke (macos-latest)",
+            "status": "completed",
+            "conclusion": "success"
+          },
+          {
+            "id": 110867007732,
+            "name": "e2e-smoke",
+            "status": "completed",
+            "conclusion": "success"
+          },
+          {
+            "id": 110867007801,
+            "name": "docker-image",
+            "status": "completed",
+            "conclusion": "success"
+          },
+          {
+            "id": 110867007906,
+            "name": "shell-custom-scripts",
+            "status": "completed",
+            "conclusion": "success"
+          },
+          {
+            "id": 110867007940,
+            "name": "boot-smoke (ubuntu-latest)",
+            "status": "completed",
+            "conclusion": "success"
+          },
+          {
+            "id": 110867007965,
+            "name": "real-hermes-integration",
+            "status": "completed",
+            "conclusion": "success"
+          },
+          {
+            "id": 110867007993,
+            "name": "e2e-full (PLAYWRIGHT_SMOKE unset)",
+            "status": "completed",
+            "conclusion": "success"
+          },
+          {
+            "id": 110867008072,
+            "name": "build-test-ubuntu",
+            "status": "completed",
+            "conclusion": "success"
+          },
+          {
+            "id": 110867008115,
+            "name": "install-harness",
+            "status": "completed",
+            "conclusion": "success"
+          },
+          {
+            "id": 110871230163,
+            "name": "acceptance-gate (full suite + install journey + real Hermes)",
+            "status": "completed",
+            "conclusion": "success"
+          }
+        ]
+      },
+      {
+        "conclusion": "success",
+        "databaseId": 37016036027,
+        "event": "pull_request",
+        "headSha": "d6989a30d9ce0f2e04ed024d953595be4951a9d2",
+        "status": "completed",
+        "url": "https://github.com/Daniel-Parke/PatterStage/actions/runs/37016036027",
+        "workflowName": "Gitleaks",
+        "receipt": "tmp/t0188-hosted-root-context-closure/pull_request-gitleaks-37016036027-1790950073367.json",
+        "jobs": [
+          {
+            "id": 110867004982,
+            "name": "scan",
+            "status": "completed",
+            "conclusion": "success"
+          }
+        ]
+      },
+      {
+        "conclusion": "success",
+        "databaseId": 37016027471,
+        "event": "push",
+        "headSha": "d6989a30d9ce0f2e04ed024d953595be4951a9d2",
+        "status": "completed",
+        "url": "https://github.com/Daniel-Parke/PatterStage/actions/runs/37016027471",
+        "workflowName": "Gitleaks",
+        "receipt": "tmp/t0188-hosted-root-context-closure/push-gitleaks-37016027471-1790950074405.json",
+        "jobs": [
+          {
+            "id": 110866975323,
+            "name": "scan",
+            "status": "completed",
+            "conclusion": "success"
+          }
+        ]
+      },
+      {
+        "conclusion": "success",
+        "databaseId": 37016027242,
+        "event": "push",
+        "headSha": "d6989a30d9ce0f2e04ed024d953595be4951a9d2",
+        "status": "completed",
+        "url": "https://github.com/Daniel-Parke/PatterStage/actions/runs/37016027242",
+        "workflowName": "CI",
+        "receipt": "tmp/t0188-hosted-root-context-closure/push-ci-37016027242-1790950075532.json",
+        "jobs": [
+          {
+            "id": 110866975880,
+            "name": "e2e-smoke",
+            "status": "completed",
+            "conclusion": "success"
+          },
+          {
+            "id": 110866976000,
+            "name": "real-hermes-integration",
+            "status": "completed",
+            "conclusion": "success"
+          },
+          {
+            "id": 110866976165,
+            "name": "install-harness",
+            "status": "completed",
+            "conclusion": "success"
+          },
+          {
+            "id": 110866976287,
+            "name": "boot-smoke (macos-latest)",
+            "status": "completed",
+            "conclusion": "success"
+          },
+          {
+            "id": 110866976296,
+            "name": "boot-smoke (ubuntu-latest)",
+            "status": "completed",
+            "conclusion": "success"
+          },
+          {
+            "id": 110866976331,
+            "name": "build-test-macos",
+            "status": "completed",
+            "conclusion": "success"
+          },
+          {
+            "id": 110866976370,
+            "name": "shell-custom-scripts",
+            "status": "completed",
+            "conclusion": "success"
+          },
+          {
+            "id": 110866976382,
+            "name": "build-test-ubuntu",
+            "status": "completed",
+            "conclusion": "success"
+          },
+          {
+            "id": 110866976508,
+            "name": "docker-image",
+            "status": "completed",
+            "conclusion": "success"
+          },
+          {
+            "id": 110866977951,
+            "name": "e2e-full (PLAYWRIGHT_SMOKE unset)",
+            "status": "completed",
+            "conclusion": "skipped"
+          },
+          {
+            "id": 110870946070,
+            "name": "acceptance-gate (full suite + install journey + real Hermes)",
+            "status": "completed",
+            "conclusion": "skipped"
+          }
+        ]
+      }
+    ],
+    "independentReviewer": "Schrodinger 01a0f7b7-f68a-79b2-ba74-81cdddf2f3ef: PASS exact-head all11PR,9applicablepush,2configuredskips,bothscans; source/tests unchanged; T0189 prerequisite cleared."
+  },
+  "scope_note": "Exact claimed usage/story/model/sync and migration-driver repairs plus bounded consolidation. All57dispositions required. Independent eight-suite oracle has421cases; no historical test edits authorised.",
+  "invariants": [
+    "Explicit finite stored totals, including zero, remain authoritative; absent totals fall back to input plus output. Missing usage is not fabricated provider measurement; spend hard-stop failure remains closed.",
+    "Malformed story reads and restart recovery do not crash or overwrite damaged raw JSON with display defaults. Unrelated updates preserve raw JSON; valid stored fields and deleted-row semantics survive.",
+    "A failed process replacement preserves the entire prior snapshot. Successful empty refresh clears stale rows. Log insertion and existing retention pruning roll back together.",
+    "Error identity is full source/timestamp/message; repeated ticks are idempotent. Existing duplicate rows are hidden using MIN(id) before LIMIT, never deleted by a new cleanup. Existing 500-row retention remains.",
+    "No schema or column is removed; the 49-table/529-column owned-fixture census is not evidence of deadness. All twenty findings, six decisions and thirty-one coverage obligations receive evidenced dispositions.",
+    "Historical tests and test identities, all target baselines, auth schema43, provider usage normalisation, read-only refusals and protected governance remain intact.",
+    "Model creation and selected default slots commit atomically, restoring the old defaults on any failed insert.",
+    "Each sync source has one underlying execution until it settles, including after timeout; resolved failures remain visible. ConfigSync nonfatal malformed-YAML behaviour remains deliberate.",
+    "Token presence agrees across process labels and EnvSync; only ruled internal sync_registry writers are removed, leaving the table and recovery intact.",
+    "Pending040 completion/version recording is atomic; at head43 only restore the missing historical index, preserving rows, explicit spend classifications, usage, links, Auth43 and old applier no-op. Never silently replace a conflicting index."
+  ],
+  "rollback": "Revert this batch code on an owned fixture. The additive repair only restores the already specified historical index; no table/column drop or operator data rewrite. Pending historical040 completion is transactional. Preserve rawJSON, failure receipts and worktrees.",
+  "verify_line": "Separate-author red-first behaviour oracle with real SQLite rollback and parser metamorphic cases; unchanged historical test identities; focused and full Jest/type checks; desktop1440x900/phone390x844 affected journeys; complete unchanged-tree ten-step gate; clean committed mutation controls/restoration; independent R2 acceptance; every required exact-head hosted push and PR job.",
+  "preflight": [
+    {
+      "receipt": "tmp/t0189-source-preflight-20261002/receipt.json",
+      "result": "Actual source plus real SQLite: second insert abort loses prior process snapshot; repeated logs occupy ten-row window and exclude older distinct error."
+    },
+    {
+      "receipt": "tmp/t0189-story-preflight-20261002.json",
+      "result": "Actual source plus real SQLite: malformed config SyntaxError; null config TypeError; object-shaped writing chapters TypeError. Raw fixture bytes retained."
+    },
+    {
+      "receipt": "tmp/t0189-live-schema-inventory-20261002.json",
+      "result": "Read-only isolated actual production fixture:49tables/529columns. No column deadness inference."
+    },
+    {
+      "receipt": "tmp/t0189-additional-preflight-20261002.json",
+      "result": "Actualsource: failed default insertion leaves newmodel/clearsolddefault; resolved scheduler failure loses lastError; concurrent and post-timeout callers execute source again while underlying pending. Allpendingwork settled. Preflight used actual default30second source timeout; independent oracle pins timeout boundaries separately."
+    }
+  ],
+  "oracle_status": "425 independent oracle cases pass; original red freezes and narrow independently accepted amendments remain recorded.",
+  "oracle_author": "01a0fcf4-e827-7393-8d98-3ababa620034; independent ORACLE; stopped writing at 2026-10-02T14:48:54.280Z",
+  "scope_review": "Turing 01a0fcea-6e43-74d1-b149-9bd09f700a8f recommends exact15source/8oracle allowance, noQ015amendment; coordinator independently reproduced additional model/scheduler defects before claiming their implementation.",
+  "additional_consolidation": {
+    "findingIds": [
+      "lib-data-03",
+      "lib-data-06",
+      "lib-data-07",
+      "lib-data-12",
+      "lib-data-14",
+      "lib-data-19",
+      "lib-data-24"
+    ],
+    "evidence": "tmp/t0189-net-assessment-20261002.json",
+    "intent": "Shared version reader/writer; remove only redundant CLI convergence; factual prose; three-consumer display safeRead; empty session branch/result cleanup. Preserve application legacy loop, custom-delay debounce semantics and runtime/asset category seed contexts with actual parity proof.",
+    "estimate": "Three identical safeRead bodies total21 lines; proposed shared helper/comment/three imports11 lines, net-10 before final census. Category SQL10 data lines identical; retain bounded duplication to avoid a new runtime filesystem dependency.",
+    "limits": "Implementation remains prohibited until the frozen oracle red commit. Historical tests remain unchanged. All57 dispositions still need qualified final evidence."
+  },
+  "preservation_baseline": "tmp/t0189-preservation-baseline-20261002.json:1006 historical tests/protected/migration paths with content hashes and committed blob IDs.",
+  "disposition_register": "org/reviews/2026-10-t0189-dispositions.json:20findings+6splitrulings+31coverage, all pending final disposition; generated ID-set validation matches ownership.",
+  "oracle_freeze": {
+    "receipt": "tmp/t0189-oracle/freeze-20261002.json",
+    "sha256": "bdca5764cedea1fa31baa84e1cb463fd1087786be8f6067063a372d14d2c238e",
+    "criteriaHead": "7b22ebb8091a4b3b1976a9a14603022acf9e6f80",
+    "validationHead": "d0b9a7eddfee73fe3df9f6d697aa7802e3a0e412",
+    "counts": {
+      "discovered": 398,
+      "executed": 333,
+      "passed": 192,
+      "failed": 141,
+      "behaviouralFailures": 140,
+      "infrastructureFailures": 1,
+      "skipped": 65,
+      "runtimeErrorSuites": 0,
+      "summedSuiteRuntimeMs": 5657
+    },
+    "checks": {
+      "node": "v24.21.0",
+      "abi": "137",
+      "jestExitCode": 1,
+      "typeDiagnostics": 0,
+      "scopedEslintExitCode": 0,
+      "treeBefore": "b6cc17294e55179de718a5608fe458906da226149a069a275cd698319a7438c4",
+      "treeAfter": "b6cc17294e55179de718a5608fe458906da226149a069a275cd698319a7438c4",
+      "treeAtFreeze": "b6cc17294e55179de718a5608fe458906da226149a069a275cd698319a7438c4",
+      "treeUnchanged": true,
+      "sourceAndInfrastructureDiffFromValidationBase": "",
+      "dependencyChanges": false,
+      "buildExecuted": false
+    },
+    "suites": {
+      "tests/unit/data-transaction-migration-parity.test.ts": "0e3ab6e8a979fa351f88e03b6b77df9162c04c18bc730b57cb5338f1ddd01cd1",
+      "tests/unit/data-transaction-models.test.ts": "fdf9790657530a4255a37ab9ed1c79f1e49329e85486cc2c743edd3c290a3196",
+      "tests/unit/data-transaction-repository-contracts.test.ts": "d85509fd81167ae8cc6b14e90c3b05ebe9b2a5801638eb9cb54893cba7f658a4",
+      "tests/unit/data-transaction-scheduler.test.ts": "e34a2f0003f8239488d33ca331d65691bfb98e3844b9ce7474fe6e2be6c08c58",
+      "tests/unit/data-transaction-schema-health.test.ts": "4af2dd92655ec12888d7ccf8a5b07a0c8b61f50fcaddf81db75836b7a635bd66",
+      "tests/unit/data-transaction-stories.test.ts": "d16474720731b496042aa6efb576aa5b02215bd3fd1112f64558ea791246cb30",
+      "tests/unit/data-transaction-sync.test.ts": "b7bd46a0ea94c4661a141b91bc945c2712bbd57a9a715f2268c815cc789e6de8",
+      "tests/unit/data-transaction-usage.test.ts": "421f8293ebc06b777078c27278ef61672ca133006e7c280b1ae786eeab7dca9d"
+    }
+  },
+  "oracle_amendment": {
+    "author": "Planck 01a0fd1f-516a-7323-af9c-0682d6bbbe6c",
+    "authority": "EXECUTOR/ORACLE different-author frozen-gate procedure; strengthening within existing T-0189 invariants. No weakening or historical oracle amendment.",
+    "brief": "org/briefs/T-0189-oracle-amendment.md",
+    "reviewer": "Schrodinger HOLD: story mixed elements/recovery/rollback; process old-row and WhatsApp assertions; explicit infrastructure failure; third display fallback.",
+    "first_freeze": {
+      "receipt": "tmp/t0189-oracle-amendment/freeze-20261002.json",
+      "sha256": "d036bf8000e13ed3fe2602574af87b04e6fafb314d1e260c944d4691d4aaca30",
+      "reviewer": "Schrodinger PASS:403 names,398original plus5new; four amended files hash/identity verified; source unchanged.146behavioural reds=145matcher failures plus1production JSON parse exception, not146mutation kills.",
+      "counts": {
+        "discovered": 403,
+        "passed": 191,
+        "behaviouralFailures": 146,
+        "infrastructureFailures": 1,
+        "unexecuted": 65
+      },
+      "remaining": "Additional fifth migration-parity suite witnesses pending; implementation still held."
+    },
+    "second_freeze": {
+      "receipt": "tmp/t0189-oracle-amendment/freeze-20261002-second.json",
+      "sha256": "7167ff358e7efddce3dd4eb6e33be53747145fe804d8beef375b41d85a8aba0f",
+      "counts": {
+        "discovered": 421,
+        "passed": 196,
+        "behaviouralFailures": 159,
+        "infrastructureFailures": 1,
+        "unexecuted": 65
+      },
+      "identity": "All403previous names preserved,18newmigration cases; four first-amendment files unchanged.",
+      "suites": {
+        "tests/unit/data-transaction-migration-parity.test.ts": "e18dc6b5fa3adfe7886e79ebd6f85ad83813a17e92f4bedce723440d7f97f79c",
+        "tests/unit/data-transaction-stories.test.ts": "19219f90cef539950605506464a37439e60bb828e6692183df4f4212f1570cc0",
+        "tests/unit/data-transaction-sync.test.ts": "ccf06ef1c110b3c3ed5978aa1df434c6eb940499c2a2cfe2586b93811dddbe00",
+        "tests/unit/data-transaction-usage.test.ts": "f0961c36ff72a00ef97aa007433ab85a0c38bf9f8b46a9f0622c947947882e66",
+        "tests/unit/data-transaction-models.test.ts": "fdf9790657530a4255a37ab9ed1c79f1e49329e85486cc2c743edd3c290a3196",
+        "tests/unit/data-transaction-scheduler.test.ts": "e34a2f0003f8239488d33ca331d65691bfb98e3844b9ce7474fe6e2be6c08c58",
+        "tests/unit/data-transaction-repository-contracts.test.ts": "d89b86f4ad1c5d34101908fa0c9a730fbf71b364b14bc255fa80068c4f5c3206",
+        "tests/unit/data-transaction-schema-health.test.ts": "4af2dd92655ec12888d7ccf8a5b07a0c8b61f50fcaddf81db75836b7a635bd66"
+      },
+      "reviewer": "Schrodinger PASS finalfreeze7167ff358e7efddce3dd4eb6e33be53747145fe804d8beef375b41d85a8aba0f:all421names/hashes verified, migration16pass15matcherreds; no preimplementation blocker. Implement only after exact red commit; no final acceptance."
+    },
+    "typing_correction": {
+      "author": "Averroes/01a0fd41-d8a8-7df1-861b-b12aa52122e6",
+      "status": "independently accepted narrow typing correction; broader batch remains open",
+      "reason": "Full test-program typecheck reports TS2769 at migration oracle line123 because Object.fromEntries loses required NODE_ENV. Earlier app-program filtered check did not establish full test typing.",
+      "scope": "Explicitly preserve process.env.NODE_ENV after filtered environment spread; no assertion, fixture, execution, test-name or suppression changes.",
+      "verify": "Full tsconfig.tests.json noEmit exits0; all31 migration cases execute/pass without skips; before/after names identical; hashes and exact unchanged validation source recorded.",
+      "failed_evidence": "tmp/t0189-static-check/1790955201191/summary.json; tmp/t0189-sync-lane/handoff.json",
+      "receipt": "tmp/t0189-oracle-amendment/typing-retry-1790956209331/receipt.json",
+      "receipt_sha256": "530f978908cdc119cb3c924bf70f9caf1b8f78c6c5914f34a57bc65718db64c8",
+      "suite_sha256": "9368e42d82a6a52e247de9508ec98efb57f0be565546a4b5b3724c9a5f0eb95b",
+      "verification": "Full tsconfig.tests exit0;31/31migrationcasespass,0skips/runtimeerrors;all31namesidentical,sourceunchanged; earlier29pass2sandboxinfrastructureerrors preserved, not mutationkills.",
+      "reviewer": "Schrodinger PASS exact diff and receipt; does not accept story recovery or whole task."
+    },
+    "recovery_numeric_preservation": {
+      "status": "independent four-case additive oracle frozen red before repair",
+      "author": "Averroes/01a0fd41-d8a8-7df1-861b-b12aa52122e6",
+      "reviewer": "Schrodinger PASS finalredfreeze e8b01a7d3552f01425b6020cae3a401b47ed0116bc68086618d302da3824c717 before repair;51cases47pass4matcherreds;currentimplementationreviewpending.",
+      "scope": "Preserve all prior names/assertions; add mixed recovery witness including raw numeric overflow and large-integer metadata preservation; no implementation edits in ORACLE lane.",
+      "verify": "Structured new matcher failure on current source, independent red freeze and commit before repair; all old names retained; no skips.",
+      "receipt": "tmp/t0189-oracle-amendment/story-final-red-1790956875734/freeze.json",
+      "receipt_sha256": "e8b01a7d3552f01425b6020cae3a401b47ed0116bc68086618d302da3824c717",
+      "suite_sha256": "d5b6e86f0334c76ad4ec4970157a953b954098f69fbd327d1727cf4b03a5708f",
+      "counts": {
+        "total": 51,
+        "passed": 47,
+        "failed": 4,
+        "skipped": 0,
+        "todo": 0,
+        "runtimeErrorSuites": 0,
+        "structuredMatcherFailures": 4
+      },
+      "verification": "All47priorstorycasespass;4newstructuredmatcherfailures;0skips/runtimeerrors;fulltesttypesandscopedeslint0;sourceunchanged;previousfreezesretained.",
+      "runtime_scope": "Node20-compatible recovery; parse all live story rows once at boot to recognise escaped semantic writing status. No periodic scan or new schema."
+    },
+    "static_dependency": {
+      "status": "independent correction frozen and verified",
+      "author": "Averroes",
+      "reason": "Knip cannot trace jest.requireActual callers after redundant CLI importer removed",
+      "scope": "Named type-only dependency for existing requireActual; exact emittedJS,31names/assertions preserved",
+      "verify": "Full test types/scopedlint/Knip/historicalproposalcheck0,31migrationcasespass, identical emittedJS and test names.",
+      "receipt": "tmp/t0189-oracle-amendment/static-dependency-1790958177898/freeze.json",
+      "receipt_sha256": "5e00ae4c845631dd7ce3d32a8717fa4b9c2669841ffb90aa86dff8fe094dff50",
+      "suite_sha256": "7f8eb5c000c02414e9c240be6f20843b4b76f4fb0abb62a1efb1274238fa67f8",
+      "result": "ESNext/CommonJS emittedJS identical;31migration and6historicalKnipproposal cases pass; fulltesttypes/scopedlint/Knip0;names/assertions/baseline/source unchanged;oldreceipts preserved.",
+      "reviewer": "Schrodinger PASS exact type-onlydiff,identicalJS,31+6cases/types/lint/Knip0;freezeSHA2565e00ae4c845631dd7ce3d32a8717fa4b9c2669841ffb90aa86dff8fe094dff50. Amendment accepted, notwholebatch."
+    }
+  },
+  "schema_maintenance": {
+    "scope": "Complete partially applied historical040 and repair its missing existing idx_runs_story at head43, without replaying its backfill at head, changing immutable SQL, new schema elements or dropping/replacing indexes.",
+    "reviewer": "Schrodinger independent scope PASS; new independent SQLite witnesses and red commit required before implementation.",
+    "authority": "Approved T0189 lib-data27/gap036.3 parity repair; current driver only. Existing schema contract restored, not a new schema decision.",
+    "router_verdict": {
+      "tier": "R2",
+      "reasons": [
+        {
+          "factor": "money",
+          "tier_floor": "R2",
+          "source": "declared",
+          "evidence": "declared side effect: financial-impact"
+        },
+        {
+          "factor": "schema-change",
+          "tier_floor": "R2",
+          "source": "declared",
+          "evidence": "declared side effect: migrates-schema"
+        },
+        {
+          "factor": "boundary-contact",
+          "tier_floor": "R1",
+          "source": "declared",
+          "evidence": "declared side effect: sends-external"
+        }
+      ],
+      "discrepancies": []
+    }
+  },
+  "implementation_lanes": {
+    "coordinator": "2026-10-02-t0189-coordinator",
+    "sync": "Carver 01a0fd33-6991-7a93-be6b-9285743b5ccc",
+    "status": "All implementation and amendment writers stopped; claims released at closure."
+  },
+  "integrated_pre_gate": {
+    "oracle": "tmp/t0189-coordinator-check/1790957188311/summary.json",
+    "result": "425/425pass,0skips/runtimeerrors;unchangedvalidatedtree",
+    "static": "tmp/t0189-static-check/1790957252020/summary.json",
+    "static_result": "Fullapp/testprogramtypesandscopedeslintall0",
+    "mutation": "31proposedmutants;notyetexecuted",
+    "remaining": "Independentlocal/hosted acceptance complete; recordclosure pushed next,closure-head jobs required beforeT0190."
+  },
+  "gate_attempts": [
+    {
+      "receipt": "tmp/t0189-full-gate-1790957390217/summary.json",
+      "exit": 1,
+      "steps": {
+        "lint": 0,
+        "tsc": 0,
+        "jest": 1
+      },
+      "tree_unchanged": true,
+      "jest": "8099pass,7fail,9existing skips;6launcher-contaminated legacy warnings,1Knip dynamic-test dependency finding. Seven later gate steps unexecuted.",
+      "disposition": "Fix own launcher CONTROL_HUB_DATA_DIR injection and expose genuine oracle import to Knip through independent type-only amendment. No checks suppressed, no baseline exception.",
+      "focused_followup": "Unchanged9/9aliascasespass after removing private CONTROL_HUB_DATA_DIR assignment:tmp/t0189-alias-control-1790958139125/summary.json. Type-only oracle amendment resolves Knip without new exceptions. Complete gate must rerun."
+    },
+    {
+      "receipt": "tmp/t0189-full-gate-1790959016924/summary.json",
+      "exit": 1,
+      "steps": {
+        "lint": 0,
+        "tsc": 0,
+        "jest": 1
+      },
+      "tree_unchanged": true,
+      "jest": "8105pass,1fail,9existing skips. T0161after-catalogsetup fixture cleanup EPERM; all previous alias and Knip failures resolved. Seven later steps unexecuted.",
+      "alone": "Unchanged4/4suitepass,0skips:tmp/t0189-coordinator-check/1790959482685/summary.json",
+      "diagnostic": "FullJestwithtransparentprivateprocess/cleanupobserver:8106pass,9existing skips,0fail;unchangedtree;tmp/t0189-shell-observation-1790959743905/summary.json. Allfoursetupreturns690-1031ms andcleanupcompleted. Observer changes timing; notfullgateacceptance.",
+      "remaining_uncertainty": "Originalsetupoutcome was not recorded beforefinally EPERM. Timeout/orphan/OS-lock cause unconfirmed. Retainfailedfixture gNpLkD; no matching livebash/nodecommandlinefound. Repeatnormalwholegate withoutobserver; recurrentfailure requires stronger prerequisite investigation, no waiver."
+    },
+    {
+      "receipt": "tmp/t0189-full-gate-1790960113841/summary.json",
+      "exit": 0,
+      "steps": {
+        "lint": 0,
+        "tsc": 0,
+        "jest": 0,
+        "knip": 0,
+        "canary": 0,
+        "build": 0,
+        "build-purity": 0,
+        "e2e": 0,
+        "census": 0,
+        "census-lines": 0
+      },
+      "tree_unchanged": true,
+      "jest": "8106 passed, nine existing skips;811 suites passed,two existing skipped",
+      "browser": "355 passed,24existing skips",
+      "purity": "Two checks pass",
+      "limits": "Earlier EPERM cause unresolved; T0195 follow-up remains."
+    }
+  ],
+  "local_acceptance": {
+    "head": "01040a434187215e071e4b3788dc950074d7474d",
+    "gate": "tmp/t0189-full-gate-1790960113841/summary.json",
+    "binding": "tmp/t0189-final-binding.json",
+    "mutation": "tmp/t0189-sweep-qualification.json",
+    "browser": "tmp/t0189-green-validation/tmp/t0188-chat-viewport-1790960747006/walk.json",
+    "dispositions": "org/reviews/2026-10-t0189-dispositions.json",
+    "counts": {
+      "oracle": 425,
+      "mutationControl": 423,
+      "killed": 31,
+      "preservedFiles": 1006,
+      "trackedPaths": 2580,
+      "dispositions": 57
+    },
+    "limits": "Independent final R2 and implementation-head hosted jobs pass. Closure-head hosted jobs remain required. No real provider or whole-platform release claim."
+  },
+  "verification": "Independent R2 acceptance at01040a43:10unchanged-tree gate stages,8106Jest/355browser/2build-purity checks,425independent oracle cases;31intended committed mutation kills with423/423 before/after controls and restoration. All2580tracked content/mode paths and1006historical preservation hashes match. All57owned dispositions accounted for:47done,8ruledout,2deferred. All required exact-head hosted jobs pass. NineJest/24browser existing skips explicit.",
+  "mutation": {
+    "receipt": "tmp/t0189-sweep-qualification.json",
+    "sha256": "0f42964a5ded35f9674194d52585b6dbffd5a0430055e780fde0e40cb48d7ec9",
+    "killed": 31,
+    "controls": 423,
+    "restored": true,
+    "qualification": "m17two productTypeErrors excluded from kill evidence; two intended matcher failures establish that kill."
+  },
+  "deviation": "Preserve both failed gates, independent oracle amendments and observer diagnostics. Windows EPERM cause remains unconfirmed underT0195. No historical tests, protected files, targets or coverage floors weakened. Lossless recovery adds source lines; explicit census growth reasons retained. External-history proof and manual prebuild retirement remain separately deferred. Authorised dev push reports configured PR-rule bypass; settings unchanged.",
+  "final_acceptance": {
+    "head": "01040a434187215e071e4b3788dc950074d7474d",
+    "review": "org/reviews/2026-10-t0189-final-acceptance.md",
+    "reviewer": "Schrodinger, independent R2",
+    "verdictSHA256": "61a3938e4bf4678ae7f86cc68099c86bed5b8493f6d36cb21665029a82cb55bc",
+    "local": {
+      "head": "01040a434187215e071e4b3788dc950074d7474d",
+      "gate": "tmp/t0189-full-gate-1790960113841/summary.json",
+      "binding": "tmp/t0189-final-binding.json",
+      "mutation": "tmp/t0189-sweep-qualification.json",
+      "browser": "tmp/t0189-green-validation/tmp/t0188-chat-viewport-1790960747006/walk.json",
+      "dispositions": "org/reviews/2026-10-t0189-dispositions.json",
+      "counts": {
+        "oracle": 425,
+        "mutationControl": 423,
+        "killed": 31,
+        "preservedFiles": 1006,
+        "trackedPaths": 2580,
+        "dispositions": 57
+      },
+      "limits": "Independent final R2 and implementation-head hosted jobs pass. Closure-head hosted jobs remain required. No real provider or whole-platform release claim."
+    },
+    "hosted": {
+      "receipt": "tmp\\t0189-hosted-implementation\\snapshot-1790962260856.json",
+      "sha256": "f73b6b251f3adc24f41eaca73fc068af8fb44fe44ec3320199adf3539c5dcbe5",
+      "runs": [
+        {
+          "conclusion": "success",
+          "databaseId": 37039829162,
+          "event": "pull_request",
+          "headSha": "01040a434187215e071e4b3788dc950074d7474d",
+          "status": "completed",
+          "url": "https://github.com/Daniel-Parke/PatterStage/actions/runs/37039829162",
+          "workflowName": "Gitleaks",
+          "receipt": "tmp/t0189-hosted-implementation/pull_request-gitleaks-37039829162-1790962257150.json",
+          "jobs": [
+            {
+              "id": 110946923993,
+              "name": "scan",
+              "status": "completed",
+              "conclusion": "success"
+            }
+          ]
+        },
+        {
+          "conclusion": "success",
+          "databaseId": 37039829021,
+          "event": "pull_request",
+          "headSha": "01040a434187215e071e4b3788dc950074d7474d",
+          "status": "completed",
+          "url": "https://github.com/Daniel-Parke/PatterStage/actions/runs/37039829021",
+          "workflowName": "CI",
+          "receipt": "tmp/t0189-hosted-implementation/pull_request-ci-37039829021-1790962258529.json",
+          "jobs": [
+            {
+              "id": 110946924084,
+              "name": "real-hermes-integration",
+              "status": "completed",
+              "conclusion": "success"
+            },
+            {
+              "id": 110946924274,
+              "name": "install-harness",
+              "status": "completed",
+              "conclusion": "success"
+            },
+            {
+              "id": 110946924306,
+              "name": "docker-image",
+              "status": "completed",
+              "conclusion": "success"
+            },
+            {
+              "id": 110946924331,
+              "name": "build-test-ubuntu",
+              "status": "completed",
+              "conclusion": "success"
+            },
+            {
+              "id": 110946924389,
+              "name": "e2e-smoke",
+              "status": "completed",
+              "conclusion": "success"
+            },
+            {
+              "id": 110946924418,
+              "name": "shell-custom-scripts",
+              "status": "completed",
+              "conclusion": "success"
+            },
+            {
+              "id": 110946924473,
+              "name": "e2e-full (PLAYWRIGHT_SMOKE unset)",
+              "status": "completed",
+              "conclusion": "success"
+            },
+            {
+              "id": 110946924478,
+              "name": "build-test-macos",
+              "status": "completed",
+              "conclusion": "success"
+            },
+            {
+              "id": 110946924576,
+              "name": "boot-smoke (macos-latest)",
+              "status": "completed",
+              "conclusion": "success"
+            },
+            {
+              "id": 110946924596,
+              "name": "boot-smoke (ubuntu-latest)",
+              "status": "completed",
+              "conclusion": "success"
+            },
+            {
+              "id": 110951103296,
+              "name": "acceptance-gate (full suite + install journey + real Hermes)",
+              "status": "completed",
+              "conclusion": "success"
+            }
+          ]
+        },
+        {
+          "conclusion": "success",
+          "databaseId": 37039825156,
+          "event": "push",
+          "headSha": "01040a434187215e071e4b3788dc950074d7474d",
+          "status": "completed",
+          "url": "https://github.com/Daniel-Parke/PatterStage/actions/runs/37039825156",
+          "workflowName": "Gitleaks",
+          "receipt": "tmp/t0189-hosted-implementation/push-gitleaks-37039825156-1790962259607.json",
+          "jobs": [
+            {
+              "id": 110946910268,
+              "name": "scan",
+              "status": "completed",
+              "conclusion": "success"
+            }
+          ]
+        },
+        {
+          "conclusion": "success",
+          "databaseId": 37039825128,
+          "event": "push",
+          "headSha": "01040a434187215e071e4b3788dc950074d7474d",
+          "status": "completed",
+          "url": "https://github.com/Daniel-Parke/PatterStage/actions/runs/37039825128",
+          "workflowName": "CI",
+          "receipt": "tmp/t0189-hosted-implementation/push-ci-37039825128-1790962260854.json",
+          "jobs": [
+            {
+              "id": 110946910420,
+              "name": "build-test-ubuntu",
+              "status": "completed",
+              "conclusion": "success"
+            },
+            {
+              "id": 110946910732,
+              "name": "install-harness",
+              "status": "completed",
+              "conclusion": "success"
+            },
+            {
+              "id": 110946910805,
+              "name": "real-hermes-integration",
+              "status": "completed",
+              "conclusion": "success"
+            },
+            {
+              "id": 110946910813,
+              "name": "docker-image",
+              "status": "completed",
+              "conclusion": "success"
+            },
+            {
+              "id": 110946910823,
+              "name": "shell-custom-scripts",
+              "status": "completed",
+              "conclusion": "success"
+            },
+            {
+              "id": 110946910870,
+              "name": "boot-smoke (macos-latest)",
+              "status": "completed",
+              "conclusion": "success"
+            },
+            {
+              "id": 110946910883,
+              "name": "boot-smoke (ubuntu-latest)",
+              "status": "completed",
+              "conclusion": "success"
+            },
+            {
+              "id": 110946910896,
+              "name": "build-test-macos",
+              "status": "completed",
+              "conclusion": "success"
+            },
+            {
+              "id": 110946910902,
+              "name": "e2e-smoke",
+              "status": "completed",
+              "conclusion": "success"
+            },
+            {
+              "id": 110946912564,
+              "name": "e2e-full (PLAYWRIGHT_SMOKE unset)",
+              "status": "completed",
+              "conclusion": "skipped"
+            },
+            {
+              "id": 110950998045,
+              "name": "acceptance-gate (full suite + install journey + real Hermes)",
+              "status": "completed",
+              "conclusion": "skipped"
+            }
+          ]
+        }
+      ]
+    },
+    "limits": "Bounded local and hosted integration proof, not real provider/foreign DB/general online-update/release acceptance. Closure-head hosted jobs remain required."
+  },
+  "closure_next": "Observe every closure-head hosted job, then openT0190with independent oracles and explicitclaims; preserveQ033T0200deferral andT0201dependency."
+}

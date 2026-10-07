@@ -1,0 +1,22 @@
+{
+  "task": "T-0156",
+  "why": "The Help previous-link icon must cross the Server Component to Client Component boundary as rendered content.",
+  "mutants": [
+    {
+      "id": "m1-function-valued-client-prop",
+      "file": "src/app/help/[[...slug]]/page.tsx",
+      "anchor": "rel=\"prev\" aria-label={`Previous: ${prev.title}`}>",
+      "replacement": "rel=\"prev\" aria-label={`Previous: ${prev.title}`} icon={ChevronLeft}>",
+      "tests": ["tests/unit/t0156-help-client-boundary.test.tsx"],
+      "why": "The boundary oracle rejects a component constructor passed as a client prop."
+    },
+    {
+      "id": "m2-previous-icon-removed",
+      "file": "src/app/help/[[...slug]]/page.tsx",
+      "anchor": "<ChevronLeft className=\"h-4 w-4 shrink-0\" aria-hidden=\"true\" />",
+      "replacement": "<span aria-hidden=\"true\" />",
+      "tests": ["tests/unit/t0156-help-client-boundary.test.tsx"],
+      "why": "The boundary oracle requires the previous navigation icon to render."
+    }
+  ]
+}

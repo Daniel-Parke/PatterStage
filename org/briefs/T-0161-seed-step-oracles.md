@@ -1,0 +1,10 @@
+# T-0161 required seed-step failure oracles
+
+The explicit post-backup seed chain is `hermes-registry-import.mjs && import-hermes-state.ts && seed-catalog.ts --merge`. Setup and deploy treat a zero exit from each step as success. Independent review found two more partial failures that currently exit zero:
+
+1. `import-hermes-state.ts` prints counts but ignores `success: false` from the root, a skill or a profile. In a disposable migrated database and valid Hermes config, a directory at `SOUL.md` makes `pullRootFromHermes()` return a failed result. The CLI must exit non-zero with a safe failure message, without dumping file contents or credentials. The no-config/already-imported success cases must remain successful.
+2. `runCatalogSeed()` catches a `SERVER_MODULES` agent seed exception and returns normal counts. The boot seeder intentionally remains best-effort, but an explicit `seed-catalog.ts --merge` in setup/deploy must exit non-zero if its required module fails. A malformed profiles manifest in a disposable copy is one way to prove this. Never change or corrupt the canonical manifest or operator database.
+
+The independent ORACLE lane owns only `tests/unit/t0161-hermes-state-cli-failures.test.ts` and `tests/unit/t0161-catalog-cli-failures.test.ts` in its separate checkout. Write behavioural red tests for the two CLI outcomes, with controls that prove the fixture reaches the intended code path. Keep fixtures isolated and do not print credential values. A launch, migration or fixture failure is infrastructure, not a passing oracle. Preserve all existing test names. Prove exact red results against the committed implementation, report LF SHA-256 and a test-only commit. Do not edit source, claims, records, baselines or protected files, and do not push.
+
+The coordinator owns the source repair and mutation fixtures. Preserve best-effort boot semantics while making the explicit seed command strict. The final gate and Docker update scenarios must be repeated after correction.

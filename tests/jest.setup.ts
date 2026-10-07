@@ -1,4 +1,15 @@
 import "@testing-library/jest-dom";
+import { TextEncoder as NodeTextEncoder, TextDecoder as NodeTextDecoder } from "node:util";
+
+// jsdom does not provide TextEncoder/TextDecoder, but server-side stream
+// parsing (e.g. the runtime SSE reader) relies on them. Pull Node's
+// implementations into the test global so that code runs under jsdom.
+if (typeof globalThis.TextEncoder === "undefined") {
+  (globalThis as Record<string, unknown>).TextEncoder = NodeTextEncoder;
+}
+if (typeof globalThis.TextDecoder === "undefined") {
+  (globalThis as Record<string, unknown>).TextDecoder = NodeTextDecoder;
+}
 
 // Polyfill globals required by Next.js 14 server route imports.
 // These are referenced during module evaluation in next/dist/server/web/spec-extension/
@@ -83,8 +94,8 @@ if (typeof globalThis.Request === "undefined") {
 // Individual test files that need specific mock behavior should additionally mock
 // "@/lib/db" to return their per-test mock values.
 //
-// NOTE: tests that call jest.restoreAllMocks() in afterAll may inadvertently
-// remove this global mock — avoid calling restoreAllMocks() in new tests.
+// restoreAllMocks restores spies and replaced properties. Module factories from
+// jest.mock and ordinary jest.fn implementations remain installed.
 const mockDbMethods = {
   pragma: jest.fn(),
   exec: jest.fn(),
@@ -103,7 +114,6 @@ jest.mock("better-sqlite3", () => ({
 }));
 
 jest.mock("@/lib/db", () => ({
-  db: jest.fn(() => mockDbMethods),
   getDb: jest.fn(() => mockDbMethods),
   ensureDb: jest.fn(),
   getSchemaHealth: jest.fn(() => ({

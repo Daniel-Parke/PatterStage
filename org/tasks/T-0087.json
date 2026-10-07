@@ -1,0 +1,50 @@
+{
+  "id": "T-0087",
+  "intent": "Round-6 finding 1 and its neighbours: story creation crashed on a string mood with an EMPTY 500, and the whole stories surface lied about itself in smaller ways (mass-assignment update, a 'generating' status nothing set, no sweep after a restart, a red banner for a fresh install's normal logs state).",
+  "declared": {
+    "capabilities": [
+      "edit-source"
+    ],
+    "side_effects": []
+  },
+  "mode": "standard",
+  "tier_proposed": "R1",
+  "tier_ruled": "R1",
+  "reasons": [],
+  "status": "done",
+  "owner_session": "t0087-stories-2026-09-04",
+  "claims": [
+    "src/app/api/stories/route.ts",
+    "src/modules/rec-room/handlers/create.ts",
+    "src/modules/rec-room/handlers/crud.ts",
+    "src/modules/rec-room/handlers/shared.ts",
+    "src/modules/rec-room/lib/story-repository.ts",
+    "src/modules/rec-room/server.ts",
+    "src/lib/modules/server.ts",
+    "src/lib/orchestration/scheduler/BackgroundScheduler.ts",
+    "src/app/api/logs/route.ts",
+    "src/app/(main)/logs/page.tsx",
+    "tests/"
+  ],
+  "invariants": [
+    "I1 A handler's rejection reaches the catch that turns it into a 500 with a body. `return await`, every case.",
+    "I2 The body is guarded at the boundary, whole. A string mood is a one-word list; junk mood is no mood; an object title or premise is a 400 before any row exists.",
+    "I3 action:update is an allowlist: title, config, chapters. A chapters update changes a chapter's title and readStatus and nothing else.",
+    "I4 safeArc guarantees the outline shape the chapter prompt reads, and coerces only what is present and wrong.",
+    "I5 A story is born 'generating' and becomes 'active' when chapter 1 lands. A status the UI has a badge for is set by something.",
+    "I6 Nothing is in flight after a restart. The boot sweep marks a 'generating' story and a 'writing' chapter failed, with the reason.",
+    "I7 Core does not import a module (ADR-0005). The sweep reaches the scheduler through a ServerModule hook via the composition root.",
+    "I8 A fresh install's logs state is a calm status carrying the reason, not a red alert. A missing directory and an empty one are the same state.",
+    "I9 Stories accept `id` beside `storyId`, like missions."
+  ],
+  "the_report_had_the_crash_and_not_the_mechanism": "Finding 1 blamed an orphaned draft row from a crash after insert. The mood crash is PRE-insert: buildMasterPrompt runs before createStory, so no draft existed. The empty 500 body was the router returning fourteen handler promises without awaiting them, so every rejection bypassed serverErrorFromCatch. The real orphan paths were elsewhere: a restart during the minutes-long LLM window, for which no story sweep existed and no 'generating' status was ever set, and the cron-schedule 400 that fires AFTER createMission (Batch 3).",
+  "mutation_finding": "Fifteen mutants, fifteen killed on the first pass: the un-awaited return, the id alias, mood normalisation, the generating birth, both boundary guards, the update forbidden-check and its chapter merge, both arc coercions, both halves of the sweep, the boot loop, the module hook, and the logs calm condition. The oracle for the module hook was re-pointed at the composition root when design-lint refused the direct import; the hook's own reach into the repository got a seam test of its own.",
+  "the_gate_caught_a_boundary": "The first implementation imported the story repository from the scheduler. design-lint's core-imports-no-module rule refused the build, as ADR-0005 says it must. ServerModule gained a reconcileOnBoot hook, rec-room implements it, and the scheduler iterates SERVER_MODULES. The rule did its job on the first crossing.",
+  "the_proof_found_a_second_case": "On the isolated instance the logs directory existed and was empty, so the dir-missing branch never fired and the red banner stayed. The route now answers noLogsYet whenever it has no log files, on both branches, and the page reads either flag. Oracles measured red before the change and green after in one run.",
+  "verification": "Isolated instance, production build, both mocks: a create with mood 'Melancholy' produced a real story with chapter 1 complete (the mock gateway answered the LLM call) and mood stored as ['Melancholy']; update with status answered 400 'update accepts title, config, chapters only (got: status)'; load by id answered 200; an object title answered 400 'title must be text'; a row forced to 'generating' in the database read back 'failed' with 'Generation was interrupted by a restart. Retry to continue.' after a server restart; /api/logs on the fresh install answers 404 with noLogsYet. Gate by exit code: lint 0, tsc 0, 3781 tests / 423 suites, knip 0, canary OK, build 0.",
+  "timestamps": {
+    "opened": "2026-09-04T22:10:00Z",
+    "updated": "2026-09-04T23:20:00Z",
+    "closed": "2026-09-04T23:20:00Z"
+  }
+}

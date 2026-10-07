@@ -1,0 +1,38 @@
+{
+  "task": "T-0164",
+  "why": "The itemised recon oracle must reject a missing preliminary finding, a duplicated coverage child and a changed frozen scope.",
+  "mutants": [
+    {
+      "id": "m1-duplicate-preliminary-finding",
+      "file": "org/reviews/2026-09-t0164-findings.jsonl",
+      "anchor": "\"id\":\"critic-14\",\"source\"",
+      "replacement": "\"id\":\"critic-15\",\"source\"",
+      "tests": ["tests/unit/t0164-recon-ledger.test.ts"],
+      "why": "Every preliminary ID must appear exactly once after sceptic reconciliation."
+    },
+    {
+      "id": "m2-duplicate-coverage-child",
+      "file": "org/reviews/2026-09-t0164-coverage.jsonl",
+      "anchor": "\"id\":\"gap-001.a\",\"parentId\"",
+      "replacement": "\"id\":\"gap-001.b\",\"parentId\"",
+      "tests": ["tests/unit/t0164-recon-ledger.test.ts"],
+      "why": "The atomic ledger must match the frozen child set without duplicates."
+    },
+    {
+      "id": "m3-change-frozen-scope",
+      "file": "org/reviews/2026-09-t0164-coverage-scope.json",
+      "anchor": "\"gap-107.e\"",
+      "replacement": "\"gap-107.d\"",
+      "tests": ["tests/unit/t0164-recon-ledger.test.ts"],
+      "why": "The original 107 gap bullets and 285 children cannot silently lose a child."
+    },
+    {
+      "id": "m4-remove-bloom-position-exception",
+      "file": "src/app/globals.css",
+      "anchor": "[data-bloom]:not(.absolute) {",
+      "replacement": "[data-bloom] {",
+      "tests": ["tests/unit/bloom-paint-rule.test.ts"],
+      "why": "An absolutely positioned Composer surface must retain its placement while ordinary bloom targets get a positioning context."
+    }
+  ]
+}

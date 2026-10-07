@@ -1,0 +1,41 @@
+{
+  "id": "T-0019",
+  "intent": "The install harness's update scenario fails on CI only, so CI gates the first install but not the update path. Warrant WG-OPS-002; the update path is half of what the install path is a gate means. Source row WO-0019. Independent of the programme's phase chain: any execution session may take it once Phase 0 closes, which it has. Symptom: fatal: not in a git directory, from the FIRST git command in the update scenario's setup block, so /workspace inside the container has no .git. The other four scenarios never touch git and pass identically on both machines; locally the full five pass in 570s, on CI it is 4 of 5, twice. Ruled out, so nobody repeats it: .git is not in the harness's COPY_IGNORE_DIR_NAMES and shutil.copytree therefore copies it; docker cp of the workspace directory copies dotfiles; and fetch-depth 0 on the checkout changed nothing, so the shallow-clone theory was wrong, and it was the first hypothesis and cost a CI cycle to disprove. Next step, recorded on the row: put a diagnostic in the job before theorising again, ls -la /workspace/.git inside the container plus git status on the runner before the copy, which says in one run whether .git leaves the runner, survives the copytree or survives the docker cp; three candidates, one cheap experiment. Acceptance: (1) the cause identified from evidence, not inference; (2) update restored to the CI scenario list; (3) the exclusion comment in ci.yml removed. Done when CI runs the same five scenarios that pass locally. Tier proposal R2, anticipated factor ci-stateful-infra from derived signal ci-config, evidence .github/workflows/ci.yml is edited to restore the scenario. Closed 2026-08-23 in a2660eca, confirmed by CI run on 6a84bdc4: ALL FIVE scenarios pass, fresh 112.1s, hermes 113.4s, dashboard 115.2s, both, update. CI gates the update path for the first time. ROOT CAUSE, and the error message was the trap. 'fatal: not in a git directory' did NOT mean .git was absent: all three candidates on this row were 'yes', .git leaves the runner, survives copytree and survives docker cp. docker cp without -a PRESERVES the source uid, so on a Linux runner /workspace arrives owned by uid 1001 while the container runs as root, and git refuses a repo with dubious ownership. git config degrades that refusal into the not-a-git-directory message, which is why the diagnosis kept going wrong. A Windows host has no POSIX ownership to preserve, so the identical copy lands root-owned and git is content: that asymmetry, not checkout depth, was the entire local-versus-CI difference. The shallow-clone theory recorded on this row was wrong and is now disproved by evidence rather than by another failed CI cycle. FIX: normalise ownership after docker cp, and print the diagnostic the row asked for on every scenario of every run, so this can never again be guessed at. Reproduced off CI first, as uid 1001 on a Linux filesystem: FAIL 122.8s without the fix, PASS 142.3s with it. Side effect: the release-profile install_bootstrap scenarios hit the same first git command and were broken on any Linux host too.",
+  "declared": {
+    "capabilities": [
+      "filesystem",
+      "container-runtime",
+      "network"
+    ],
+    "side_effects": []
+  },
+  "mode": "standard",
+  "tier_proposed": "R2",
+  "tier_ruled": "R0",
+  "reasons": [],
+  "status": "done",
+  "owner_session": "t0019-install-harness-2026-08-23",
+  "claims": [
+    ".github/workflows/ci.yml",
+    "tests/integration/test_full_install_update_process.py"
+  ],
+  "timestamps": {
+    "opened": "2026-07-26T00:00:00Z",
+    "updated": "2026-08-23T01:00:00Z",
+    "closed": "2026-08-23T01:00:00Z"
+  },
+  "hypothesis_ledger": [
+    {
+      "hypothesis": "The update scenario fails on CI because the checkout is shallow, so the copied /workspace has no usable .git.",
+      "test": "Set fetch-depth: 0 on the actions/checkout step and re-run the install-harness job.",
+      "result": "Falsified. The run failed identically, at the first git command in the update scenario's setup block.",
+      "learning": "The missing .git is not a clone-depth problem. The next round instruments where .git is lost, on the runner, through shutil.copytree, or through docker cp, instead of theorising again."
+    },
+    {
+      "hypothesis": "The update scenario fails on CI because /workspace inside the container has no .git, so the copy loses it on the runner, through shutil.copytree or through docker cp.",
+      "test": "Instrument the copy: print .git's owner inside the container immediately after docker cp. Then reproduce the runner's conditions locally, running the harness from a Linux filesystem as uid 1001 against the same Docker daemon, which is the one thing a Windows host cannot express.",
+      "result": "Falsified as stated, and the cause found underneath it. .git survives every step and is present in the container, owned by uid 1001, because docker cp without -a preserves the source uid whenever the source filesystem carries POSIX ownership, and on a runner that is the runner user. Container commands run as root, so git calls /workspace dubious ownership. git status says exactly that; git config, which sets up gently, degrades the same condition into 'fatal: not in a git directory' and exit 128, byte-identical to the CI log. A Windows host has no POSIX ownership to preserve, so the same copy lands root-owned and git is content, which is the whole of the platform difference. Controlled locally on a Linux filesystem as uid 1001 against the same daemon: without the normalisation the scenario fails at the first git command in 122.8s, the CI failure reproduced off CI for the first time; with it the scenario passes end to end in 142.3s, ps-deploy update included.",
+      "learning": "The message was read literally, as an absent directory, and that reading cost two rounds. The harness now normalises /workspace ownership to the container's user after every copy and prints the before and after owner alongside git's own verdict, so this class of failure names itself in the log. Acceptance item 3, a green CI run of all five scenarios, is still unobserved: the fix is committed, not yet pushed."
+    }
+  ]
+}

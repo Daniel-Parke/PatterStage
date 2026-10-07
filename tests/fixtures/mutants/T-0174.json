@@ -1,0 +1,46 @@
+{
+  "task": "T-0174",
+  "why": "The paired Pages versions, main-only guard, hidden-file inclusion and site inventory must each remain observable.",
+  "mutants": [
+    {
+      "id": "m1-revert-upload-version",
+      "file": ".github/workflows/docs-pages.yml",
+      "anchor": "actions/upload-pages-artifact@v5",
+      "replacement": "actions/upload-pages-artifact@v3",
+      "tests": ["tests/unit/t0174-pages-publication.test.ts"],
+      "why": "The upload action version must be held by the workflow oracle."
+    },
+    {
+      "id": "m2-drop-hidden-files",
+      "file": ".github/workflows/docs-pages.yml",
+      "anchor": "include-hidden-files: true",
+      "replacement": "include-hidden-files: false",
+      "tests": ["tests/unit/t0174-pages-publication.test.ts"],
+      "why": "The uploaded artifact must retain .nojekyll under v5."
+    },
+    {
+      "id": "m3-manual-deploy-dev",
+      "file": ".github/workflows/docs-pages.yml",
+      "anchor": "if: github.ref == 'refs/heads/main'",
+      "replacement": "if: github.ref == 'refs/heads/dev'",
+      "tests": ["tests/unit/t0174-pages-publication.test.ts"],
+      "why": "Manual dispatch on dev must not deploy."
+    },
+    {
+      "id": "m4-ignore-hidden-paths",
+      "file": "scripts/docs/check-publish-artifact.mjs",
+      "anchor": "if (entry.name.startsWith(\".\") && !isNoJekyll) {",
+      "replacement": "if (false && entry.name.startsWith(\".\") && !isNoJekyll) {",
+      "tests": ["tests/unit/t0174-pages-publication.test.ts"],
+      "why": "A hidden .env or nested dotfile must fail before upload."
+    },
+    {
+      "id": "m5-ignore-links",
+      "file": "scripts/docs/check-publish-artifact.mjs",
+      "anchor": "if (stat.isSymbolicLink()) throw new Error(\"site contains a symbolic link\");",
+      "replacement": "if (stat.isSymbolicLink()) continue;",
+      "tests": ["tests/unit/t0174-pages-publication.test.ts"],
+      "why": "A symlink or Windows directory junction must fail before the v5 tar dereferences it."
+    }
+  ]
+}

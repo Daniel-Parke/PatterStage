@@ -5,23 +5,22 @@
 import type Database from "better-sqlite3";
 import { spawnSync } from "child_process";
 import {
-  copyFileSync,
   existsSync,
-  mkdirSync,
   readdirSync,
   readFileSync,
   unlinkSync,
 } from "fs";
 import { dirname, join } from "path";
-import { PATHS } from "../paths";
+import { PATHS } from "../host/paths";
+import { OWNER_ONLY_FILE, copyOwnerOnly, ensureDir, restrictToOwner } from "../fs/fs-helpers";
 
 /** Squashed baseline schema, including profile/root/skills source-of-truth tables. */
 export const BASELINE_SCHEMA_VERSION = 3;
 
 const SCHEMA_VERSION_KEY = "schema_version";
 
-/** Mission precedence: JSON files in CH_DATA_DIR/missions override SQLite export on same id. */
-export const MISSION_JSON_OVERLAY_WINS = true;
+/** Mission precedence: JSON files in PS_DATA_DIR/missions override SQLite export on same id. */
+const MISSION_JSON_OVERLAY_WINS = true;
 
 interface MissionRow {
   id: string;
@@ -294,12 +293,18 @@ export function rebuildToBaseline(
   dbPath: string,
   baselineSql: string
 ): void {
+  // The legacy rebuild imports a fixed list of old application tables. Refuse
+  // to replace a database carrying browser-session rows it cannot preserve.
+  if (tableExists(database, "auth_sessions")) {
+    throw new Error("Baseline rebuild cannot preserve auth_sessions; migration refused");
+  }
   const snapshot = exportLegacySnapshot(database);
   database.close();
 
   const backupPath = `${dbPath}.pre-baseline-${Date.now()}`;
   if (existsSync(dbPath)) {
-    copyFileSync(dbPath, backupPath);
+    copyOwnerOnly(dbPath, backupPath);
+    restrictToOwner(backupPath, OWNER_ONLY_FILE);
     unlinkSync(dbPath);
     for (const suffix of ["-wal", "-shm"]) {
       const p = dbPath + suffix;
@@ -307,7 +312,7 @@ export function rebuildToBaseline(
     }
   }
 
-  mkdirSync(dirname(dbPath), { recursive: true });
+  ensureDir(dirname(dbPath));
 
   // Real driver (avoids Jest mock when integration tests unmock better-sqlite3).
   // eslint-disable-next-line @typescript-eslint/no-require-imports

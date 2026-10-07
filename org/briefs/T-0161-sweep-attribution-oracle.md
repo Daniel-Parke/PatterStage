@@ -1,0 +1,5 @@
+# T-0161 model-sync caller attribution oracle
+
+The 34-mutant sweep against committed `555d1d90` returned 31 KILLED, m15 and m19 NOT-APPLIED because their anchors occur twice, and m32 ERROR (infrastructure). The independent test author owns only `tests/unit/t0161-required-step-failures.test.ts` for this amendment. Preserve every test name and assertion; do not edit implementation or the mutation manifest.
+
+In the configured deploy `config-loss` fixture, let the fake model-sync child report success even when `config.yaml` is gone. The caller must detect the missing configured file itself and stop before restart. Retain the separate real-CLI oracle for `--require-config` in `t0161-model-sync-cli-failures.test.ts`. Keep the configured control's evidence that model sync ran. The implementer will narrow m32 to disable only the caller's missing-file clause so it still calls model sync for the control, and will repair the two ambiguous anchors. Run the amended focused suite, commit only the test file, and report identity and result. No fixture may touch operator data.

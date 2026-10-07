@@ -1,0 +1,1391 @@
+{
+  "task": "T-0192",
+  "originalRecordSha256": "62d117b95f3c0de4670b2cda867cc31366cd6b38d67c74e75593c343185a3248",
+  "preservedExtensions": {
+    "authority": "Approved Phase2/Q010/Q013/Q014/Q016/Q032, individual T0192 item rulings and explicit follow-up repairs. Q033 preserves compatibility until first-post-v1. No protected edit, paid provider execution, unruled removal or general response-policy change.",
+    "prerequisite": {
+      "head": "49aa7a604cfead440c6cce827a53d2a294408e60",
+      "observed": "2026-10-03T20:36:08.844Z",
+      "allRequiredJobsPassed": true,
+      "allRuns": [
+        {
+          "conclusion": "success",
+          "databaseId": 37151141396,
+          "event": "pull_request",
+          "headSha": "49aa7a604cfead440c6cce827a53d2a294408e60",
+          "status": "completed",
+          "url": "https://github.com/Daniel-Parke/PatterStage/actions/runs/37151141396",
+          "workflowName": "Gitleaks"
+        },
+        {
+          "conclusion": "success",
+          "databaseId": 37151141385,
+          "event": "pull_request",
+          "headSha": "49aa7a604cfead440c6cce827a53d2a294408e60",
+          "status": "completed",
+          "url": "https://github.com/Daniel-Parke/PatterStage/actions/runs/37151141385",
+          "workflowName": "CI"
+        },
+        {
+          "conclusion": "success",
+          "databaseId": 37151137044,
+          "event": "push",
+          "headSha": "49aa7a604cfead440c6cce827a53d2a294408e60",
+          "status": "completed",
+          "url": "https://github.com/Daniel-Parke/PatterStage/actions/runs/37151137044",
+          "workflowName": "Gitleaks"
+        },
+        {
+          "conclusion": "success",
+          "databaseId": 37151137011,
+          "event": "push",
+          "headSha": "49aa7a604cfead440c6cce827a53d2a294408e60",
+          "status": "completed",
+          "url": "https://github.com/Daniel-Parke/PatterStage/actions/runs/37151137011",
+          "workflowName": "CI"
+        }
+      ],
+      "runs": [
+        {
+          "conclusion": "success",
+          "databaseId": 37151141396,
+          "event": "pull_request",
+          "headSha": "49aa7a604cfead440c6cce827a53d2a294408e60",
+          "status": "completed",
+          "url": "https://github.com/Daniel-Parke/PatterStage/actions/runs/37151141396",
+          "workflowName": "Gitleaks",
+          "receipt": "tmp/t0191-hosted-closure/pull_request-gitleaks-37151141396-1791059765576.json",
+          "jobs": [
+            {
+              "id": 111285120838,
+              "name": "scan",
+              "status": "completed",
+              "conclusion": "success"
+            }
+          ]
+        },
+        {
+          "conclusion": "success",
+          "databaseId": 37151141385,
+          "event": "pull_request",
+          "headSha": "49aa7a604cfead440c6cce827a53d2a294408e60",
+          "status": "completed",
+          "url": "https://github.com/Daniel-Parke/PatterStage/actions/runs/37151141385",
+          "workflowName": "CI",
+          "receipt": "tmp/t0191-hosted-closure/pull_request-ci-37151141385-1791059766796.json",
+          "jobs": [
+            {
+              "id": 111285120859,
+              "name": "install-harness",
+              "status": "completed",
+              "conclusion": "success"
+            },
+            {
+              "id": 111285121005,
+              "name": "e2e-full (PLAYWRIGHT_SMOKE unset)",
+              "status": "completed",
+              "conclusion": "success"
+            },
+            {
+              "id": 111285121024,
+              "name": "shell-custom-scripts",
+              "status": "completed",
+              "conclusion": "success"
+            },
+            {
+              "id": 111285121025,
+              "name": "real-hermes-integration",
+              "status": "completed",
+              "conclusion": "success"
+            },
+            {
+              "id": 111285121032,
+              "name": "boot-smoke (ubuntu-latest)",
+              "status": "completed",
+              "conclusion": "success"
+            },
+            {
+              "id": 111285121042,
+              "name": "e2e-smoke",
+              "status": "completed",
+              "conclusion": "success"
+            },
+            {
+              "id": 111285121060,
+              "name": "boot-smoke (macos-latest)",
+              "status": "completed",
+              "conclusion": "success"
+            },
+            {
+              "id": 111285121071,
+              "name": "docker-image",
+              "status": "completed",
+              "conclusion": "success"
+            },
+            {
+              "id": 111285121129,
+              "name": "build-test-ubuntu",
+              "status": "completed",
+              "conclusion": "success"
+            },
+            {
+              "id": 111285121169,
+              "name": "build-test-macos",
+              "status": "completed",
+              "conclusion": "success"
+            },
+            {
+              "id": 111287081683,
+              "name": "acceptance-gate (full suite + install journey + real Hermes)",
+              "status": "completed",
+              "conclusion": "success"
+            }
+          ]
+        },
+        {
+          "conclusion": "success",
+          "databaseId": 37151137044,
+          "event": "push",
+          "headSha": "49aa7a604cfead440c6cce827a53d2a294408e60",
+          "status": "completed",
+          "url": "https://github.com/Daniel-Parke/PatterStage/actions/runs/37151137044",
+          "workflowName": "Gitleaks",
+          "receipt": "tmp/t0191-hosted-closure/push-gitleaks-37151137044-1791059767640.json",
+          "jobs": [
+            {
+              "id": 111285107758,
+              "name": "scan",
+              "status": "completed",
+              "conclusion": "success"
+            }
+          ]
+        },
+        {
+          "conclusion": "success",
+          "databaseId": 37151137011,
+          "event": "push",
+          "headSha": "49aa7a604cfead440c6cce827a53d2a294408e60",
+          "status": "completed",
+          "url": "https://github.com/Daniel-Parke/PatterStage/actions/runs/37151137011",
+          "workflowName": "CI",
+          "receipt": "tmp/t0191-hosted-closure/push-ci-37151137011-1791059768843.json",
+          "jobs": [
+            {
+              "id": 111285107964,
+              "name": "boot-smoke (ubuntu-latest)",
+              "status": "completed",
+              "conclusion": "success"
+            },
+            {
+              "id": 111285107977,
+              "name": "docker-image",
+              "status": "completed",
+              "conclusion": "success"
+            },
+            {
+              "id": 111285107988,
+              "name": "build-test-macos",
+              "status": "completed",
+              "conclusion": "success"
+            },
+            {
+              "id": 111285108009,
+              "name": "build-test-ubuntu",
+              "status": "completed",
+              "conclusion": "success"
+            },
+            {
+              "id": 111285108027,
+              "name": "shell-custom-scripts",
+              "status": "completed",
+              "conclusion": "success"
+            },
+            {
+              "id": 111285108042,
+              "name": "e2e-smoke",
+              "status": "completed",
+              "conclusion": "success"
+            },
+            {
+              "id": 111285108050,
+              "name": "boot-smoke (macos-latest)",
+              "status": "completed",
+              "conclusion": "success"
+            },
+            {
+              "id": 111285108082,
+              "name": "real-hermes-integration",
+              "status": "completed",
+              "conclusion": "success"
+            },
+            {
+              "id": 111285108093,
+              "name": "install-harness",
+              "status": "completed",
+              "conclusion": "success"
+            },
+            {
+              "id": 111285108809,
+              "name": "e2e-full (PLAYWRIGHT_SMOKE unset)",
+              "status": "completed",
+              "conclusion": "skipped"
+            },
+            {
+              "id": 111287071440,
+              "name": "acceptance-gate (full suite + install journey + real Hermes)",
+              "status": "completed",
+              "conclusion": "skipped"
+            }
+          ]
+        }
+      ]
+    },
+    "scope_note": "Initial exact source and oracle claims replace broad globs. Read and disposition all82obligations; expand exact claims and independently freeze relevant contracts before any additional edits. Phases are execution order, not permission to omit obligations.",
+    "invariants": [
+      "Every shipped route URL/method, auth/read-only boundary, response-time session check and guard order survives.",
+      "Preserve optional-body handling, exact error text, specialised Hindsight/stream/auth and HTTP200partial-success contracts. Story genuine read failure is the narrow approved exception to false-success empty data.",
+      "Preserve all historical identities; only independently reviewed valid-loaded-graph fixture amendment is contemplated, with allthree Composer assertions/names intact.",
+      "Never touch operator data; isolated built instances and synthetic keyless data only. No paid provider calls or script execution.",
+      "No fixed target, ceiling, coverage floor, timeout, retry or concurrency weakening.",
+      "T0191 oracles and all prior invariants remain frozen."
+    ],
+    "rollback": "Revert each coherent defect or route/type/prop cohort with its callers. Retain regression tests; no schema or stored-key migration. Public contracts remain pinned.",
+    "verify_line": "Independent red-first eight-defect oracles and real persistence under discovered Playwright specs; full URL/method snapshot and operator caller allowlist before route edits; exact error/optional-body/guard contracts; boot/flag/gateway consistency; current82item ledger and measured complete-cohort net counts; cold/warm Windows/Linux built endpoint and event-loop investigation; ordinary1440x900/390x844 personal walks/screenshots; full unchanged ten-stage gate; clean committed causal sweep with passing restored controls; independentR2; every implementation andclosure hosted job.",
+    "oracle_status": "Initial defect/public-contract oracles independently accepted and committed before their implementation: browser27/42 red, unit16/51 red, public contracts52/52 passed, caller9/9 passed. Broader consolidation cohorts need their own contracts before edits.",
+    "preservation_baseline": "tmp/t0192-preservation-baseline-20261003.json",
+    "independence": {
+      "oracleAuthor": "Galileo unit/contracts; Sartre browser/persistence and historical Composer fixture; source exposure disclosed",
+      "implementer": "coordinator",
+      "finalReviewer": "Laplace, neither source nor gate author",
+      "writing_handoff": "Galileo stopped writing after unit handoff. Coordinator reacquired disjoint metadata lane. Sartre stopped for helper review; browser lane retained for subsequent qualified runtime run. Never more than two writers."
+    },
+    "execution_order": [
+      "Freeze complete URL/method baseline and applicable response/auth/body contracts before any route edit, including defect repairs",
+      "Eight focused defect contracts and repairs",
+      "Boot/flag/gateway consistency",
+      "Measured existing-helper route folds and named operator APIs",
+      "Current82dispositions, equivalent type/prop convergence and remaining investigations"
+    ],
+    "readiness": [
+      "tmp/t0192-opening-reconciliation.md",
+      "tmp/t0192-resume-readiness.md"
+    ],
+    "historical_amendment_authority": {
+      "file": "tests/unit/composer-review-control.test.tsx",
+      "scope": "Replace only missing-graph mock with valid loaded graph; preserve three expanded identities, assertions and two-step launch. Exact baseline/control/hash and independent review required before integration.",
+      "reviewer": "Laplace opening critique, 2026-10-03",
+      "reason": "Approved missing-graph disclosure fix makes the old absent-graph success fixture invalid; no failing assertion may be removed."
+    },
+    "latency_obligation": "Controlled cold/warm Windows AND Linux built-app six-endpoint timing and event-loop evidence. Current5.4-8.5s observations and fixture preloading do not establish cause or repair.",
+    "ownership_counts": {
+      "findings": 41,
+      "operatorDispositions": 16,
+      "coverage": 25
+    },
+    "prerequisite_review": {
+      "reviewer": "Laplace",
+      "head": "49aa7a604cfead440c6cce827a53d2a294408e60",
+      "verdict": "Closure prerequisite satisfied; metadata-only eight-file closure, clean tree,11PR/9applicablepush jobs and bothscans pass. Corrected T0192 opening ready, not implementation approval.",
+      "scope": "Freeze complete URL/method baseline before all route edits, including defects. Exact helper and historical fixture amendments require independent review."
+    },
+    "browser_oracle_freeze": {
+      "reviewer": "Laplace / 01a1019a-65c6-7ae2-aafe-5b79b166c745",
+      "verdict": "Accepted for bounded red-first commit and Script, Composer, profile and fallback repairs; no broader implementation acceptance.",
+      "sourceRevision": "4a0ce1968befcfd33f392478627b9ac668e67ef1",
+      "sourceTree": "016c614b1682b7a4d76a5a5c973d9dedfd59ad10",
+      "files": [
+        {
+          "file": "tests/e2e/route-contract-persistence.spec.ts",
+          "rawSha256": "91437eee360237146694c76064cac013a0d8096830310885d93a3ae123885a52",
+          "lfSha256": "91437eee360237146694c76064cac013a0d8096830310885d93a3ae123885a52",
+          "bytes": 7325
+        },
+        {
+          "file": "tests/e2e/route-contract-followups.spec.ts",
+          "rawSha256": "55f01e8b7cc0f67b417240c593c7f14d27a3c57edb534fe73f624bcdd2a77b2c",
+          "lfSha256": "55f01e8b7cc0f67b417240c593c7f14d27a3c57edb534fe73f624bcdd2a77b2c",
+          "bytes": 17625
+        },
+        {
+          "file": "tests/helpers/route-contract-runtime.ts",
+          "rawSha256": "89028f9dbe4df0e84a4b7c84be273da7ca2c82f94a46fc97e756b92955b3bc6d",
+          "lfSha256": "89028f9dbe4df0e84a4b7c84be273da7ca2c82f94a46fc97e756b92955b3bc6d",
+          "bytes": 14714
+        },
+        {
+          "file": "tests/unit/composer-review-control.test.tsx",
+          "rawSha256": "d0caedb25484c92fd88f20df9f1383abcf5660a58c3e6983ffbab4aac22ea4a1",
+          "lfSha256": "d0caedb25484c92fd88f20df9f1383abcf5660a58c3e6983ffbab4aac22ea4a1",
+          "bytes": 3312
+        }
+      ],
+      "receipt": "tmp/t0191-green-validation/tmp/t0192-browser-oracle/freeze-provenance.json",
+      "browserCases": 42,
+      "browserPassed": 15,
+      "browserBehaviouralFailures": 27,
+      "publicContractCasesPassed": 52,
+      "historicalComposerCasesPassed": 3,
+      "limitations": [
+        "Profile refusal proves original row loss; later directory assertions were not reached.",
+        "Conditional later Settings save is not proved by the failing run.",
+        "Composer requests are captured and refused; execution and HIL are not proved.",
+        "Qualified-1 contains two fixture timing failures; earlier unqualified attempts remain retained.",
+        "Census report is not a growth-gate waiver."
+      ]
+    },
+    "bounded_defect_additions": [
+      "Unread or refused Script load permits an actual empty overwrite; stale responses can replace another selected script.",
+      "Profile rename destination obstruction can remove the original database row before reporting failure. Preserve row and directory before mutation; no historical-reference rewrite."
+    ],
+    "unit_defect_freeze": {
+      "reviewer": "Laplace",
+      "sourceRevision": "4a0ce1968befcfd33f392478627b9ac668e67ef1",
+      "receipt": "tmp/t0191-green-validation/tmp/t0192-unit-amendment/manifest.json",
+      "files": [
+        {
+          "path": "tests/unit/api-fetch-error-envelope.test.ts",
+          "before": {
+            "path": "tests/unit/api-fetch-error-envelope.test.ts",
+            "exists": false,
+            "sha256": null
+          },
+          "sha256": "f19bdd09a27ac0e4204ed36fe873cfc81adc7946f8b0ffab644a6bfe6135db51",
+          "lfSha256": "f19bdd09a27ac0e4204ed36fe873cfc81adc7946f8b0ffab644a6bfe6135db51",
+          "bytes": 2071,
+          "lines": 38
+        },
+        {
+          "path": "tests/unit/settings-save-draft-ownership.test.tsx",
+          "before": {
+            "path": "tests/unit/settings-save-draft-ownership.test.tsx",
+            "exists": false,
+            "sha256": null
+          },
+          "sha256": "bcfe417bce67d68bfe6de8725e47f53eb4836d2b8c72755301a8396a1fcd025a",
+          "lfSha256": "bcfe417bce67d68bfe6de8725e47f53eb4836d2b8c72755301a8396a1fcd025a",
+          "bytes": 6767,
+          "lines": 130
+        },
+        {
+          "path": "tests/unit/model-bulk-default-feedback.test.tsx",
+          "before": {
+            "path": "tests/unit/model-bulk-default-feedback.test.tsx",
+            "exists": false,
+            "sha256": null
+          },
+          "sha256": "f91bd70cebfe92b56a5c3182f99d072a090abbe543b15963156761de8b0d9a50",
+          "lfSha256": "f91bd70cebfe92b56a5c3182f99d072a090abbe543b15963156761de8b0d9a50",
+          "bytes": 3031,
+          "lines": 57
+        },
+        {
+          "path": "tests/unit/story-list-failure-contract.test.ts",
+          "sha256": "c6f0d74f9b638b9da1f294a5639e0869b630ef4ebb81ab945332baf1522f04be",
+          "lfSha256": "c6f0d74f9b638b9da1f294a5639e0869b630ef4ebb81ab945332baf1522f04be",
+          "bytes": 3420
+        },
+        {
+          "path": "tests/unit/runtime-operational-consistency.test.ts",
+          "sha256": "7836f83645de586260256b522ea0b29993c63695130993b3d11531a88063b326",
+          "lfSha256": "7836f83645de586260256b522ea0b29993c63695130993b3d11531a88063b326",
+          "bytes": 7324
+        }
+      ],
+      "cases": 51,
+      "passed": 35,
+      "behaviouralFailures": 16,
+      "historicalControlsPassed": 150,
+      "callerGate": "Separate disposition amendment pending for public liveness alias required by accepted T0170; not a product defect."
+    },
+    "caller_oracle_freeze": {
+      "reviewer": "Laplace",
+      "verdict": "Accepted exact file, 9/9 cases passed; no implementation acceptance.",
+      "file": "tests/unit/api-route-caller-gate.test.ts",
+      "sha256": "2a1e0c589798b3989bccfbc4671339bcb6b826810d1613a4d09650350a9cebce",
+      "receipt": "tmp/t0191-green-validation/tmp/t0192-liveness-oracle/provenance.json",
+      "authority": "T0170 explicitly retains the public JSON liveness alias. Four operator exceptions remain unchanged."
+    }
+  },
+  "recordRepair": "Laplace approved lossless active-record normalisation. Historical records and protected schemas are unchanged. Complete record validation replaces no check and no unsupported value is discarded.",
+  "runtimeFixtureAmendment": {
+    "authority": "Q015 standing different-author narrow fixture amendment for approved gateway consistency repair.",
+    "file": "tests/unit/b3-runtime-status.test.ts",
+    "scope": "Expose the real endpoint resolver in the incomplete module mock and isolate relevant override environment. Keep all four case bodies, assertions and names.",
+    "failureReceipt": "tmp/t0192-defects-unit-1791063750288",
+    "author": "Galileo",
+    "reviewer": "Laplace",
+    "acceptedHash": "ab490cdb8499ece2e385923dc8f92348569e06c35b0a24388ba0515fec2808b2",
+    "verdict": "Laplace accepted exact two fixture edits; four names/bodies/assertions byte-identical;4/4 pass.",
+    "receipt": "tmp/t0191-green-validation/tmp/t0192-runtime-fixture/run-1791063881951/manifest.json"
+  },
+  "profileFixtureAmendment": {
+    "acceptedHash": "29b0532d0c7d81b7f0141b5943e10ddcecdf3a7d5addc7d8ed1f5c6c90bee615",
+    "author": "Halley",
+    "reviewer": "Laplace",
+    "receipt": "tmp/t0191-green-validation/tmp/t0192-profile-fixture/report.json",
+    "focused": "2/2 pass",
+    "full": "41/42 pass; nonempty fallback sync failed with Windows rename EPERM. Unchanged isolated rerun passed 1/1; cause and full acceptance remain open."
+  },
+  "schemaValidation": {
+    "pinnedEosCommit": "727bee44bdd83ce569a8d711d51eccf79851af92",
+    "schemaGitBlob": "f1c7c5ed47d8bba55c4a4b849d08e1379b4d2210",
+    "workingSchemaMatchesPin": true,
+    "completeSavedRecordErrors": 0,
+    "originalFailureRetained": "tmp/t0192-record-normalisation/original-validation.txt",
+    "losslessReceipt": "tmp/t0192-record-normalisation/validation.json"
+  },
+  "implementationReviewFollowups": [
+    {
+      "id": "T0192-review-diagnostic-secrets",
+      "priority": "P1",
+      "reviewer": "Laplace",
+      "status": "open",
+      "owner": "T-0192",
+      "evidence": "src/instrumentation.ts:52; src/app/api/status/runtime/route.ts:12; module resolver preserves URL userinfo and query",
+      "requiredProof": "Independent synthetic URL-secret regressions at actual boot and status boundaries; diagnostics redact without changing operational endpoints."
+    },
+    {
+      "id": "T0192-review-script-write-owner",
+      "priority": "P2",
+      "reviewer": "Laplace",
+      "status": "open",
+      "owner": "T-0192",
+      "classification": "Pre-existing, not introduced by the current diff.",
+      "evidence": "src/app/work/scripts/page.tsx:181,198; late save/delete callback closes the current editor",
+      "requiredProof": "Independent held-write tests: close A, open B, settle A; B and its draft survive."
+    }
+  ],
+  "focusedImplementationValidation": {
+    "unit": {
+      "receipt": "tmp/t0192-defects-unit-1791064568690",
+      "passed": 279,
+      "failed": 0
+    },
+    "build": {
+      "receipt": "tmp/t0192-defects-build-1791063848807",
+      "exitCode": 0,
+      "isolated": true
+    },
+    "browserAcceptance": "Open: recurring Windows rename EPERM in full cohorts; isolated passes do not erase failures.",
+    "fullGate": "Not yet run for T-0192."
+  },
+  "windowsReplacementInvestigation": {
+    "status": "Repair and regression pending; no full-browser acceptance.",
+    "incompleteProbe": "tmp/t0192-fs-diagnostic-review.json",
+    "correctedProbe": "tmp/t0192-defects-browser-probe-1791065712155",
+    "correctedCoverage": "42 child injections, 50 observer logs, no incomplete markers; 40/42 cases passed, two actual EPERM failures.",
+    "observedCorrelation": "Both failed renames had same-process pending ConfigSync read spans; all 11 successful renames had none. Spans do not prove OS handle lifetime.",
+    "nativeControl": "tmp/t0192-native-replacement-MSO8Ub/result.json",
+    "nativeResult": "6/6 open-read-handle replacements failed with EPERM; 9/9 closed/no-handle controls succeeded. Owned synthetic files only.",
+    "readCost": "tmp/t0192-read-cost-Vxtemj/report.json",
+    "readCostLimit": "Read-only microbenchmark on freshly written, likely cached files; no YAML parsing or loaded server. 32KiB/1MiB/16MiB synchronous maximum read times 9.9243/5.9674/11.6013ms. No production latency guarantee.",
+    "proposedRepair": "Windows-only synchronous content read in ConfigSync, with async existence checks, parsing/stats/errors unchanged. Linux retains async read. Independent red regression precedes implementation.",
+    "limits": "Does not establish external-process ownership or explain earlier .env EPERM. No retries, deadlines, concurrency or atomic writer changes."
+  },
+  "boundedConsolidation": {
+    "routes": {
+      "files": [
+        "src/app/api/sync/route.ts",
+        "src/app/api/status/route.ts",
+        "src/app/api/update/route.ts"
+      ],
+      "netSourceLines": -26,
+      "review": "Sartre read-only exact-cohort review found no source-level contract mismatch; full acceptance pending."
+    },
+    "typeOnly": {
+      "receipt": "tmp/t0192-type-only-proof.json",
+      "files": 29,
+      "identicalExecutableOutputs": 29,
+      "routeContextReceipt": "tmp/t0192-context-cohort.json",
+      "qualification": "TypeScript transpile output comparison removes comments; independent typechecking still required."
+    },
+    "focused": {
+      "receipt": "tmp/t0192-defects-unit-1791066085146",
+      "suites": 30,
+      "passed": 334,
+      "failed": 0
+    },
+    "typecheck": {
+      "receipt": "tmp/t0192-defects-types-1791066012354",
+      "exitCode": 0,
+      "scope": "Route-context candidate before credential type fold; latest full candidate remains pending."
+    },
+    "docs": "Four retained operator API labels; four source-verified environment entries added. Link check passes. This is not a complete environment inventory."
+  },
+  "criticalOracleFreeze": {
+    "files": {
+      "tests/unit/runtime-gateway-diagnostic-redaction.test.ts": "c53177fe527470a2b665bcac816bde428f585a8881816d8e431a078f5c3dba26",
+      "tests/unit/config-sync-atomic-replacement.test.ts": "84a11950d2d80e22025f0324c6bf6629a9d7b0511c72c2c51100ddcdefaf1ca4"
+    },
+    "reviewer": "Laplace",
+    "accepted": "2026-10-03T22:32:09.307339+00:00",
+    "security": {
+      "originalAuthor": "Galileo",
+      "correctionAuthor": "Nash",
+      "originalHash": "e5c7f8d3590a6dd7eb6575bf0f76d4ca7624de078d1a8b482d1a63f30a7ca418",
+      "originalReceipt": "tmp/t0191-green-validation/tmp/t0192-diagnostic-oracle-1791065872501",
+      "originalQualification": "15 causal disclosure failures;24 invalid/control failures initially blocked by broad vocabulary assertion. This unsuccessful candidate is preserved.",
+      "acceptedReceipt": "tmp/t0191-green-validation/tmp/t0192-security-corrected-1791066331106",
+      "red": 39,
+      "passed": 8,
+      "limitation": "Explicit environment double preserves control bytes; not native NUL-environment transport proof."
+    },
+    "replacement": {
+      "author": "Nash",
+      "receipt": "tmp/t0191-green-validation/tmp/t0192-config-replacement-freeze-1791066542169",
+      "red": 1,
+      "passed": 9,
+      "limitation": "Controlled real descriptor lifetime, not stock readFile scheduling. Linux/performance pending.",
+      "canonicalNormalisation": {
+        "rawSha256": "84a11950d2d80e22025f0324c6bf6629a9d7b0511c72c2c51100ddcdefaf1ca4",
+        "committedLfSha256": "9ffab396b581bacc5abda6f846b811ec0842ced6deedfb63cbf59e05bc2b86b1",
+        "relationship": "Only CRLF to LF; canonical bytes exactly equal git show HEAD:file. Both working copies now match Git.",
+        "originalReceiptPreserved": true
+      }
+    }
+  },
+  "sharedBootFixture": {
+    "receipt": "tmp/t0191-green-validation/tmp/t0192-boot-boundary-amendment/provenance.json",
+    "author": "Sartre",
+    "reviewer": "Laplace",
+    "accepted": "2026-10-03T22:45:30.523289+00:00",
+    "before": {
+      "exitCode": 0,
+      "total": 66,
+      "passed": 66
+    },
+    "after": {
+      "exitCode": 0,
+      "total": 66,
+      "passed": 66
+    },
+    "files": [
+      {
+        "file": "tests/unit/runtime-operational-consistency.test.ts",
+        "beforeRawSha256": "7836f83645de586260256b522ea0b29993c63695130993b3d11531a88063b326",
+        "beforeLfSha256": "7836f83645de586260256b522ea0b29993c63695130993b3d11531a88063b326",
+        "afterRawSha256": "d2b6c4aca363e55997bdb7acf035e688b667ba08dd1426a2cc294286969cfedd",
+        "afterLfSha256": "d2b6c4aca363e55997bdb7acf035e688b667ba08dd1426a2cc294286969cfedd",
+        "bodyAndFixtureSuffixByteIdentical": true,
+        "lineDelta": -31
+      },
+      {
+        "file": "tests/unit/runtime-gateway-diagnostic-redaction.test.ts",
+        "beforeRawSha256": "c53177fe527470a2b665bcac816bde428f585a8881816d8e431a078f5c3dba26",
+        "beforeLfSha256": "c53177fe527470a2b665bcac816bde428f585a8881816d8e431a078f5c3dba26",
+        "afterRawSha256": "fe09ca800a0ed873a5f3ef783f958320cfb2d0afa97ef9dca3622d4af3072e8b",
+        "afterLfSha256": "fe09ca800a0ed873a5f3ef783f958320cfb2d0afa97ef9dca3622d4af3072e8b",
+        "bodyAndFixtureSuffixByteIdentical": true,
+        "lineDelta": -32
+      }
+    ],
+    "helper": {
+      "file": "tests/helpers/runtime-boot-boundary.ts",
+      "rawSha256": "4a8ff944dc5e2d08f2e60caf85dad97df91f8673a1e046a2e132d6fb8aed607a",
+      "lfSha256": "4a8ff944dc5e2d08f2e60caf85dad97df91f8673a1e046a2e132d6fb8aed607a",
+      "copiedDiagnosticMocksAndLifecycleExactExceptRelativeImport": true
+    },
+    "netTestLines": -28,
+    "repeatedTestWindowsBefore": 4844,
+    "repeatedTestWindowsAfter": 4796,
+    "ceilingUnchanged": 4800
+  },
+  "candidateChecks": {
+    "scope": "Uncommitted T0192 candidate, after accepted shared boot fixture. No full-gate, mutation, hosted or whole-product acceptance.",
+    "unit": {
+      "receipt": "tmp/t0192-defects-unit-1791067559071",
+      "exitCode": 0,
+      "passed": 545,
+      "suites": 44,
+      "qualification": "Jest emitted a delayed-exit warning and then exited 0. No cause is established."
+    },
+    "build": {
+      "receipt": "tmp/t0192-defects-build-1791066906689",
+      "exitCode": 0
+    },
+    "browser": {
+      "receipt": "tmp/t0192-defects-browser-1791067016138",
+      "passed": 42,
+      "failed": 0,
+      "workers": 6,
+      "retries": 0,
+      "instrumented": false,
+      "qualification": "Built candidate before shared fixture extraction. Earlier failures and isolated reruns remain in their receipts."
+    },
+    "linux": {
+      "receipt": "tmp/t0192-linux-1791067183812397200",
+      "passed": 95,
+      "suites": 5,
+      "exitCode": 0,
+      "node": "24.21.0",
+      "abi": 137,
+      "matchingLock": true,
+      "qualification": "Native focused unit checks before shared fixture extraction; no Linux build, journey or endpoint latency claim."
+    }
+  },
+  "windowsReplacementRepair": {
+    "causeEvidence": "tmp/t0192-defects-browser-probe-1791065712155",
+    "observation": "Both observed EPERM replacements overlapped same-process destination reads; 11 successful replacements did not.",
+    "qualification": "Promise spans, not OS handle telemetry; instrumentation can perturb timing. Earlier non-injected probe remains incomplete evidence.",
+    "nativeControl": "tmp/t0192-native-replacement-MSO8Ub/result.json",
+    "nativeResults": "6/6 held-descriptor replacements failed EPERM; 9/9 absent or closed-descriptor controls succeeded.",
+    "implementation": "Windows ConfigSync reads close synchronously before yielding; non-Windows asynchronous reads and writer retry policy retained.",
+    "measuredCost": "tmp/t0192-config-sync-cost-lkOINs/report.json",
+    "costQualification": "15/15 synthetic syncs, data unchanged. Warm, primed, comment-heavy inputs up to16MiB; largest observed timer gap47.41ms. Not production latency guarantees.",
+    "remaining": "Other historical Windows file errors, external readers and six-endpoint cold/warm platform latency remain outside this repair proof."
+  },
+  "scheduleCohort": {
+    "authority": "Approved app-11 T0192 consolidation; same ruled R2 and no public contract change.",
+    "files": [
+      "src/app/api/schedules/route.ts",
+      "src/app/api/schedules/[id]/route.ts",
+      "src/lib/missions/mission-promote-handler.ts",
+      "src/lib/missions/mission-handlers/dispatch.ts",
+      "src/lib/schedule/schedule-problem.ts",
+      "tests/e2e/schedule-validation-contract.spec.ts"
+    ],
+    "baselineReceipt": "tmp/t0192-defects-schedule-1791067674095",
+    "baseline": "51/51 cases in five unchanged suites, exit0 before cohort implementation.",
+    "invariants": "Syntax before impossible date before interval bounds; exact refusal strings and pre-write locations. Promotion preserves parsed display. Compute-next and dispatch ordering unchanged.",
+    "status": "Consolidated; focused checks green; full gate and final review remain.",
+    "oracle": "tests/e2e/schedule-validation-contract.spec.ts",
+    "sha256": "516a93fe938fb06124c8752974c4327b3b585ad9d08e4b8ee5532cb470542fea",
+    "baselineBrowserReceipt": "tmp/t0192-defects-schedule-browser-1791068081146",
+    "baselineBrowser": "16/16 pass, six workers, zero retries. Characterisation controls, not claimed causal reds.",
+    "review": "Halley found no blocking defect in16case draft; coordinator strengthened omitted-expression assertion to require the renamed value before freeze and reran16/16. Existing task red-first defect oracles remain separate.",
+    "qualifications": "Leap-day acceptance is calendar-dependent for next-run nullness; past one-shot pins null. Persisted snapshots do not prove absence of all transient side effects.",
+    "types": "tmp/t0192-defects-types-1791068040648 exit0; focused ESLint exit0 before added name field assertion.",
+    "postUnitReceipt": "tmp/t0192-defects-schedule-1791068255826",
+    "postUnit": "51/51 exit0",
+    "postBuildReceipt": "tmp/t0192-defects-build-1791068277825",
+    "postBrowserReceipt": "tmp/t0192-defects-schedule-browser-1791068421691",
+    "postBrowser": "16/16 exit0",
+    "measuredSourceDelta": -41,
+    "measurementQualification": "Includes new18line helper, comments/imports; excludes unrelated minus2line Ctx change. Test growth reported separately.",
+    "implementationReview": "Halley: no regression or additional blocking behavioural gap in five-file extraction."
+  },
+  "scriptWriteOracle": {
+    "author": "Sartre",
+    "reviewer": "Laplace",
+    "accepted": "2026-10-03T22:50:41.314939+00:00",
+    "receipt": "tmp/t0191-green-validation/tmp/t0192-script-write-oracle/provenance.json",
+    "originalRawSha256": "14af4525e36e1abc278d6fd0f54fa5d15cd09fa913fc4fc3b6a84587c5890b85",
+    "canonicalLfSha256": "4b26bd71b317edd2ab628ad7e40a882c887dcf2661cda31db036f8e4f8c3e7ea",
+    "normalisation": "Repository LF policy only; names, bodies and assertions unchanged.",
+    "red": 4,
+    "passed": 4,
+    "workers": 6,
+    "retries": 0,
+    "scope": "Real owned PUT/DELETE completion versus replacement editor, desktop and phone; normal controls preserve disk outcome. No script execution. Relevant built source maps match; unrelated candidate edits not claimed built."
+  },
+  "scriptWriteRepair": {
+    "buildReceipt": "tmp/t0192-defects-build-1791067854897",
+    "browserReceipt": "tmp/t0192-defects-browser-1791067943392",
+    "result": "50/50 pass, six workers, zero retries; includes all8 Script write cases and42 prior browser cases.",
+    "implementation": "Capture editor epoch before write; close only matching current editor on success; always refresh persisted list.",
+    "remaining": "Final full gate, mutation, hosted jobs and overall Script lifecycle review remain open."
+  },
+  "localCatchCharacterisation": {
+    "author": "Sartre",
+    "reviewer": "Laplace",
+    "originalRawSha256": "770a0cd69ab2ffdb3e543236c9d270e87f089fab6a629fc9b8fdca5cb81c680e",
+    "canonicalLfSha256": "dc4255a9f6bba308215389d543dfba68f7f22da32c53c9530047149e6a221de8",
+    "normalisation": "Repository LF policy only.",
+    "receipt": "tmp/t0191-green-validation/tmp/t0192-local-catch-oracle/provenance.json",
+    "baseline": "76/76 passed before folding; characterisation controls, not product reds.",
+    "earlierAttempt": "75/76, quotation-mark expectation corrected before freeze; retained oracle failure, not a product defect.",
+    "files": [
+      "src/app/api/missions/route.ts",
+      "src/app/api/scripts/logs/route.ts",
+      "src/app/api/scripts/run/route.ts",
+      "src/app/api/models/sync/push/route.ts",
+      "src/app/api/agent/files/[key]/route.ts",
+      "src/app/api/sessions/[id]/route.ts",
+      "src/app/api/models/fallbacks/route.ts"
+    ],
+    "qualification": "Pins terminal contexts, selected inner failures and response-time revocation; unexercised JSONL recovery remains outside new proof.",
+    "postFoldUnitReceipt": "tmp/t0192-defects-unit-1791068703110",
+    "postFoldResult": "621/621 cases in45suites passed, including76new catch contracts and public URL/method inventory; exit0.",
+    "sourceDelta": -42
+  },
+  "templateIdentifierOracle": {
+    "authority": "Accepted cross-cutting-16, decision register line3105: new UUID IDs only; preserve existing IDs.",
+    "file": "tests/unit/template-create-identifiers.test.ts",
+    "sha256": "457f19df38ecf10011e32224dc9e638586678f9ca3a8fee722071733558dac71",
+    "author": "coordinator",
+    "reviewer": "Halley",
+    "receipt": "tmp/t0192-defects-template-1791068870506",
+    "result": "2 causal reds,27 historical controls pass, no runtime errors.",
+    "review": "Suitable for source-informed freeze conditional on observed expected reds; both confirmed by structured Jest output.",
+    "limits": "Mocked persistence/events/enrichment; not real-file collision, legacy-ID loading or import-pack proof. House-helper adoption needs source review."
+  },
+  "pendingDraftOracle": {
+    "file": "tests/e2e/script-editor-pending-draft.spec.ts",
+    "sha256": "a7114aca2e3d0304d5c9401567b217ae5c21c16d8410e0b7604bb074ad258820",
+    "author": "Nash",
+    "reviewer": "Laplace",
+    "receipt": "tmp/t0191-green-validation/tmp/t0192-pending-draft-red-1791068651902/manifest.json",
+    "result": "8/8 causal reds at disappearing-editor assertion, six workers, zero retries; disk/single-write preconditions pass.",
+    "qualification": "Subsequent explicit-Save assertions unreached. Full test typecheck failed on four unrelated local-catch fixture fields; no green freeze gate or batch acceptance claimed.",
+    "canonicalLfSha256": "ed010f89c5c6351f2182e554aef9f3e5c7d74c5a866cacf777fc272e1a5a854c"
+  },
+  "oracleTypecheckCorrection": {
+    "failedReceipt": "tmp/t0191-green-validation/tmp/t0192-pending-draft-red-1791068651902/types.log",
+    "cause": "Default tsconfig.json excludes tests. Earlier default tsc exit0 does not validate any oracle fixture. Sartre retracted broader claim; four missing logFile/backupPath fixture fields require independent correction.",
+    "requiredCommand": "node node_modules/typescript/bin/tsc --noEmit --incremental false -p tsconfig.tests.json",
+    "scope": "All earlier default-configuration type receipts are application-only; runtime suite results remain separate valid evidence."
+  },
+  "independentFixtureCorrections": {
+    "receipt": "tmp/t0191-green-validation/tmp/t0192-independent-fixtures/final-report.json",
+    "reviewer": "Laplace",
+    "accepted": "2026-10-03T23:27:03.076935+00:00",
+    "files": [
+      {
+        "file": "tests/unit/template-create-identifiers.test.ts",
+        "originalSha256": "457f19df38ecf10011e32224dc9e638586678f9ca3a8fee722071733558dac71",
+        "finalSha256": "6645f0d0675749237470c72ed75c274d66a8cce2a266fab13fc353b031db4362"
+      },
+      {
+        "file": "tests/unit/route-local-catch-contract.test.ts",
+        "originalSha256": "dc4255a9f6bba308215389d543dfba68f7f22da32c53c9530047149e6a221de8",
+        "finalSha256": "10bc6dd5418a0def5ceaa76bb86eb97f80974129124a0b17f8d1076faaf21af5"
+      }
+    ],
+    "result": "Original/folded route76/76; real house UUID original2red/current2green;27historical controls green; explicit test types and lint exit0;868source hashes unchanged.",
+    "failuresRetained": "Original app-only type claims corrected; four missing fixture fields and75/76 backupPath mismatch remain in original receipts."
+  },
+  "gatewayBoundaryRepair": {
+    "problem": "Design-lint reported four Hermes adapter-boundary violations in the new gateway diagnostic bindings.",
+    "repair": "Both bindings use the existing neutral getAgentGateway port. No rule, suppression or baseline changed.",
+    "qualification": "The neutral port removes all trailing slashes; the module resolver can retain some. Diagnostic output follows the established neutral contract; operational endpoint configuration is unchanged.",
+    "reviewer": "Laplace",
+    "verification": "design-lint exit0; 650/650 tests in49suites, no pending cases.",
+    "receipt": "tmp/t0192-defects-unit-1791071240862/summary.json"
+  },
+  "scriptEditorVisualRepair": {
+    "before": "tmp/t0192-script-visual-1791070549435",
+    "after": "tmp/t0192-script-visual-1791071202218",
+    "build": "tmp/t0192-defects-build-1791070836378/summary.json",
+    "change": "Phone textarea height leaves metadata and help text visible; wrapping is explicit. Help accurately says runs on the server instead of claiming all supported scripts use Bash.",
+    "observed": "Owned built journeys at1440x900 and390x844 both exit0, no console/page errors or horizontal overflow, one page h1; explicit save of retained draft succeeds. Phone screenshot personally inspected.",
+    "limits": "Focused walks only; gateway repair followed this build. Full candidate gate and whole-product acceptance pending."
+  },
+  "toolingEnvironmentOracle": {
+    "file": "tests/unit/tooling-env-contract.test.ts",
+    "sha256": "c2994435592fbeaa804a53adc2c008927b067824ea3b90f70ad6f5be213e5c43",
+    "author": "Galileo",
+    "reviewer": "Laplace",
+    "receipt": "tmp/t0191-green-validation/tmp/t0192-env-candidate-1791070203854",
+    "result": "46cases:26pass,10missing-helper contracts,5missing-import structural checks,5behavioural deploy failures; no runtime errors or pending cases.",
+    "limits": "Copied CLI probes stop before application import. Copied deploy runner intercepts external effects; actual child only records handoff, not real deployment. AST imports alone do not prove consolidation; source review must check helper calls and removal of all five duplicate loaders. Historical alias and packaging controls remain required.",
+    "typecheck": "Explicit tsconfig.tests.json and focused lint exit0; repeated test windows4796/4800.",
+    "loneQuoteAmendment": {
+      "author": "Halley",
+      "reviewer": "Laplace",
+      "sha256": "72f3769868dfc8e45e717b68963f092ed587940a803dcb9d1ce3bbe04da22b4e",
+      "receipt": "tmp/t0192-defects-env-1791072133259",
+      "result": "46pass,2causal red, existing identities/assertions preserved; explicit tests types and lint0."
+    },
+    "historicalControls": {
+      "receipt": "tmp/t0192-defects-env-controls-1791071610677",
+      "result": "49/49in10suites,exit0 before lone-quote guard; more alias controls remain for final gate."
+    },
+    "postImplementation": {
+      "environment": {
+        "receipt": "tmp/t0192-defects-env-1791072309277",
+        "passed": 48,
+        "suites": 1,
+        "pending": 0
+      },
+      "historical": {
+        "receipt": "tmp/t0192-defects-env-controls-1791072319872",
+        "passed": 115,
+        "suites": 20,
+        "pending": 0
+      }
+    },
+    "sourceReview": "Laplace verified five actual helper calls, duplicate-body removal and unchanged precedence/import ordering. Deploy-only lone-quote guard preserves unmatched values; TS historical behaviour remains unchanged. Source subtotal minus71 lines before final census. Docker copies all scripts; installer clones repo; new helper must be included at implementation commit."
+  },
+  "scriptTypecheckOracle": {
+    "file": "tests/unit/scripts-typecheck-contract.test.ts",
+    "sha256": "b7a5b7c81c4e164af788679348179eef0fa1a77f9d3fb6eaeb16ec01386ad650",
+    "author": "Galileo",
+    "reviewer": "Laplace",
+    "receipt": "tmp/t0191-green-validation/tmp/t0192-typing-oracle-1791071397501",
+    "result": "8cases:2controls pass,6missing-contract failures. Five stop at missing config; one exposes missing mandatory wiring.",
+    "baseline": "Three TS5097 diagnostics at scripts/docs/check.mts lines29-31. Existing explicit extension imports need allowImportingTsExtensions in a no-emit config.",
+    "limits": "Passing isolated control proves compiler refusal/correction without CLI execution. Production-config planted TS/MTS tests and actual scripts program remain unexecuted until config implementation. No full-gate claim.",
+    "postImplementation": {
+      "reviewer": "Laplace",
+      "receipt": "tmp/t0192-defects-script-types-1791072029868",
+      "result": "8/8exit0, real scripts program and both plantedTS/MTS refusal/correction controls. No CLI execution or emitted files. Mandatory lint retains prior checks."
+    },
+    "copyError": "Initial coordinator config-copy command used wrong working-directory-relative source and reported TS5058. Retried with absolute source; strict real scripts compilation exit0. This was setup failure, not a product failure or mutant kill."
+  },
+  "missionEditorWiringOracle": {
+    "file": "tests/unit/mission-template-editor-wiring.test.tsx",
+    "sha256": "5970075307193edafa251aaa93db6ffaf27c6021b63d1a593052a654944f64ef",
+    "author": "Galileo",
+    "reviewer": "Laplace",
+    "receipt": "tmp/t0191-green-validation/tmp/t0192-mission-wiring-1791072294398",
+    "result": "37/37before consolidation:6new43prop-boundary/UI cases,7B10,24mission-query controls. Historical identities and source unchanged; explicit tests types/lint0.",
+    "cost": "182new testlines; projected37source-line reduction remains unmeasured. Not a whole-cohort line saving.",
+    "limits": "Mocked HTTP/jsdom; real persistence, focus and responsive geometry remain separate built-walk obligations.",
+    "postImplementation": {
+      "receipt": "tmp/t0192-defects-mission-wiring-1791073268229",
+      "result": "37/37unchanged identities,minus37productionlines; Laplace sourceaccepted. BuiltUI/persistence and fullgate pending."
+    },
+    "builtWalk": {
+      "before": "tmp/t0192-mission-visual-1791073814015",
+      "after": "tmp/t0192-mission-visual-1791074111142",
+      "result": "1440x900and390x844 eachpassactualcreate/edit/diskJSON/reload/reopen/Cancel. UUIDv4formatchecked fornewIDs. Noerrors/overflow,oneh1. Coordinator inspectedbothbefore screenshots andafterphone.",
+      "polish": "Stackname/descriptionfieldsbelow sm breakpoint; desktopcolumnsretained. Oneclassline, noaddedsource lines. Metadata was visiblytruncated at390beforechange.",
+      "limits": "Privatebuiltwalk complementsfrozenjsdomoracle. No legacy-ID import proof or wholeproductacceptance."
+    }
+  },
+  "serverLoggingOracle": {
+    "author": "coordinator",
+    "reviewer": "Laplace",
+    "files": {
+      "tests/unit/composer-advance-diagnostics.test.ts": "e6d6c68eb8cd383cf27121bd05f62127b575e53137b7ff5145b3f73c4e9b91cf",
+      "tests/unit/server-log-contract.test.ts": "771fa19b7f496e165c465e33b9609d7af028f908450fd47680fe379b4dbbf6ac",
+      "tests/unit/server-log-boot-contract.test.ts": "2f6e0ad627ab99075866224564484b62a9c1ba3d45911c2923aa497a20bda5ca"
+    },
+    "receipt": "tmp/t0192-defects-logs-1791073304770",
+    "result": "49cases:6pass,41missing-helper contracts,2causal missing-Composer-diagnostic failures. No runtime errors or pending cases. Exact-source tests types and focused lint exit0.",
+    "invariants": "Preserve exactauth/config strings and errorobject identity. Closedtags keepstreams/body/arguments. Two safeComposer warnings do not expose arbitraryrejections, retry, awaitcontinuation or changenoderesult.",
+    "retainedFailures": [
+      "tmp/t0192-defects-logs-1791072534377",
+      "tmp/t0192-defects-logs-1791072887905",
+      "tmp/t0192-defects-logs-1791072920447"
+    ],
+    "qualification": "Earlier group workflowId fixture, bootseparator, tokenlocation and dynamicmock-lifetime failures were corrected beforefreeze. Missing-helper failures are prospective contracts, not41product defects. Global testtypes initialfailure was concurrent unfrozen Missionsdraft, laterfixed.",
+    "postImplementation": {
+      "receipt": "tmp/t0192-defects-logs-1791073499729",
+      "result": "49/49exit0; Laplace accepted27call substitutions, exactbootmessages, argumentidentity and nonfatalComposer diagnostics. Productiondelta+25lines; no generalredaction claim."
+    }
+  },
+  "testRequirePolicyOracle": {
+    "file": "tests/unit/test-require-policy.test.ts",
+    "sha256": "b1bcb12f5adee1bbc13a71ee312a7e2a5aa023d58a109f5941222509746247b2",
+    "author": "Nash",
+    "reviewer": "Laplace",
+    "receipt": "tmp/t0191-green-validation/tmp/t0192-require-policy-red-1791073733476",
+    "result": "9cases:4causal policy failures,5passing boundaries. RealESLint calculatedpolicy andlintText with inlineconfig disabled; types/lint0.",
+    "amendmentScope": "285exactfiles assigned:284testfiles311directives+Jest. Remove140reasonless89exactboilerplate, preserve82specificreasons+Jest asplaincomments. Tokens/nontargetcomments/expandedidentities mustmatch.",
+    "lineEndingBinding": "b14-spend-one-window.test.ts primary/validation rawbytes differ onlyLF/CRLF. Independent author must regenerate exactprimaryhash/spans or explicitly prove normalisation; driftcheck cannotbebypassed.",
+    "limits": "Integrated candidate; full gate, sweep, final R2 and hosted checks pending.",
+    "integration": {
+      "receipt": "tmp/t0192-comment-integration.json",
+      "independentAuthor": "Nash",
+      "reviewer": "Laplace",
+      "before": "282 suites,2954 identities,2941 pass13fail; preserved baseline.",
+      "after": "tmp/t0191-green-validation/tmp/t0192-require-after-1791075471030:282suites2954pass0fail0pending; full-name multisets identical.",
+      "policy": "tmp/t0191-green-validation/tmp/t0192-policy-green-1791075598100:9/9pass.",
+      "scope": "285 files,312 exact spans.82 specific reasons plus Jest reason retained. Override only tests TS/TSX and jest.config.js.",
+      "qualification": "Not green-before/green-after.12setupfailures disappear with required shell permissions, not caused by comments. Story separate real-logger and500 exacterror correction retains obsolete historical name.",
+      "story": {
+        "path": "tests/unit/stories-api-actions.test.ts",
+        "authority": "Laplace authorised exact proposal through operator; T-0192 genuine Story read failure exception",
+        "offsetUnits": "UTF-16 code units; exact primary post-comment input hash mandatory",
+        "beforeSha256": "b826dd537a8d01bf8756568926aab1cd10bc5a97179c96c158cc1c9b1656be81",
+        "afterSha256": "fdd14f7e0f4fa59f01cc9e36fbef478a868d1d998a9a6873f764a033ad798e22",
+        "validationCandidateSha256": "fdd14f7e0f4fa59f01cc9e36fbef478a868d1d998a9a6873f764a033ad798e22",
+        "spans": [
+          {
+            "start": 432,
+            "end": 505,
+            "raw": "jest.mock(\"@/lib/api/api-logger\", () => ({\n  logApiError: jest.fn(),\n}));",
+            "replacement": "jest.mock(\"@/lib/api/api-logger\", () => jest.requireActual(\"@/lib/api/api-logger\"));"
+          },
+          {
+            "start": 8366,
+            "end": 8477,
+            "raw": "expect(res.status).toBe(200);\n      const data = await res.json();\n      expect(data.data.stories).toEqual([]);",
+            "replacement": "expect(res.status).toBe(500);\n      const data = await res.json();\n      expect(data).toEqual({ error: \"Failed to load stories\" });"
+          }
+        ]
+      }
+    }
+  },
+  "nativeLinuxExpandedCandidate": {
+    "receipt": "tmp/t0192-linux-1791074008592217500",
+    "result": "Original95controls pass; expanded111cases108pass3infrastructurefailures. npm cannotspawnsh duefixturePATH. Independent correction assignedNash; no Linuxfullgateclaim.",
+    "posixCorrection": {
+      "author": "Nash",
+      "reviewer": "Laplace",
+      "sha256": "54c3e733bbb19af183970cd9fceaee732b889e6d2bcf506767c1fc5533d40777",
+      "receipt": "tmp/t0192-linux-posix-correction",
+      "result": "111/111 tests in six suites, no pending, exit 0. Includes all eight compiler contracts. Original failed receipt retained. Not a full gate."
+    }
+  },
+  "coordinatorExpandedCandidate": {
+    "unit": "tmp/t0192-defects-unit-1791073531584",
+    "result": "815/815in62suites,exit0,zero pending. Jest delayed-exit warning retained; cause not established.",
+    "browser": "tmp/t0192-defects-browser-1791073847428",
+    "browserResult": "58/58sixworkers0retriesexit0, before one-line phone metadata layout adjustment.",
+    "windowsBuild": "tmp/t0192-defects-build-1791073939552",
+    "windowsBuildResult": "exit0 after final phone metadata adjustment, owneddataonly.",
+    "linuxBuild": "tmp/t0192-linux-1791074008592217500/build-summary.json",
+    "linuxBuildResult": "nativeLinuxNode24.21.0,exit0. Packincludesclaimeduntrackedhelpers. Notwholegate.",
+    "limits": "Newrequire-policy oracle remains deliberatelyred pending scopedoverride/commentamendment. Nativecompilerfixture infrastructurefailures remainopen. Fullbatchgate/sweep/hostedacceptance absent."
+  },
+  "migrationSandboxProbe": {
+    "command": "pinned Node -e console.log(require('node:os').userInfo().username.length)",
+    "result": "Default restricted shell exits 1 with uv_os_get_passwd ENOMEM; elevated shell exits 0. No account name logged. Isolated migration controls rerunning with required permissions; earlier failures retained.",
+    "controls": "tmp/t0191-green-validation/tmp/t0192-migration-elevated-summary.json:15/15 across4suites, unchanged tests/production, original failed receipts retained."
+  },
+  "endpointTiming": {
+    "harness": "tmp/t0192-endpoint-timing.mjs",
+    "sha256": "56fa95f477e4984c2698ed129ced70ebe5cb23d114b6e24011d5779617cc39e7",
+    "reviewer": "Laplace",
+    "results": [
+      {
+        "platform": "windows",
+        "receipt": "tmp/t0192-endpoint-windows-20261004",
+        "build": "SvKgbMtbtCmKOBCNi3_R2",
+        "node": "v24.21.0",
+        "requests": 228,
+        "phases": {
+          "cold-concurrent": {
+            "count": 36,
+            "minimumMs": 457.7468000000008,
+            "maximumMs": 788.7599000000009,
+            "medianMs": 620.7536
+          },
+          "first": {
+            "count": 12,
+            "minimumMs": 430.9872000000014,
+            "maximumMs": 608.7495999999999,
+            "medianMs": 588.9982
+          },
+          "mixed-serial": {
+            "count": 72,
+            "minimumMs": 3.1549999999997453,
+            "maximumMs": 57.52000000000044,
+            "medianMs": 12.061999999999898
+          },
+          "warm-concurrent": {
+            "count": 36,
+            "minimumMs": 8.329600000000937,
+            "maximumMs": 82.78700000000026,
+            "medianMs": 45.00760000000082
+          },
+          "warm-repeat": {
+            "count": 72,
+            "minimumMs": 2.38169999999991,
+            "maximumMs": 31.516099999998914,
+            "medianMs": 4.85819999999876
+          }
+        },
+        "limitations": "Custom production listener measures request ingress-to-finish, not individual database/Git spans. Fresh-process means after Next preparation, not cold filesystem caches. ProcessLoop is one cumulative startup-and-trial histogram sampled after callbacks, with no concurrent resets; individual finish-time loop fields are preliminary cumulative observations, not per-request attribution. No artificial threshold or retries."
+      },
+      {
+        "platform": "linux",
+        "receipt": "tmp/t0192-endpoint-linux-20261004",
+        "build": "rOxqJtwfPZkvgeVAZogzO",
+        "node": "v24.21.0",
+        "requests": 228,
+        "phases": {
+          "cold-concurrent": {
+            "count": 36,
+            "minimumMs": 353.00102100000004,
+            "maximumMs": 508.9889599999997,
+            "medianMs": 451.72585099999924
+          },
+          "first": {
+            "count": 12,
+            "minimumMs": 287.88264100000015,
+            "maximumMs": 760.958989,
+            "medianMs": 416.2822020000003
+          },
+          "mixed-serial": {
+            "count": 72,
+            "minimumMs": 3.2784019999999146,
+            "maximumMs": 51.48540899999989,
+            "medianMs": 10.18996900000002
+          },
+          "warm-concurrent": {
+            "count": 36,
+            "minimumMs": 10.359145000000353,
+            "maximumMs": 38.97349000000031,
+            "medianMs": 27.3453499999996
+          },
+          "warm-repeat": {
+            "count": 72,
+            "minimumMs": 1.8751310000006924,
+            "maximumMs": 13.723682999998346,
+            "medianMs": 4.423587999999654
+          }
+        },
+        "limitations": "Custom production listener measures request ingress-to-finish, not individual database/Git spans. Fresh-process means after Next preparation, not cold filesystem caches. ProcessLoop is one cumulative startup-and-trial histogram sampled after callbacks, with no concurrent resets; individual finish-time loop fields are preliminary cumulative observations, not per-request attribution. No artificial threshold or retries."
+      }
+    ],
+    "scope": "Six endpoints,18 owned processes per OS, synthetic empty/initialised data, first-endpoint rotation and three concurrent cohorts, complete matching client/server IDs, no retries.",
+    "causality": "First process requests cost more than repeats in this fixture. No individual database/Git attribution or production workload claim. Prior long-delay observation not reproduced here; retain uncertainty.",
+    "cleanup": "All trial children stopped by harness; Linux container ps-t0188-linux-install stopped after receipt copy. No deployed listener retained.",
+    "sourceBinding": "Windows built receipt tmp/t0192-defects-build-1791073939552; Linux source package tmp/t0192-linux-1791074008592217500 and its build-summary. Both contain candidate phone layout and runtime implementation; later changes are tests/configuration only."
+  },
+  "dependencyHygieneOracle": {
+    "file": "tests/unit/dependency-hygiene-contract.test.ts",
+    "sha256": "100e0bbcd70bee2799b1c29df2b0a4836662c98aa5b6a02f0579e9dcfdb56874",
+    "author": "Sartre",
+    "reviewer": "Laplace",
+    "receipt": "tmp/t0191-green-validation/tmp/t0192-dependency-oracle",
+    "result": "6 pass,6 structural contract reds; types/lint0. Before implementation.",
+    "historicalBaseline": "46 pass,1 Knip failure for unused exported WireResponse; preserve receipt, independently remove only export keyword.",
+    "authority": "cross22 approved fixes except next.config.ts; Q015 independent amendments. Coordinator relays reviewer verdict, not a new operator ruling.",
+    "limits": "Candidate integrated; full unchanged-tree gate, mutation and hosted validation pending.",
+    "postImplementation": {
+      "receipt": "tmp/t0191-green-validation/tmp/t0192-dependency-oracle/post-handoff.json",
+      "result": "59/59 pass, same expanded identities; types and Knip0;18 exact baseline findings unchanged.",
+      "lockDelta": {
+        "removed": [
+          "node_modules/bs-logger",
+          "node_modules/handlebars",
+          "node_modules/lodash.memoize",
+          "node_modules/make-error",
+          "node_modules/neo-async",
+          "node_modules/ts-jest",
+          "node_modules/ts-jest/node_modules/semver",
+          "node_modules/ts-jest/node_modules/type-fest",
+          "node_modules/uglify-js",
+          "node_modules/wordwrap"
+        ],
+        "added": [],
+        "versionChanges": [],
+        "typesDev": true
+      },
+      "cleanInstall": "Fresh tmp/t0192-dependency-clean-install: npm ci --offline --no-audit --no-fund exits0,760packages. PinnedNode24 realJSDOM text andin-memorySQLite select1 pass. npm native-script approval warnings retained; no full-build claim.",
+      "amendments": [
+        {
+          "path": "tests/helpers/route-contract-runtime.ts",
+          "before": "89028f9dbe4df0e84a4b7c84be273da7ca2c82f94a46fc97e756b92955b3bc6d",
+          "after": "dd39ffd453d88429512ef92081626ab21dc99c69c59111981bb259c333c15dea"
+        },
+        {
+          "path": "tests/unit/t0175-dependency-proposals.test.ts",
+          "before": "805c23655ebd329f4eed47acad5b00459cbac081e6778d908f71722e28664652",
+          "after": "b42bd421c59b25ba4da9369592c79e52b9627de9ecc2f02ca4206730383fe217"
+        },
+        {
+          "path": "tests/unit/t0176-visual-dependency-proposals.test.ts",
+          "before": "29a631f090805164d9dcbba727766ff5f56e8d05ca16b42175b734ae645a1aa0",
+          "after": "d2ad8ecc926a81895adbc9d78b1f913da1c13e5b36489f0e9bb19d43ebadd8d1"
+        },
+        {
+          "path": "tests/unit/t0177-knip-proposal.test.ts",
+          "before": "83878dd4a5f1a3705c8d68c136f1683064776c25d845460724d42061f275a090",
+          "after": "999d124e7653172347a696a2621996d90c43cf0b032ffd17713b36056d855d62"
+        },
+        {
+          "path": "tests/unit/dashboard-helpers-unit.test.ts",
+          "before": "896f34e5278f1689d9d9575bdd55e29d4a87480dcc05bd7e7ff85b9666cf0c2b",
+          "after": "f94ef2768aaace75c85914c354639162cf851051d8f4c1fdbde3411cc89d87d9"
+        }
+      ]
+    }
+  },
+  "residualReview": {
+    "reviewer": "Halley",
+    "inspectedHead": "d8b8b64f plus candidate changes",
+    "status": "82 rows are not closure-ready",
+    "retainRecommendations": {
+      "cross-cutting-12/13": "Different time, achievement precision and byte-unit/spacing contracts remain. AgentPerformanceStrip/StatStrip compact helpers are genuinely identical but only approximately four net source lines would be saved with a new module and imports; avoid unhelpful abstraction. Estimate not an executed patch measurement.",
+      "coverage-088.a/b": "Six static imports across five files plus two modules/server.ts type references match LOCKBOOK composition points and schema exception; retain with explicit classification.",
+      "cross-cutting-15": "safeJsonParse has five live mission field readers and null semantics; truncate has six existing tests, no test retirement authorised. No blanket utility deletion."
+    },
+    "remainingAssessments": [
+      "cross19 seed fallback real-function coverage and packaged availability",
+      "cross20 Hermes home slash-only/whitespace/alias/MJS semantics",
+      "cross18 analytics/mission/feedback upward types",
+      "app01 item-specific operator-only descriptions",
+      "coverage055.1/063.2 eleven-page ownership roster",
+      "coverage056.2 per-method validation/errors/guards/side-effects",
+      "coverage057 boundary/redirect/dynamic-build/visual mapping",
+      "coverage059.1/060.2 styles and standalone proxy visual/contrast",
+      "coverage061.1 route-to-assertion error mapping",
+      "coverage062.2 retained font visual/accessibility evidence",
+      "coverage081.b Flow client imports and built chunks",
+      "coverage085.b/087.a complete error/client-message inventories"
+    ],
+    "limits": "No automatic transfer or blanket deferral. Candidate implementation evidence remains distinct from whole-gate, sweep, independent batch and hosted acceptance.",
+    "routeCommentCorrections": [
+      "stories header now names src/modules/rec-room/handlers",
+      "session backfill comment now states true dry-run default; executable bytes unchanged"
+    ],
+    "seedHomeRetention": {
+      "reviewer": "Galileo",
+      "cross19": "Retain embedded eight-row recovery SQL. Existing data-transaction-repository-contracts tests invoke real ensureDefaultCategories, compare SQL parity, prohibit runtime readFileSync, and test existing rows/missing table. No new runtime filesystem dependency for nine estimated lines.",
+      "cross20": "Retain home fallback: slash-only canonical home can normalise toempty and triggers alias/default; whitespacecanonicalshadowsalias. Script default precedence/normalisation differs. Unreachable-fallback hypothesis refuted; no environment behaviour changed."
+    }
+  },
+  "coordinatorPartialGate": {
+    "receipt": "tmp/t0192-coordinator-gate-1791076793300/gate/partial/summary.partial.json",
+    "result": "Lint exit1, tree unchanged; one redundant inline require-import suppression. Later planned stages did not run. Independent narrow amendment in progress.",
+    "launchFailure": "tmp/t0192-coordinator-gate-1791076763156: scratch wrapper PATH casing omitted Git; corrected wrapper only, original receipt retained.",
+    "inlineCorrection": {
+      "receipt": "tmp/t0191-green-validation/tmp/t0192-memory-directive-1791076972339",
+      "author": "Nash",
+      "reviewer": "Laplace",
+      "result": "Six controls pass before and after, identical names/tokens; focusedlint0; specificreason retained."
+    },
+    "expandedRun": {
+      "receipt": "tmp/t0192-coordinator-gate-1791077049145/gate/partial/summary.partial.json",
+      "result": "Unchanged tree; lint0, app tsc0; full Jest coverage exits1:8775pass3fail9unchangedskip,844passsuites3failed2skip. Knip/canary stages not reached.",
+      "failures": [
+        "K6 historical livecatch list still requires Update aftercatchconvergence; independent fixture correction authorised",
+        "T0165 retirementclaims missing src/instrumentation.ts aliasreader; addedexactpath with no release-dependency change",
+        "U16 testingdocs stale12lintchecks; corrected to13 includingmandatory scriptstypes"
+      ]
+    },
+    "k6Correction": {
+      "receipt": "tmp/t0191-green-validation/tmp/t0192-k6-amendment-1791077555322",
+      "author": "Nash",
+      "reviewer": "Laplace",
+      "result": "33pass1causalred before;34pass after, same identities; lint0. Only historical fixture case amended; detector, baseline and other controls unchanged."
+    },
+    "repairControls": {
+      "receipt": "tmp/t0191-green-validation/tmp/t0192-gate-repair-controls.json",
+      "result": "All three previously failing suites pass:47/47,0skips,exit0. This is focused evidence, not a green fullcoverage rerun."
+    }
+  },
+  "finiteCoverageMapping": {
+    "reviewer": "Halley",
+    "report": "org/reviews/2026-10-t0192-route-verification.md#independent-finite-coverage-mapping-2026-10-04",
+    "scope": "Eleven page ownership maps;61named-family paths104explicitexports; eightliteral-search additions12exports. Combined69paths116exports.",
+    "limits": "Source review only. Existing test links do not establish method-complete runtime coverage. Reader early-if prelude metric is not architectural progress. Implicit frameworkHEAD/OPTIONS excluded."
+  },
+  "typeOwnerOracle": {
+    "file": "tests/unit/type-owner-equivalence.test.ts",
+    "sha256": "99fc48f9a962e64b2ec3f22f514d174addf2731ac14ee70df71017c6c39f59c6",
+    "author": "Galileo",
+    "reviewer": "Laplace",
+    "receipt": "tmp/t0191-green-validation/tmp/t0192-type-owner-1791077946755",
+    "result": "37cases:26pass11structuralred, no runtimeerrors; types/lint0. First escaped-path parser failure retained as infrastructure, notredproof.",
+    "scope": "21 productionfiles,12upwardlibraryedges across9consumers. Existing canonicalowners and historicalreexports. HookUIcoordination imports retained.",
+    "proof": "Pinned TypeScript5.9.3 emittedJS hashes, exact publictype shapes and3in-memory sensitivitycontrols. No application execution.",
+    "limits": "Not SWC/browser proof. Definition relocation can increase lines; no net reduction claimed. Implementation/fullgate pending.",
+    "postImplementation": {
+      "hashes": "tmp/t0192-type-owner-final.json",
+      "oracle": "tmp/t0191-green-validation/tmp/t0192-type-owner-green.json",
+      "result": "37/37 exit0; independent Laplace 21/21 emittedJS comparison and publicownership review accepted.",
+      "appTypes": "tmp/t0192-defects-types-1791078494555:exit0",
+      "testTypes": "tmp/t0192-defects-test-types-1791078431480:exit0",
+      "lint": "Exact21 productionfile ESLint max-warnings0 exits0",
+      "netSourceLines": 23,
+      "limits": "TypeScript emitter only; broadgate, final build/UI/sweep stillrequired."
+    }
+  },
+  "censusGrowthReason": {
+    "baseline": "scripts/tooling/line-census.baseline.json",
+    "testLines": "T-0192 adds 3387 net test lines (147076 to 150463) for regression and contract oracles with recorded authorship and independent review. Historical test identities and coverage floors are preserved. Fixed programme targets remain unchanged. One-importer components remain 103 after shared chart types retain legitimate UI boundary consumers.",
+    "oneImporterComponents": "103 committed and final. Intermediate candidate 105 retained in tmp/t0192-census-superseded-candidate.json; chart compatibility types now have real rendering-boundary consumers. No new visual components.",
+    "fixedTargets": "Unchanged. No general exemption; candidate mutations or latergrowth require fresh reasons."
+  },
+  "mutationPreparation": {
+    "manifest": "tests/fixtures/mutants/T-0192.json",
+    "author": "Nash",
+    "reviewer": "Laplace",
+    "result": "18Jest anchors and2separatebrowser anchors unique and parseable in independent read-only review. No mutants executed; no kills claimed.",
+    "browserCandidates": [
+      {
+        "id": "b01-profile-submitted-description",
+        "file": "src/app/api/agent/profiles/[id]/route.ts",
+        "anchor": "description: typeof description === \"string\" ? description : undefined,",
+        "replacement": "description: undefined,",
+        "oracle": "tests/e2e/route-contract-persistence.spec.ts",
+        "intendedIdentity": "T-0192 owned HTTP and persistence profile changed slug: submitted metadata and owned files survive reload without losing snapshots",
+        "intendedAssertion": "Reloaded metadata must retain the submitted description.",
+        "qualification": "Covers one part of original defect 5. Does not establish rename-refusal atomicity or reference preservation. Excluded from the Jest manifest."
+      },
+      {
+        "id": "b02-empty-fallback-no-write",
+        "file": "src/modules/hermes/lib/hermes-fallback-config.ts",
+        "anchor": "const yamlConfig: HermesConfig = loadHermesConfigFromString(original);",
+        "replacement": "const yamlConfig: HermesConfig = loadHermesConfigFromString(original); if (chain.length === 0) return { backupPath, configPath, hermesHome: paths.root };",
+        "oracle": "tests/e2e/route-contract-persistence.spec.ts",
+        "intendedIdentityPattern": "T-0192 owned HTTP and persistence fallback <existing action>: SQLite and real YAML both contain an empty enabled chain",
+        "intendedAssertion": "Independent YAML read must show an empty fallback chain after the real mutation.",
+        "qualification": "Represents original defect 6. Expand the existing action parameters when preparing a browser experiment; do not invent a Jest identity or count this as a Jest kill."
+      }
+    ],
+    "limits": [
+      "Original defects 1-4 have selected direct Jest mutants. Original defects 5-6 have exact source candidates linked to existing Playwright persistence oracles, not selected Jest kills.",
+      "Composer m17 proves loaded-graph review-before-launch only. Pending, refused and stale graph selection remains covered by route-contract-followups.spec.ts browser cases, not by this mutant.",
+      "Script unread-save and pending-draft ownership are additional browser obligations, not claimed covered by these 18 mutants.",
+      "Responsive geometry, clipping, focus behaviour, real HTTP persistence and browser-session entry enforcement cannot be inferred from Jest kills.",
+      "m09 covers response-settlement reauthorisation through the existing unit boundary; it is not proxy integration proof.",
+      "Gateway mutation covers disclosure for valid URLs. Invalid/control-character fail-closed behaviour and endpoint precedence remain separate existing assertions, not independently mutated here.",
+      "Boot mutants cover missing recovery and swallowed startup failure; they do not independently mutate every startup ordering edge.",
+      "Environment mutants sample precedence and paired-quote behaviour. Alias provenance, whitelist, caller execution order and copied-deploy packaging are not fully mutation-covered.",
+      "No parser, typecheck, test or sweep was executed for this proposal. Syntactic and causal suitability still require controlled verification."
+    ],
+    "reviewConditions": [
+      "m14 requires causal planted MTS compiler refusal, not config/launch failure",
+      "m16 requires actual saved-name payload mismatch to claim behaviour, not mapping assertion alone",
+      "m15 description corrected to three creations",
+      "Run only clean committed candidate with passing unmodified and restored controls"
+    ]
+  },
+  "chartCompatibilityRepair": {
+    "failedGate": "tmp/t0192-coordinator-gate-1791078831917/gate/summary.json",
+    "failure": "Knip detected three unused retained chart type exports; full Jest 8814 passed, 1 failed, 9 skipped. Tree unchanged. Later stages not executed.",
+    "repair": "Insights chart inputs use retained compatibility types through erased satisfies checks. Canonical library ownership remains unchanged.",
+    "emission": "tmp/t0192-insights-emission.json: identical TypeScript 5.9.3 JavaScript emission",
+    "controls": "tmp/t0191-green-validation/tmp/t0192-chart-knip-controls.json: 43/43 passed",
+    "baseline": "Normal generator started from exact committed baseline; committed allowed history preserved. Superseded uncommitted candidate retained, one justified test-line rise remains.",
+    "qualification": "The satisfies checks are redundant with existing bundle/component types; their purpose is to consume retained historical export paths at the real rendering boundary. The census change reflects type-import edges, not new rendering consumers or a claimed architectural reduction."
+  },
+  "fullCandidateGate": {
+    "receipt": "tmp/t0192-coordinator-gate-1791079520716/gate/summary.json",
+    "treeHash": "5252829a408c9313a6ed983b58c0517c8a1b980d8249873643fb624083b8d315",
+    "result": "All ten stages exit 0; complete, unchanged tree.",
+    "jest": {
+      "passed": 8815,
+      "skipped": 9,
+      "failed": 0
+    },
+    "browser": {
+      "passed": 497,
+      "skipped": 24,
+      "failed": 0
+    },
+    "buildPurity": "Both empty and populated data checks passed.",
+    "designCensus": "One complete documented-route census passed.",
+    "limits": "Candidate verification only. Mutation sweep, remaining evidence inventories, targeted visual review, final independent acceptance and hosted checks remain open."
+  },
+  "signInDocumentOracle": {
+    "file": "tests/unit/sign-in-document-metadata.test.ts",
+    "sha256": "5d9fa42fecb4245d5fac875442f27bd071236126800ee5500aaa314b17570a3a",
+    "author": "Galileo",
+    "reviewer": "Laplace",
+    "receipt": "tmp/t0191-green-validation/tmp/t0192-sign-in-metadata-1791081788977/manifest.json",
+    "red": "2 causal metadata failures, 2 passing preservation controls; types/lint0.",
+    "builtReproduction": "tmp/t0192-remaining-walk-1791081554941/sign-in-390.json: 390px mobile layout is980px, language empty; form sign-in remainsfunctional.",
+    "scope": "Document language and viewport only; authentication responses and policy unchanged. Failed native-form presentation question remains pending.",
+    "focusedGreen": "tmp/t0191-green-validation/tmp/t0192-sign-in-document-green.json:25/25pass including4newcases; browser geometry awaits rebuilt candidate.",
+    "builtGreen": {
+      "receipt": "tmp/t0192-remaining-walk-1791084205199",
+      "passed": 2,
+      "phoneWidths": [
+        390,
+        390,
+        390
+      ],
+      "language": "en",
+      "h1": 1,
+      "screenshotSha256": "b3f43ff094fcb651a335dc241668407062099681d7021ff77e519279ef6bdbc3",
+      "limits": "Public failed-form JSON presentation unchanged, pending operator ruling."
+    }
+  },
+  "firstCommittedSweep": {
+    "head": "31fa54413427e2bde5351f7e17ce48bd1710e1c8",
+    "receipt": "tmp/t0192-sweep-1791080830354",
+    "exit": 2,
+    "officialResult": "17 KILLED,1ERROR; original/restored293pass.",
+    "independentReview": "Laplace accepted16causal behavioural kills; m16 was mapping-only, not saved-payload proof. m01 intended failure observed but unsupported promise matcher remainedERROR.",
+    "followUp": "Nash independent fetch assertion amendment; m16 now targets actual input event, preserving hook mapping. A fresh committed sweep remainsrequired."
+  },
+  "fetchAssertionAmendment": {
+    "author": "Nash",
+    "reviewer": "Laplace",
+    "sha256": "b5b70b1a437c6894d24bbf53c13e50cbccca6b48390d293a4b5592e553fa5b01",
+    "receipt": "tmp/t0192-fetch-assertion-receipts/receipt.json",
+    "scopeProof": "tmp/t0192-fetch-assertion-receipts/scope-proof.json",
+    "fulfilmentProof": "tmp/t0192-fetch-assertion-receipts/fulfilment-proof.json",
+    "result": "Before/amended/restored16pass; mutant15pass1causal normalmatcher; allnine amended cases refuse error-shaped fulfilment. Original16names/inputs retained. Runner unchanged."
+  },
+  "remainingWalks": {
+    "initialComplete": "tmp/t0192-remaining-walk-1791081554941",
+    "readerExtended": "tmp/t0192-remaining-walk-1791082478732",
+    "composerChunks": "tmp/t0192-remaining-walk-1791082345183/composer-chunks.json",
+    "results": "Five initial journeys and two extended Reader journeys passed at1440x900/390x844. Actual five Reader font glyph faces verified, preferences persisted/reset, keyboard and outside-pointer dismissal exercised. Actual two-hop legacy redirect and Next error-boundary recovery exercised.",
+    "failedProbes": "Earlier font checks incorrectly required unused fallback faces to load; actual glyph evidence corrected the probe. First extended phone outside-click probe hit the popover; an uncovered coordinate passed. All original failed receipts retained.",
+    "composer": "Initial empty Run did not request Flow chunk1yg0728ycmojj.js; first Build did.228727 raw bytes is the whole chunk, not isolated dependency transfer. No paid/live run tested.",
+    "qualityFollowUps": [
+      {
+        "owner": "T-0193: visible-state scope extension accepted by independent reviewer; explicit plan update still required",
+        "finding": "Reader popover contrast: observed muted text4.041:1 and selected purple2.463:1 (hover2.188:1). Requires independent reproduction/oracle before repair. Functional passes do not establish accessibility acceptance."
+      },
+      {
+        "owner": "T-0192",
+        "finding": "Phone geometry repaired and verified on rebuilt candidate: inner/visual/document widths390px, one h1 and English language.",
+        "status": "repaired; final mutation/independent acceptance pending"
+      },
+      {
+        "owner": "operator ruling pending",
+        "finding": "Wrong browser form token gives401JSON page. Do not change public response presentation without ruling."
+      }
+    ],
+    "limits": "Controlled synthetic data and owned ephemeral listeners; no whole-product or provider acceptance.",
+    "stateMatrix": {
+      "receipt": "tmp/t0192-state-walk-1791084096756",
+      "passed": 22,
+      "widths": [
+        1440,
+        390
+      ],
+      "pageErrors": 0,
+      "horizontalOverflow": 0,
+      "qualification": "Observational assertions passed; Models false emptiness and Skill error/absence conflation remain defects, not accepted behaviour."
+    }
+  },
+  "finalCandidateGate": {
+    "receipt": "tmp/t0192-coordinator-gate-1791083066836/gate/summary.json",
+    "treeHash": "9c8f687b0c6bbbe7e2b152895b3f1d5bfcc7fb63c0e8fcc17edb092b658533a0",
+    "steps": 10,
+    "unitPassed": 8819,
+    "unitSkipped": 9,
+    "browserPassed": 497,
+    "browserSkipped": 24,
+    "limits": "Implementation candidate passed. Additional review walks, committed sweep, disposition reconciliation, final independent acceptance and hosted checks remain open."
+  },
+  "committedJestSweep": {
+    "head": "a21b4ee808681cf51ab46ac861a1bc26087444d3",
+    "receipt": "tmp/t0192-sweep-1791084323557",
+    "exit": 0,
+    "causalKills": 20,
+    "controlsBefore": 297,
+    "controlsAfter": 297,
+    "reviewer": "Laplace",
+    "qualification": "All20 independently accepted; m16 actual edited payload reached. Original17KILLED/1ERROR receipt preserved."
+  },
+  "apiDocumentationChecks": {
+    "receipt": "tmp/t0192-final-api-docs.json",
+    "passed": 13,
+    "limits": "API inventory and caller scope only; subsequent single prose clarification names sanctioned useMutation. Independent source review accepted conventions and exact labels."
+  },
+  "browserB01Qualification": {
+    "receipt": "tmp/t0192-browser-b01-analysis.json",
+    "originalRun": "tmp/t0192-browser-sweep-1791084568922",
+    "originalStatus": "ERROR/exit1: ANSI analyser mismatch",
+    "qualification": "b01 causal kill independently verified; original orchestration failed during analysis. No fresh execution claimed. Four controls before and after; actual SQLite and API description assertions failed.",
+    "reviewer": "Laplace",
+    "restoration": "Source hash matched; restored build0 and four restored controls pass."
+  },
+  "browserB02Qualification": {
+    "receipt": "tmp/t0192-browser-sweep-1791085192516",
+    "exit": 0,
+    "causalKills": 1,
+    "intendedFailures": 3,
+    "unrelatedPasses": 1,
+    "controlsBefore": 4,
+    "controlsAfter": 4,
+    "builds": "Mutant and restored exit0",
+    "sourceRestored": true,
+    "reviewer": "Laplace",
+    "qualification": "Three fallback actions reach actual YAML assertion with stale fallback-one while SQL empty. One mutant, not three independent kills."
+  },
+  "boundaryInvestigation": {
+    "failedHypothesis": [
+      "tmp/t0192-outer-boundary-1791085849752",
+      "tmp/t0192-outer-boundary-1791085952306"
+    ],
+    "observation": "tmp/t0192-next-fallback-1791086086666",
+    "passed": 2,
+    "reviewer": "Laplace",
+    "verdict": "Bounded runtime investigation accepted; retainboth. ActualNextrecovery observed even after injectedNextfallbackeffect error. Classreachability/removalnotproved.",
+    "limits": "Synthetic malformed APIresponse, not corruptedstorage. Failedprobesretained andnotrelabeled."
+  }
+}

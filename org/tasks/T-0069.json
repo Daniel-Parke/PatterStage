@@ -1,0 +1,53 @@
+{
+  "id": "T-0069",
+  "intent": "Rejecting a Composer HIL gate with no on_reject edge produced a good sentence that reached nobody, and left the rejected stage drawn GREEN on the canvas beneath a pink failed header. F5 of the 2026-08-30 QA pass, graded worse than reported: the UI discarded the 400 entirely.",
+  "declared": {
+    "capabilities": [
+      "edit-source",
+      "migrate-schema"
+    ],
+    "side_effects": []
+  },
+  "mode": "standard",
+  "tier_proposed": "R2",
+  "tier_ruled": "R2",
+  "reasons": [],
+  "status": "done",
+  "owner_session": "t0069-composer-reject-2026-08-31",
+  "claims": [
+    "src/lib/db/migrations/035_composer_rejected.sql",
+    "src/lib/db/apply-composer-rejected-migration.ts",
+    "src/lib/db-schema.ts",
+    "src/lib/composer/schema.ts",
+    "src/lib/composer/engine.ts",
+    "src/app/api/composer/runs/[id]/",
+    "src/app/orchestration/composer/page.tsx",
+    "src/components/composer/",
+    "tests/"
+  ],
+  "invariants": [
+    "I1 A rejected gate ends the run as rejected, a distinct terminal state, because a rejection is a decision and a failure is a defect and the operator ruled they must read differently.",
+    "I2 The rejected STAGE is written too. The canvas must not contradict the status line.",
+    "I3 A stage that genuinely FAILED keeps its own status and its own error. The routing error must not overwrite the real cause. There is a control for that direction.",
+    "I4 A refusal names the state it is refusing from and repeats the reason already stored on the run.",
+    "I5 The refusal is VISIBLE. safeApiCall returns rather than throws, so a better message written to a response nobody reads is not an improvement.",
+    "I6 The rebuild is lossless or it does not happen. A stale column list drops operator data silently, so the applier asserts the live shape and throws before anything is dropped."
+  ],
+  "root_cause": "applyNext collapsed two different endings into one write. resolveNext already computed cond, which is on_reject for a rejected gate and on_fail for a crashed stage, and applyNext discarded the distinction: status failed on the run, nothing at all on the node-run. The stage therefore kept the completed that finalizeComposerNodeRun had written moments earlier, and WorkflowRunCanvas's STATUS_BORDER lookup drew it green. Separately, approve/route.ts's guard answered a constant string while run.status and run.error were both in scope, and decideGate dropped safeApiCall's return value.",
+  "operator_ruling": "Cheap fixes AND a distinct rejected terminal state, rather than reusing failed. That required a migration, because SQLite cannot ALTER a CHECK constraint.",
+  "the_migration_is_the_chains_first_table_rebuild": "SQLite's twelve-step procedure: create the replacement, copy by EXPLICIT column list, drop, rename, recreate indexes. Verified against real SQLite before the file was written -- after the rebuild both REFERENCES clauses still point at composer_runs, foreign_key_check is clean, ON DELETE CASCADE still fires, both partial indexes are back and the widened CHECK still refuses an unknown status. It does NOT use execMigrationFile: execIdempotent swallows already-exists, which is right for an ADD COLUMN and catastrophic for a rebuild that half-applied. The applier owns its own transaction and its own foreign_keys pragma, restored in a finally so a failure cannot leave the connection with foreign keys off for the rest of the process's life.",
+  "beyond_the_report": [
+    "The new status would have HUNG a sub-workflow. settleGroupNode tested failed-or-cancelled literally, so a rejected child matched neither branch and the parent's group stage waited forever. The SSE route held a third copy of the same list and would have streamed a finished run indefinitely. Three open-coded copies of one vocabulary: TERMINAL_COMPOSER_RUN_STATUSES now states it once, with satisfies so a new status cannot be added without classifying it.",
+    "The legacy prebuild loop leaves a half-rebuilt table behind. db-schema-ensure.mjs upgrades a pre-v3 install by exec-ing every .sql under a blanket catch, and 035 fails there -- parent_node_run_id is added by a TS applier, not a .sql file -- leaving composer_runs_new in the schema. Measured, not assumed. No data is lost (the INSERT fails before the DROP) and DROP TABLE IF EXISTS at the head of the migration cleans it up on the next boot, but nothing was holding that line there.",
+    "SafeApiCallResult types error as optional while safeApiCall always sets it, so passing res.error straight to a string-or-null setter is a type error and the fallback is load-bearing: setting the banner to undefined would hide the refusal again. Narrowing that type to a discriminated union would help every caller and is filed rather than done here.",
+    "cancelled is dead vocabulary on composer_runs -- in the CHECK, in the union, read twice, written nowhere. Left in place because the two cancel entry points converge in T-0070."
+  ],
+  "oracle_provenance": "Committed alone at 097bd7d2 ahead of the implementation at ed933235: ten assertions, ten red. One of the ten passed trivially in the first draft -- a bare run.status match against the whole file, which the guard condition itself satisfies -- and was scoped to the refusal before the commit. The whole file was then REWRITTEN at ed933235 from source regexes to behaviour against real SQLite, because a regex cannot tell a status that is WRITTEN from one merely permitted, and cancelled is the standing proof that the difference matters.",
+  "mutation_finding": "Eleven mutations, eleven caught -- but only after two rounds. The first oracle asserted TERMINAL_COMPOSER_RUN_STATUSES contains rejected and stopped there, so reverting settleGroupNode to its literal two-status check left all thirteen tests green. Asserting that a LIST contains a value does not assert that the code READING it was ever changed to use the list; that is the T-0062 lesson in a new place, and the fix was a behavioural test driving a real parent/child pair. The migration's drift guard also had no test at all -- a guard against silent data loss that is itself unproven is worse than none -- and it now has both directions, including the one-directional variant that checks only for MISSING columns and not EXTRA ones, which is the direction that truncates.",
+  "verification": "Proved end to end against a real server on a temp HERMES_HOME: the schema climbed to 35 on boot, both CHECKs carry rejected, no orphan tables, zero foreign-key violations. Rejecting a real gate answered 200 and left the run rejected carrying 'Plan was rejected and the workflow has no recovery path from here.', with the STAGE also rejected where it was previously completed. A second click answered 400 with 'This gate was already rejected, so there is nothing left to decide.' followed by that same stored sentence. Gate: lint 0, tsc 0, 3362 tests / 389 suites, knip 0, canary blessed (the only generatedArtefacts delta is the new migration file, verified line by line), build 0.",
+  "timestamps": {
+    "opened": "2026-08-31T12:00:00Z",
+    "updated": "2026-08-31T14:30:00Z",
+    "closed": "2026-08-31T14:30:00Z"
+  }
+}

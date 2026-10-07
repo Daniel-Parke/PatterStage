@@ -1,5 +1,7 @@
 /** @jest-environment node */
-import { resolveSafeProfileName } from "@/lib/path-security";
+import { NextResponse } from "next/server";
+
+import { resolveSafeProfileName, requireSafeProfileName } from "@/lib/fs/path-security";
 
 describe("resolveSafeProfileName", () => {
   it("returns 'default' for null input", () => {
@@ -65,5 +67,43 @@ describe("resolveSafeProfileName", () => {
   it("rejects dot-prefixed names exceeding 127 chars", () => {
     const long = ".a".repeat(64); // ".a" * 64 = 128 chars total
     expect(resolveSafeProfileName(long).ok).toBe(false);
+  });
+});
+
+describe("requireSafeProfileName", () => {
+  it("returns { profile } for null input (defaults to 'default')", () => {
+    const r = requireSafeProfileName(null);
+    expect(r).toEqual({ profile: "default" });
+  });
+
+  it("returns { profile } for valid alphanumeric names", () => {
+    expect(requireSafeProfileName("qa-engineer")).toEqual({ profile: "qa-engineer" });
+    expect(requireSafeProfileName("default")).toEqual({ profile: "default" });
+  });
+
+  it("returns a 400 NextResponse for path-traversal attempts", async () => {
+    const r = requireSafeProfileName("../etc/passwd");
+    expect(r).toBeInstanceOf(NextResponse);
+    if (r instanceof NextResponse) {
+      expect(r.status).toBe(400);
+      const body = await r.json();
+      expect(body.error).toMatch(/invalid|profile/i);
+    }
+  });
+
+  it("returns a 400 NextResponse for names with slashes", async () => {
+    const r = requireSafeProfileName("foo/bar");
+    expect(r).toBeInstanceOf(NextResponse);
+    if (r instanceof NextResponse) {
+      expect(r.status).toBe(400);
+    }
+  });
+
+  it("returns a 400 NextResponse for names starting with hyphen", async () => {
+    const r = requireSafeProfileName("-bad-name");
+    expect(r).toBeInstanceOf(NextResponse);
+    if (r instanceof NextResponse) {
+      expect(r.status).toBe(400);
+    }
   });
 });

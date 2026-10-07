@@ -1,0 +1,24 @@
+{
+  "measuredAt": "2026-09-27",
+  "why": "T-0162 expands Knip over tests and test-harness. These exact findings are retained until the Q-011 release permits structural cleanup; new findings fail the gate. Two externally invoked scripts are explicit entries, not exceptions.",
+  "issues": [
+    { "kind": "files", "file": "test-harness/poll-pair.mjs", "name": "test-harness/poll-pair.mjs", "reason": "Manual benchmark polling CLI; removal waits for the operator release and tooling removal ruling." },
+    { "kind": "files", "file": "test-harness/poll-run.mjs", "name": "test-harness/poll-run.mjs", "reason": "Manual benchmark polling CLI; removal waits for the operator release and tooling removal ruling." },
+    { "kind": "types", "file": "src/components/dashboard/LedgerRow.tsx", "name": "LedgerRowPadding", "reason": "Knip 6.34.0 newly reports this pre-existing exported styling type. It has no external importer, but Q-011 defers structural API removal until after release; keep its exact identity ratcheted." },
+    { "kind": "exports", "file": "tests/e2e/lib/census-analysis.ts", "name": "round2", "reason": "Unused design-census helper export; retain historical test surface until release-gated cleanup." },
+    { "kind": "exports", "file": "tests/e2e/lib/census-analysis.ts", "name": "LOWER_IS_BETTER", "reason": "Unused design-census helper export; retain historical test surface until release-gated cleanup." },
+    { "kind": "types", "file": "tests/e2e/lib/census-analysis.ts", "name": "BorderRecord", "reason": "Unused design-census helper type; retain historical test surface until release-gated cleanup." },
+    { "kind": "types", "file": "tests/e2e/lib/census-analysis.ts", "name": "TextRecord", "reason": "Unused design-census helper type; retain historical test surface until release-gated cleanup." },
+    { "kind": "types", "file": "tests/e2e/lib/census-analysis.ts", "name": "BoxRecord", "reason": "Unused design-census helper type; retain historical test surface until release-gated cleanup." },
+    { "kind": "types", "file": "tests/e2e/lib/census-analysis.ts", "name": "GeometryRecord", "reason": "Unused design-census helper type; retain historical test surface until release-gated cleanup." },
+    { "kind": "exports", "file": "tests/e2e/seed-demo.mjs", "name": "MISSIONS", "reason": "Unused demo-seed export; retain CLI and fixture contract until release-gated cleanup." },
+    { "kind": "exports", "file": "tests/e2e/seed-demo.mjs", "name": "SCRIPTS", "reason": "Unused demo-seed export; retain CLI and fixture contract until release-gated cleanup." },
+    { "kind": "exports", "file": "tests/e2e/seed-demo.mjs", "name": "CHARACTERS", "reason": "Unused demo-seed export; retain CLI and fixture contract until release-gated cleanup." },
+    { "kind": "exports", "file": "tests/e2e/seed-demo.mjs", "name": "THEMES", "reason": "Unused demo-seed export; retain CLI and fixture contract until release-gated cleanup." },
+    { "kind": "exports", "file": "tests/helpers/mocks.tsx", "name": "safeApiCallOver", "reason": "Unused test-double override export; retain helper contract until release-gated cleanup." },
+    { "kind": "exports", "file": "tests/helpers/mocks.tsx", "name": "apiFetchOver", "reason": "Unused test-double override export; retain helper contract until release-gated cleanup." },
+    { "kind": "exports", "file": "tests/helpers/story.tsx", "name": "answer", "reason": "Unused story test helper export; retain helper contract until release-gated cleanup." },
+    { "kind": "exports", "file": "tests/helpers/story.tsx", "name": "lucideNullMock", "reason": "Unused story test helper export; retain helper contract until release-gated cleanup." },
+    { "kind": "exports", "file": "tests/helpers/story.tsx", "name": "storyReaderNavigationMock", "reason": "Unused story test helper export; retain helper contract until release-gated cleanup." }
+  ]
+}

@@ -1,0 +1,24 @@
+{
+  "version": 1,
+  "assigned": "2026-10-07",
+  "lanes": [
+    {
+      "lane_id": "T-0196-coordinator",
+      "task_id": "T-0196",
+      "session_id": "2026-10-07-t0196-coordinator",
+      "host": "local",
+      "path_claims": [
+        ".npmrc",
+        "package.json",
+        ".gitignore",
+        "org/briefs/T-0196-oracle.md",
+        "org/reviews/2026-10-t0196-npm-standardisation.md",
+        "scripts/tooling/line-census.baseline.json",
+        "org/claims.json",
+        "org/HANDOVER.md",
+        "org/tasks/T-0196.json"
+      ],
+      "status": "active"
+    }
+  ]
+}

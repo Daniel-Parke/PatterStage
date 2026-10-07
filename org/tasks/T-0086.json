@@ -1,0 +1,54 @@
+{
+  "id": "T-0086",
+  "intent": "Round-6 finding 9, CRITICAL: config.yaml corrupted on every sync cycle, nine .broken/.corrupt backups over five months. Find the real corrupter, stop it, and make every writer refuse rather than launder.",
+  "declared": {
+    "capabilities": [
+      "edit-source"
+    ],
+    "side_effects": []
+  },
+  "mode": "standard",
+  "tier_proposed": "R2",
+  "tier_ruled": "R2",
+  "reasons": [
+    "Rewrites the assembler every config.yaml on disk passes through; a regression here corrupts the agent's boot file."
+  ],
+  "status": "done",
+  "owner_session": "t0086-config-assembler-2026-09-04",
+  "claims": [
+    "src/modules/hermes/lib/profile-config-builder.ts",
+    "src/modules/hermes/lib/hermes-config-write.ts",
+    "src/modules/hermes/lib/profile-sync-shared.ts",
+    "src/modules/hermes/lib/profiles-repository.ts",
+    "src/modules/hermes/lib/config-sync.ts",
+    "src/modules/hermes/lib/profile-push.ts",
+    "src/modules/hermes/lib/profile-pull.ts",
+    "src/modules/hermes/lib/profile-drift.ts",
+    "src/modules/hermes/lib/sync-manager.ts",
+    "src/app/api/agent/files/[key]/route.ts",
+    "tests/"
+  ],
+  "invariants": [
+    "I1 A rebuild of config.yaml emits every top-level key exactly once. One object, one dump.",
+    "I2 No content reaches a config.yaml on disk without parsing first. The belt sits on the writer, not on the caller.",
+    "I3 A failed parse is a fact the parser reports, never an exception it throws and never a default it silently returns.",
+    "I4 Nothing rebuilds from a failed parse. Rebuilding from one is the silent preserved-section drop that compounded into data loss.",
+    "I5 finalizeRootConfigOnDisk copies disk into the database only when the disk parses. The copy-back was the loop-closer.",
+    "I6 A refusal is not a success. It carries an error the caller must read, and it reaches the operator.",
+    "I7 Every refusal names the newest backup that still parses, and performs no restore. A backup carries older model settings.",
+    "I8 A poisoned row renders a drift banner, never a 500. The banner is where the operator learns the row is poisoned.",
+    "I9 The database's edits beat the file's raw managed blocks. Push exists to change things."
+  ],
+  "the_report_named_the_wrong_corrupter": "Finding 9 blamed syncDefaultsToHermesConfig and a missing pre-write validation. That function is an object round-trip that structurally cannot emit a duplicate key, and it was the ONLY writer that already refused corrupt input. The corrupter was the text-level assembler in profile-config-builder, with three independent faults: preserved-section children leaked into extraYamlLines AND were captured structurally, so a rebuild emitted them twice; the platform_toolsets scanner never exited on a following key: header, so later sections became phantom platforms, order-dependent and hence 'intermittent'; and inAgent flipped off on its own header line, so agent.personality was never read and every install reported 'technical'.",
+  "the_loop": "Pull, seed and the files editor parsed with the broken assembler and stored the result. Push wrote the stored text to disk with no validation. finalizeRootConfigOnDisk then copied whatever was on disk BACK into the database, so one bad write became a permanently poisoned row. On the next cycle extractPreservedSections' catch returned {} and every preserved section (model, auxiliary, memory, plugins) vanished. That is the compounding data loss behind nine backups.",
+  "what_changed": "parseConfigYaml/buildConfigYaml are an object round-trip: yaml.load, structured edits, one dumpYamlConfig. extraYamlLines is deleted; parseError is added. assertParseableConfigYaml sits on writeHermesConfigFile and on writeWithBackup for config targets. finalize skips the copy-back on refusal and parse-checks disk even on success. syncDefaults reports its refusal as an error instead of a null backup path. syncSingleModelToHermesConfig refuses-and-reports like its sibling instead of 500ing. Push propagates finalize's error; sync-manager surfaces the per-model refusal; drift wraps both assembly calls; the files editor answers 409 like PUT /api/config. repairGuidance names the newest parseable backup in every refusal.",
+  "mutation_finding": "Thirteen mutants across the three former mechanisms, the belt, the finalize guard and the single-model parity. Three survived the first pass and each was a gap, not a redundancy: no fixture ever had the database DISAGREE with the file, so a build that let the file's raw skills block or raw agent block win passed every round trip; and nothing drove the assembly seam with a poisoned row. Three oracles added, all three killed. The fourth survivor, finalize's first guard, is shadowed by the disk-parse guard behind it and is recorded as equivalent-by-redundancy. Then four seams above the assembler had no oracle at all: push propagation, sync-manager surfacing, drift-on-poisoned-row and the files-route 409. Four oracles added, each with a fuse test proving its writes stay in the OS temp dir (the T-0082 rule).",
+  "the_gate_had_been_red_since_T-0083": "Two design-lint violations (the voice law on the round-6 brief, and hermes-outside-adapter on the T-0083 toast strings) had been failing npm run lint for three batches. My gate greps filtered output for 'error|warning' and design-lint prints 'violations'. Gates are now judged by exit code, every batch, and this record says so because the product keeps being found doing the same thing.",
+  "verification": "End to end on an isolated instance (throwaway PS_DATA_DIR and HERMES_HOME, both mocks, production build): a Hermes-native-ordered config.yaml with agent.personality, auxiliary, fallback_providers after platform_toolsets, secrets and version was pulled, then pushed three times. Every push parsed, carried exactly one top-level model: key, was byte-identical to the previous push and semantically identical to the original across every section. Then the disk file was hand-corrupted with a duplicate key: pull refused with the fault's first line and the path of the backup to restore, the database row kept one model key, personality creative and version 2, the profiles list showed the root as drift, the files editor answered 409 storing nothing, and a push from the clean database healed the disk to a parseable, semantically identical file. Gate by exit code: lint 0, tsc 0, 3758 tests / 418 suites, knip 0, canary OK, build 0.",
+  "operator_note": "Existing installs: run Pull all once after upgrading. Two genuine drift wake-ups are expected on rows the old parser polluted (personality forced to technical; phantom platform entries) and one Pull clears both.",
+  "timestamps": {
+    "opened": "2026-09-04T18:00:00Z",
+    "updated": "2026-09-04T22:05:00Z",
+    "closed": "2026-09-04T22:05:00Z"
+  }
+}

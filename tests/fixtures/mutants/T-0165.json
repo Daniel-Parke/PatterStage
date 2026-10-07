@@ -1,0 +1,37 @@
+{
+  "task": "T-0165",
+  "mutants": [
+    {
+      "id": "m1-lift-source-target-to-baseline",
+      "file": "org/plans/2026-09-refactor-measures.json",
+      "anchor": "\"key\": \"srcLines\", \"scope\": \"line\", \"baseline\": 102141, \"target\": 100000",
+      "replacement": "\"key\": \"srcLines\", \"scope\": \"line\", \"baseline\": 102141, \"target\": 102141",
+      "tests": ["tests/unit/t0165-plan-contract.test.ts"],
+      "why": "A target cannot be silently moved up to the frozen starting number."
+    },
+    {
+      "id": "m2-skip-sequential-batch-id",
+      "file": "org/plans/2026-09-refactor-programme.json",
+      "anchor": "\"id\": \"T-0201\",\n      \"name\": \"Close the programme row by row\"",
+      "replacement": "\"id\": \"T-0202\",\n      \"name\": \"Close the programme row by row\"",
+      "tests": ["tests/unit/t0165-plan-contract.test.ts"],
+      "why": "The task register must remain sequential and cannot omit an approved batch identity."
+    },
+    {
+      "id": "m3-duplicate-finding-owner",
+      "file": "org/plans/2026-09-refactor-ownership.json",
+      "anchor": "\"id\": \"critic-14\"",
+      "replacement": "\"id\": \"critic-02\"",
+      "tests": ["tests/unit/t0165-plan-contract.test.ts"],
+      "why": "Every preliminary finding must occur exactly once in the plan's ownership map."
+    },
+    {
+      "id": "m4-invert-closing-comparison",
+      "file": "scripts/tooling/refactor-closing-oracle.mjs",
+      "anchor": "passed: final <= row.target",
+      "replacement": "passed: final >= row.target",
+      "tests": ["tests/unit/t0165-closing-oracle.test.ts"],
+      "why": "A measure above its fixed target must be named as a miss."
+    }
+  ]
+}

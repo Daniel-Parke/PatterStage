@@ -1,0 +1,49 @@
+{
+  "id": "T-0042",
+  "intent": "Sessions tiles must mean what their labels say. SessionInsights receives only the 50-row page and computes total: sessions.length, so the tile labelled TOTAL showed 50 against 35,790 real sessions, contradicting the page header directly above it. ACTIVE, MESSAGES and CLI are page-scoped too; only TOTAL was caught because it had a contradicting number beside it. The real COUNT(*) is ALREADY in the payload and already feeds the header; it is simply never passed to the tiles. Operator ruled 2026-08-26: real totals for all four, which needs one new aggregate (GROUP BY status, source plus SUM(message_count)) in the sessions repository. CHECK THE INDEX before shipping, this runs against 35k rows; if the aggregate is slow, relabel the three as page-scoped rather than ship a slow page. SQL goes in the repository file: sql-outside-repository is at zero and stays there. Source: the operator's live Hermes QA pass on dev@43d16c30, 2026-08-26; root cause traced and independently re-verified. Not a regression from the consolidation work. Closed 2026-08-26. Fixed as ruled: all four tiles are whole-table. The fix is structural rather than a pass-through. SessionInsights no longer receives the page at all, so it cannot count the page, and the one aggregate REPLACES the listing's separate SELECT COUNT(*) so that `total` is the sum of its group counts. The header number and the tile number are one value, not two values that agree. Two things the work turned up in the operator's own data, both filed here rather than deferred. First, sessions.source is free text and the real table holds `subagent` and `tui` rows, which the strip's fixed {cli, mission, cron, api} map counted as nothing at all, so the donut's segments did not sum to the number in its own centre; counts are now keyed by the stored value with the remainder drawn as Other. Second, 001_baseline.sql predates 006_sessions_message_count and runMigrations returns straight after applying the baseline, so a fresh install's first boot has a sessions table with no message_count column; naming that column unguarded would have taken the whole page down on exactly that boot, so the aggregate reuses the sync layer's pragma guard (ruling D6). One correction to the record itself: data/control-hub.db holds 35 sessions, not 35,790. At 35 rows against a 50-row page every page-scoped tile happens to equal its whole-table figure, so the reported symptom is not reproducible against that file; the defect is structural and the oracle proves it at 137 rows.",
+  "declared": {
+    "capabilities": [
+      "edit-source"
+    ],
+    "side_effects": []
+  },
+  "mode": "standard",
+  "tier_proposed": "R2",
+  "tier_ruled": "R2",
+  "reasons": [],
+  "status": "done",
+  "owner_session": "t0042-session-tiles-2026-08-26",
+  "invariants": [
+    "I1 No check is weakened. design-lint stays at 0 in 0 files across all eleven rules, the coverage floors stay at baseline, and the new SQL lives in src/lib/sessions/session-repository.ts so sql-outside-repository stays at zero. Verified: lint, tsc, tsc -p tsconfig.tests.json, 3074 tests in 363 suites, knip and build all pass.",
+    "I2 The header number and every tile number are one number. `listSessions` returns `total` and `totals.total` from the SAME aggregate rather than from two counts, so they are arithmetically identical under every offset, source filter and search. Pinned at the repository by session-totals-whole-table.test.ts and at the page by session-tiles-agree-with-header.test.tsx, which reads both numbers back out of the rendered DOM.",
+    "I3 The strip cannot see the page. SessionInsights takes whole-table totals and nothing else, so a page-scoped figure is not a bug to avoid but a value it has no access to. Held at COMPILE time by a @ts-expect-error asserting the component rejects a `sessions` prop; tsconfig.tests.json is wired into npm run lint, so that directive is a gate and not a comment.",
+    "I4 Nothing is counted as nothing. The per-source breakdown is keyed by the value stored in sessions.source, so it sums to the total whatever values an install carries, and the donut's segments add up to the number in its centre. Pinned with `subagent` rows in the seed, which the operator's real database actually holds.",
+    "I5 The query count per listing is unchanged. The aggregate replaces the COUNT(*) it makes redundant rather than joining it, so the fix costs one pragma guard read and no extra scan."
+  ],
+  "oracle_provenance": "Authored by the executor in this session BEFORE any file under src/ was edited, per the EXECUTOR R2 clause, and committed on its own in b97cb063 ahead of the implementation in b3ae643f. Two files. tests/unit/session-totals-whole-table.test.ts drives listSessions against a real in-memory SQLite database seeded so the newest 50 rows (exactly one page) are all completed api sessions with zero messages, against a table of 137, so a page-scoped TOTAL reads 50 and page-scoped ACTIVE, MESSAGES and CLI all read 0; it also holds the header/tile invariant across offsets, filters and searches, the per-source sum, and agreement with the number /api/monitor publishes. tests/unit/session-tiles-agree-with-header.test.tsx renders the real Sessions page against payloads whose loaded page is deliberately unrepresentative and compares the two numbers in the DOM, including after a source filter is clicked and on a page slice that is empty while the table is not. Measured red on dev@841ebd9c: 19 of 19 failed in the repository file, 8 of 9 failed in the page file (the one green case, an empty table printing no strip at all, is true today and must stay true), and tsc -p tsconfig.tests.json reported 17 errors including TS2578 Unused '@ts-expect-error' directive, which is the proof that the strip could still be handed the page. ONE amendment to declare: eslint at --max-warnings 0 flagged an unused destructured binding in the first case, which was dropped. No assertion changed.",
+  "rollback": "One-command revert. No migration, no schema element, no new index, no new route, no persisted state and no dependency change, so `git revert` of this task's two commits returns the tree to 841ebd9c behaviour. One note for whoever does it: SessionsResponse.totals and the /api/sessions payload field are additive and required together, so the hook, the route and the repository revert as one. Nothing reads the field outside this task.",
+  "claims": [
+    "src/app/(main)/sessions/",
+    "src/components/session/",
+    "src/lib/sessions/",
+    "tests/",
+    "src/app/api/sessions/route.ts",
+    "src/hooks/useSessions.ts"
+  ],
+  "claims_extended": [
+    "src/app/api/sessions/route.ts and src/hooks/useSessions.ts, the two links of the wire the task text itself names ('the real COUNT(*) is ALREADY in the payload, useSessions returns it, pass it through'), and the only path by which a repository figure reaches a tile"
+  ],
+  "measurements": {
+    "indexes_on_sessions": "mission_id, (agent_type, source), started_at DESC, plus the id primary key. None on status, so the aggregate is a full scan plus a temp b-tree.",
+    "real_db": "data/control-hub.db, opened read only, holds 35 sessions (not 35,790). COUNT(*) it replaces 0.013ms median; new aggregate 0.024ms median, 0.29ms max.",
+    "synthetic_35790": "Same schema and indexes, 35,790 rows. COUNT(*) 0.01ms median; new aggregate 15.9ms median and 23ms max on a checkpointed database, up to roughly 50ms with a large unmerged WAL.",
+    "verdict": "Ship real totals for all four. 16ms of server time at a size the table is nowhere near, on a request that already reads the agent's state.db, is not a slow page, so the relabelling fallback the operator allowed was not needed.",
+    "deferred_option": "A covering index on (status, source, message_count) measures 2.4ms at 35,790 rows. Not taken: it is a schema element, which is the durable decision band, and the table is three orders of magnitude away from wanting it."
+  },
+  "timestamps": {
+    "opened": "2026-08-26T09:30:00Z",
+    "updated": "2026-08-26T18:40:00Z",
+    "closed": "2026-08-26T12:00:00Z"
+  },
+  "claims_note": "Claims extended after the close commit, per the batch-B review. The work also edited src/app/api/sessions/route.ts and src/hooks/useSessions.ts, which is the minimum needed to carry `totals` from the repository to the page: the aggregate is useless if the route does not return it and the hook does not type it. The extension was declared in the executor's report at the time; this record now says so too."
+}

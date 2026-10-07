@@ -1,73 +1,33 @@
 import { NextRequest, NextResponse } from "next/server";
-import { existsSync, readFileSync } from "fs";
-
-import { logApiError } from "@/lib/api-logger";
-import { requireAuth, requireNotReadOnly } from "@/lib/api-auth";
-import { parseJsonBody } from "@/lib/parse-json-body";
-import { safeStat } from "@/lib/fs-stats";
-import { appendAuditLine } from "@/lib/audit-log";
+import { badRequest, notFound, ok, serverError } from "@/lib/api/api-response";
+import { parseJsonBody } from "@/lib/api/parse-json-body";
+import { appendAuditLine } from "@/lib/api/audit-log";
 import { ensureDb } from "@/lib/db";
-import { getSkill, upsertSkill, parseSkillFrontmatter } from "@/lib/skills-repository";
-import { pushSkillToHermes } from "@/lib/hermes-profile-sync";
-import { skillsRootForProfile } from "@/lib/skills-config";
+import { upsertSkill, parseSkillFrontmatter } from "@/lib/skills/skills-repository";
+import { readSkillView, skillsRoot } from "@/modules/hermes/lib/skill-view";
+import { resolveSkillDirUnderRoot } from "@/lib/fs/path-security";
+import { pushSkillToHermes } from "@/modules/hermes/lib/profile-push";
+import { route } from "@/lib/api/api-route";
 
-export async function GET(
-  request: NextRequest,
-  { params }: { params: Promise<{ name: string }> },
-) {
+export const GET = route("GET /api/skills/[name]", (p) => `reading skill ${p.name}`, "Failed to read skill", async (request: NextRequest, { params }: { params: Promise<{ name: string }> }) => {
   const { name } = await params;
-  const auth = requireAuth(request);
-  if (auth) return auth;
-
-  try {
-    ensureDb();
-    const row = getSkill(name);
-    if (row) {
-      return NextResponse.json({
-        data: {
-          name,
-          path: skillsRootForProfile() + "/" + name + "/SKILL.md",
-          content: row.content,
-          size: row.content.length,
-          lastModified: row.updatedAt,
-        },
-      });
-    }
-
-    const skillsRoot = skillsRootForProfile();
-    const filePath = skillsRoot + "/" + name + "/SKILL.md";
-    if (!existsSync(filePath)) {
-      return NextResponse.json({ error: `Skill not found: ${name}` }, { status: 404 });
-    }
-
-    const content = readFileSync(filePath, "utf-8");
-    const st = safeStat(filePath)!; // file confirmed to exist above
-
-    return NextResponse.json({
-      data: {
-        name,
-        path: filePath,
-        content,
-        size: st.size,
-        lastModified: st.mtime,
-      },
-    });
+  ensureDb();
+  // A single-segment key lands here and a nested one lands on
+  // [...path]; the two used to answer different shapes, and the viewer
+  // reached into the fields only the catch-all sent, so opening any
+  // top-level skill threw (T-0103, D81). One reader, one payload.
+  const resolved = resolveSkillDirUnderRoot(skillsRoot(), [name]);
+  if (!resolved.ok) {
+    return badRequest(resolved.error);
   }
-  catch (error) {
-    logApiError("GET /api/skills/[name]", `reading skill ${name}`, error);
-    return NextResponse.json({ error: "Failed to read skill" }, { status: 500 });
+  const view = readSkillView([name], resolved.skillDir);
+  if (!view) {
+    return notFound(`Skill not found: ${name}`);
   }
-}
+  return ok(view);
+});
 
-export async function PUT(
-  request: NextRequest,
-  { params }: { params: Promise<{ name: string }> },
-) {
-  const auth = requireAuth(request);
-  if (auth) return auth;
-  const ro = requireNotReadOnly("skill writes are disabled");
-  if (ro) return ro;
-
+export const PUT = route("PUT /api/skills/[name]", (p) => `writing skill ${p.name}`, "Failed to write skill", async (request: NextRequest, { params }: { params: Promise<{ name: string }> }) => {
   const { name } = await params;
 
   const bodyResult = await parseJsonBody(request);
@@ -79,42 +39,33 @@ export async function PUT(
       : undefined;
 
   if (typeof content !== "string") {
-    return NextResponse.json({ error: "Content is required" }, { status: 400 });
+    return badRequest("Content is required");
+  }
+  ensureDb();
+  const meta = parseSkillFrontmatter(content);
+  upsertSkill({
+    skillKey: name,
+    content,
+    displayName: meta.name || name,
+    description: meta.description,
+    category: meta.category,
+    source: "custom",
+  });
+
+  const push = pushSkillToHermes(name);
+  if (!push.success) {
+    return serverError(push.error ?? "Push failed");
   }
 
-  try {
-    ensureDb();
-    const meta = parseSkillFrontmatter(content);
-    upsertSkill({
-      skillKey: name,
-      content,
-      displayName: meta.name || name,
-      description: meta.description,
-      category: meta.category,
-      source: "custom",
-    });
+  appendAuditLine({
+    action: "skills.put",
+    resource: name,
+    ok: true,
+  });
 
-    const push = pushSkillToHermes(name);
-    if (!push.success) {
-      return NextResponse.json({ error: push.error ?? "Push failed" }, { status: 500 });
-    }
-
-    appendAuditLine({
-      action: "skills.put",
-      resource: name,
-      ok: true,
-    });
-
-    return NextResponse.json({
-      data: {
-        success: true,
-        name,
-        size: content.length,
-      },
-    });
-  }
-  catch (error) {
-    logApiError("PUT /api/skills/[name]", `writing skill ${name}`, error);
-    return NextResponse.json({ error: "Failed to write skill" }, { status: 500 });
-  }
-}
+  return ok({
+    success: true,
+    name,
+    size: content.length,
+  });
+});

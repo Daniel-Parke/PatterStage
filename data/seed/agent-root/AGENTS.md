@@ -9,7 +9,7 @@ Bob is the default agent at `HERMES_HOME` itself, not a named profile under
 - Use `SOUL.md` as the primary identity.
 - Respect `skills.disabled` and `skills.platform_disabled`.
 - Respect `platform_toolsets` for each runtime platform.
-- Preserve user-local changes unless the operator explicitly requests a push from Control Hub.
+- Preserve user-local changes unless the operator explicitly requests a push from PatterStage.
 - Prefer pull/import before seed when a Hermes install already exists.
 
 ## Workflow

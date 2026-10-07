@@ -37,19 +37,19 @@ export class ErrorBoundary extends Component<Props, State> {
   render() {
     if (this.state.hasError) {
       return (
-        <div className={`flex items-center justify-center gap-3 p-6 rounded-xl border border-neon-red/30 bg-neon-red/5 ${this.props.className ?? ""}`}>
+        <div className={`flex items-center justify-center gap-3 p-6 rounded-ps-lg border border-neon-red/30 bg-neon-red/5 ${this.props.className ?? ""}`}>
           <AlertTriangle className="w-5 h-5 text-neon-red flex-shrink-0" />
           <div className="min-w-0">
-            <p className="text-sm font-medium text-neon-red">
+            <p className="text-body font-medium text-neon-red">
               {this.props.label ?? "Something went wrong"}
             </p>
-            <p className="text-xs text-white/40 font-mono mt-0.5 truncate">
+            <p className="text-micro text-ps-text-muted font-mono mt-0.5 truncate">
               {this.state.message}
             </p>
           </div>
           <button
             onClick={this.handleReload}
-            className="ml-auto flex items-center gap-1.5 text-xs text-white/40 hover:text-white transition-colors px-2 py-1 rounded border border-white/10 hover:border-white/20"
+            className="ml-auto flex items-center gap-1.5 text-body text-ps-text-muted hover:text-ps-text-primary transition-colors px-2 py-1 rounded-ps-sm border border-ps-edge hover:border-ps-edge-emphasis"
           >
             <RefreshCw className="w-3 h-3" />
             Retry

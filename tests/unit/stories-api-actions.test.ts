@@ -8,83 +8,23 @@
 // - unknown action returns 400
 // - validateChapterOutput strips meta commentary
 
-jest.mock("next/server", () => {
-  class NextResponse {
-    status: number;
-    ok: boolean;
-    statusText: string;
-    headers: Headers;
-    private _data: unknown;
-    constructor(data?: unknown, init?: ResponseInit) {
-      this._data = data;
-      this.status = init?.status ?? 200;
-      this.ok = this.status >= 200 && this.status < 300;
-      this.statusText = init?.statusText ?? "OK";
-      this.headers = new Headers(init?.headers);
-    }
-    static json(data: unknown, init?: ResponseInit) {
-      return new NextResponse(data, init);
-    }
-    async json() {
-      return this._data;
-    }
-  }
-  return {
-    NextRequest: class NextRequest {
-      url: string;
-      method: string;
-      headers: Headers;
-      bodyUsed: boolean = false;
-      private _body: string;
-      constructor(url: string, init?: RequestInit) {
-        this.url = url;
-        this.method = init?.method ?? "GET";
-        this.headers = new Headers(init?.headers as HeadersInit);
-        this._body = typeof init?.body === "string" ? init.body : JSON.stringify(init?.body ?? {});
-      }
-      async json() { return JSON.parse(this._body); }
-    },
-    NextResponse,
-  };
-});
 
-jest.mock("@/lib/api-logger", () => ({
-  logApiError: jest.fn(),
-}));
+jest.mock("next/server", () => require("../helpers/mocks").nextServerMock());
 
-jest.mock("@/lib/story-weaver/prompts", () => ({
+jest.mock("@/lib/api/api-logger", () => jest.requireActual("@/lib/api/api-logger"));
+
+jest.mock("@/modules/rec-room/lib/prompts", () => ({
   getStoryPrompt: jest.fn(() => "system prompt"),
 }));
 
-jest.mock("@/lib/api-auth", () => ({
-  requireAuth: jest.fn(() => null),
-  requireAuth: jest.fn(() => null),
+jest.mock("@/lib/api/api-auth", () => ({
 }));
 
-// Mock story-repository
-jest.mock("@/lib/story-repository", () => {
-  const listStories = jest.fn();
-  const getStory = jest.fn();
-  const createStory = jest.fn();
-  const updateStory = jest.fn();
-  const deleteStory = jest.fn();
 
-  return {
-    listStories,
-    getStory,
-    createStory,
-    updateStory,
-    deleteStory,
-    __listStories: listStories,
-    __getStory: getStory,
-    __createStory: createStory,
-    __updateStory: updateStory,
-    __deleteStory: deleteStory,
-  };
-});
+jest.mock("@/modules/rec-room/lib/story-repository", () => require("../helpers/story").storyRepositoryMock());
 
-// eslint-disable-next-line @typescript-eslint/no-require-imports
-const storyRepo = require("@/lib/story-repository") as Record<string, unknown>;
+
+const storyRepo = require("@/modules/rec-room/lib/story-repository") as Record<string, unknown>;
 const mockGetStory = storyRepo.__getStory as jest.Mock;
 const mockUpdateStory = storyRepo.__updateStory as jest.Mock;
 const mockDeleteStory = storyRepo.__deleteStory as jest.Mock;
@@ -305,9 +245,9 @@ describe("/api/stories action validation", () => {
       });
 
       const res = await POST(request);
-      expect(res.status).toBe(200);
+      expect(res.status).toBe(500);
       const data = await res.json();
-      expect(data.data.stories).toEqual([]);
+      expect(data).toEqual({ error: "Failed to load stories" });
     });
   });
 

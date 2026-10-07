@@ -1,12 +1,12 @@
 /** @jest-environment node */
 
 import {
-  buildDisabledYamlLines,
   collectSkillDirectoryNames,
   computeEffectiveDisabledFromYaml,
   normalizeDisabledSkillKeys,
   parseSkillsDisabledFromYaml,
-} from "@/lib/skills-config";
+  skillFilePath,
+} from "@/modules/hermes/lib/skills-config";
 
 describe("parseSkillsDisabledFromYaml", () => {
   it("returns empty disabled lists when skills section has no disabled key", () => {
@@ -39,22 +39,6 @@ describe("parseSkillsDisabledFromYaml", () => {
     expect(parsed.disabledNames.has("b")).toBe(true);
     expect(parsed.platformDisabled.telegram.has("c")).toBe(true);
     expect(parsed.platformDisabled.telegram.has("d")).toBe(true);
-  });
-});
-
-describe("buildDisabledYamlLines", () => {
-  it("emits empty disabled list", () => {
-    expect(buildDisabledYamlLines([])).toEqual(["  disabled: []"]);
-  });
-
-  it("emits platform_disabled", () => {
-    expect(buildDisabledYamlLines(["a"], { cli: ["b"] })).toEqual([
-      "  disabled:",
-      "    - a",
-      "  platform_disabled:",
-      "    cli:",
-      "      - b",
-    ]);
   });
 });
 
@@ -95,5 +79,31 @@ describe("computeEffectiveDisabledFromYaml", () => {
     );
     const disabled = computeEffectiveDisabledFromYaml(yaml, catalog);
     expect(disabled.sort()).toEqual(["a/two", "b/three"]);
+  });
+});
+
+describe("skillFilePath", () => {
+  it("joins a leaf catalog key to the skills root", () => {
+    expect(skillFilePath("/root/skills", "apple-notes")).toBe(
+      "/root/skills/apple-notes/SKILL.md",
+    );
+  });
+
+  it("joins a nested catalog key with forward slashes", () => {
+    expect(skillFilePath("/root/skills", "apple/apple-notes")).toBe(
+      "/root/skills/apple/apple-notes/SKILL.md",
+    );
+  });
+
+  it("normalises Windows-style backslashes in the catalog key", () => {
+    expect(skillFilePath("/root/skills", "apple\\apple-notes")).toBe(
+      "/root/skills/apple/apple-notes/SKILL.md",
+    );
+  });
+
+  it("preserves a trailing slash on the root", () => {
+    expect(skillFilePath("/root/skills/", "apple-notes")).toBe(
+      "/root/skills//apple-notes/SKILL.md",
+    );
   });
 });

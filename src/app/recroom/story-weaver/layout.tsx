@@ -1,9 +1,37 @@
-import { Literata, EB_Garamond, Lora, Merriweather } from "next/font/google";
+import localFont from "next/font/local";
 
-const literata = Literata({ variable: "--font-literata", subsets: ["latin"], display: "swap" });
-const ebGaramond = EB_Garamond({ variable: "--font-eb-garamond", subsets: ["latin"], display: "swap" });
-const lora = Lora({ variable: "--font-lora", subsets: ["latin"], display: "swap" });
-const merriweather = Merriweather({ variable: "--font-merriweather", weight: ["300", "400", "700"], subsets: ["latin"], display: "swap" });
+// The Story Weaver reader's four serif faces, vendored rather than fetched
+// (WG-DEL-004, ruled C: determinism first). They were next/font/google, which made
+// `next build` reach the network and forced CI to carry a font warmup and a
+// whole-build retry.
+//
+// All four are variable fonts, so one file each covers the range the CSS API used
+// to serve. Merriweather previously requested three discrete weights; the variable
+// file spans them.
+const literata = localFont({
+  src: "../../fonts/Literata.woff2",
+  variable: "--font-literata",
+  weight: "200 900",
+  display: "swap",
+});
+const ebGaramond = localFont({
+  src: "../../fonts/EBGaramond.woff2",
+  variable: "--font-eb-garamond",
+  weight: "400 800",
+  display: "swap",
+});
+const lora = localFont({
+  src: "../../fonts/Lora.woff2",
+  variable: "--font-lora",
+  weight: "400 700",
+  display: "swap",
+});
+const merriweather = localFont({
+  src: "../../fonts/Merriweather.woff2",
+  variable: "--font-merriweather",
+  weight: "300 700",
+  display: "swap",
+});
 
 export default function StoryWeaverLayout({
   children,
@@ -11,7 +39,7 @@ export default function StoryWeaverLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <div className={`${literata.variable} ${ebGaramond.variable} ${lora.variable} ${merriweather.variable}`}>
+    <div className={`h-full min-h-0 ${literata.variable} ${ebGaramond.variable} ${lora.variable} ${merriweather.variable}`}>
       {children}
     </div>
   );

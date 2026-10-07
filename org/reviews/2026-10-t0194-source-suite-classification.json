@@ -1,0 +1,706 @@
+{
+  "inspectedRevision": "a30bdfdb0c47bf1138d0a593a552273408f4cd4a",
+  "author": "01a107e1-5dcc-7f00-98e1-4d98b9d8e943",
+  "method": "Original AST candidate detector followed by read-to-assertion source inspection. Includes mixed behaviour/source suites. Classification only; no retirement authority.",
+  "counts": {
+    "source-assertion-or-scan": 111,
+    "sql-data-fixture": 18,
+    "generated-receipt-runtime-fixture": 2,
+    "metadata-tree-generated-contract": 6
+  },
+  "broadenedNamedReaderCandidates": 223,
+  "remainingOutsideOriginalDetector": 86,
+  "limitations": [
+    "Historical published candidate counts retain their inspected revision and scope.",
+    "Candidate selection is not proof of a source assertion.",
+    "The broadened 86 outside the original detector remain unclassified.",
+    "SQL fixture category can include migration-tree checks; no blanket claim that all 18 avoid structural assertions."
+  ],
+  "entries": [
+    {
+      "path": "tests/unit/b1-colour-classes-name-declared-tokens.test.ts",
+      "classification": "source-assertion-or-scan",
+      "scepticVerdict": "pending-independent-check"
+    },
+    {
+      "path": "tests/unit/b1-deploy-api-flag.test.ts",
+      "classification": "source-assertion-or-scan",
+      "scepticVerdict": "pending-independent-check"
+    },
+    {
+      "path": "tests/unit/b1-one-cancel-and-a-stream-that-lets-go.test.ts",
+      "classification": "source-assertion-or-scan",
+      "scepticVerdict": "pending-independent-check"
+    },
+    {
+      "path": "tests/unit/b10-category-write-failures.test.tsx",
+      "classification": "source-assertion-or-scan",
+      "scepticVerdict": "pending-independent-check"
+    },
+    {
+      "path": "tests/unit/b10-mission-panel-schedule-and-sessions.test.tsx",
+      "classification": "source-assertion-or-scan",
+      "scepticVerdict": "pending-independent-check"
+    },
+    {
+      "path": "tests/unit/b11-session-row-and-group.test.tsx",
+      "classification": "source-assertion-or-scan",
+      "scepticVerdict": "pending-independent-check"
+    },
+    {
+      "path": "tests/unit/b13-script-extensions-are-one-rule.test.ts",
+      "classification": "source-assertion-or-scan",
+      "scepticVerdict": "pending-independent-check"
+    },
+    {
+      "path": "tests/unit/b15-corpus-moves-under-org.test.ts",
+      "classification": "source-assertion-or-scan",
+      "scepticVerdict": "pending-independent-check"
+    },
+    {
+      "path": "tests/unit/b16-concept-hint-a11y.test.tsx",
+      "classification": "source-assertion-or-scan",
+      "scepticVerdict": "pending-independent-check"
+    },
+    {
+      "path": "tests/unit/b16-help-link-on-every-header.test.tsx",
+      "classification": "source-assertion-or-scan",
+      "scepticVerdict": "pending-independent-check"
+    },
+    {
+      "path": "tests/unit/b17-the-latch-survives-a-reset.test.ts",
+      "classification": "source-assertion-or-scan",
+      "scepticVerdict": "pending-independent-check"
+    },
+    {
+      "path": "tests/unit/b17-the-two-read-events.test.ts",
+      "classification": "source-assertion-or-scan",
+      "scepticVerdict": "pending-independent-check"
+    },
+    {
+      "path": "tests/unit/b19-no-screen-claims-a-published-rate.test.ts",
+      "classification": "source-assertion-or-scan",
+      "scepticVerdict": "pending-independent-check"
+    },
+    {
+      "path": "tests/unit/b2-confirm-button.test.tsx",
+      "classification": "source-assertion-or-scan",
+      "scepticVerdict": "pending-independent-check"
+    },
+    {
+      "path": "tests/unit/b2-focus-is-visible.test.ts",
+      "classification": "source-assertion-or-scan",
+      "scepticVerdict": "pending-independent-check"
+    },
+    {
+      "path": "tests/unit/b2-read-contract.test.tsx",
+      "classification": "source-assertion-or-scan",
+      "scepticVerdict": "pending-independent-check"
+    },
+    {
+      "path": "tests/unit/b2-status-vocabulary.test.tsx",
+      "classification": "source-assertion-or-scan",
+      "scepticVerdict": "pending-independent-check"
+    },
+    {
+      "path": "tests/unit/b2-toasts-stack.test.tsx",
+      "classification": "source-assertion-or-scan",
+      "scepticVerdict": "pending-independent-check"
+    },
+    {
+      "path": "tests/unit/b3-titles-from-registry.test.tsx",
+      "classification": "source-assertion-or-scan",
+      "scepticVerdict": "pending-independent-check"
+    },
+    {
+      "path": "tests/unit/b4-taxonomy.test.ts",
+      "classification": "source-assertion-or-scan",
+      "scepticVerdict": "pending-independent-check"
+    },
+    {
+      "path": "tests/unit/b5-dashboard-source-shape.test.ts",
+      "classification": "source-assertion-or-scan",
+      "scepticVerdict": "pending-independent-check"
+    },
+    {
+      "path": "tests/unit/b6-backup-route.test.ts",
+      "classification": "source-assertion-or-scan",
+      "scepticVerdict": "pending-independent-check"
+    },
+    {
+      "path": "tests/unit/b6-credentials-rotate-route.test.ts",
+      "classification": "source-assertion-or-scan",
+      "scepticVerdict": "pending-independent-check"
+    },
+    {
+      "path": "tests/unit/b6-keyless-providers.test.tsx",
+      "classification": "source-assertion-or-scan",
+      "scepticVerdict": "pending-independent-check"
+    },
+    {
+      "path": "tests/unit/b6-models-diff-route.test.ts",
+      "classification": "source-assertion-or-scan",
+      "scepticVerdict": "pending-independent-check"
+    },
+    {
+      "path": "tests/unit/b7-logs-terminal-and-actions.test.tsx",
+      "classification": "source-assertion-or-scan",
+      "scepticVerdict": "pending-independent-check"
+    },
+    {
+      "path": "tests/unit/b7-memory-empty-states.test.tsx",
+      "classification": "source-assertion-or-scan",
+      "scepticVerdict": "pending-independent-check"
+    },
+    {
+      "path": "tests/unit/b7-memory-provider-is-one-switch.test.ts",
+      "classification": "source-assertion-or-scan",
+      "scepticVerdict": "pending-independent-check"
+    },
+    {
+      "path": "tests/unit/b8-agents-page.test.tsx",
+      "classification": "source-assertion-or-scan",
+      "scepticVerdict": "pending-independent-check"
+    },
+    {
+      "path": "tests/unit/b9-tools-and-skills-routes.test.ts",
+      "classification": "source-assertion-or-scan",
+      "scepticVerdict": "pending-independent-check"
+    },
+    {
+      "path": "tests/unit/bloom-paint-rule.test.ts",
+      "classification": "source-assertion-or-scan",
+      "scepticVerdict": "pending-independent-check"
+    },
+    {
+      "path": "tests/unit/c1-one-route-body.test.ts",
+      "classification": "source-assertion-or-scan",
+      "scepticVerdict": "pending-independent-check"
+    },
+    {
+      "path": "tests/unit/c2-one-type-each.test.ts",
+      "classification": "source-assertion-or-scan",
+      "scepticVerdict": "pending-independent-check"
+    },
+    {
+      "path": "tests/unit/c3-one-way-to-write.test.ts",
+      "classification": "source-assertion-or-scan",
+      "scepticVerdict": "pending-independent-check"
+    },
+    {
+      "path": "tests/unit/c5-comments-that-narrate.test.ts",
+      "classification": "source-assertion-or-scan",
+      "scepticVerdict": "pending-independent-check"
+    },
+    {
+      "path": "tests/unit/c6-the-page-layer.test.ts",
+      "classification": "source-assertion-or-scan",
+      "scepticVerdict": "pending-independent-check"
+    },
+    {
+      "path": "tests/unit/c7-the-lib-root.test.ts",
+      "classification": "source-assertion-or-scan",
+      "scepticVerdict": "pending-independent-check"
+    },
+    {
+      "path": "tests/unit/cancel-and-gather-tell-the-truth.test.ts",
+      "classification": "source-assertion-or-scan",
+      "scepticVerdict": "pending-independent-check"
+    },
+    {
+      "path": "tests/unit/components-token-preservation.test.tsx",
+      "classification": "source-assertion-or-scan",
+      "scepticVerdict": "pending-independent-check"
+    },
+    {
+      "path": "tests/unit/composer-cancel-is-a-decision.test.ts",
+      "classification": "source-assertion-or-scan",
+      "scepticVerdict": "pending-independent-check"
+    },
+    {
+      "path": "tests/unit/composer-reject-is-not-a-cliff.test.ts",
+      "classification": "source-assertion-or-scan",
+      "scepticVerdict": "pending-independent-check"
+    },
+    {
+      "path": "tests/unit/config-put-refuses-unparseable-yaml.test.ts",
+      "classification": "source-assertion-or-scan",
+      "scepticVerdict": "pending-independent-check"
+    },
+    {
+      "path": "tests/unit/console-shapes-and-dead-ends.test.ts",
+      "classification": "source-assertion-or-scan",
+      "scepticVerdict": "pending-independent-check"
+    },
+    {
+      "path": "tests/unit/dependency-hygiene-contract.test.ts",
+      "classification": "source-assertion-or-scan",
+      "scepticVerdict": "pending-independent-check"
+    },
+    {
+      "path": "tests/unit/feature-flag-route-is-dynamic.test.ts",
+      "classification": "source-assertion-or-scan",
+      "scepticVerdict": "pending-independent-check"
+    },
+    {
+      "path": "tests/unit/feedback-is-perceivable.test.tsx",
+      "classification": "source-assertion-or-scan",
+      "scepticVerdict": "pending-independent-check"
+    },
+    {
+      "path": "tests/unit/gateway-models-route.test.ts",
+      "classification": "source-assertion-or-scan",
+      "scepticVerdict": "pending-independent-check"
+    },
+    {
+      "path": "tests/unit/k1-ci-can-go-green.test.ts",
+      "classification": "source-assertion-or-scan",
+      "scepticVerdict": "pending-independent-check"
+    },
+    {
+      "path": "tests/unit/k4-the-security-fixes.test.ts",
+      "classification": "source-assertion-or-scan",
+      "scepticVerdict": "pending-independent-check"
+    },
+    {
+      "path": "tests/unit/k5-the-ruled-security-fixes.test.ts",
+      "classification": "source-assertion-or-scan",
+      "scepticVerdict": "pending-independent-check"
+    },
+    {
+      "path": "tests/unit/k6-the-gates-see.test.ts",
+      "classification": "source-assertion-or-scan",
+      "scepticVerdict": "pending-independent-check"
+    },
+    {
+      "path": "tests/unit/kit-provenance.test.ts",
+      "classification": "source-assertion-or-scan",
+      "scepticVerdict": "pending-independent-check"
+    },
+    {
+      "path": "tests/unit/lib-domain-helper-parity.test.ts",
+      "classification": "source-assertion-or-scan",
+      "scepticVerdict": "pending-independent-check"
+    },
+    {
+      "path": "tests/unit/lib-domain-obsolete-exports.test.ts",
+      "classification": "source-assertion-or-scan",
+      "scepticVerdict": "pending-independent-check"
+    },
+    {
+      "path": "tests/unit/lib-domain-ownership.test.ts",
+      "classification": "source-assertion-or-scan",
+      "scepticVerdict": "pending-independent-check"
+    },
+    {
+      "path": "tests/unit/lockbook-tokens.test.ts",
+      "classification": "source-assertion-or-scan",
+      "scepticVerdict": "pending-independent-check"
+    },
+    {
+      "path": "tests/unit/memory-switch-is-honoured.test.ts",
+      "classification": "source-assertion-or-scan",
+      "scepticVerdict": "pending-independent-check"
+    },
+    {
+      "path": "tests/unit/memory-tab-render.test.tsx",
+      "classification": "source-assertion-or-scan",
+      "scepticVerdict": "pending-independent-check"
+    },
+    {
+      "path": "tests/unit/mission-composer-finishes.test.tsx",
+      "classification": "source-assertion-or-scan",
+      "scepticVerdict": "pending-independent-check"
+    },
+    {
+      "path": "tests/unit/missions-read-only-reads.test.ts",
+      "classification": "source-assertion-or-scan",
+      "scepticVerdict": "pending-independent-check"
+    },
+    {
+      "path": "tests/unit/model-select-dropdown-source-pattern.test.tsx",
+      "classification": "source-assertion-or-scan",
+      "scepticVerdict": "pending-independent-check"
+    },
+    {
+      "path": "tests/unit/models-section-header.test.tsx",
+      "classification": "source-assertion-or-scan",
+      "scepticVerdict": "pending-independent-check"
+    },
+    {
+      "path": "tests/unit/nav-phrases-name-real-places.test.ts",
+      "classification": "source-assertion-or-scan",
+      "scepticVerdict": "pending-independent-check"
+    },
+    {
+      "path": "tests/unit/output-canary.test.ts",
+      "classification": "source-assertion-or-scan",
+      "scepticVerdict": "pending-independent-check"
+    },
+    {
+      "path": "tests/unit/read-only-actually-reads.test.ts",
+      "classification": "source-assertion-or-scan",
+      "scepticVerdict": "pending-independent-check"
+    },
+    {
+      "path": "tests/unit/record-surface-containers.test.ts",
+      "classification": "source-assertion-or-scan",
+      "scepticVerdict": "pending-independent-check"
+    },
+    {
+      "path": "tests/unit/session-size-is-a-number.test.ts",
+      "classification": "source-assertion-or-scan",
+      "scepticVerdict": "pending-independent-check"
+    },
+    {
+      "path": "tests/unit/spend-unattended-dispatch.test.ts",
+      "classification": "source-assertion-or-scan",
+      "scepticVerdict": "pending-independent-check"
+    },
+    {
+      "path": "tests/unit/t0162-blind-gates.test.ts",
+      "classification": "source-assertion-or-scan",
+      "scepticVerdict": "pending-independent-check"
+    },
+    {
+      "path": "tests/unit/the-numbers-stop-lying.test.ts",
+      "classification": "source-assertion-or-scan",
+      "scepticVerdict": "pending-independent-check"
+    },
+    {
+      "path": "tests/unit/tooling-env-contract.test.ts",
+      "classification": "source-assertion-or-scan",
+      "scepticVerdict": "pending-independent-check"
+    },
+    {
+      "path": "tests/unit/type-owner-equivalence.test.ts",
+      "classification": "source-assertion-or-scan",
+      "scepticVerdict": "pending-independent-check"
+    },
+    {
+      "path": "tests/unit/u0-the-gate-sees-what-it-claims.test.ts",
+      "classification": "source-assertion-or-scan",
+      "scepticVerdict": "pending-independent-check"
+    },
+    {
+      "path": "tests/unit/u11-models-memory-and-the-eyebrows.test.tsx",
+      "classification": "source-assertion-or-scan",
+      "scepticVerdict": "pending-independent-check"
+    },
+    {
+      "path": "tests/unit/u12-five-entries-become-two.test.ts",
+      "classification": "source-assertion-or-scan",
+      "scepticVerdict": "pending-independent-check"
+    },
+    {
+      "path": "tests/unit/u12-story-weaver-on-the-primitives.test.ts",
+      "classification": "source-assertion-or-scan",
+      "scepticVerdict": "pending-independent-check"
+    },
+    {
+      "path": "tests/unit/u12-the-reader-register.test.tsx",
+      "classification": "source-assertion-or-scan",
+      "scepticVerdict": "pending-independent-check"
+    },
+    {
+      "path": "tests/unit/u13-help-names-itself.test.tsx",
+      "classification": "source-assertion-or-scan",
+      "scepticVerdict": "pending-independent-check"
+    },
+    {
+      "path": "tests/unit/u13-link-button.test.tsx",
+      "classification": "source-assertion-or-scan",
+      "scepticVerdict": "pending-independent-check"
+    },
+    {
+      "path": "tests/unit/u13-quests-is-one-card-level.test.tsx",
+      "classification": "source-assertion-or-scan",
+      "scepticVerdict": "pending-independent-check"
+    },
+    {
+      "path": "tests/unit/u13-the-dashboard-says-it-once.test.tsx",
+      "classification": "source-assertion-or-scan",
+      "scepticVerdict": "pending-independent-check"
+    },
+    {
+      "path": "tests/unit/u14-a-failed-run-is-an-error.test.tsx",
+      "classification": "source-assertion-or-scan",
+      "scepticVerdict": "pending-independent-check"
+    },
+    {
+      "path": "tests/unit/u14-the-rail-between-768-and-1024.test.tsx",
+      "classification": "source-assertion-or-scan",
+      "scepticVerdict": "pending-independent-check"
+    },
+    {
+      "path": "tests/unit/u14-the-ring-paints-and-motion-stops.test.ts",
+      "classification": "source-assertion-or-scan",
+      "scepticVerdict": "pending-independent-check"
+    },
+    {
+      "path": "tests/unit/u15-nothing-lives-only-for-its-test.test.ts",
+      "classification": "source-assertion-or-scan",
+      "scepticVerdict": "pending-independent-check"
+    },
+    {
+      "path": "tests/unit/u15-reads-go-through-the-hook.test.tsx",
+      "classification": "source-assertion-or-scan",
+      "scepticVerdict": "pending-independent-check"
+    },
+    {
+      "path": "tests/unit/u15-the-dead-are-gone.test.tsx",
+      "classification": "source-assertion-or-scan",
+      "scepticVerdict": "pending-independent-check"
+    },
+    {
+      "path": "tests/unit/u17-split-pane.test.tsx",
+      "classification": "source-assertion-or-scan",
+      "scepticVerdict": "pending-independent-check"
+    },
+    {
+      "path": "tests/unit/u17-the-phone-keeps-its-title.test.tsx",
+      "classification": "source-assertion-or-scan",
+      "scepticVerdict": "pending-independent-check"
+    },
+    {
+      "path": "tests/unit/u18-one-push-all.test.tsx",
+      "classification": "source-assertion-or-scan",
+      "scepticVerdict": "pending-independent-check"
+    },
+    {
+      "path": "tests/unit/u18-the-header-says-what-the-panel-says.test.tsx",
+      "classification": "source-assertion-or-scan",
+      "scepticVerdict": "pending-independent-check"
+    },
+    {
+      "path": "tests/unit/u18-the-transcript-says-it-once.test.tsx",
+      "classification": "source-assertion-or-scan",
+      "scepticVerdict": "pending-independent-check"
+    },
+    {
+      "path": "tests/unit/u19-an-empty-page-offers-its-action.test.tsx",
+      "classification": "source-assertion-or-scan",
+      "scepticVerdict": "pending-independent-check"
+    },
+    {
+      "path": "tests/unit/u19-the-board-comes-first.test.tsx",
+      "classification": "source-assertion-or-scan",
+      "scepticVerdict": "pending-independent-check"
+    },
+    {
+      "path": "tests/unit/u19-the-canvas-waits-for-build.test.tsx",
+      "classification": "source-assertion-or-scan",
+      "scepticVerdict": "pending-independent-check"
+    },
+    {
+      "path": "tests/unit/u19-the-terminal-owns-its-toolbar.test.tsx",
+      "classification": "source-assertion-or-scan",
+      "scepticVerdict": "pending-independent-check"
+    },
+    {
+      "path": "tests/unit/u2-the-contrast-gate-refuses.test.ts",
+      "classification": "source-assertion-or-scan",
+      "scepticVerdict": "pending-independent-check"
+    },
+    {
+      "path": "tests/unit/u2-the-token-layer.test.ts",
+      "classification": "source-assertion-or-scan",
+      "scepticVerdict": "pending-independent-check"
+    },
+    {
+      "path": "tests/unit/u20-polish.test.tsx",
+      "classification": "source-assertion-or-scan",
+      "scepticVerdict": "pending-independent-check"
+    },
+    {
+      "path": "tests/unit/u3-page-geometry.test.tsx",
+      "classification": "source-assertion-or-scan",
+      "scepticVerdict": "pending-independent-check"
+    },
+    {
+      "path": "tests/unit/u4-surfaces-and-edges.test.ts",
+      "classification": "source-assertion-or-scan",
+      "scepticVerdict": "pending-independent-check"
+    },
+    {
+      "path": "tests/unit/u5-the-type-scale.test.ts",
+      "classification": "source-assertion-or-scan",
+      "scepticVerdict": "pending-independent-check"
+    },
+    {
+      "path": "tests/unit/u6-colour-that-is-there.test.ts",
+      "classification": "source-assertion-or-scan",
+      "scepticVerdict": "pending-independent-check"
+    },
+    {
+      "path": "tests/unit/u6-the-scales.test.ts",
+      "classification": "source-assertion-or-scan",
+      "scepticVerdict": "pending-independent-check"
+    },
+    {
+      "path": "tests/unit/u6-the-status-ladder.test.ts",
+      "classification": "source-assertion-or-scan",
+      "scepticVerdict": "pending-independent-check"
+    },
+    {
+      "path": "tests/unit/u7-the-rail.test.tsx",
+      "classification": "source-assertion-or-scan",
+      "scepticVerdict": "pending-independent-check"
+    },
+    {
+      "path": "tests/unit/u8-the-card-primitive.test.tsx",
+      "classification": "source-assertion-or-scan",
+      "scepticVerdict": "pending-independent-check"
+    },
+    {
+      "path": "tests/unit/u8-the-focus-ring.test.ts",
+      "classification": "source-assertion-or-scan",
+      "scepticVerdict": "pending-independent-check"
+    },
+    {
+      "path": "tests/unit/u9-no-dangling-variant.test.ts",
+      "classification": "source-assertion-or-scan",
+      "scepticVerdict": "pending-independent-check"
+    },
+    {
+      "path": "tests/unit/use-copy-to-clipboard.test.tsx",
+      "classification": "source-assertion-or-scan",
+      "scepticVerdict": "pending-independent-check"
+    },
+    {
+      "path": "tests/unit/viz-chrome-tokens.test.ts",
+      "classification": "source-assertion-or-scan",
+      "scepticVerdict": "pending-independent-check"
+    },
+    {
+      "path": "tests/unit/analytics-repository.test.ts",
+      "classification": "sql-data-fixture",
+      "scepticVerdict": "pending-independent-check"
+    },
+    {
+      "path": "tests/unit/b11-sessions-sql-filters.test.ts",
+      "classification": "sql-data-fixture",
+      "scepticVerdict": "pending-independent-check"
+    },
+    {
+      "path": "tests/unit/b6-models-origin.test.ts",
+      "classification": "sql-data-fixture",
+      "scepticVerdict": "pending-independent-check"
+    },
+    {
+      "path": "tests/unit/baseline-schema.test.ts",
+      "classification": "sql-data-fixture",
+      "scepticVerdict": "pending-independent-check"
+    },
+    {
+      "path": "tests/unit/chat-repository.test.ts",
+      "classification": "sql-data-fixture",
+      "scepticVerdict": "pending-independent-check"
+    },
+    {
+      "path": "tests/unit/close-orphaned-sessions.test.ts",
+      "classification": "sql-data-fixture",
+      "scepticVerdict": "pending-independent-check"
+    },
+    {
+      "path": "tests/unit/count-templates-in-category.test.ts",
+      "classification": "sql-data-fixture",
+      "scepticVerdict": "pending-independent-check"
+    },
+    {
+      "path": "tests/unit/data-transaction-repository-contracts.test.ts",
+      "classification": "sql-data-fixture",
+      "scepticVerdict": "pending-independent-check"
+    },
+    {
+      "path": "tests/unit/db-baseline.test.ts",
+      "classification": "sql-data-fixture",
+      "scepticVerdict": "pending-independent-check"
+    },
+    {
+      "path": "tests/unit/db-migrations-incremental.test.ts",
+      "classification": "sql-data-fixture",
+      "scepticVerdict": "pending-independent-check"
+    },
+    {
+      "path": "tests/unit/db-upgrade.integration.test.ts",
+      "classification": "sql-data-fixture",
+      "scepticVerdict": "pending-independent-check"
+    },
+    {
+      "path": "tests/unit/ensure-default-categories.test.ts",
+      "classification": "sql-data-fixture",
+      "scepticVerdict": "pending-independent-check"
+    },
+    {
+      "path": "tests/unit/migration-t0188-update-backup-order.test.ts",
+      "classification": "sql-data-fixture",
+      "scepticVerdict": "pending-independent-check"
+    },
+    {
+      "path": "tests/unit/mission-delete-cleans-disk.test.ts",
+      "classification": "sql-data-fixture",
+      "scepticVerdict": "pending-independent-check"
+    },
+    {
+      "path": "tests/unit/session-totals-whole-table.test.ts",
+      "classification": "sql-data-fixture",
+      "scepticVerdict": "pending-independent-check"
+    },
+    {
+      "path": "tests/unit/sessions-search.test.ts",
+      "classification": "sql-data-fixture",
+      "scepticVerdict": "pending-independent-check"
+    },
+    {
+      "path": "tests/unit/the-ledger-answers-when-a-script-last-ran.test.ts",
+      "classification": "sql-data-fixture",
+      "scepticVerdict": "pending-independent-check"
+    },
+    {
+      "path": "tests/unit/u15-one-driver-for-sql-migrations.test.ts",
+      "classification": "sql-data-fixture",
+      "scepticVerdict": "pending-independent-check"
+    },
+    {
+      "path": "tests/unit/release-jest-worker-budget.test.ts",
+      "classification": "generated-receipt-runtime-fixture",
+      "scepticVerdict": "pending-independent-check"
+    },
+    {
+      "path": "tests/unit/t0161-backup-creation.test.ts",
+      "classification": "generated-receipt-runtime-fixture",
+      "scepticVerdict": "pending-independent-check"
+    },
+    {
+      "path": "tests/unit/b1-api-md-matches-the-route-tree.test.ts",
+      "classification": "metadata-tree-generated-contract",
+      "scepticVerdict": "pending-independent-check"
+    },
+    {
+      "path": "tests/unit/b2-copy.test.ts",
+      "classification": "metadata-tree-generated-contract",
+      "scepticVerdict": "pending-independent-check"
+    },
+    {
+      "path": "tests/unit/c0-the-line-census.test.ts",
+      "classification": "metadata-tree-generated-contract",
+      "scepticVerdict": "pending-independent-check"
+    },
+    {
+      "path": "tests/unit/k3-a-closed-record-keeps-its-spelling.test.ts",
+      "classification": "metadata-tree-generated-contract",
+      "scepticVerdict": "pending-independent-check"
+    },
+    {
+      "path": "tests/unit/schema-json-drift.test.ts",
+      "classification": "metadata-tree-generated-contract",
+      "scepticVerdict": "pending-independent-check"
+    },
+    {
+      "path": "tests/unit/t0165-plan-contract.test.ts",
+      "classification": "metadata-tree-generated-contract",
+      "scepticVerdict": "pending-independent-check"
+    }
+  ]
+}

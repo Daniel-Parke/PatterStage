@@ -5,7 +5,7 @@ const packPath = join(
   __dirname,
   "..",
   "..",
-  "data/seed/template-packs/control-hub-professional-v1.json",
+  "data/seed/template-packs/patterstage-professional-v1.json",
 );
 
 describe("professional mission template pack", () => {

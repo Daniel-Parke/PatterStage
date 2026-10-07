@@ -1,0 +1,126 @@
+{
+  "id": "T-0206",
+  "intent": "Investigate the recurring macOS full-suite HTTP fixture deadline failure before T0193. Preserve every frozen bound and assertion; identify avoidable overhead by independent phase evidence before authoring a repair oracle or implementation. Adopt independent R2 verification even if the declaration router minimum is R1; invariants and rollback are in org/briefs/T-0206-oracle.md.\nQ-035 permits T-0193 to start after the current selector fix passes the full local gate and every required hosted job while T-0206 stays open; the original timing failures and frozen bounds remain.\nClosure4a9bc63e PR37206142400 repeats C02/C05:21 native statuses but20 shell completions and watchdog expiry. T0194 remains unopened. Instrument the actual failed invocation through an independent Q015 amendment before attempting an overhead repair; preserve every bound and normal coverage concurrency. Closure6dc4ce15 push37242011425 adds distinct H12 base-stalled HTTP withinDeadline failure. Current observer covers context invocation only, not this base callback. Exact watchdog status and timing cause remain unproved; no common-cause inference from C02/C05. Next diagnostic must capture the same base callback once, preserving all workload/bounds/cleanup, under independently authored Q015/R2 amendment. No timing repair authorised. Distinct native-worker crash at f1f9162c PR37608052780/macjob112748279916:SIGSEGV,affected suite returns no case results,9062passed. AlreadyNode suite/scanner unchanged; no commoncause withtiming/Windows/teardown established. Hosted24.20.0 differs from validated24.21.0. GaussR2authorises exactsix CI selector alignment only underapprovedNode24/ADR0020/T0203; newredoracle precedes implementation. Existingfullchecks/parallelism/deadlines and failedrunremain. Exactscope/invariants/rollback (inverse6fields) andVerify:org/reviews/2026-10-t0195-ci-runtime-alignment.md. NativeOSstackunavailable; no crashrepairorclosure claimed. Runtime-selector oracle frozen67c48a1498376629aa9f21aa264a10030affed3fbdcf6db634aaea9aa6e3fca1:1ordinary red,10unchangedobserver controls green,0runtime errors, tmp/t0206-runtime-focus-1791371213747. CIstilloriginal duringred. Structural YAML assertion is deliberately small because hosted controller selection is not executable on Windows; actualnewhostedruntime remains acceptance requirement. Count correction7October: sixteen static it declarations exist in the affected suite; cross-platform total differences do not establish unexecuted-case count. Newruntime oracle independently adopted byGauss from preserved prepatch redreceipts; afterexact6fieldpatch11focused casesgreen. No broadernativecauseorclosure implied. Runtime-alignment cohort lands separately at2e923aed: exactly6existing CI selectors now24.21.0, unchanged workflow otherwise. Complete combined gate1791376312504 passes10steps with9075unit/523browser; production committed sweep1791377211714 catches1representative selector mutant with1control before/after,3structured runs,0runtime errors and exact restoration. Independent R2 adoption:tmp/t0195-combined-gate-adoption-20261007.json. This verifies runtime selection, not macOS compatibility or the cause of historical timing/SIGSEGV failures. All those causes remain open; exact-head hosted runtime/jobs pending.",
+  "declared": {
+    "capabilities": [
+      "edit-tests",
+      "edit-docs",
+      "run-isolated-process",
+      "owned-container",
+      "git",
+      "git-push",
+      "edit-ci",
+      "edit-tooling"
+    ],
+    "side_effects": [
+      "sends-external"
+    ]
+  },
+  "mode": "high-assurance",
+  "tier_proposed": "R2",
+  "status": "active",
+  "owner_session": "2026-10-04-t0206-coordinator",
+  "claims": [
+    "org/tasks/T-0206.json",
+    "org/claims.json",
+    "org/briefs/T-0206-oracle.md",
+    "org/reviews/2026-10-t0206-http-budget.md",
+    "org/HANDOVER.md",
+    "org/TASKS.md",
+    "org/STATE.md",
+    "docs/manifest.json",
+    "tests/helpers/release-http-phase-observer.py",
+    ".github/workflows/ci.yml",
+    "tests/unit/release-test-tools.test.ts",
+    "scripts/tooling/line-census.baseline.json",
+    "tests/e2e/features.spec.ts",
+    "org/QUESTIONS.md",
+    "org/plans/2026-09-refactor-programme.json",
+    "org/plans/2026-09-refactor-programme.md",
+    "tests/helpers/release-install-http-context-probe.py",
+    "tests/unit/release-http-actual-observer.test.ts",
+    "org/briefs/T-0206-actual-oracle.md",
+    "tests/fixtures/mutants/T-0206-actual.json",
+    "tests/unit/ci-validated-runtime.test.ts",
+    "org/reviews/2026-10-t0195-ci-runtime-alignment.md"
+  ],
+  "timestamps": {
+    "opened": "2026-10-04T07:07:12.340680+00:00",
+    "updated": "2026-10-07T13:04:03.273076+00:00"
+  },
+  "verdicts": [
+    {
+      "role": "REVIEWER",
+      "session": "01a10610-cd11-7cd1-a83c-bbed065d1f98",
+      "verdict": "pass",
+      "date": "2026-10-04T14:21:31.407837+00:00",
+      "notes": "Bounded final RED-freeze PASS only:52controls,33pass19matcherfail,zero skips/runtime errors. A02 wraps exactly the actual single stalled callback; A05 real bridge receiver/validation, synthetic native execution,21correlated intervals.42old names/assertions held. Missing-validator reds establish absent capability only, not rejection behaviour until green. No implementation, timing repair or final T0206 acceptance. Receipt tmp/t0206-actual-oracle-red-strengthened.json; evidence org/reviews/2026-10-t0206-http-budget.md."
+    },
+    {
+      "role": "REVIEWER",
+      "session": "01a10610-cd11-7cd1-a83c-bbed065d1f98",
+      "verdict": "pass",
+      "date": "2026-10-04T14:48:27.697960+00:00",
+      "notes": "Bounded implementation PASS: exact helper LF hashes e20b8964/4a810761, 52 focused and27 Windows controls, native Linux21-request disabled/enabled parity, redaction/restoration preserved. Independent NODE_ENV=test correction passes actual test-specific typecheck onNode24.19 and10focused controls. Faraday independently reconstructs original bytes/names/assertions. Fullgate and7mutants pending; no timing repair or finalT0206 acceptance."
+    },
+    {
+      "role": "REVIEWER",
+      "session": "01a10610-cd11-7cd1-a83c-bbed065d1f98",
+      "verdict": "pass",
+      "date": "2026-10-04T15:32:44.129502+00:00",
+      "notes": "Bounded diagnostic checkpoint only: full unchanged gate3d62a0d7 all10stages,8902unit/511browser;9b2d140e is manifest-only corrected mutant,7causalmatcherkills/52before-restoredcontrols/exactrestoration. First apparent7killrun rejected for individual fixture infrastructure; preserved. Fullgate not relabeled to latermanifesthead. MacOS cause/repair,hosted currenthead and wholeT0206closure remain open. See HTTP-budget review."
+    },
+    {
+      "role": "REVIEWER",
+      "session": "2026-10-04-t0194-coordinator",
+      "verdict": "fail",
+      "date": "2026-10-04T22:40:10.977298+00:00",
+      "notes": "Exact39f98848 PR37238590551 macOS full suite repeats unchanged C02/C05: missing final shell completion despite native statuses and six-second deadline crossed. Completed log tmp/t0194-hosted-macos-failure.log; all jobs snapshot tmp/t0194-hosted-1791152485929/snapshot.json. Separate20/20 diagnostic does not establish cause or repair. Preserve watchdog, grace, outer/RPC/lifecycle bounds,21 realcurl calls and coverage concurrency. T0194/T0207 remain active until required hosted checks pass; T0206 cause remains open even if a later run passes."
+    },
+    {
+      "role": "REVIEWER",
+      "session": "01a107e1-5ba0-7703-ab13-e23e640dc10b",
+      "verdict": "fail",
+      "date": "2026-10-04T23:15:31.295777+00:00",
+      "notes": "New H12 investigation item: push37242011425 Macjob111552448308 at6dc4ce15,9058pass/onefail/fiveexisting skips. Fail at release-install-http-smoke32/96 withinDeadline; base helper derives flag from statuses124/137 but exact status/timing is not captured. Earlier cleanup/ownership assertions passed; later assertions not reached. PRMacPASS; no currenthead hostedgreen. Retain distinct source-bound signature and no retries, deadline increase or common-cause claim. Log tmp/t0194-closure-macos-failure.log; snapshot tmp/t0194-hosted-1791155151553/snapshot.json. R3 acceptance at72edf3ff remains bounded; release acceptance remains blocked."
+    },
+    {
+      "role": "REVIEWER",
+      "session": "01a11562-421e-72f1-bce4-668d08db7c2f",
+      "verdict": "pass",
+      "date": "2026-10-07T13:04:03.273076+00:00",
+      "notes": "Runtime-alignment cohort lands separately at2e923aed: exactly6existing CI selectors now24.21.0, unchanged workflow otherwise. Complete combined gate1791376312504 passes10steps with9075unit/523browser; production committed sweep1791377211714 catches1representative selector mutant with1control before/after,3structured runs,0runtime errors and exact restoration. Independent R2 adoption:tmp/t0195-combined-gate-adoption-20261007.json. This verifies runtime selection, not macOS compatibility or the cause of historical timing/SIGSEGV failures. All those causes remain open; exact-head hosted runtime/jobs pending."
+    }
+  ],
+  "tier_ruled": "R2",
+  "reasons": [
+    {
+      "factor": "ci-stateful-infra",
+      "tier_floor": "R2",
+      "source": "derived",
+      "evidence": "Planned existing .github/workflows/ci.yml actual-oracle diagnostic capture; stateful CI factor applies."
+    },
+    {
+      "factor": "boundary-contact",
+      "tier_floor": "R1",
+      "source": "declared",
+      "evidence": "declared side effect: sends-external"
+    }
+  ],
+  "oracle_provenance": {
+    "files": [
+      "tests/unit/release-test-tools.test.ts",
+      "tests/helpers/release-http-phase-observer.py",
+      "tests/unit/release-http-actual-observer.test.ts",
+      "tests/unit/ci-validated-runtime.test.ts"
+    ],
+    "hashes": {
+      "tests/unit/release-test-tools.test.ts": "8f07fcf7dcd40344199d7387c99ad6d5a7f93bc4145bf73b49ed96c2eb2844f0",
+      "tests/helpers/release-http-phase-observer.py": "5df60fd8f6c59216107b9634eea615d7b86311871cccfb36a510c2704110364f",
+      "tests/unit/release-http-actual-observer.test.ts": "c5e80eb53dbb92a00f138618f9871e374b0a31e555bc454f7b281a4fde82bc73",
+      "tests/unit/ci-validated-runtime.test.ts": "67c48a1498376629aa9f21aa264a10030affed3fbdcf6db634aaea9aa6e3fca1"
+    },
+    "author_session": "Nash 01a10198-6b4f-7593-aa19-e0b3c8facad8; separate-author Q-015 diagnostic amendment reviewed by Laplace; original T-0203 and frozen HTTP records untouched; Faraday01a1062b-0f36-7702-885b-476fd150d9bf independent actual-entrypoint red controls and Q015 additive workflow amendment2026-10-04, Banach bounded red-freeze PASS,42original/10new identities held; Banach independent NODE_ENV harness correction after full test-typecheck TS2741, Faraday byte reconstruction confirms names/assertions held, 2026-10-04; coordinatorR2runtime-selector oracle authored before exactsix CI selector implementation, independently adopted using preserved prepatch receipts, executedred1matcher/10oldobservergreen/0runtime-error suites atf1f9162c on7October",
+    "independence_method": "metamorphic"
+  }
+}

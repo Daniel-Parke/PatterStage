@@ -1,0 +1,37 @@
+{
+  "task": "T-0184",
+  "mutants": [
+    {
+      "id": "m1-leave-cron-in-queue",
+      "file": "src/lib/missions/mission-promote-handler.ts",
+      "anchor": "} else if (isCronMode) {\n    updates.queuedForRun = false;",
+      "replacement": "} else if (isCronMode) {\n    updates.queuedForRun = true;",
+      "tests": ["tests/unit/mission-promote-atomic.test.ts"],
+      "why": "A queued mission placed on a timer must leave the immediate queue."
+    },
+    {
+      "id": "m2-ignore-catalog-references",
+      "file": "src/lib/missions/mission-category-repository.ts",
+      "anchor": ".run(reassignToId ?? null, now(), id);",
+      "replacement": ".run(reassignToId ?? null, now(), \"__never__\");",
+      "tests": ["tests/unit/mission-category-atomic.test.ts"],
+      "why": "Deleting a category must move its SQLite catalog templates too."
+    },
+    {
+      "id": "m3-keep-stale-template-list",
+      "file": "src/lib/missions/mission-category-repository.ts",
+      "anchor": "invalidateTemplatesCache();",
+      "replacement": "void 0;",
+      "tests": ["tests/unit/mission-category-visibility.test.ts"],
+      "why": "A successful category move must invalidate a warm template list immediately."
+    },
+    {
+      "id": "m4-collapse-explicit-uncategorized",
+      "file": "src/lib/templates-handlers/shared.ts",
+      "anchor": "categoryId: categoryId === null ? null : categoryId ?? \"general\",",
+      "replacement": "categoryId: categoryId ?? \"general\",",
+      "tests": ["tests/unit/mission-category-visibility.test.ts"],
+      "why": "Explicit Uncategorized is distinct from an omitted category with a General fallback."
+    }
+  ]
+}

@@ -1,0 +1,241 @@
+{
+  "task": "T-0193",
+  "draft": false,
+  "inspectedRevision": "070f24eac34edb82ff65b730e770ff9a6a46cf54",
+  "historical": {
+    "findings": [],
+    "operatorDispositions": [],
+    "coverage": [
+      {
+        "id": "gap-059.2",
+        "outcome": "done",
+        "task": "T-0193",
+        "reason": "Owned-preview DOM rel=icon link and HTTP200 image/x-icon;25931served bytes equal source SHA2562b8ad2d33455a8f736fc3a8ebf8f0bdea8848ad4c0db48a2833bd0f9cd775932. Re-run node tmp/t0193-favicon-probe.mjs on the owned3999 instance. Banach independently recomputed source and inspected receipt; browser observation was coordinator supplied. Receipt tmp/t0193-favicon-proof.json. Bounded asset proof, not whole-browser brand acceptance."
+      }
+    ]
+  },
+  "historicalCounts": {
+    "findings": 0,
+    "operatorDispositions": 0,
+    "coverage": 1
+  },
+  "supplemental": [
+    {
+      "id": "composer-cohort",
+      "status": "retained",
+      "evidence": [
+        "org/briefs/T-0193-oracle.md",
+        "org/plans/2026-09-refactor-ownership.json"
+      ],
+      "scepticVerdict": "Banach independent measurement; before-render block src/app/work/composer/page.tsx:135, URL effects:181.",
+      "authority": "org/plans/2026-09-refactor-programme.json#T-0193",
+      "reason": "Composer page542lines+existing query hooks62;148orchestration lines. Extraction moves these lines and adds an interface/imports without demonstrated reduction. Retain page lifecycle; repair the separately owned output-save defect."
+    },
+    {
+      "id": "story-cohort",
+      "status": "retained",
+      "evidence": [
+        "org/briefs/T-0193-oracle.md",
+        "org/plans/2026-09-refactor-ownership.json"
+      ],
+      "scepticVerdict": "Banach independent measurement: Create104/182/193; Reader27/44/81.",
+      "authority": "org/plans/2026-09-refactor-programme.json#T-0193",
+      "scope": "Approved Story cohort includes both Create and Reader.",
+      "reason": "Create749lines/404before-render; Reader600/497. Retain distinct lifecycles: Create Suspense/URL/draft; Reader publication/controller cleanup. New hooks add interfaces without removing control flow. Desktop/phone parity walk remains required."
+    },
+    {
+      "id": "missions-cohort",
+      "status": "done",
+      "evidence": [
+        "org/tasks/T-0193.json#oracle_provenance",
+        "org/reviews/2026-10-t0193-verification.md"
+      ],
+      "scepticVerdict": "Banach FINAL bounded PASS at 070f24eac34edb82ff65b730e770ff9a6a46cf54: independently frozen red controls, complete unchanged-tree gate,19 causal mutants with restored controls, all required hosted jobs. Manual walks supplement controlled tests; whole-product and release acceptance remain unclaimed.",
+      "authority": "org/plans/2026-09-refactor-programme.json#T-0193",
+      "reason": "31binding names and five callback aliases replaced with the existing vm object. Page208\u2192167physical lines, net\u221241, zero new hooks/interfaces/test assertions. All30existing unit names match and pass before/after."
+    },
+    {
+      "id": "profile-draft-ownership",
+      "status": "done",
+      "evidence": [
+        "org/tasks/T-0193.json#oracle_provenance",
+        "org/reviews/2026-10-t0193-verification.md"
+      ],
+      "scepticVerdict": "Banach FINAL bounded PASS at 070f24eac34edb82ff65b730e770ff9a6a46cf54: independently frozen red controls, complete unchanged-tree gate,19 causal mutants with restored controls, all required hosted jobs. Manual walks supplement controlled tests; whole-product and release acceptance remain unclaimed.",
+      "authority": "org/plans/2026-09-refactor-programme.json#T-0193"
+    },
+    {
+      "id": "t0191-composer-output-save-ownership",
+      "status": "done",
+      "source": "t0191ReviewFollowups",
+      "evidence": [
+        "org/tasks/T-0193.json#oracle_provenance",
+        "org/reviews/2026-10-t0193-verification.md"
+      ],
+      "scepticVerdict": "Banach FINAL bounded PASS at 070f24eac34edb82ff65b730e770ff9a6a46cf54: independently frozen red controls, complete unchanged-tree gate,19 causal mutants with restored controls, all required hosted jobs. Manual walks supplement controlled tests; whole-product and release acceptance remain unclaimed.",
+      "authority": "org/plans/2026-09-refactor-programme.json#T-0193"
+    },
+    {
+      "id": "t0191-script-tab-navigation",
+      "status": "done",
+      "source": "t0191ReviewFollowups",
+      "evidence": [
+        "org/tasks/T-0193.json#oracle_provenance",
+        "org/reviews/2026-10-t0193-verification.md"
+      ],
+      "scepticVerdict": "Banach FINAL bounded PASS at 070f24eac34edb82ff65b730e770ff9a6a46cf54: independently frozen red controls, complete unchanged-tree gate,19 causal mutants with restored controls, all required hosted jobs. Manual walks supplement controlled tests; whole-product and release acceptance remain unclaimed.",
+      "authority": "org/plans/2026-09-refactor-programme.json#T-0193"
+    },
+    {
+      "id": "t0191-research-copy-and-export",
+      "status": "done",
+      "source": "t0191ReviewFollowups",
+      "evidence": [
+        "org/tasks/T-0193.json#oracle_provenance",
+        "org/reviews/2026-10-t0193-verification.md"
+      ],
+      "scepticVerdict": "Banach FINAL bounded PASS at 070f24eac34edb82ff65b730e770ff9a6a46cf54: independently frozen red controls, complete unchanged-tree gate,19 causal mutants with restored controls, all required hosted jobs. Manual walks supplement controlled tests; whole-product and release acceptance remain unclaimed.",
+      "authority": "org/plans/2026-09-refactor-programme.json#T-0193"
+    },
+    {
+      "id": "t0191-agent-growth-error-truth",
+      "status": "done",
+      "source": "t0191ReviewFollowups",
+      "evidence": [
+        "org/tasks/T-0193.json#oracle_provenance",
+        "org/reviews/2026-10-t0193-verification.md"
+      ],
+      "scepticVerdict": "Banach FINAL bounded PASS at 070f24eac34edb82ff65b730e770ff9a6a46cf54: independently frozen red controls, complete unchanged-tree gate,19 causal mutants with restored controls, all required hosted jobs. Manual walks supplement controlled tests; whole-product and release acceptance remain unclaimed.",
+      "authority": "org/plans/2026-09-refactor-programme.json#T-0193"
+    },
+    {
+      "id": "t0191-skill-search-category-context",
+      "status": "done",
+      "source": "t0191ReviewFollowups",
+      "evidence": [
+        "org/tasks/T-0193.json#oracle_provenance",
+        "org/reviews/2026-10-t0193-verification.md"
+      ],
+      "scepticVerdict": "Banach FINAL bounded PASS at 070f24eac34edb82ff65b730e770ff9a6a46cf54: independently frozen red controls, complete unchanged-tree gate,19 causal mutants with restored controls, all required hosted jobs. Manual walks supplement controlled tests; whole-product and release acceptance remain unclaimed.",
+      "authority": "org/plans/2026-09-refactor-programme.json#T-0193"
+    },
+    {
+      "id": "t0191-trend-chart-text-equivalent",
+      "status": "done",
+      "source": "t0191ReviewFollowups",
+      "evidence": [
+        "org/tasks/T-0193.json#oracle_provenance",
+        "org/reviews/2026-10-t0193-verification.md"
+      ],
+      "scepticVerdict": "Banach FINAL bounded PASS at 070f24eac34edb82ff65b730e770ff9a6a46cf54: independently frozen red controls, complete unchanged-tree gate,19 causal mutants with restored controls, all required hosted jobs. Manual walks supplement controlled tests; whole-product and release acceptance remain unclaimed.",
+      "authority": "org/plans/2026-09-refactor-programme.json#T-0193"
+    },
+    {
+      "id": "t0191-collection-state-semantics",
+      "status": "done",
+      "source": "t0191ReviewFollowups",
+      "evidence": [
+        "org/tasks/T-0193.json#oracle_provenance",
+        "org/reviews/2026-10-t0193-verification.md"
+      ],
+      "scepticVerdict": "Banach FINAL bounded PASS at 070f24eac34edb82ff65b730e770ff9a6a46cf54: independently frozen red controls, complete unchanged-tree gate,19 causal mutants with restored controls, all required hosted jobs. Manual walks supplement controlled tests; whole-product and release acceptance remain unclaimed.",
+      "authority": "org/plans/2026-09-refactor-programme.json#T-0193"
+    },
+    {
+      "id": "skill-detail-error-truth",
+      "status": "done",
+      "source": "t0192VisibleStateFollowups",
+      "inheritedEvidenceStatus": "reproduced500/404atbothwidths",
+      "evidence": [
+        "org/tasks/T-0193.json#oracle_provenance",
+        "org/reviews/2026-10-t0193-verification.md"
+      ],
+      "scepticVerdict": "Banach FINAL bounded PASS at 070f24eac34edb82ff65b730e770ff9a6a46cf54: independently frozen red controls, complete unchanged-tree gate,19 causal mutants with restored controls, all required hosted jobs. Manual walks supplement controlled tests; whole-product and release acceptance remain unclaimed.",
+      "authority": "org/plans/2026-09-refactor-programme.json#T-0193"
+    },
+    {
+      "id": "models-error-truth",
+      "status": "done",
+      "source": "t0192VisibleStateFollowups",
+      "inheritedEvidenceStatus": "reproduced500plusfalseemptyatbothwidths",
+      "evidence": [
+        "org/tasks/T-0193.json#oracle_provenance",
+        "org/reviews/2026-10-t0193-verification.md"
+      ],
+      "scepticVerdict": "Banach FINAL bounded PASS at 070f24eac34edb82ff65b730e770ff9a6a46cf54: independently frozen red controls, complete unchanged-tree gate,19 causal mutants with restored controls, all required hosted jobs. Manual walks supplement controlled tests; whole-product and release acceptance remain unclaimed.",
+      "authority": "org/plans/2026-09-refactor-programme.json#T-0193"
+    },
+    {
+      "id": "reader-popover-contrast",
+      "status": "done",
+      "source": "t0192VisibleStateFollowups",
+      "inheritedEvidenceStatus": "rendered4.041muted/2.463selected/2.188hoverratiosobserved",
+      "evidence": [
+        "org/tasks/T-0193.json#oracle_provenance",
+        "org/reviews/2026-10-t0193-verification.md"
+      ],
+      "scepticVerdict": "Banach FINAL bounded PASS at 070f24eac34edb82ff65b730e770ff9a6a46cf54: independently frozen red controls, complete unchanged-tree gate,19 causal mutants with restored controls, all required hosted jobs. Manual walks supplement controlled tests; whole-product and release acceptance remain unclaimed.",
+      "authority": "org/plans/2026-09-refactor-programme.json#T-0193"
+    },
+    {
+      "id": "reduced-motion-reveal",
+      "status": "done",
+      "source": "t0192VisibleStateFollowups",
+      "inheritedEvidenceStatus": "source-supportedonly",
+      "evidence": [
+        "org/tasks/T-0193.json#oracle_provenance",
+        "org/reviews/2026-10-t0193-verification.md"
+      ],
+      "scepticVerdict": "Banach FINAL bounded PASS at 070f24eac34edb82ff65b730e770ff9a6a46cf54: independently frozen red controls, complete unchanged-tree gate,19 causal mutants with restored controls, all required hosted jobs. Manual walks supplement controlled tests; whole-product and release acceptance remain unclaimed.",
+      "authority": "org/plans/2026-09-refactor-programme.json#T-0193"
+    },
+    {
+      "id": "verdict-reasons-consolidation",
+      "status": "retained",
+      "evidence": [
+        "org/briefs/T-0193-oracle.md",
+        "org/plans/2026-09-refactor-ownership.json"
+      ],
+      "scepticVerdict": "Franklin independent pre-implementation source measurement.",
+      "authority": "org/plans/2026-09-refactor-programme.json#T-0193",
+      "scope": "t0191AttributedConsolidationCandidates.cohorts[0]: ComposerGatePrompt and ComposerNodeRunDetail.",
+      "reason": "Two-consumer projection costs27removed versus28new component/interface lines plus imports/calls, net+5before tests. Preserve advisory gate vs recorded outcome/suggestions. No new shared component."
+    },
+    {
+      "id": "step-label-consolidation",
+      "status": "done",
+      "evidence": [
+        "org/tasks/T-0193.json#oracle_provenance",
+        "org/reviews/2026-10-t0193-verification.md"
+      ],
+      "scepticVerdict": "Banach FINAL bounded PASS at 070f24eac34edb82ff65b730e770ff9a6a46cf54: independently frozen red controls, complete unchanged-tree gate,19 causal mutants with restored controls, all required hosted jobs. Manual walks supplement controlled tests; whole-product and release acceptance remain unclaimed.",
+      "authority": "org/plans/2026-09-refactor-programme.json#T-0193",
+      "scope": "t0191AttributedConsolidationCandidates.cohorts[1]: ResearchReport and laboratory/deep-research/report.",
+      "reason": "Export existing pure report STEP_LABEL; import it in the UI instead of repeating seven lines. Net\u22126source lines, no new interface file; five labels and unknown-kind fallback pass."
+    },
+    {
+      "id": "comment-qualification",
+      "status": "done",
+      "evidence": [
+        "org/tasks/T-0193.json#oracle_provenance",
+        "org/reviews/2026-10-t0193-verification.md"
+      ],
+      "scepticVerdict": "Banach FINAL bounded PASS at 070f24eac34edb82ff65b730e770ff9a6a46cf54: independently frozen red controls, complete unchanged-tree gate,19 causal mutants with restored controls, all required hosted jobs. Manual walks supplement controlled tests; whole-product and release acceptance remain unclaimed.",
+      "authority": "org/plans/2026-09-refactor-programme.json#T-0193",
+      "scope": "Both t0192VisibleStateFollowups.commentScope (globals.css) and t0192CommentFollowup (Models/error headers)."
+    },
+    {
+      "id": "parent-child-rollups",
+      "status": "retained",
+      "evidence": [
+        "org/briefs/T-0193-oracle.md",
+        "org/plans/2026-09-refactor-ownership.json"
+      ],
+      "scepticVerdict": "Banach independently traced org/plans/2026-09-refactor-ownership.json and existing disposition files.",
+      "authority": "org/plans/2026-09-refactor-programme.json#T-0193",
+      "scope": "cross-cutting-03, cross-cutting-04, cross-cutting-14, cross-cutting-21, cross-cutting-23: preserve each child owner and explicit parent reconciliation.",
+      "reason": "Preserve child authority:03aT0196/03bT0194;04a/bT0200afterv1.0;14aT0194/14bacceptedT0191;21aacceptedT0190/21bruledout-key-renaming;23a/bruledout/23cT0195. Final parent reconciliation belongs to T0201, without claiming other owners complete."
+    }
+  ],
+  "qualification": "All19 supplemental obligations adjudicated:15 done and4 measured retentions. Supplemental accountability remains excluded from historical totals. Mixed-parent children retain their owners; final reconciliation belongs to T0201. Q027 timeout wording is separately assigned to T0194, not silently marked repaired."
+}

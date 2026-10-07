@@ -1,0 +1,44 @@
+{
+  "id": "T-0166",
+  "intent": "Repair the existing Models-page reload oracle's hosted macOS synchronisation so it keeps asserting the open disclosure, retained body and enabled re-import button after the controlled reads complete.",
+  "declared": {
+    "capabilities": ["edit-tests", "git-push"],
+    "side_effects": ["sends-external"]
+  },
+  "mode": "standard",
+  "tier_proposed": "R1",
+  "tier_ruled": "R1",
+  "reasons": [{"factor": "boundary-contact", "tier_floor": "R1", "source": "declared", "evidence": "declared side effect: sends-external"}],
+  "status": "done",
+  "owner_session": "2026-09-26-refactor-foundations",
+  "claims": [
+    "org/tasks/T-0166.json",
+    "tests/unit/the-models-page-keeps-its-body.test.tsx",
+    "tests/fixtures/mutants/T-0166.json",
+    "scripts/tooling/line-census.baseline.json",
+    "org/HANDOVER.md",
+    "org/TASKS.md",
+    "org/STATE.md"
+  ],
+  "timestamps": {"opened": "2026-09-26T21:36:40Z", "updated": "2026-09-26T21:49:04Z", "closed": "2026-09-26T21:49:04Z"},
+  "invariants": [
+    "Both existing test names and every product assertion remain; no timeout or coverage floor is loosened.",
+    "The mock releases its held reads and React settles before the final enabled-button assertion.",
+    "A separate author amends this closed oracle under Q-015; the implementer does not rewrite it.",
+    "The isolated full gate, mutation evidence and every hosted job are observed before moving to T-0157."
+  ],
+  "rollback": "Revert the test-fixture synchronisation if it conceals a real Models-page regression; retain the red hosted run as evidence.",
+  "oracle_provenance": {
+    "file": "tests/unit/the-models-page-keeps-its-body.test.tsx",
+    "old_hash": "fb9a16ac84df73011dbbfb6424f24b7897a9ea386ee2789acd6eb33118c0acf7",
+    "new_hash": "32341b83ef8f876fd90663ca36e5d2cb48eaddebc74ed6d0cc00bde28a03aee0",
+    "author_session": "01a0df7e-781c-7d73-9de1-3a122a5db36b",
+    "author_commit": "2fb9824e45b6b75165eace3487eefb6f903389d5",
+    "authorised_by": "Q-015 independent closed-oracle amendment after hosted macOS failure, 2026-09-26",
+    "identity": "The same two test names and thirteen assertion lines before and after; no timeout increase."
+  },
+  "notes": "Hosted push CI 36272784560 on dev@fa423657 failed only build-test-macos Unit tests with coverage: tests/unit/the-models-page-keeps-its-body.test.tsx line 116, one failure of 7115 tests. At the default wait boundary the disabled button still rendered Re-importing… after net.open(). The PR macOS job on the same SHA passed all jobs; the Windows isolated full gate passed. The unmodified test rerun alone on Windows passed two of two. The existing hosted red test is the oracle. No separate new red suite is added because this is an independently authored amendment to a closed test, not a product behaviour change. The fixture now tracks held GET promises, awaits their resolution inside async act on both releases, and retains every behaviour assertion.",
+  "verification": "The unmodified existing suite was red only in hosted push macOS CI 36272784560: one Models-page case failed of 7115 tests; PR macOS on the same SHA passed and the Windows standalone rerun passed two of two. Independent amendment 2fb9824e retains the same two test names and thirteen assertion lines, tracks held GET promises, and opens the mock gate inside async React act. Focused amended suite passed two of two. Complete isolated gate on the candidate passed all nine steps: 701 Jest suites, 7112 passed and 3 skipped tests, 275 Playwright passed and 24 skipped; treeBefore and treeAfter both ccd38ab8f7f8ce89df2e7a7fafb462f29b13e8efad92f5699ad8a99902ab57b7. Feature commit e4db8cb2. Hosted macOS and all other jobs must be observed after push.",
+  "mutation": "Committed-tree sweep at e4db8cb2 exited 0: m1-settled-reimport-is-disabled KILLED by a structured assertion failure, with passing unmodified controls before and after and exact restoration.",
+  "deviation": "The existing closed test, already red in hosted push macOS, served as the oracle; no new red oracle commit was added for this test-only synchronisation amendment. An independent author made the Q-015 amendment and preserved test identity and assertions. The first isolated gate stopped at derived-view lint because the validation clone held an older active T-0160 record; after copying the already-closed canonical record, the check and complete gate passed without changing the product or weakening any rule."
+}

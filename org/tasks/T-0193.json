@@ -1,0 +1,137 @@
+{
+  "id": "T-0193",
+  "intent": "Preserve visible state while repairing the approved page lifecycle defects and evaluating measured page-hook consolidation. Invariants, rollback, complete supplemental accountability and exact verification contracts are in org/briefs/T-0193-oracle.md; no implementation precedes its applicable independently frozen red oracle.",
+  "declared": {
+    "capabilities": [
+      "edit-code",
+      "edit-tests",
+      "edit-docs",
+      "git",
+      "git-push",
+      "run-isolated-process",
+      "owned-temporary-git"
+    ],
+    "side_effects": [
+      "financial-impact",
+      "sends-external"
+    ]
+  },
+  "mode": "high-assurance",
+  "tier_proposed": "R2",
+  "status": "done",
+  "owner_session": "2026-10-04-t0193-coordinator",
+  "claims": [
+    "src/app/agent/profiles/page.tsx",
+    "src/components/agents/EditProfileModal.tsx",
+    "tests/unit/profile-draft-ownership.test.tsx",
+    "tests/e2e/page-state-profile-ownership.spec.ts",
+    "org/tasks/T-0193.json",
+    "org/claims.json",
+    "org/briefs/T-0193-oracle.md",
+    "org/briefs/T-0193-review.md",
+    "org/reviews/2026-10-t0193-verification.md",
+    "org/reviews/2026-10-t0193-dispositions.json",
+    "org/plans/2026-09-refactor-programme.json",
+    "org/HANDOVER.md",
+    "org/TASKS.md",
+    "org/STATE.md",
+    "docs/manifest.json",
+    "scripts/tooling/line-census.baseline.json",
+    "tests/fixtures/mutants/T-0193.json",
+    "org/QUESTIONS.md",
+    "org/plans/2026-09-refactor-programme.md",
+    "src/app/agent/models/page.tsx",
+    "src/hooks/useModelsPage.ts",
+    "src/hooks/useModelsRegistry.ts",
+    "src/app/agent/skills/",
+    "src/components/agents/AgentGrowthPanel.tsx",
+    "src/components/composer/ComposerNodeRunDetail.tsx",
+    "src/components/scripts/ScriptEditorModal.tsx",
+    "src/components/research/ResearchReport.tsx",
+    "src/lib/laboratory/deep-research/report.ts",
+    "src/components/skills/SkillsSearchResults.tsx",
+    "src/components/viz/AreaTrend.tsx",
+    "src/components/viz/StackedAreaTrend.tsx",
+    "src/components/session/MissionGroupCard.tsx",
+    "src/components/logs/LogFilePicker.tsx",
+    "src/components/memory/HindsightBrowser.tsx",
+    "src/modules/rec-room/components/ReaderSettings.tsx",
+    "src/app/globals.css",
+    "org/briefs/T-0193-followup-oracle.md",
+    "tests/unit/page-read-failure-truth.test.tsx",
+    "tests/unit/page-state-followups.test.tsx",
+    "tests/e2e/page-state-reader-motion.spec.ts",
+    "src/app/work/missions/page.tsx",
+    "tests/unit/type-owner-equivalence.test.ts",
+    "tests/unit/c5-comments-that-narrate.test.ts",
+    "tests/e2e/component-accessibility-responsive.spec.ts"
+  ],
+  "timestamps": {
+    "opened": "2026-10-04T10:03:25.397971+00:00",
+    "updated": "2026-10-04T13:34:24.595260+00:00",
+    "closed": "2026-10-04T13:34:24.595260+00:00"
+  },
+  "verdicts": [
+    {
+      "role": "REVIEWER",
+      "session": "01a10610-cd11-7cd1-a83c-bbed065d1f98",
+      "verdict": "pass",
+      "date": "2026-10-04T13:05:52.326367+00:00",
+      "notes": "Banach bounded LOCAL acceptance of product9ce945ac: full10stage unchanged gate,8892unit/511browser,19causal mutants with58original/restored controls and exact file/mode restoration. No runtime P1/P2 or material omitted T0193 scope. Frozen oracles, independent amendments and measured retention judgements preserved. Hosted checks remain pending; this is not batch closure, whole-product or release acceptance. Q036/T0206 timing red remains. Evidence: org/reviews/2026-10-t0193-verification.md."
+    },
+    {
+      "role": "REVIEWER",
+      "session": "01a10610-cd11-7cd1-a83c-bbed065d1f98",
+      "verdict": "pass",
+      "date": "2026-10-04T13:34:24.595260+00:00",
+      "notes": "Banach FINAL bounded R2 PASS at 070f24eac34edb82ff65b730e770ff9a6a46cf54: all four exact-head CI/Gitleaks runs green, all11 PR and9 required push jobs pass, unchanged runtime from full gate and19 causal mutants. Extra owned StoryCreate and Missions walks supplement retained-state evidence. Ready for task closure. Q027 elapsed-deadline wording remains a named T0194 obligation. T0206 causal timing uncertainty remains red; no whole-product, release or paid-provider acceptance. See org/reviews/2026-10-t0193-verification.md."
+    }
+  ],
+  "tier_ruled": "R2",
+  "reasons": [
+    {
+      "factor": "money",
+      "tier_floor": "R2",
+      "source": "declared",
+      "evidence": "declared side effect: financial-impact"
+    },
+    {
+      "factor": "boundary-contact",
+      "tier_floor": "R1",
+      "source": "declared",
+      "evidence": "declared side effect: sends-external"
+    }
+  ],
+  "oracle_provenance": {
+    "files": [
+      "tests/unit/profile-draft-ownership.test.tsx",
+      "tests/e2e/page-state-profile-ownership.spec.ts",
+      "tests/unit/page-read-failure-truth.test.tsx",
+      "tests/unit/page-state-followups.test.tsx",
+      "tests/unit/mission-query-ownership.test.tsx",
+      "tests/unit/mission-template-editor-wiring.test.tsx",
+      "tests/e2e/missions-flows.spec.ts",
+      "tests/e2e/missions-compose.spec.ts",
+      "tests/e2e/page-state-reader-motion.spec.ts",
+      "tests/unit/type-owner-equivalence.test.ts",
+      "tests/unit/c5-comments-that-narrate.test.ts",
+      "tests/e2e/component-accessibility-responsive.spec.ts"
+    ],
+    "hashes": {
+      "tests/unit/profile-draft-ownership.test.tsx": "9f6003bb94a453ea3c33495e8f37488e2700b9c10987b439dcf412b8ff46a977",
+      "tests/e2e/page-state-profile-ownership.spec.ts": "acf9c71fa7450adb062d6e451a68cb7db740c7d3de66aef3e8d2df1c144a7886",
+      "tests/unit/page-read-failure-truth.test.tsx": "ceba024fdee96317882e56fcff6bfaad2f04debce3ff61b4a3b728e42abef97b",
+      "tests/unit/page-state-followups.test.tsx": "959c9091b94fd29c88eca0a1f03fe6e8bd3721ada6ab2e3b0e25c9fba13262d0",
+      "tests/unit/mission-query-ownership.test.tsx": "645d7bcf373803a83a7b3e0e674d767f71f8c8a848730de9cde27443e6ce1b5a",
+      "tests/unit/mission-template-editor-wiring.test.tsx": "5970075307193edafa251aaa93db6ffaf27c6021b63d1a593052a654944f64ef",
+      "tests/e2e/missions-flows.spec.ts": "0b6b72b33bd9f717b4feaba08b78ce3cfa36ba23e65f2561429fd1683ff4170c",
+      "tests/e2e/missions-compose.spec.ts": "b03c3daa0ead65eeaa49538f6f8ae1fc96c0e30fdc9b7f8bccae7d3a044e5caa",
+      "tests/e2e/page-state-reader-motion.spec.ts": "9737b028b3f37669c010247a248c65563db195f216883d3ce2d9fd25b0f2d80b",
+      "tests/unit/type-owner-equivalence.test.ts": "8ad507d737d5a84621976ed3f707941166d8c4c17cfb9bf85f0fbf9d6d7db06b",
+      "tests/unit/c5-comments-that-narrate.test.ts": "7704d220dc79ee0512da3254fd0450a30680406241a323424c37a14728efa671",
+      "tests/e2e/component-accessibility-responsive.spec.ts": "283bc48ad95fadcb4f3536d8a0bbfc22f9737893cf2e5a42384b3d9db7c32a74"
+    },
+    "author_session": "Faraday 01a1062b-0f36-7702-885b-476fd150d9bf; independent real-form and held-transport oracle; Q015 amendment by Franklin 01a1062c-ad31-77c2-8ff2-71c41ee9b5d6, preserving all16 original controls; read truth by Franklin 01a1062c-ad31-77c2-8ff2-71c41ee9b5d6; Faraday independent five-option typing correction,17unchanged controls; Faraday independent three-void Reader lint correction,8names/assertions retained; Faraday independent eight Composer lifecycle controls, original17 unchanged, red6of25; Faraday dated Q015 closed-guard amendment:21original emission hashes and37/12floors retained;44controls pass; Faraday independent physical keyboard/monitor readiness amendment, Banach bounded PASS,58names retained",
+    "independence_method": "metamorphic"
+  }
+}

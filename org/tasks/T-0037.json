@@ -1,0 +1,52 @@
+{
+  "id": "T-0037",
+  "intent": "Category grouping must normalise as much as the display does. skills-grouping.ts:36 keys on raw.toLowerCase() while titleCaseCategory ALSO folds [-_]+ to spaces, so 'Control Hub' and 'controlhub' become two buckets rendering near-identical labels (QA saw CONTROL HUB (6) beside CONTROLHUB (1)). Since T-0032 the key is load-bearing: collapse and paging state key off it, so a split bucket splits its state too. NOTE the existing test pins the buggy behaviour ('Fine-Tuning' -> 'fine-tuning' while the display renders 'Fine Tuning'); it must be corrected, not deleted. Source: the operator's live Hermes QA pass on dev@43d16c30, 2026-08-26. Root cause traced by three read-only investigations and re-verified independently; NOT a regression from the consolidation work, which only put a QA pass in front of pages nobody had text-scraped before. Closed 2026-08-26 in ba96b3b8. REJECTED on first review, and rightly: the fix shipped a NEW contradiction on the page it was fixing, because SkillsInsights counted categories with its own lowercase Set that no longer matched the widened grouping key. That is now T-0045, fixed and tracked as its own row rather than left as prose in a closed record. The test-expectation change was verified legitimate: the old assertion encoded the bug, and the diff raised the assertion count rather than lowering it.",
+  "declared": {
+    "capabilities": [
+      "edit-source"
+    ],
+    "side_effects": []
+  },
+  "mode": "standard",
+  "tier_proposed": "R1",
+  "tier_ruled": "R2",
+  "reasons": [],
+  "status": "done",
+  "owner_session": "t0037-grouping-2026-08-26",
+  "claims": [
+    "src/lib/skills-grouping.ts",
+    "tests/"
+  ],
+  "timestamps": {
+    "opened": "2026-08-26T09:00:00Z",
+    "updated": "2026-08-26T20:00:00Z",
+    "closed": "2026-08-26T20:00:00Z"
+  },
+  "invariants": [
+    "INV-1 The grouping key is what the display renders, lowercased: titleCaseCategory(raw).toLowerCase() IS the key, for every spelling. Both are built from one fold, categoryWords, so neither can drift from the other again.",
+    "INV-2 One bucket carries one state key. Two spellings of one label produce a single categoryStateKey, so the collapse and paging state T-0032 hung off the key cannot split with the bucket.",
+    "INV-3 The merged bucket's label does not depend on arrival order. Whichever spelling the catalogue returns first, the header reads the same.",
+    "INV-4 Nothing that renders differently is merged. A separator-free spelling keeps its own bucket: the key normalises as far as the display does and no further.",
+    "INV-5 Both consumers inherit the key from the one helper and neither re-implements it: src/app/api/skills/route.ts:97 and src/lib/skills-page-helpers.ts:63-69."
+  ],
+  "oracle": {
+    "authored": "before implementation, in the owning session, per EXECUTOR R2",
+    "files": [
+      "tests/unit/skills-category-normalization.test.ts"
+    ],
+    "frozen_evidence": "Run against the unmodified helper at 3afabcc8: 5 failed, 14 passed of 19. The five red are the four T-0037 cases plus the corrected 'Fine-Tuning' expectation. Re-run in both directions after the fix landed: reverting src/lib/skills-grouping.ts to HEAD reproduced exactly the same five failures, and restoring it returned the file to green, so the guard is known to fail against the old behaviour rather than merely passing against the new one.",
+    "final": "19 passed in the oracle file, 42 passed with tests/unit/skills-page-helpers.test.ts alongside it. Full suite 354 of 356 suites green; the two red suites are T-0038's frozen oracle, written in another session and awaiting its own implementation, and neither references skills.",
+    "deviation": "One assertion in the oracle was wrong as authored, and it was corrected before the implementation was believed rather than after: it claimed all four 'Control Hub' spellings render one label, but titleCaseCategory raises the first letter of each word and leaves the rest, so 'CONTROL  HUB' renders 'CONTROL HUB'. The case fold was never the missing part; the separators were. The corrected assertion is stricter, not looser, and it still failed against the old helper."
+  },
+  "rollback": {
+    "plan": "git revert the single commit. The change is one pure function plus its tests: no schema, no migration, no route contract, no config and no persisted state, so a revert restores the previous behaviour exactly and needs no follow-up step. Category collapse and paging state is useState in src/app/operations/skills/page.tsx and is never persisted, so no stored key goes stale in either direction.",
+    "blast_radius": "src/lib/skills-grouping.ts, and through it the two callers named in INV-5. The API response's `categories` map now keys on 'control hub' where it keyed on 'control-hub'; the only reader of those keys is Object.keys(...).length in the same handler, and the page groups `skills` itself rather than reading the map, so no client reads the key strings.",
+    "signal": "The oracle plus npm run build. A regression here shows up as a red oracle, because INV-1 is an equality between the key and the label rather than a judgement call."
+  },
+  "notes": [
+    "THE TEST WAS WRONG, NOT WEAKENED. tests/unit/skills-category-normalization.test.ts asserted that 'Fine-Tuning' keys to 'fine-tuning' while the display has always rendered it 'Fine Tuning'. That assertion pinned the defect: a key holding a hyphen describes a word boundary the label does not have, which is precisely what let two spellings of one label sit in two buckets. The expectation was moved onto the behaviour the display already had, and the corrected case fails against the old helper, which is the evidence that it was tightened rather than relaxed.",
+    "WHAT THE FIX DOES NOT REACH, stated plainly because the QA note asked for it. 'controlhub' written with no separator at all does NOT join 'Control Hub'. It renders 'Controlhub', a different label, and this task's whole invariant is that the key normalises as far as the display and no further. Merging them needs a rule for which label the merged bucket wears, which is a decision this task has no mandate to take. If the operator wants the QA pair merged and the catalogue really does hold a separator-free spelling, that is a follow-up with a canonical-label rule in it. Left as a characterisation test in the oracle so the boundary is executable and any future change to it is deliberate.",
+    "DISCOVERED, NOT FIXED, and outside this task's claims: src/components/skills/SkillsInsights.tsx counts distinct categories with `sk.category.toLowerCase()` inline, and its own comment says it does that to match groupByCategory. It no longer matches. After this change the tile counts 'Control Hub' and 'control-hub' as two categories while the page below it renders one row, which is the same shape of defect as T-0042. The fix is one line, counting through groupByCategory rather than re-implementing half of it, and the file sits in the stat-tile surface another session is working in right now (T-0035), so it was left alone. Not filed as a task ID because several sessions are writing to org/tasks/ concurrently and claiming an unassigned number risks a collision.",
+    "GATE at close: design-lint 11 rules at 0 in 0 files, tsc --noEmit clean, knip clean, build green, eslint clean on both touched files. The repo-wide `npm run lint` is red on src/hooks/useDialogA11y.ts:91, an untracked file belonging to another session's T-0036, and `npm test` is red on that session's two T-0038 oracle suites. Neither touches this task's surface and neither was modified."
+  ]
+}

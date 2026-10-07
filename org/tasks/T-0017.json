@@ -1,0 +1,61 @@
+{
+  "id": "T-0017",
+  "intent": "Phase 7, fourth: declare retention for the two unbounded tables and implement the prune. Warrant WG-ARCH-008 (A with C's seam), ruled by the operator. analytics_events and chat_messages are append-only with no expiry column, on machines belonging to people the operator has never met. Source row WO-0009. Runs only after T-0016 has captured history, and the operator merges this task because it is data safety. Acceptance: (1) the consumer, the retention window, the prune path and the split migration written into the migration headers and an ADR; (2) the prune implemented; (3) ordered after T-0016, so no history is destroyed before it is captured. Done when neither table can grow without bound, and the owner of each is named. Tier proposal R3, matching the declared facts: the prune deletes rows from databases on other people's machines, which is writes-production-data and irreversible-action; migrates-schema covers the split migration; handles-pii is declared because chat_messages carries user-authored content on installs the operator does not own, which is the warrant's own reasoning. Per the plan's section 12, the acceptance oracle is authored before implementation by a session that has not seen the implementation. Closed 2026-08-23 in e5b2da80 plus the review fixes. Retention windows are declared, defended in ADR-0009, and enforced by an OPT-IN prune that ships disabled on every install: review mutation-proved that flipping the seeds to enabled turns 8 tests red across 3 suites, including 'an upgrade deletes nothing'. The interlock refuses to delete any row the progression record has not already captured, and replacing both guards with else-if-false turns 4 tests red. The boundary is strict: changing < to <= on the cutoff turns the either-side-of-the-boundary tests red. The delete and its audit record commit in one transaction, proved by dropping the record table and watching the delete roll back. REJECTED ON FIRST REVIEW, and not for data safety: all five safety questions passed with mutation proofs. The blocker was npm run lint:knip exiting 1 on two unused exported types this commit introduced, and knip is a CI gate, so landing it would have reddened dev, the exact condition WO-0018 and WO-0019 had just cleared. Both types are now module-private with the reason recorded; they were always reachable structurally through the exported report type, so nothing lost capability. GOVERNANCE CORRECTION: ADR-0009's status line originally read 'accepted by Daniel (operator)'. A session cannot grant the acceptance it writes down, and org/decisions/ is in the protected set, so it is restated as PROPOSED pending the operator's signature at merge. The route is legitimate (RUL-ARCH-008 is operator-ruled and this record pre-authorises the ADR); the signature was not.",
+  "declared": {
+    "capabilities": [
+      "database",
+      "filesystem"
+    ],
+    "side_effects": [
+      "migrates-schema",
+      "writes-production-data",
+      "irreversible-action",
+      "handles-pii"
+    ]
+  },
+  "mode": "high-assurance",
+  "tier_proposed": "R3",
+  "tier_ruled": "R3",
+  "reasons": [
+    {
+      "factor": "irreversible-action",
+      "tier_floor": "R3",
+      "source": "declared",
+      "evidence": "declared side effect: irreversible-action"
+    },
+    {
+      "factor": "data-deletion",
+      "tier_floor": "R3",
+      "source": "declared",
+      "evidence": "declared side effect: writes-production-data"
+    },
+    {
+      "factor": "schema-change",
+      "tier_floor": "R2",
+      "source": "declared",
+      "evidence": "declared side effect: migrates-schema"
+    },
+    {
+      "factor": "pii-handling",
+      "tier_floor": "R2",
+      "source": "declared",
+      "evidence": "declared side effect: handles-pii"
+    }
+  ],
+  "status": "done",
+  "owner_session": "phase7-retention-2026-08-23",
+  "claims": [
+    "src/lib/retention/",
+    "src/lib/db/",
+    "org/decisions/",
+    "docs/",
+    "scripts/tooling/",
+    "tests/unit/",
+    "package.json"
+  ],
+  "timestamps": {
+    "opened": "2026-07-25T00:00:00Z",
+    "updated": "2026-08-23T04:00:00Z",
+    "closed": "2026-08-23T04:00:00Z"
+  }
+}

@@ -1,0 +1,56 @@
+{
+  "id": "T-0116",
+  "intent": "U2 of the UI overhaul programme: the token layer the design system never had, and a surface ladder solved rather than picked. @theme declared 38 colours, three widths, two fonts and one spacing step: no type scale, no radius scale, no elevation, no z ladder, no motion. And the one thing it did tokenise was flat, spanning 1.00 to 1.19:1 against the painted ground, which is why the rail measures 1.06:1 against the page beside it and nothing in the product has an edge. Declaration and gates only: nothing repaints, because the codemods that consume this are U4 to U6.",
+  "declared": {
+    "capabilities": [
+      "edit-source",
+      "edit-tooling",
+      "edit-tests"
+    ],
+    "side_effects": []
+  },
+  "mode": "standard",
+  "tier_proposed": "R1",
+  "tier_ruled": "R1",
+  "reasons": [
+    {
+      "factor": "size-threshold",
+      "tier_floor": "R1",
+      "source": "derived:diff-size",
+      "evidence": "globals.css, contrast-check, design-lint and one new tool; no protected or sensitive path, no schema, no route"
+    }
+  ],
+  "status": "done",
+  "owner_session": "t0116-u2-token-layer-2026-09-07",
+  "claims": [
+    "src/app/globals.css",
+    "scripts/tooling/derive-surface-ladder.mjs",
+    "scripts/tooling/contrast-check.mjs",
+    "scripts/tooling/design-lint.mjs",
+    "scripts/tooling/design-lint.baseline.json",
+    "tests/unit/"
+  ],
+  "programme": "U2, depends on U1. Everything from U4 onward consumes these tokens, so it lands before any codemod.",
+  "timestamps": {
+    "opened": "2026-09-07T02:30:00Z",
+    "updated": "2026-09-07T05:00:00Z",
+    "closed": "2026-09-07T05:00:00Z"
+  },
+  "invariants": [
+    "I1 DERIVED, not chosen. Every rung is the output of a solver given a ground, a ray and a target ratio, and the oracle recomputes each ratio from the hex actually written in globals.css. An edit that looks nicer and measures worse fails.",
+    "I2 NOTHING REPAINTS. Every new name is new; --color-ps-surface-panel had zero call sites in .tsx; the radius scale is house-prefixed so that declaring it cannot change what rounded-lg means in 324 places; well and hairline keep the values their call sites paint until U4 moves the call sites.",
+    "I3 A rung that cannot be measured is a failure, not a pass. A keyword, an oklab() or an unresolvable alias exits 1 rather than being skipped, because a rung nothing checks is how the ladder reached 1.06:1.",
+    "I4 Every new rule refuses one form AND allows another. A rule that fires on the replacement as well as the original is a rule nobody can satisfy, and the codemod that tried would drive its count up.",
+    "I5 The debt is baselined, not hidden. Eleven rules land at their real counts so the ratchet can take them down; the gate refuses growth meanwhile, so nothing new is added while the old is removed."
+  ],
+  "commits": "0c6c2b7a the oracle and the derivation instrument, red at 38 of 51; be43f15a the ladder, the four missing scales, the extended contrast gate and eleven baselined rules; the sharper-oracle commit the sweep asked for; and the record commit that follows.",
+  "verification": "Gate by exit code: lint 0, tsc 0, jest 0 (6293 tests, 620 suites), knip 0, canary 0, build 0, Playwright 140 passed and 26 skipped, census 0. The census is unchanged by design: this batch paints nothing, so every number in it should hold, and it does.",
+  "the_ladder": "ground #040b12 unchanged; panel #1e3042 at 1.466:1 against it; raised #2e4a66 at 1.470:1 against the panel; edge #6c7887 at 3.003:1; hairline #474f59 at 1.626:1; emphasis #8797aa at 4.521:1. Two rays, because a surface and a rule are not the same object: surfaces travel the palette's own line (#263d54 is 38:61:84, its brightest existing rung) so the identity does not move, and rules travel a cooler, far less saturated one because on the surface ray a 3:1 stroke is a blue line rather than an edge. WHICH RULE WHERE was decided by rendering both in a browser and looking: `edge` for a control boundary and the shell's seams, which is what WCAG 1.4.11 is about, and `hairline` for a card outline, because a card whose fill already sits 1.47:1 off the page does not also need a 3:1 stroke and drawing one round every tile reads as wireframe. `inset` is the ground: a well is a step down and a near-black page has nowhere to go, so an input reads as sunken by being its parent's lower rung.",
+  "the_debt": "Eleven rules registered and baselined at today's counts, 3107 violations in total, with a written reason recorded in the baseline's growth log. By rule: type-scale-only 1189, no-raw-border-alpha 498, radius-scale-only 477, no-inline-card-chrome 344, palette-must-be-house 187, no-raw-text-alpha 159, no-raw-control-outside-ui 127, z-scale-only 51, one-container-per-page 36, no-raw-colour-in-css 28, no-raw-fetch-in-component 11. Each codemod batch drives its own rules to zero and re-baselines; until then the gate refuses any growth, so nothing new can be added while the old is being removed. The twelfth rule the plan named, status-colour-through-helper, is not here: a state-to-colour map is an object literal over many lines and a line-oriented regex cannot see it without guessing, so it becomes a source-seam test in U6.",
+  "mutation": "Two rounds against the committed tree, 22 mutants. Round one: 19 killed, 3 survived. All three survivors were the same mistake in three different rules: a fixture carrying MORE than the one thing it tested, so weakening the rule left something else in the line still matching. no-raw-border-alpha's refusal case wrote border-white/10 AND bg-white/5, so dropping bg from the alternation changed nothing. no-inline-card-chrome's permission case carried none of corner, edge or fill, so weakening it to a corner alone left the case passing. no-raw-fetch-in-component had no case at all for a component calling the API from an event handler, which is not reading on mount and is not what the rule is about. Each spelling is isolated on its own line now, and a rounded avatar, a filled chip and an outlined pill each assert that one or two of the three is not a card. Round two: 3 of 3 killed. 22 of 22.",
+  "proof": "Declared is not the same as usable, and both halves were measured against a real build rather than assumed. A probe component using all 25 new tokens as utilities was planted, built and grepped out of the emitted stylesheet: 25 of 25 generated. That probe is also what caught the z ladder, which produced nothing at all, because z-index is not one of Tailwind v4's theme namespaces: the rungs live in :root now with an @utility each, re-probed, and all seven emit. The ladder itself was rendered in a browser beside the current one before any value was written down.",
+  "found_by_gating_last": "U1 was pushed with a red lint. Its gate ran, then the sweep asked for a sharper oracle, and the oracle's `require` was added AFTER the gate and before the push. The two tree states look identical from outside, so nothing said so. The runner now stamps the tree it measured, HEAD plus the working diff, and says loudly if that stamp moves during a run; the fix itself is one pragma.",
+  "deviation": "(1) Oracle-first held for the token layer, which was red at 38 of 51 on write. It did not hold for the derivation instrument, the per-rule cases or the contrast-gate cases, all of which were written after the code they cover. The instrument is a measuring tool rather than product code and its constants are independent of it; the per-rule and gate cases were written because the plan asks for them and the mutation sweep is what proves they can fail. Recorded rather than dressed up. (2) contrast-check gained a `--css <path>` flag, which is not in the plan. Without it the new ladder half has no oracle at all: the script reads one fixed file and exits, so nothing could ask it what it does when a rung is too dim, and that is the exact shape of the defect U0 was about.",
+  "harness_amendments": "scripts/tooling/derive-surface-ladder.mjs is new. contrast-check.mjs measures the ladder as well as the tiers and takes --css. design-lint.mjs gains eleven rules and its baseline gains a growth entry with the reason. tests/unit/lockbook-tokens.test.ts is amended with the reason at the changed line: it used to assert that all four surface roles alias a --color-dark-* primitive, which is a good rule and is also the rule that kept the ladder flat, since the primitives it named span 1.19:1. It now asserts the alias rule for the roles that are still names and asserts the two that became values AS values. More assertions than before, not fewer.",
+  "deferred": "The codemods. Nothing in the product uses any of this yet, which is deliberate: U3 takes the geometry, U4 the surfaces and edges, U5 the type, U6 the colour, radius and layers. The 3,107 baselined violations are the list of what they have to do, and the census is what will say whether it worked."
+}

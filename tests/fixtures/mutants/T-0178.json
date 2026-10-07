@@ -1,0 +1,30 @@
+{
+  "task": "T-0178",
+  "why": "The exact Playwright proposal must remain observable after PR #228 retires.",
+  "mutants": [
+    {
+      "id": "m1-revert-playwright-range",
+      "file": "package.json",
+      "anchor": "\"@playwright/test\": \"^1.62.1\"",
+      "replacement": "\"@playwright/test\": \"^1.61.0\"",
+      "tests": ["tests/unit/t0178-playwright-proposal.test.ts"],
+      "why": "The direct proposal must be enforced independently from the lockfile."
+    },
+    {
+      "id": "m2-revert-root-lock-range",
+      "file": "package-lock.json",
+      "anchor": "\"@playwright/test\": \"^1.62.1\"",
+      "replacement": "\"@playwright/test\": \"^1.61.0\"",
+      "tests": ["tests/unit/t0178-playwright-proposal.test.ts"],
+      "why": "The root lockfile contract must agree with the manifest."
+    },
+    {
+      "id": "m3-revert-playwright-core-resolution",
+      "file": "package-lock.json",
+      "anchor": "\"node_modules/playwright-core\": {\n      \"version\": \"1.62.1\"",
+      "replacement": "\"node_modules/playwright-core\": {\n      \"version\": \"1.61.0\"",
+      "tests": ["tests/unit/t0178-playwright-proposal.test.ts"],
+      "why": "The browser automation core must resolve to the same proposed version."
+    }
+  ]
+}

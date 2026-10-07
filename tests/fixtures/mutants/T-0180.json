@@ -1,0 +1,29 @@
+{
+  "task": "T-0180",
+  "mutants": [
+    {
+      "id": "m1-disable-default-rules",
+      "file": ".gitleaks.toml",
+      "anchor": "useDefault = true",
+      "replacement": "useDefault = false",
+      "tests": ["tests/unit/t0180-secret-scan-config.test.ts"],
+      "why": "The scanner must load the default secret rules."
+    },
+    {
+      "id": "m2-exclude-test-tree",
+      "file": ".gitleaks.toml",
+      "anchor": "useDefault = true",
+      "replacement": "useDefault = true\n\n[allowlist]\npaths = ['''tests/''']",
+      "tests": ["tests/unit/t0180-secret-scan-config.test.ts"],
+      "why": "A broad tests path exclusion must not hide a new secret."
+    },
+    {
+      "id": "m3-unpin-hosted-scanner",
+      "file": ".github/workflows/gitleaks.yml",
+      "anchor": "GITLEAKS_VERSION: 8.30.1",
+      "replacement": "GITLEAKS_VERSION: latest",
+      "tests": ["tests/unit/t0180-secret-scan-config.test.ts"],
+      "why": "The hosted scanner must use the same proven version as the control."
+    }
+  ]
+}

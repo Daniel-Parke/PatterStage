@@ -1,0 +1,213 @@
+{
+  "task": "T-0192",
+  "notes": [
+    "Proposal only. Require a clean committed candidate and passing unmodified/restored controls.",
+    "tests selects whole Jest suites; why identifies the intended executed assertion.",
+    "Import, syntax, configuration, dependency, launch and fixture-setup failures are not causal kills.",
+    "Inspect assertion evidence even when the runner reports killed. In particular, an infrastructure error wrapped in an expect assertion is still infrastructure.",
+    "Single-line anchors were individually verified unique. Recheck exact bytes at the committed sweep head.",
+    "Coverage is representative, not exhaustive."
+  ],
+  "mutants": [
+    {
+      "id": "m01-null-http-envelope",
+      "file": "src/lib/api/api-fetch.ts",
+      "anchor": "typeof json?.cronPushError === \"string\"",
+      "replacement": "typeof json.cronPushError === \"string\"",
+      "why": "T-0192 failed HTTP envelopes retains HTTP diagnosis for null: must reject with message HTTP 503, status 503 and body null. A runtime TypeError instead of that API diagnosis is the intended behavioural regression.",
+      "tests": [
+        "tests/unit/api-fetch-error-envelope.test.ts"
+      ]
+    },
+    {
+      "id": "m02-settings-later-draft",
+      "file": "src/hooks/useSettingsEditor.ts",
+      "anchor": "JSON.stringify(value) !== JSON.stringify(values[key])",
+      "replacement": "JSON.stringify(value) !== JSON.stringify(value)",
+      "why": "T-0192 Settings save owns only the submitted draft keeps 42 unsaved after a held save of 41 from baseline 40 succeeds: later draft must remain visible and unsaved.",
+      "tests": [
+        "tests/unit/settings-save-draft-ownership.test.tsx"
+      ]
+    },
+    {
+      "id": "m03-bulk-semantic-refusal",
+      "file": "src/hooks/useModelActions.ts",
+      "anchor": "const unsynchronised = results.filter((r) => r.ok && r.syncError);",
+      "replacement": "const unsynchronised = results.filter(() => false);",
+      "why": "T-0192 bulk default feedback distinguishes SQLite success from YAML refusal for HTTP200 semantic errors: feedback must identify YAML refusal rather than unconditional success.",
+      "tests": [
+        "tests/unit/model-bulk-default-feedback.test.tsx"
+      ]
+    },
+    {
+      "id": "m04-story-false-empty-success",
+      "file": "src/modules/rec-room/handlers/crud.ts",
+      "anchor": "return serverErrorFromCatch(\"POST /api/stories\", \"listing stories\", error, \"Failed to load stories\");",
+      "replacement": "return NextResponse.json({ data: { stories: [] } });",
+      "why": "T-0192 Story list read contract reports a genuine SQL read failure instead of a successful empty library: real SQL failure must produce status 500, not healthy empty data.",
+      "tests": [
+        "tests/unit/story-list-failure-contract.test.ts"
+      ]
+    },
+    {
+      "id": "m05-boot-research-recovery",
+      "file": "src/instrumentation.ts",
+      "anchor": "const failed = failStuckResearchRuns();",
+      "replacement": "const failed = 0;",
+      "why": "T-0192 boot recovery survives earlier boot failures recovers interrupted Research and Chat work on a healthy boot: research recovery must execute once before startup. Failure-path cases also require the sweep.",
+      "tests": [
+        "tests/unit/runtime-operational-consistency.test.ts"
+      ]
+    },
+    {
+      "id": "m06-boot-fatal-swallowed",
+      "file": "src/instrumentation.ts",
+      "anchor": "  ensureSyncLayer();",
+      "replacement": "  try { ensureSyncLayer(); } catch { /* mutant swallows startup refusal */ }",
+      "why": "T-0192 boot recovery survives earlier boot failures still recovers after sync fails and does not silently swallow the failure: reject with the original failure and do not start subsequent steps.",
+      "tests": [
+        "tests/unit/runtime-operational-consistency.test.ts"
+      ]
+    },
+    {
+      "id": "m07-gateway-diagnostic-disclosure",
+      "file": "src/lib/status/runtime-status-format.ts",
+      "anchor": "return url.origin + (url.pathname === \"/\" ? \"\" : url.pathname);",
+      "replacement": "return value;",
+      "why": "T-0192 gateway diagnostics preserve operations without disclosing URL secrets HERMES_GATEWAY_URL redacts userinfo from actual boot and runtime GET: synthetic userinfo must be absent from complete diagnostic output while operational endpoints remain unchanged.",
+      "tests": [
+        "tests/unit/runtime-gateway-diagnostic-redaction.test.ts"
+      ]
+    },
+    {
+      "id": "m08-composer-flag-diagnostic",
+      "file": "src/lib/deploy/boot-diagnostics.ts",
+      "anchor": "const composer = onOff(isFeatureEnabled(\"composer\"));",
+      "replacement": "const composer = onOff(true);",
+      "why": "T-0192 operational configuration matches consumers reports Composer consistently for \"off\": boot diagnostics must agree with the disabled consumer flag.",
+      "tests": [
+        "tests/unit/runtime-operational-consistency.test.ts"
+      ]
+    },
+    {
+      "id": "m09-response-reauthorisation",
+      "file": "src/lib/api/response-route.ts",
+      "anchor": "if (streamAuthorizer(request)()) return response;",
+      "replacement": "if (true) return response;",
+      "why": "T-0192 public route contracts reauthorises at response settlement after success, and the caught error variant: a revoked held request must receive the refusal rather than its original response.",
+      "tests": [
+        "tests/unit/api-route-public-contract.test.ts"
+      ]
+    },
+    {
+      "id": "m10-fixed-error-envelope",
+      "file": "src/lib/api/api-logger.ts",
+      "anchor": "return serverError(message);",
+      "replacement": "return serverError(\"Mutated failure\");",
+      "why": "T-0192 public route contracts preserves fixed and dynamic helper errors for Error: the fixed helper must retain its exact published message and 500 status.",
+      "tests": [
+        "tests/unit/api-route-public-contract.test.ts"
+      ]
+    },
+    {
+      "id": "m11-ts-shell-precedence",
+      "file": "scripts/tooling/load-env-local.ts",
+      "anchor": "if (!process.env[key]) process.env[key] = value;",
+      "replacement": "process.env[key] = value;",
+      "why": "T-0192 tooling environment precedence TS loader: nonempty shell wins: file loading must not replace the inherited nonempty value.",
+      "tests": [
+        "tests/unit/tooling-env-contract.test.ts"
+      ]
+    },
+    {
+      "id": "m12-deploy-file-precedence",
+      "file": "scripts/tooling/_env-local.mjs",
+      "anchor": "process.env[key] = val;",
+      "replacement": "if (!process.env[key]) process.env[key] = val;",
+      "why": "T-0192 tooling environment precedence deploy file values replace inherited values including empty; last duplicate wins: deploy intentionally differs from TS shell-wins semantics.",
+      "tests": [
+        "tests/unit/tooling-env-contract.test.ts"
+      ]
+    },
+    {
+      "id": "m13-deploy-lone-quote",
+      "file": "scripts/tooling/_env-local.mjs",
+      "anchor": "value.length >= 2 &&",
+      "replacement": "value.length >= 1 &&",
+      "why": "T-0192 tooling environment precedence deploy preserves a lone ' quote as a literal value, and its double-quote variant: a single quote must not be treated as a paired delimiter.",
+      "tests": [
+        "tests/unit/tooling-env-contract.test.ts"
+      ]
+    },
+    {
+      "id": "m14-script-mts-coverage",
+      "file": "tsconfig.scripts.json",
+      "anchor": "\"scripts/**/*.mts\"",
+      "replacement": "\"scripts/**/*.never-mts\"",
+      "why": "T-0192 script typecheck contract actual mandatory compiler command refuses a planted .mts error then accepts its correction without running the CLI: the intended failure is that the compiler no longer diagnoses the planted TS2322 in the omitted .mts file. Invalid configuration, missing npm/sh or another compiler setup failure must not count. The explicit coverage-list assertion is supporting structural evidence only.",
+      "tests": [
+        "tests/unit/scripts-typecheck-contract.test.ts"
+      ]
+    },
+    {
+      "id": "m15-template-uuid-collision",
+      "file": "src/lib/templates-handlers/create.ts",
+      "anchor": "const id = \"ct_\" + uuid();",
+      "replacement": "const id = \"ct_00000000-0000-4000-8000-000000000000\";",
+      "why": "new template identifiers preserve independent creations does not collide when clock and ordinary random values repeat: three successful creations must receive distinct IDs. The constant retains UUID shape so collision is the intended assertion.",
+      "tests": [
+        "tests/unit/template-create-identifiers.test.ts"
+      ]
+    },
+    {
+      "id": "m16-missions-name-binding",
+      "file": "src/components/missions/templates/TemplateEditorModal.tsx",
+      "anchor": "onChange={(e) => onTemplateNameChange(e.target.value)}",
+      "replacement": "onChange={() => undefined}",
+      "why": "The actual Template name input stops publishing edits while the 43 hook-to-modal bindings remain unchanged. Require the real-controls save case to reach its saved payload assertion and observe the original name instead of Edited template; a mapping-only failure is insufficient.",
+      "tests": [
+        "tests/unit/mission-template-editor-wiring.test.tsx"
+      ]
+    },
+    {
+      "id": "m17-composer-review-bypass",
+      "file": "src/components/composer/ComposerRunForm.tsx",
+      "anchor": "onClick={() => setConfirming(true)}",
+      "replacement": "onClick={() => onRun()}",
+      "why": "Composer launch control opens the review rather than running: Review must leave onRun uncalled and display the review heading. The confirmation control remains in the same suite.",
+      "tests": [
+        "tests/unit/composer-review-control.test.tsx"
+      ]
+    },
+    {
+      "id": "m18-terminal-log-context",
+      "file": "src/lib/api/api-logger.ts",
+      "anchor": "console.error(`[API ${route}] Error ${context}: ${message}`);",
+      "replacement": "console.error(`[API ${route}] Error mutated-context: ${message}`);",
+      "why": "T-0192 route-local terminal catch contracts Missions list: exact terminal log and 500 for Error: require the exact original route/context/message and exactly one terminal log.",
+      "tests": [
+        "tests/unit/route-local-catch-contract.test.ts"
+      ]
+    },
+    {
+      "id": "m19-sign-in-language",
+      "file": "src/proxy.ts",
+      "anchor": "<html lang=\"en\">",
+      "replacement": "<html lang=\"fr\">",
+      "why": "The actual standalone sign-in document must declare English; preserve all refusal controls.",
+      "tests": [
+        "tests/unit/sign-in-document-metadata.test.ts"
+      ]
+    },
+    {
+      "id": "m20-sign-in-viewport",
+      "file": "src/proxy.ts",
+      "anchor": "width=device-width, initial-scale=1",
+      "replacement": "width=980, initial-scale=1",
+      "why": "The actual document viewport must follow the device rather than the reproduced980px phone layout.",
+      "tests": [
+        "tests/unit/sign-in-document-metadata.test.ts"
+      ]
+    }
+  ]
+}

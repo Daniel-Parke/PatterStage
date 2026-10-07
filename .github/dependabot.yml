@@ -11,7 +11,7 @@ updates:
       # ESLint 10 breaks eslint-config-next / eslint-plugin-react (getFilename API change).
       - dependency-name: "eslint"
         update-types: ["version-update:semver-major"]
-      # Stay aligned with CI Node 20 — do not auto-bump to @types/node 22+.
+      # CI uses Node 24; major Node type updates still require separate validation.
       - dependency-name: "@types/node"
         update-types: ["version-update:semver-major"]
       # TypeScript 6 is not yet validated against our Next.js 16 stack.

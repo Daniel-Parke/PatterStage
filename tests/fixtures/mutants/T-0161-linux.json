@@ -1,0 +1,14 @@
+{
+  "task": "T-0161 Linux backup permissions",
+  "why": "POSIX creation modes are observable only on Linux or macOS, so this mutant runs in the isolated Node 20 Linux checkout.",
+  "mutants": [
+    {
+      "id": "linux-private-copy-created-readable",
+      "file": "scripts/tooling/_platform.mjs",
+      "anchor": "output = openSync(destination, \"wx\", OWNER_ONLY_FILE);",
+      "replacement": "output = openSync(destination, \"wx\", 0o666);",
+      "tests": ["tests/unit/t0161-backup-creation.test.ts"],
+      "why": "A credential-bearing database backup must never be created readable by other users."
+    }
+  ]
+}

@@ -1,0 +1,49 @@
+{
+  "id": "T-0079",
+  "intent": "One defect shape, five instances: a value is accepted at the boundary, a default or a cast papers over the gap, and the damage lands in a column nobody re-validates. Four came from the 2026-08-30 fresh-agent QA pass (findings 4, 5+16, 8, 14); the fifth came from driving the product in a browser, which that pass could not do.",
+  "declared": {
+    "capabilities": [
+      "edit-source"
+    ],
+    "side_effects": []
+  },
+  "mode": "standard",
+  "tier_proposed": "R1",
+  "tier_ruled": "R1",
+  "reasons": [],
+  "status": "done",
+  "owner_session": "t0079-boundary-column-2026-08-31",
+  "claims": [
+    "src/lib/schedule/next-run.ts",
+    "src/lib/missions/mission-name.ts",
+    "src/modules/rec-room/lib/characters.ts",
+    "src/app/api/mission-categories/route.ts",
+    "src/app/api/logs/route.ts",
+    "src/app/api/schedules/",
+    "src/lib/missions/dispatch.ts",
+    "tests/"
+  ],
+  "invariants": [
+    "I1 A schedule that can never fire is refused at the boundary, not stored enabled-and-dead.",
+    "I2 The refusal does not cost legitimate expressions: the 29th of February is accepted, and a day-of-month impossible for its month is still accepted when a day-of-week can match it.",
+    "I3 Only cron is judged. An interval shorthand or an ISO instant is not a cron and carries none of this problem.",
+    "I4 Two unnamed missions with different instructions get different names.",
+    "I5 A delete that deleted nothing says so. The boolean the repository already returns is not thrown away.",
+    "I6 A character written as a string is a named character, not three undefineds in the model's prompt.",
+    "I7 A 404 an operator will hit on their FIRST visit explains itself, and says whether it is normal."
+  ],
+  "the_trap_in_the_obvious_fix": "Finding 4's natural fix is to call computeNextRun and refuse a null. That would refuse `0 0 29 2 *` -- a legitimate expression firing every four years -- because the prober gives up after CAP_MINUTES, 366 days. It would be a new defect wearing the old one's clothes, and it would have looked like a fix. cronCanEverFire is therefore STRUCTURAL: it intersects the day-of-month set with the longest possible month, and honours the standard cron rule that a restricted day-of-week ORs with day-of-month rather than ANDing.",
+  "what_the_existing_suite_caught_immediately": "The guard was first wired into every schedule write. `every 10m` has fewer than five fields, so it was judged unfireable and refused -- and the existing schedule tests went red the moment the wiring landed. scheduleCanEverFire now parses first and judges only the cron kind. Worth recording because it is the suite catching a REGRESSION in a change whose own oracle was green: the new tests all passed while the product was broken for interval schedules.",
+  "two_answers_that_were_computed_and_discarded": [
+    "deleteCategory already returned false for an unknown id; the route answered 200 {deleted:id} and threw the boolean away. The correct sibling is four files over in schedules/[id]/route.ts.",
+    "The /logs route already built availableLogs before its guards. T-0071 fixed the missing-FILE 404 to carry it; the missing-DIRECTORY 404 three lines up returned a bare not-found, which the page rendered as 'No matching log files' -- indistinguishable from an empty state, on the very first visit of a fresh install."
+  ],
+  "mutation_finding": "Eleven mutations, ten caught, one survivor -- and the survivor is the same seam-blindness this programme keeps finding. Stripping the body from the directory-missing 404 changed nothing observable, because every test of that path mocked the useLogs HOOK. The page tests proved the page renders an error when handed one; nothing proved the route hands one over. Fixed by driving the real handler: the 404 now asserts a reason, that the reason says a missing logs directory is NORMAL on a fresh install, and that availableLogs is still present for the page to read. One further mutation proved nothing -- its pattern did not match the file -- and was re-expressed against the derivation itself rather than a regex, then re-run. 11/11 after.",
+  "oracle_provenance": "boundary-accepts-column-lies.test.ts committed alone at e8d1c77c ahead of the implementation, and the route-level additions at 6d80e8fb after mutation exposed the gap. Green controls are load-bearing throughout: Feb 29 accepted, `0 0 30 2 1` accepted (day-of-week saves it), a properly-shaped character left alone, and an existing log still served normally.",
+  "verification": "Proved live on an isolated instance over HTTP: `0 0 30 2 *` and `0 0 31 4 *` refused 400 naming the reason; `0 0 29 2 *` accepted 201; `every 10m` and `0 9 * * *` accepted with real next runs; DELETE an unknown category -> 404 'Category not found'; GET /api/logs on an install with no logs directory -> 404 carrying the fresh-install explanation AND availableLogs; a mission dispatched with no name -> 'Summarise the Q3 revenue report for the board' rather than a shared constant. Gate: lint 0, tsc 0, 3520 tests / 402 suites, knip 0, canary OK, build 0.",
+  "timestamps": {
+    "opened": "2026-08-31T16:30:00Z",
+    "updated": "2026-08-31T17:40:00Z",
+    "closed": "2026-08-31T17:40:00Z"
+  }
+}

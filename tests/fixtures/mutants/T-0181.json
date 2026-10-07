@@ -1,0 +1,29 @@
+{
+  "task": "T-0181",
+  "mutants": [
+    {
+      "id": "m1-admit-hardlink-alias",
+      "file": "src/lib/fs/log-files.ts",
+      "anchor": "if (!entry.isFile() || entry.isSymbolicLink() || entry.nlink !== BigInt(1)) return false;",
+      "replacement": "if (!entry.isFile() || entry.isSymbolicLink()) return false;",
+      "tests": ["tests/unit/t0181-log-alias-amendment.test.ts"],
+      "why": "A planted hardlink must receive the specified 400 refusal; descriptor checks independently limit file access."
+    },
+    {
+      "id": "m2-misclassify-dangling-alias",
+      "file": "src/lib/fs/log-files.ts",
+      "anchor": "let entry: BigIntStats;",
+      "replacement": "if (!existsSync(C)) return true;\n  let entry: BigIntStats;",
+      "tests": ["tests/unit/t0181-log-alias-amendment.test.ts"],
+      "why": "A dangling symlink must not be misclassified as an absent basename."
+    },
+    {
+      "id": "m3-leave-normal-log-uncleared",
+      "file": "src/lib/fs/log-files.ts",
+      "anchor": "ftruncateSync(fd, 0);",
+      "replacement": "fstatSync(fd);",
+      "tests": ["tests/unit/log-files-t0181-boundary.test.ts", "tests/unit/t0181-log-alias-amendment.test.ts"],
+      "why": "The symlink refusal must not disable ordinary named and bulk log clearing."
+    }
+  ]
+}

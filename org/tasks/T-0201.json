@@ -1,0 +1,44 @@
+{
+  "id": "T-0201",
+  "intent": "Close the programme row by row. Approved authority, invariants, dependencies, rollback and exact Verify remain in org/plans/2026-09-refactor-programme.json. Receive the exact unresolved review proofs in org/reviews/2026-10-t0194-review-handoff.md; preserve original evidence and do not treat allocation as completion. Red-first oracle and exact opening claims precede implementation.",
+  "declared": {
+    "capabilities": [
+      "edit-code",
+      "edit-tests",
+      "edit-docs",
+      "git",
+      "git-push",
+      "run-isolated-process"
+    ],
+    "side_effects": [
+      "touches-auth"
+    ]
+  },
+  "mode": "high-assurance",
+  "tier_proposed": "R2",
+  "status": "proposed",
+  "owner_session": "2026-10-04-t0194-coordinator",
+  "claims": [
+    "org/plans/2026-09-refactor-programme.md",
+    "org/plans/2026-09-refactor-ownership.json",
+    "org/plans/2026-09-refactor-final-dispositions.json",
+    "org/HANDOVER.md",
+    "scripts/tooling/refactor-closing-oracle.mjs",
+    "org/tasks/T-0201.json",
+    "org/reviews/2026-10-t0194-review-handoff.md"
+  ],
+  "timestamps": {
+    "opened": "2026-10-04T22:00:44.414178+00:00",
+    "updated": "2026-10-04T22:00:44.414178+00:00"
+  },
+  "verdicts": [],
+  "tier_ruled": "R2",
+  "reasons": [
+    {
+      "factor": "auth-surface",
+      "tier_floor": "R2",
+      "source": "declared",
+      "evidence": "declared side effect: touches-auth"
+    }
+  ]
+}

@@ -1,0 +1,40 @@
+{
+  "id": "T-0065",
+  "intent": "The smaller UX defects from the 2026-08-30 QA pass and this review: a disabled submit button that named the wrong blocker and then named none at all, a duplicate-mission path that silently withdrew the dispatch acknowledgement, a silent return with no message, and a mock gateway whose default port is the one the real gateway uses.",
+  "declared": {
+    "capabilities": [
+      "edit-source"
+    ],
+    "side_effects": []
+  },
+  "mode": "standard",
+  "tier_proposed": "R1",
+  "tier_ruled": "R1",
+  "reasons": [],
+  "status": "done",
+  "owner_session": "t0065-small-ux-2026-08-30",
+  "claims": [
+    "src/lib/missions/mission-submit-requirement.ts",
+    "src/components/missions/MissionCreateForm.tsx",
+    "src/hooks/useMissionDispatch.ts",
+    "mock-hermes/",
+    "mock-hindsight/",
+    "mock-llm/",
+    "docs/TESTING.md",
+    "tests/"
+  ],
+  "invariants": [
+    "I1 The reported blocker is the FIRST unmet requirement, in the same order as the disabled expression. Asserted over all sixteen boolean combinations, which is what makes 'they cannot disagree' a fact rather than an intention.",
+    "I2 A refused submit says why on both surfaces. The acknowledgement branch used to toast while the name and instruction branch returned silently, so the ack was the only blocker with a voice.",
+    "I3 A double-click still returns silently. A spinner already says submitting.",
+    "I4 A mock that cannot bind exits 1 with a sentence naming the likely culprit, not a stack."
+  ],
+  "the_stuck_state": "handleDuplicateMission called the raw setNewDispatch instead of the setFormField wrapper that re-acknowledges. populateFormFromMission clears the ack, and with the sheet ALREADY OPEN the form does not remount, so its once-per-mount default-reporting effect never runs: Dispatch renders open, the ack is false, the button is dead, and the tooltip tells the operator to open something already open. Duplicating from a CLOSED sheet remounted and healed itself, which is why two QA passes could report the symptom and neither could reproduce it reliably. resetForm keeps the raw setter deliberately, and now says why, so the next reader does not correct the asymmetry.",
+  "verification": "21 tests on the pure helper, including the sixteen-combination agreement test. The EADDRINUSE handler was proved by colliding two mocks on one port: exit 1, and the message names the real gateway. Gate: lint 0, tsc 0, 3320 tests / 386 suites, knip 0, canary 0, build 0.",
+  "mock_port_reasoning": "The original sin was reading the AGENT's API_SERVER_PORT to configure the MOCK: it is exactly the variable a machine running the real Hermes gateway already has set. MOCK_HERMES_PORT now comes first with 8642 kept as the FINAL default, so every doc, compose file and smoke test keeps working untouched. Loopback is now the default host, matching mock-hindsight, because an unauthenticated fake agent gateway that accepts run submissions has no business on a dev machine's LAN; the compose stack is unaffected because its Dockerfile pins 0.0.0.0 explicitly.",
+  "timestamps": {
+    "opened": "2026-08-30T21:00:00Z",
+    "updated": "2026-08-30T21:30:00Z",
+    "closed": "2026-08-30T21:30:00Z"
+  }
+}

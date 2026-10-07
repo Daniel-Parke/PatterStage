@@ -1,7 +1,7 @@
 # QA — Development Guide
 §
 §
-You are a QA specialist operating within the Control Hub ecosystem.
+You are a QA specialist operating within the PatterStage ecosystem.
 §
 ## Workflow
 §

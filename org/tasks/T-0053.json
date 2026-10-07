@@ -1,0 +1,46 @@
+{
+  "id": "T-0053",
+  "intent": "Three items from the operator's second live Hermes QA pass, 2026-08-29. A2 reported that the skills category dedup had regressed; refuted, but chasing it found a real defect in the code T-0037 shipped. B6 asked for a boot line naming the operational flags, after three sessions were lost to a watchdog restarting the server without their environment and one finding had to be retracted because of it. And an inconsistency found while refuting A5: useInterval catch-up ticks on tab return while the query layer had refetchOnWindowFocus off, so the two disagreed in the opposite direction from what useInterval's own comment claims. Closed 2026-08-29.",
+  "declared": {
+    "capabilities": [
+      "edit-source"
+    ],
+    "side_effects": []
+  },
+  "mode": "standard",
+  "tier_proposed": "R1",
+  "tier_ruled": "R1",
+  "reasons": [],
+  "status": "done",
+  "owner_session": "t0053-label-and-boot-2026-08-29",
+  "invariants": [
+    "I1 A category heading does not depend on catalogue order. Asserted by grouping the same four spellings in two different orders and comparing the rendered heading, not by inspecting the fold.",
+    "I2 The module's stated invariant still holds: titleCaseCategory(raw).toLowerCase() === the grouping key, for every spelling. A heading and its bucket cannot drift apart again.",
+    "I3 A separator-free spelling KEEPS its own bucket. This is the thing the report asked to be changed, and changing it would reintroduce order-dependent headings by merging labels that do not match.",
+    "I4 The boot line never prints a secret. It is meant to be pasted into a bug report; the mutation that adds a token to it turns the guard red.",
+    "I5 The boot line prints unconditionally. A diagnostic that appears only when something is wrong cannot be used to establish that nothing is."
+  ],
+  "oracle_provenance": "Authored BEFORE any production file was opened for edit and committed on its own at c660f814, ahead of the implementation at 85c1aa28. Two files. category-label-is-deterministic measured against dev@0ec7b9ba: 3 red, 3 green, and the greens are load-bearing because they assert the REPORTED claim is not a bug. boot-says-how-it-is-configured: module absent, so all 8 red on resolution.",
+  "verification": "Four mutations against the committed implementation, tree restored and confirmed clean after each: restoring the old title-casing turns 4 red; making the boot line stop reading read-only turns 2 red; adding a token to the boot line turns 1 red; dropping the legacy CH_ alias turns 1 red. The boot line was also verified on a real server booted with PS_READ_ONLY=1 and a gateway override, and printed exactly the intended line.",
+  "report_claim_refuted": "A2 said CONTROL HUB and CONTROLHUB rendering as separate rows is a regression in the T-0037 dedup. It is not. CONTROLHUB has no separator, so it title-cases to Controlhub, a different label, and the module states that a spelling which renders differently keeps its own bucket, because merging labels that do not match is what makes a heading depend on data order. The shipped seed catalogue is also clean (all lowercase single words), so the CONTROLHUB row is the operator's own skill directory naming, not shipped data.",
+  "claim_retired_by_measurement": "The advertised PORT was reported as derived from `process.env.PORT ?? \"3000\"` rather than from the -p flag. True of the source and false of the behaviour: Next assigns process.env.PORT at bind time, before instrumentation runs. Measured on a real server booted with `-p 3494` and no PORT in the environment; the boot line advertised 3494. No fix was made. I had already carried the claim into the QA prompt as a footgun and corrected it there, which is the part worth recording: a wrong warning in a brief costs the next tester an hour looking for a bug that is not there.",
+  "pinned_defect_corrected": "tests/unit/skills-category-normalization.test.ts asserted titleCaseCategory('CONTROL  HUB') === 'CONTROL HUB' and carried a comment accurately DESCRIBING the defect as though it were a design: 'titleCaseCategory raises the first letter of each word and leaves the rest alone'. Corrected in place with the reason written beside it. The merge that test protects is unchanged; what changed is that its stated premise is now true of all four spellings rather than three.",
+  "cost_accepted": "Lower-casing the remainder title-cases acronyms too, so MLOps renders Mlops. The module already documented that stance for the lowercase spelling, and a heading that flickers between Control Hub and CONTROL HUB depending on which row came back first is worse than one that is consistently plain. Recorded as a judgement so a future reader can overturn it on evidence rather than guess at intent.",
+  "rollback": "Revert 85c1aa28. Both oracles at c660f814 then go red again.",
+  "claims": [
+    "src/lib/skills-grouping.ts",
+    "src/lib/boot-diagnostics.ts",
+    "src/instrumentation.ts",
+    "src/components/providers/QueryProvider.tsx",
+    "tests/"
+  ],
+  "deferred": [
+    "The boot line names five flags. PS_DATA_DIR and the resolved database path are arguably as load-bearing (the paths module already warns separately when a sibling data dir shadows the one in use), and a build id would answer 'which build is running', which the product review asked for. Both need a decision about how much boot noise is right, so they are not smuggled in here.",
+    "refetchOnWindowFocus is now on globally. staleTime keeps it cheap, but a surface with an expensive read may want to opt out per query; nothing does today, so no opt-out was invented for a caller that does not exist."
+  ],
+  "timestamps": {
+    "opened": "2026-08-30T00:30:00Z",
+    "updated": "2026-08-30T03:00:00Z",
+    "closed": "2026-08-30T03:00:00Z"
+  }
+}

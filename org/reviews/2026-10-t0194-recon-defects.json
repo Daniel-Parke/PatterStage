@@ -1,0 +1,273 @@
+{
+  "inspectedHead": "57aad470c161bdf963cb70d86c418e55692be66f",
+  "scope": "Current working-tree source audits by Helmholtz, Parfit and Arendt. Source hypotheses are not runtime reproductions or acceptance. Named library controls precede implementation; foreign defects retain explicit owners.",
+  "findings": [
+    {
+      "id": "recon-dns-rebinding",
+      "owner": "T-0207",
+      "priority": "P1",
+      "status": "runtime-confirmed",
+      "evidence": "org/reviews/2026-10-t0207-dns-rebinding-evidence.json",
+      "reason": "Public guard resolution and separate loopback transport resolution return the owned forbidden marker. ADR0020 accepted; independent regression controls precede implementation."
+    },
+    {
+      "id": "recon-cron-negative-step",
+      "owner": "T-0194",
+      "priority": "P1",
+      "status": "focused-repair-verified",
+      "evidence": "src/lib/schedule/next-run.ts:25",
+      "reason": "A negative step can decrement forever under v <= hi. Independent bounded-child controls must confirm and preserve positive cron/six-field parsing.",
+      "verification": "Independent23-case oracle red15/23 in4d697485; final23/23 and33/33 with held next-run controls. Full gate/sweep/hosted pending; org/reviews/2026-10-t0194-verification.md."
+    },
+    {
+      "id": "recon-model-default-owner",
+      "owner": "T-0194",
+      "priority": "P2",
+      "status": "focused-repair-verified",
+      "evidence": "src/lib/models/models-repository.ts:324",
+      "reason": "False on a non-owner deletes another model's default. Real SQLite controls must distinguish false/true/omitted flags.",
+      "verification": "Independent23-case oracle red15/23 in4d697485; final23/23 and33/33 with held next-run controls. Full gate/sweep/hosted pending; org/reviews/2026-10-t0194-verification.md."
+    },
+    {
+      "id": "recon-hindsight-patch-keys",
+      "owner": "T-0194",
+      "priority": "P2",
+      "status": "focused-repair-verified",
+      "evidence": "src/lib/memory/hindsight-route-helpers.ts:48",
+      "reason": "Pass-through builder uses a field value as its JSON key. Verify exact upstream fields, zero/false/omission and query mapping.",
+      "verification": "Independent23-case oracle red15/23 in4d697485; final23/23 and33/33 with held next-run controls. Full gate/sweep/hosted pending; org/reviews/2026-10-t0194-verification.md."
+    },
+    {
+      "id": "recon-skills-inherited-category",
+      "owner": "T-0194",
+      "priority": "P2",
+      "status": "focused-repair-verified",
+      "evidence": "src/lib/skills/skills-grouping.ts:40",
+      "reason": "Inherited constructor value prevents bucket initialisation and cannot receive push. Preserve normalisation, sorting and item identity.",
+      "verification": "Independent23-case oracle red15/23 in4d697485; final23/23 and33/33 with held next-run controls. Full gate/sweep/hosted pending; org/reviews/2026-10-t0194-verification.md."
+    },
+    {
+      "id": "recon-dashboard-schedule-kind",
+      "owner": "T-0194",
+      "priority": "P2",
+      "status": "focused-repair-verified",
+      "evidence": "src/lib/stats/stats-repository.ts:238",
+      "reason": "Script schedules are emitted as mission. Prove actual query mapping.",
+      "verification": "Independent23-case oracle red15/23 in4d697485; final23/23 and33/33 with held next-run controls. Full gate/sweep/hosted pending; org/reviews/2026-10-t0194-verification.md."
+    },
+    {
+      "id": "recon-mixed-timestamp-cutoffs",
+      "owner": "T-0194",
+      "priority": "P2",
+      "status": "focused-repair-verified",
+      "evidence": [
+        "src/lib/stats/stats-repository.ts:168",
+        "src/lib/stats/stats-repository.ts:243",
+        "src/lib/stats/stats-repository.ts:265",
+        "src/lib/analytics/analytics-repository.ts:355"
+      ],
+      "reason": "Raw ISO text and SQLite datetime text compare differently within a date. Verify actual boundary results before changing queries.",
+      "verification": "Independent23-case oracle red15/23 in4d697485; final23/23 and33/33 with held next-run controls. Full gate/sweep/hosted pending; org/reviews/2026-10-t0194-verification.md."
+    },
+    {
+      "id": "recon-tools-invalid-json",
+      "owner": "T-0208",
+      "priority": "P2",
+      "status": "source-hypothesis",
+      "evidence": "src/app/agent/tools/page.tsx:175",
+      "reason": "Malformed advanced JSON is parsed outside feedback handling before Save. Needs focused UI refusal/recovery control."
+    },
+    {
+      "id": "recon-story-missing-arc-writing",
+      "owner": "T-0208",
+      "priority": "P2",
+      "status": "source-hypothesis",
+      "evidence": "src/modules/rec-room/handlers/generate.ts:86",
+      "reason": "Writing is persisted before missing-arc rejection at105. Verify failed validation leaves durable state unchanged."
+    },
+    {
+      "id": "recon-story-failed-chapter-completion",
+      "owner": "T-0208",
+      "priority": "P2",
+      "status": "source-hypothesis",
+      "evidence": "src/modules/rec-room/handlers/generate.ts:71",
+      "reason": "No pending chapter can mark a story complete even when failed/writing chapters remain. Verify status transitions."
+    },
+    {
+      "id": "recon-client-read-error-loss",
+      "owner": "T-0208",
+      "priority": "P2",
+      "status": "source-hypothesis",
+      "evidence": [
+        "src/app/results/insights/page.tsx:88",
+        "src/app/work/research/page.tsx:108",
+        "src/components/ui/ProfilePicker.tsx:30",
+        "src/components/missions/ModelPicker.tsx:86"
+      ],
+      "reason": "Several consumers discard or obscure read failures. Test distinct failure, genuine empty, retry and stale-data states."
+    },
+    {
+      "id": "recon-install-empty-selection",
+      "owner": "T-0195",
+      "priority": "P2",
+      "status": "source-hypothesis",
+      "evidence": "tests/integration/test_full_install_update_process.py:1658",
+      "reason": "Empty scenarios can report all passed after running none. Validate before image side effects; preserve nonempty selections."
+    },
+    {
+      "id": "recon-shell-abort-fixture-cleanup",
+      "owner": "T-0195",
+      "priority": "P2",
+      "status": "source-hypothesis",
+      "evidence": "tests/scripts/run-shell-custom-tests.sh:40",
+      "reason": "EXIT trap cleans only initial fixtures; later roots rely on normal completion. Prove owned cleanup on abort."
+    },
+    {
+      "id": "recon-install-stale-interactive-key",
+      "owner": "T-0196",
+      "priority": "P2",
+      "status": "source-hypothesis",
+      "evidence": "tests/integration/test_full_install_update_process.py:591",
+      "reason": "CH_INSTALL_NONINTERACTIVE is not read by the installer; CI=1 masks it. Supported data/update aliases remain intentional."
+    },
+    {
+      "id": "recon-shell-backup-rotation",
+      "owner": "T-0196",
+      "priority": "P1",
+      "status": "source-hypothesis",
+      "evidence": "scripts/hardware/ps-db-backup.sh:43",
+      "reason": "Shell glob can rotate labelled manual/pre-restore backups, unlike the tested MJS path. Do not delete any real backup during proof."
+    },
+    {
+      "id": "recon-process-stop-ownership",
+      "owner": "T-0196",
+      "priority": "P1",
+      "status": "source-hypothesis",
+      "evidence": [
+        "scripts/lib/ps-env.sh:204",
+        "scripts/tooling/ps-deploy.mjs:313"
+      ],
+      "reason": "Port listeners and live PIDs are treated as owned without identity proof. Test unrelated listeners and PID reuse with disposable processes."
+    },
+    {
+      "id": "recon-retention-preview-wording",
+      "owner": "T-0197",
+      "priority": "P2",
+      "status": "source-hypothesis",
+      "evidence": "scripts/tooling/retention-prune.ts:31",
+      "reason": "Preview prevents pruning but can capture progression; earlier Changes nothing wording is contradictory. Preserve actual retention policy."
+    },
+    {
+      "id": "recon-gateway-retry-usage",
+      "owner": "T-0208",
+      "priority": "P2",
+      "status": "runtime-confirmed",
+      "evidence": "src/lib/models/llm.ts:395",
+      "reason": "Synthetic blank-success and terminal-success responses each report2/3; real in-memory spend writer retains2/3 rather than4/6. Single-response control retains2/3. Response-reported usage only, not actual charges. Independent accounting oracle and repair remain T0208."
+    },
+    {
+      "id": "recon-research-cancel-usage",
+      "owner": "T-0208",
+      "priority": "P2",
+      "status": "runtime-confirmed",
+      "evidence": "src/lib/laboratory/deep-research/run-job.ts:119",
+      "reason": "Real engine synthetic calls return30/60/90; cancellation before terminal persistence leaves NULL usage. Uncancelled control persists all totals. Cancelled status/no completion/report/artifact held. Partial/restart recovery remains separate."
+    },
+    {
+      "id": "recon-skills-editor-request-identity",
+      "owner": "T-0208",
+      "priority": "P1",
+      "status": "source-hypothesis",
+      "evidence": "src/app/agent/skills/page.tsx:270",
+      "reason": "Held A read after closing A/opening B can replace B draft without request identity; saving may write A content to B. Initial read permits editing and Save. Reproduce with controlled promises before repair."
+    },
+    {
+      "id": "recon-clean-preview-scope",
+      "owner": "T-0208",
+      "priority": "P1",
+      "status": "source-hypothesis",
+      "evidence": "src/app/agent/settings/restore/page.tsx:188",
+      "reason": "Preview lists IDs, bodyless POST recomputes deletion set in cleanDevData. New matching records may be removed after preview. Establish exact confirmation contract and isolated before/after fixture; never exercise operator data."
+    },
+    {
+      "id": "recon-sessions-stale-page",
+      "owner": "T-0208",
+      "priority": "P2",
+      "status": "source-hypothesis",
+      "evidence": "src/app/results/sessions/page.tsx:192",
+      "reason": "Out-of-range bookmarked or shrinking-results page shows empty and hides pagination despite total>0. Reproduce and retain genuine empty-state distinction."
+    },
+    {
+      "id": "recon-logs-delete-ownership",
+      "owner": "T-0208",
+      "priority": "P2",
+      "status": "source-hypothesis",
+      "evidence": "src/app/results/logs/page.tsx:92",
+      "reason": "No busy ownership during held delete allows a second arm/confirm DELETE. Retain confirmation and show executing state."
+    },
+    {
+      "id": "recon-sync-partial-success",
+      "owner": "T-0208",
+      "priority": "P2",
+      "status": "source-hypothesis",
+      "evidence": "src/app/page.tsx:108",
+      "reason": "Sync response allSuccessful:false bypasses runWrite data.success failure check and receives success toast. 45s default versus300s bulk is a source-supported timing risk, not reproduced failure."
+    },
+    {
+      "id": "recon-platform-monitor-unknown",
+      "owner": "T-0208",
+      "priority": "P2",
+      "status": "source-hypothesis",
+      "evidence": "src/modules/hermes/components/PlatformsPanel.tsx:53",
+      "reason": "Null monitor during unresolved/failed read appears as every platform Not configured and Background sync idle. Preserve unknown/error versus genuine absent configuration."
+    },
+    {
+      "id": "recon-composer-start-draft-ownership",
+      "owner": "T-0208",
+      "priority": "P2",
+      "status": "source-hypothesis",
+      "evidence": "src/app/work/composer/page.tsx:225",
+      "reason": "Held start acknowledgment clears newer input and selects its run. Reproduce A/B draft/selection ownership before repair."
+    },
+    {
+      "id": "recon-chat-stop-refusal",
+      "owner": "T-0208",
+      "priority": "P2",
+      "status": "source-hypothesis",
+      "evidence": "src/hooks/useChatSend.ts:313",
+      "reason": "Stop closes local stream then ignores returned ok/error; hold a refused Stop and verify feedback and continued ability to stop actual active turn."
+    },
+    {
+      "id": "recon-script-logs-request-ownership",
+      "owner": "T-0208",
+      "priority": "P2",
+      "status": "source-hypothesis",
+      "evidence": "src/app/work/scripts/page.tsx:260",
+      "reason": "Held A logs response can replace newer B dialog text/loading; editor guards elsewhere remain positive controls."
+    },
+    {
+      "id": "recon-research-draft-ownership",
+      "owner": "T-0208",
+      "priority": "P2",
+      "status": "source-hypothesis",
+      "evidence": "src/app/work/research/page.tsx:146",
+      "reason": "Delayed start/preset acknowledgement clears newer query/name and selection. Preserve successful submitted draft while retaining subsequent edits."
+    },
+    {
+      "id": "recon-tools-save-draft-ownership",
+      "owner": "T-0208",
+      "priority": "P2",
+      "status": "source-hypothesis",
+      "evidence": "src/app/agent/tools/page.tsx:172",
+      "reason": "Held Save success clears newer dirty state and reload may replace edits. Preserve valid JSON, saved counters and profile-switch guards."
+    },
+    {
+      "id": "recon-stale-read-feedback",
+      "owner": "T-0208",
+      "priority": "P2",
+      "status": "source-hypothesis",
+      "evidence": "src/app/work/composer/page.tsx:434",
+      "reason": "Cached Composer graph can suppress refresh error; first Scripts read failure can also show No scripts yet. Reproduce failure versus stale/empty states separately."
+    }
+  ]
+}

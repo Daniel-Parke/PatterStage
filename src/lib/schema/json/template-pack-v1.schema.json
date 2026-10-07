@@ -74,6 +74,12 @@
               "type": "string"
             }
           },
+          "suggestedToolsets": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
           "defaultModel": {
             "type": "string"
           },

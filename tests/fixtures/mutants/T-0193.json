@@ -1,0 +1,194 @@
+{
+  "task": "T-0193",
+  "notes": [
+    "Require a clean committed tree, passing unmodified/restored controls and exact restoration.",
+    "Launch/configuration/syntax/invalid-mutant failures are errors, not kills. Inspect executed matcher evidence.",
+    "Representative unit mutations; browser-only contrast, reveal and late-dialog checks are separately bounded production evidence."
+  ],
+  "mutants": [
+    {
+      "id": "profile-chain",
+      "file": "src/app/agent/profiles/page.tsx",
+      "anchor": "from: previous?.to === target.id ? previous.from : target.id,",
+      "replacement": "from: target.id,",
+      "tests": [
+        "tests/unit/profile-draft-ownership.test.tsx"
+      ],
+      "why": "The second confirmed rename after a refused refresh must keep later-b selected."
+    },
+    {
+      "id": "cached-reselect",
+      "file": "src/app/agent/profiles/page.tsx",
+      "anchor": "if (pendingRename?.from === profile.id) {",
+      "replacement": "if (pendingRename?.to === profile.id) {",
+      "tests": [
+        "tests/unit/profile-draft-ownership.test.tsx"
+      ],
+      "why": "Reselecting the cached row after Bob must keep the confirmed canonical slug."
+    },
+    {
+      "id": "unmount-feedback",
+      "file": "src/app/agent/profiles/page.tsx",
+      "anchor": "if (mounted.current) showToast(...args);",
+      "replacement": "showToast(...args);",
+      "tests": [
+        "tests/unit/profile-draft-ownership.test.tsx"
+      ],
+      "why": "Unmounted profile completion must not publish feedback."
+    },
+    {
+      "id": "create-duplicate",
+      "file": "src/app/agent/profiles/page.tsx",
+      "anchor": "if (createPending.current || !createName.trim()) return;",
+      "replacement": "if (!createName.trim()) return;",
+      "tests": [
+        "tests/unit/profile-draft-ownership.test.tsx"
+      ],
+      "why": "Two same-frame clicks must produce one create write."
+    },
+    {
+      "id": "edit-duplicate",
+      "file": "src/app/agent/profiles/page.tsx",
+      "anchor": "if (!target || editPending.current) return;",
+      "replacement": "if (!target) return;",
+      "tests": [
+        "tests/unit/profile-draft-ownership.test.tsx"
+      ],
+      "why": "Two same-frame clicks must produce one profile write."
+    },
+    {
+      "id": "model-false-empty",
+      "file": "src/hooks/useModelsRegistry.ts",
+      "anchor": "const hasData = modelsRead.data !== null && credentialsRead.data !== null && defaultsRead.data !== null;",
+      "replacement": "const hasData = true;",
+      "tests": [
+        "tests/unit/page-read-failure-truth.test.tsx"
+      ],
+      "why": "An unconfirmed registry must not display No models yet after any primary read fails."
+    },
+    {
+      "id": "skill-false-missing",
+      "file": "src/app/agent/skills/[...path]/page.tsx",
+      "anchor": "const failedRead = Boolean(error && !hasMalformedPath && skill.errorStatus !== 404);",
+      "replacement": "const failedRead = false;",
+      "tests": [
+        "tests/unit/page-read-failure-truth.test.tsx"
+      ],
+      "why": "A500or network refusal must not claim Skill Not Found."
+    },
+    {
+      "id": "growth-false-empty",
+      "file": "src/components/agents/AgentGrowthPanel.tsx",
+      "anchor": "if (error) return <LoadErrorBanner compact error={error} onRetry={() => void refetch()} />;",
+      "replacement": "if (false) return <LoadErrorBanner compact error={error!} onRetry={() => void refetch()} />;",
+      "tests": [
+        "tests/unit/page-read-failure-truth.test.tsx"
+      ],
+      "why": "A failed growth read must not assert no completed work."
+    },
+    {
+      "id": "script-shift-tab",
+      "file": "src/components/scripts/ScriptEditorModal.tsx",
+      "anchor": "if (e.key === \"Tab\" && !e.shiftKey) {",
+      "replacement": "if (e.key === \"Tab\") {",
+      "tests": [
+        "tests/unit/page-state-followups.test.tsx"
+      ],
+      "why": "Shift+Tab must permit navigation without publishing an insertion."
+    },
+    {
+      "id": "artifact-content",
+      "file": "src/components/composer/ComposerNodeRunDetail.tsx",
+      "anchor": "content: nodeRun.output,",
+      "replacement": "content: \"\",",
+      "tests": [
+        "tests/unit/page-state-followups.test.tsx"
+      ],
+      "why": "The actual artifact request must retain A and B output content."
+    },
+    {
+      "id": "artifact-run-owner",
+      "file": "src/components/composer/ComposerNodeRunDetail.tsx",
+      "anchor": "JSON.stringify([nodeRun?.composerRunId, nodeRun?.id, nodeRun?.output])",
+      "replacement": "JSON.stringify([nodeRun?.id, nodeRun?.output])",
+      "tests": ["tests/unit/page-state-followups.test.tsx"],
+      "why": "Identical node/output in a different Composer run must remain independently saveable."
+    },
+    {
+      "id": "artifact-synchronous-claim",
+      "file": "src/components/composer/ComposerNodeRunDetail.tsx",
+      "anchor": "if (!nodeRun?.output || pending.current.has(outputKey) || saveStates[outputKey]) return;",
+      "replacement": "if (!nodeRun?.output || saveStates[outputKey]) return;",
+      "tests": ["tests/unit/page-state-followups.test.tsx"],
+      "why": "Two clicks before React commits must produce exactly one artifact POST."
+    },
+    {
+      "id": "artifact-unmount-feedback",
+      "file": "src/components/composer/ComposerNodeRunDetail.tsx",
+      "anchor": "showToast: (...args) => { if (mounted.current) showToast(...args); },",
+      "replacement": "showToast: (...args) => { showToast(...args); },",
+      "tests": ["tests/unit/page-state-followups.test.tsx"],
+      "why": "Held artifact completion after parent unmount must not publish feedback."
+    },
+    {
+      "id": "clipboard-false-success",
+      "file": "src/components/research/ResearchReport.tsx",
+      "anchor": "      setCopied(false);",
+      "replacement": "      setCopied(true);",
+      "tests": [
+        "tests/unit/page-state-followups.test.tsx"
+      ],
+      "why": "Clipboard refusal must not announce Copied."
+    },
+    {
+      "id": "step-label",
+      "file": "src/lib/laboratory/deep-research/report.ts",
+      "anchor": "  plan: \"Plan\",",
+      "replacement": "  plan: \"Planning\",",
+      "tests": [
+        "tests/unit/page-state-followups.test.tsx"
+      ],
+      "why": "The shared five-label contract and both rendered timelines retain Plan."
+    },
+    {
+      "id": "throughput-values",
+      "file": "src/components/viz/AreaTrend.tsx",
+      "anchor": "failed ${d.failed ?? 0}",
+      "replacement": "failed ${999}",
+      "tests": [
+        "tests/unit/page-state-followups.test.tsx"
+      ],
+      "why": "Daily text alternatives must preserve failed counts including zero."
+    },
+    {
+      "id": "mission-expanded",
+      "file": "src/components/session/MissionGroupCard.tsx",
+      "anchor": "aria-expanded={expanded}",
+      "replacement": "aria-expanded={false}",
+      "tests": [
+        "tests/unit/page-state-followups.test.tsx"
+      ],
+      "why": "Opening the existing mission group must announce expanded=true."
+    },
+    {
+      "id": "log-selected",
+      "file": "src/components/logs/LogFilePicker.tsx",
+      "anchor": "aria-pressed={activeLog === log.name}",
+      "replacement": "aria-pressed={false}",
+      "tests": [
+        "tests/unit/page-state-followups.test.tsx"
+      ],
+      "why": "The active log file must announce pressed=true and follow selection."
+    },
+    {
+      "id": "hindsight-selected",
+      "file": "src/components/memory/HindsightBrowser.tsx",
+      "anchor": "aria-pressed={activeTab === tab.id}",
+      "replacement": "aria-pressed={false}",
+      "tests": [
+        "tests/unit/page-state-followups.test.tsx"
+      ],
+      "why": "The current Hindsight collection must announce pressed=true."
+    }
+  ]
+}

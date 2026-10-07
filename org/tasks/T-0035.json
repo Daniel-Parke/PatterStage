@@ -1,0 +1,39 @@
+{
+  "id": "T-0035",
+  "intent": "Stat tiles must tell the truth on their first painted frame. useCountUp seeds useState(0)/useRef(0) and ramps over 800ms, so the first frame of EVERY tile is literally 0, on /sessions and all three Operations pages. QA read that as 'zeroed stat rows' across four surfaces. Proof it is not a data bug: the Tools Platforms tile reads a hard-coded 7-element array and still showed 0, and Skills showed active:0 with inactive:0 where inactive = 218 - active is arithmetically impossible. Operator ruled 2026-08-26: seed from the real value, ramp only on a later change, which is what the hook's own docstring already claims. Also commit fromRef.current in the effect cleanup: today it commits only on completion, so an interrupted ramp restarts from a stale origin and visibly snaps toward zero. Acceptance: a test asserts the real value is in the DOM SYNCHRONOUSLY on first paint, before any timer or frame is flushed. That test fails on today's hook. Source: the operator's live Hermes QA pass on dev@43d16c30, 2026-08-26. Root cause traced by three read-only investigations and re-verified independently; NOT a regression from the consolidation work, which only put a QA pass in front of pages nobody had text-scraped before. Closed 2026-08-26. The fix is three lines of intent inside one hook and nothing else: the seed moves from 0 to target, so on mount from === target and the effect takes its existing no-op branch, which is why no consumer needed restructuring and no call site changed. The cleanup now commits the frame that was actually painted, read from a new paintedRef the tick writes each frame, because a cleanup closure cannot see current state. The old docstring already promised the behaviour this task implements; what was missing was the seed. Measured against the unfixed hook first, and the numbers are on the record under oracle_provenance rather than asserted.",
+  "declared": {
+    "capabilities": [
+      "edit-source"
+    ],
+    "side_effects": []
+  },
+  "mode": "standard",
+  "tier_proposed": "R1",
+  "tier_ruled": "R2",
+  "reasons": [],
+  "status": "done",
+  "owner_session": "t0035-first-paint-2026-08-26",
+  "invariants": [
+    "I1 First paint is exact and unconditional. There is no frame, no timer and no await in which a tile reads a number that is not its own. Pinned synchronously: render the strip, then assert, with nothing flushed in between, and with requestAnimationFrame proven never to have been called at all, because on a first paint there is nothing to animate.",
+    "I2 The ramp is not deleted, only deferred. Seeding from the target is a fix only if a LATER change still animates: a value that changes after mount still eases over its duration and still lands exactly on the new target. Pinned twice, once through StatStrip and once at the hook, each asserting a mid-flight frame equals neither endpoint, so a hook that simply returned its argument would fail.",
+    "I3 A ramp is monotone across an interruption. A second change arriving mid-ramp resumes from the frame that was on screen, never from the origin of the ramp it replaced. Pinned frame by frame across 50 frames, so the 875 to 117.6 backwards snap the old completion-only commit produced cannot return unnoticed.",
+    "I4 Reduced motion still wins, in both directions. prefers-reduced-motion commits instantly and requests no frame, on mount and on change alike. jsdom ships no matchMedia at all, which is why the hook calls it optionally and why the test defines one rather than spying on it.",
+    "I5 No check is weakened. design-lint holds at 0 in 0 files across all eleven rules, the coverage floors are untouched, knip is clean, and no existing test is edited, skipped or deleted. The diff is one hook rewritten and one test file added.",
+    "I6 No consumer is restructured. useCountUp has exactly two call sites, StatStrip.tsx and CommandCenter.tsx, and neither is edited; nor are the six components that mount StatStrip. Tile keys are stable label strings, so a refetch updates a live instance rather than remounting it, which is precisely what makes I1 and I2 compatible."
+  ],
+  "oracle_provenance": "Authored by the executor in this session BEFORE src/hooks/useCountUp.ts was touched, per the EXECUTOR R2 clause, and committed on its own ahead of the implementation, so the freeze is checkable in history rather than asserted here. One file, tests/unit/stat-tiles-first-paint.test.tsx, eight tests. Run against the UNFIXED hook first: 5 of 8 failed, and the failures are the bug verbatim. useCountUp(4218) returned 0. A four-tile StatStrip scheduled four animation frames on mount where zero are allowed, and its DOM read 0 in every tile. The interrupted ramp fell from 875 to 117.616 on the first frame after the second change, which is the visible snap toward zero the intent describes. Against the fixed hook, 8 of 8 pass. ONE amendment to declare, made while the implementation still did not exist: the reduced-motion case first used jest.spyOn(window, 'matchMedia'), which throws 'Property matchMedia does not exist in the provided object' under jsdom. It now defines the property and deletes it again in a finally. The assertion is unchanged, and the reason the spy failed is itself the reason the hook guards the call with an optional chain.",
+  "rollback": "One-command revert. No schema element, no migration, no route, no dependency, no persisted state, and the hook's exported signature is unchanged, so `git revert` of this task's two commits returns the tree to 3afabcc8 behaviour with nothing to unwind. The two commits revert together or not at all: reverting only the implementation leaves the oracle red, and reverting only the oracle leaves the fix unguarded. A revert restores the zeroed first frame, which is what the oracle then reports, and that is the tripwire working rather than a flake.",
+  "claims": [
+    "src/hooks/useCountUp.ts",
+    "src/components/viz/StatStrip.tsx",
+    "tests/"
+  ],
+  "claims_unused": [
+    "src/components/viz/StatStrip.tsx was claimed and read but not edited. The consumers were sanity-checked, as the task directed, and needed nothing: the fix is entirely inside the hook."
+  ],
+  "timestamps": {
+    "opened": "2026-08-26T09:00:00Z",
+    "updated": "2026-08-26T12:00:00Z",
+    "closed": "2026-08-26T12:00:00Z"
+  }
+}

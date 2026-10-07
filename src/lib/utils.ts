@@ -1,5 +1,8 @@
 // ═══════════════════════════════════════════════════════════════
 // Shared Utility Functions
+//
+// AT THE LIB ROOT ON PURPOSE: cross-cutting parsing and formatting helpers.
+// Routes and components share these helpers across domains.
 // ═══════════════════════════════════════════════════════════════
 
 /**
@@ -66,7 +69,7 @@ export function timeUntil(iso: string | null, now: number = Date.now()): string 
 
 /**
  * Format the elapsed time since a startedAt ISO timestamp as
- * "Xs / Xm Ys / Xh Ym" — used for active sessions where we want
+ * "Xs / Xm Ys / Xh Ym / Xd Yh" — used for active sessions where we want
  * a live, monotonically-increasing duration. Returns an empty
  * string when the timestamp can't be parsed.
  *
@@ -87,18 +90,8 @@ export function formatElapsed(startedAt: string, now: number = Date.now()): stri
   const minutes = Math.floor(seconds / 60);
   if (minutes < 60) return `${minutes}m ${seconds % 60}s`;
   const hours = Math.floor(minutes / 60);
+  if (hours >= 24) return `${Math.floor(hours / 24)}d ${hours % 24}h`;
   return `${hours}h ${minutes % 60}m`;
-}
-
-/**
- * Safely format a Unix timestamp as a relative time string.
- * Returns "never" for null, undefined, NaN, or negative values.
- * Use this instead of `timeAgo(new Date(unixTs * 1000).toISOString())`
- * to avoid RangeError when the timestamp is invalid.
- */
-export function safeTimeAgo(unixTs: number | null | undefined): string {
-  if (unixTs == null || typeof unixTs !== "number" || isNaN(unixTs) || unixTs <= 0) return "never";
-  return timeAgo(new Date(unixTs * 1000).toISOString());
 }
 
 /**
@@ -115,26 +108,13 @@ export function formatBytes(bytes: number): string {
 }
 
 /**
- * Truncate a string to a max length with ellipsis
+ * English noun pluralisation: appends `"s"` when `count !== 1`.
+ *
+ * Intentionally minimal (no irregulars, no `y → ies`): a "child/children"
+ * call site should get its own helper rather than overloading this one.
  */
-export function truncate(str: string, maxLen: number): string {
-  if (maxLen <= 0) return "";
-  if (str.length <= maxLen) return str;
-  return str.slice(0, maxLen - 1) + "…";
-}
-
-/**
- * Debounce a function call
- */
-export function debounce<T extends (...args: unknown[]) => void>(
-  fn: T,
-  delay: number
-): (...args: Parameters<T>) => void {
-  let timer: ReturnType<typeof setTimeout>;
-  return (...args: Parameters<T>) => {
-    clearTimeout(timer);
-    timer = setTimeout(() => fn(...args), delay);
-  };
+export function pluralise(count: number): "" | "s" {
+  return count !== 1 ? "s" : "";
 }
 
 // ── Session Message Summary ────────────────────────────────────
@@ -153,19 +133,14 @@ export function messageSummary(content: string | undefined): string {
   return trimmed + (firstNonEmpty.length > 120 || hasMoreContent ? "..." : "");
 }
 
-// Re-exports from schedule module
-export { parseSchedule } from "@/lib/schedule/parse-schedule";
-export type { ParsedSchedule } from "@/lib/schedule/types";
-export { describeSchedule, parseCronExpression } from "@/lib/schedule/types";
-
 // ── Model Defaults ───────────────────────────────────────────
 
-import { TASK_TYPES, type TaskType } from "@/lib/hermes-providers";
+import { TASK_TYPES, type TaskType } from "@/lib/models/task-types";
 
 /**
  * Empty task-defaults map — initialises all 12 slots to null.
  * Client-safe (no DB dependency), shared between server and UI.
- * Uses TASK_TYPES from hermes-providers as the single source of truth.
+ * Uses TASK_TYPES from `@/lib/models/task-types` as the single source of truth.
  */
 export function emptyModelDefaults(): Record<TaskType, string | null> {
   return TASK_TYPES.reduce<Record<TaskType, string | null>>(

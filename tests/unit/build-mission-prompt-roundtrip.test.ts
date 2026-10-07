@@ -6,7 +6,7 @@ import {
   buildMissionPrompt,
   buildMissionPromptHuman,
   parseMissionPrompt,
-} from "@/lib/build-mission-prompt";
+} from "@/lib/missions/build-mission-prompt";
 
 const baseOpts = {
   instruction: "Refactor the authentication module to use JWT.",
@@ -64,7 +64,8 @@ describe("buildMissionPrompt (AI XML)", () => {
     expect(prompt).toContain("<mission_scope>");
     expect(prompt).toContain("120 minutes");
     expect(prompt).toContain("<safety_limits>");
-    expect(prompt).toContain("Inactivity timeout: 30 minutes");
+    // Q015 Faraday, 2026-10-04: Q027 retains elapsed deadlines and corrects guidance.
+    expect(prompt).toContain("Elapsed run deadline: 30 minutes");
   });
 
   it("omits scope and safety when zero or absent", () => {

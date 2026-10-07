@@ -1,2 +1,15 @@
+# EOS Session 0, phase B: declared before anything else lands (INCEPTION.md).
+#
+# Normalise every text file to LF in the REPOSITORY. Working copies on Windows
+# still check out CRLF; this fixes only what is stored, so the tree stops
+# depending on each contributor's core.autocrlf setting.
+#
+# Verified safe when added: `git ls-files --eol` reported zero files stored with
+# CRLF, so this declares the behaviour the repo already had rather than
+# renormalising anything. Every commit in the 2026-07 rebuild session warned
+# about LF/CRLF conversion because the policy was undeclared, not because it was
+# wrong.
+* text=auto eol=lf
+
 # Shell scripts must use LF so bash on Linux/macOS does not see stray CR.
 *.sh text eol=lf

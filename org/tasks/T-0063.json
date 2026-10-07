@@ -1,0 +1,47 @@
+{
+  "id": "T-0063",
+  "intent": "Typing an unparseable cron into the mission composer and clicking Schedule created a mission on the default cadence, under a green toast affirming a schedule the operator never typed. Reported as F-6 by the 2026-08-30 QA pass. The same defect existed on the host crontab in ScheduleScriptModal, which nobody reported.",
+  "declared": {
+    "capabilities": [
+      "edit-source"
+    ],
+    "side_effects": []
+  },
+  "mode": "standard",
+  "tier_proposed": "R2",
+  "tier_ruled": "R2",
+  "reasons": [],
+  "status": "done",
+  "owner_session": "t0063-schedule-gate-2026-08-30",
+  "claims": [
+    "src/components/schedule/SchedulePicker.tsx",
+    "src/lib/dispatch-mode.ts",
+    "src/lib/schedule/picker-resolver.ts",
+    "src/hooks/",
+    "src/components/missions/",
+    "src/components/scripts/ScheduleScriptModal.tsx",
+    "tests/"
+  ],
+  "invariants": [
+    "I1 A dispatch whose schedule field holds something unusable does not reach the wire. Asserted against the real handleCreate, not against the helper.",
+    "I2 The composer is left open and the reason stays on screen. The error used to render and then be unmounted by finishComposer on success.",
+    "I3 No toast names a cadence the operator did not type. The success message is now built from the PAYLOAD rather than from form state, because two sources for one claim is what let them diverge.",
+    "I4 The gate is scoped to the modes that actually send a schedule, asserted by iterating every DispatchMode against scheduleForDispatch so the twins cannot drift.",
+    "I5 The gate is not a one-way latch: correcting the draft dispatches."
+  ],
+  "why_the_previous_fix_did_not_hold": "T-0051 built the signal and never connected it. commitAdvancedDraft returned a boolean whose own doc comment said it existed 'so a caller that is about to SUBMIT can tell a silent revert from a successful commit', and for two rounds nothing consumed it: the only references were the definition, the onBlur wire and the Enter handler. The accompanying test then LOCKED IN the incomplete behaviour under the title 'an invalid draft leaves the previous schedule on the wire, and says so', asserting only that a message appeared. A test whose title states the bug is worse than no test, because it converts an open defect into a documented decision.",
+  "design_decision_required_not_optional": "onDraftError is a REQUIRED prop. An optional callback would have been the same bug with a nicer name: a caller can forget it exactly as this codebase forgot to consume a return value. Required makes the omission a red tsc, which is WG-WEB-013's principle applied to the type system. It earned itself immediately by failing at ScheduleScriptModal, the unreported second instance, whose own guard reads the COMMITTED value and so could never fire on a bad draft: garbage there wrote 0 3 * * * into the real host crontab.",
+  "design_decision_report_on_change": "The picker reports on CHANGE and displays on blur. Blur does fire before click in a browser, but relying on that ordering is the assumption that produced the defect, and jsdom does not move focus on click at all, so a test written against it would be testing the harness.",
+  "oracle_provenance": "Committed alone at 37966d01, ahead of the implementation at 6c0a2c1a. The dishonest test was deleted in the same oracle commit. 5 red, 5 green. That oracle commit is the one place in this batch where `npm run lint` was red, necessarily: it references an interface that does not exist yet, so typecheck:tests cannot pass. Same allowance T-0049 took for its gate trio.",
+  "verification": "Three mutations, and the FIRST ONE SURVIVED, which is the most useful thing in this record. Removing the gate from handleCreate entirely turned nothing red: scheduleBlocksDispatch had unit tests, the picker had unit tests, and nothing asserted the handler consults either. That is the same mistake this batch deleted a test for, made again one commit later, and only mutation caught it. Six seam tests added at 4ab1ce78; the mutation now turns 4 red, and the over-reach mutation turns the scoping control red. Gate: lint 0, tsc 0, 3280 tests / 384 suites, knip 0, canary 0, build 0.",
+  "rollback": "Revert 6c0a2c1a and the toast commit. The oracle at 37966d01 goes red again.",
+  "deferred": [
+    "25 existing SchedulePicker renders needed the new prop. That ripple is the feature rather than the cost, but it does mean a future prop addition to this component is a 25-file change.",
+    "successMessageForDispatch is now fed from the payload in the create branch only. The edit and re-dispatch branches still build it from form state; they cannot diverge today because the gate runs above all of them, but the asymmetry is worth closing."
+  ],
+  "timestamps": {
+    "opened": "2026-08-30T18:30:00Z",
+    "updated": "2026-08-30T19:30:00Z",
+    "closed": "2026-08-30T19:30:00Z"
+  }
+}

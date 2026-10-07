@@ -1,0 +1,29 @@
+{
+  "id": "T-0173",
+  "intent": "Pause Dependabot version-update pull requests until release while keeping security updates available. Apply only the two open-PR limits to default-branch main under the operator's narrow exception, then mirror the same configuration on dev.",
+  "declared": {"capabilities": ["edit-config", "edit-tests", "git", "github-api", "git-push"], "side_effects": ["irreversible-action", "sends-external"]},
+  "mode": "high-assurance",
+  "tier_proposed": "R3",
+  "tier_ruled": "R3",
+  "reasons": [
+    {"factor": "irreversible-action", "tier_floor": "R3", "source": "declared", "evidence": "A minimal direct commit to main is externally consequential and the user explicitly approved this exact exception."},
+    {"factor": "boundary-contact", "tier_floor": "R1", "source": "declared", "evidence": "The default-branch configuration controls GitHub's version-update service."}
+  ],
+  "status": "done",
+  "owner_session": "2026-09-27-refactor-foundations",
+  "timestamps": {"opened": "2026-09-27T13:15:32Z", "updated": "2026-09-27T13:42:23Z", "closed": "2026-09-27T13:42:23Z"},
+  "claims": ["org/tasks/T-0173.json", "org/claims.json", "org/briefs/T-0173-oracle.md", "org/HANDOVER.md", "org/TASKS.md", "org/STATE.md", ".github/dependabot.yml", "tests/unit/t0173-dependabot-pause.test.ts", "tests/fixtures/mutants/T-0173.json", "scripts/tooling/line-census.baseline.json"],
+  "programme": "The operator chose to pause version PRs until release and then explicitly authorised a narrow exception to the dev-only push rule: change only main's .github/dependabot.yml to set both npm and GitHub Actions open-pull-requests-limit to zero. GitHub documents that Dependabot reads this file from the default branch and that zero blocks version updates without disabling security updates. Live GitHub API inspection showed Dependabot alerts and security updates are currently disabled; enabling them is a separate operator-setting action, not part of this config-only authorisation. All T-0172 hosted jobs completed successfully before this task opened.",
+  "invariants": [
+    "The only main-tree content change is .github/dependabot.yml, adding open-pull-requests-limit: 0 for npm and GitHub Actions; preserve each target-branch: dev and every existing ignore rule.",
+    "Repository security settings, currently disabled for Dependabot alerts and security updates, are not changed by this task. The version-PR limit does not govern security updates if the operator later enables them.",
+    "The main update uses the exact current content SHA as a compare-and-swap guard, and the resulting main file is verified byte-for-byte against the reviewed proposal.",
+    "Dev receives the same configuration so its single PR back to main remains coherent. PR #157 and all other branches are unchanged by this task.",
+    "A separately authored red-first oracle, complete unchanged-tree gate and committed-tree mutation sweep precede closure; every hosted job is observed after the closure push and before the next batch."
+  ],
+  "rollback": "Set the two open-pull-requests-limit values back to their prior configuration on main and dev using a new reviewed commit; keep security settings untouched. The release will deliberately lift this temporary pause and amend its oracle through an independent author.",
+  "oracle_provenance": "Pauli (session 01a0e1fd-fece-7642-8b9d-ec3e48d04e25) authored tests/unit/t0173-dependabot-pause.test.ts only, before implementation. Commit 5969e4b1 froze four test names and red 2/4: npm received 10 instead of 0; GitHub Actions received undefined instead of 0. The same four names passed 4/4 after the configuration edit.",
+  "verification": "The approved main-only GitHub commit 7b9d6d6856386e6e3e39a30edb8cf6596a7f9417 has parent 9b786b765160095d918ce09d8bcca47520bf5312 and changes only .github/dependabot.yml: npm 10 to 0 and Actions adds 0. Main's Git blob 5dce391b20381b6d5ecefffecce883a25bb17bb8 matches the dev file after Windows CRLF normalisation. Seven candidate files were SHA-256 identical between primary and isolated clone. Its final ten-step full gate exited 0 at every step with treeBefore=treeAfter=9a73cd6e1e8cb05dd028cbbea70bfb0142ddc0c33363794237915c82ccd63dc9, complete=true: 729 Jest suites, 7223 passed and 4 skipped; Playwright 283 passed and 24 skipped. The line baseline holds testLines 129983 after a reasoned 57-line oracle rise; its other twelve measures were unchanged. Main push Gitleaks passed; Docker CI failed on its first run at the old Next Google-font build, then that job passed alone on attempt 2. Hosted dev push and PR jobs remain to be observed after closure push.",
+  "mutation": "On exact dev commit 3fa0c2f3, both manifest mutants were KILLED with structured assertion-failed evidence: m1-reopen-npm and m2-reopen-actions. Unmodified controls passed before and after, the YAML Git blob restored to 5dce391b20381b6d5ecefffecce883a25bb17bb8, and Git status remained clean. The isolated clone used an LF checkout so the same multiline anchors apply on Windows and Linux.",
+  "deviation": "GitHub API inspection found Dependabot alerts and security updates disabled before this change; they are not enabled by a zero version-PR limit, and this task leaves the settings untouched. The first isolated gate stopped at lint because the new open task record had no generated TASKS row; the canonical renderer repaired the views. The next gate passed nine of ten steps and stopped at the shrink-only testLines check: four independent oracle cases added 57 lines, from 129926 to 129983. The exact rise was held through --update-baseline --allow-growth with its reason, with every other census measure unchanged. Main push CI initially failed only its Docker image job in an old Next Google-font build; the original red run is retained, and rerunning that job alone passed. This config-only commit did not change Docker or application inputs."
+}

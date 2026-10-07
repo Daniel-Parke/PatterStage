@@ -2,7 +2,7 @@
 // Badge Component — Tags, status indicators, labels
 // ═══════════════════════════════════════════════════════════════
 
-import type { AccentColor } from "@/types/hermes";
+import type { AccentColor } from "@/types/console";
 
 interface BadgeProps {
   children: React.ReactNode;
@@ -10,6 +10,8 @@ interface BadgeProps {
   size?: "sm" | "md";
   variant?: "solid" | "outline";
   className?: string;
+  /** A hover title, for a chip whose full meaning does not fit its word (T-0127). */
+  title?: string;
 }
 
 const colorMap: Record<string, { bg: string; text: string; border: string }> = {
@@ -18,13 +20,13 @@ const colorMap: Record<string, { bg: string; text: string; border: string }> = {
   green: { bg: "bg-neon-green/10", text: "text-neon-green", border: "border-neon-green/20" },
   pink: { bg: "bg-neon-pink/10", text: "text-neon-pink", border: "border-neon-pink/20" },
   orange: { bg: "bg-neon-orange/10", text: "text-neon-orange", border: "border-neon-orange/20" },
-  gray: { bg: "bg-white/5", text: "text-white/50", border: "border-white/10" },
-  red: { bg: "bg-red-500/10", text: "text-red-400", border: "border-red-500/20" },
+  gray: { bg: "bg-ps-surface-raised", text: "text-ps-text-muted", border: "border-ps-edge-hairline" },
+  red: { bg: "bg-semantic-danger/10", text: "text-semantic-danger", border: "border-semantic-danger/20" },
 };
 
 const sizeMap = {
-  sm: "text-[10px] px-1.5 py-0.5",
-  md: "text-xs px-2 py-0.5",
+  sm: "text-body px-1.5 py-0.5",
+  md: "text-body px-2 py-0.5",
 };
 
 export default function Badge({
@@ -33,6 +35,7 @@ export default function Badge({
   size = "sm",
   variant = "solid",
   className = "",
+  title,
 }: BadgeProps) {
   const c = colorMap[color] || colorMap.gray;
   const s = sizeMap[size];
@@ -44,7 +47,8 @@ export default function Badge({
 
   return (
     <span
-      className={`inline-flex items-center font-mono rounded ${s} ${variantClass} ${className}`}
+      title={title}
+      className={`inline-flex items-center font-mono rounded-ps-sm ${s} ${variantClass} ${className}`}
     >
       {children}
     </span>

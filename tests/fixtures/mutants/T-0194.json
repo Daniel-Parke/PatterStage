@@ -1,0 +1,194 @@
+{
+  "task": "T-0194",
+  "notes": [
+    "Clean committed tree and passing unmodified/restored controls required.",
+    "Every anchor is unique in LF-normalised source. Runtime, syntax or fixture failure alone is not a kill.",
+    "Representative branch controls; source moves and type-only folds also retain name, compiler and emitted-JavaScript identity proofs."
+  ],
+  "mutants": [
+    {
+      "id": "queue-durable-before-drain",
+      "file": "src/lib/composer/queue-cleanup.ts",
+      "anchor": "if (run.status === \"started\" && !isTerminalComposerRunStatus(composer.status)) {",
+      "replacement": "if (run.status === \"started\" && isTerminalComposerRunStatus(composer.status)) {",
+      "tests": [
+        "tests/unit/lib-domain-queue-admission.test.ts"
+      ],
+      "why": "Terminal output and usage must be durable before any upstream reader starts."
+    },
+    {
+      "id": "queue-live-owner-refusal",
+      "file": "src/lib/composer/queue-cleanup.ts",
+      "anchor": "(record.owner && ownerCouldBeAlive(record.owner))",
+      "replacement": "(record.owner && false)",
+      "tests": [
+        "tests/unit/lib-domain-queue-admission.test.ts"
+      ],
+      "why": "A live or uncertain owner is never stolen solely because time elapsed."
+    },
+    {
+      "id": "queue-dead-owner-recovery",
+      "file": "src/lib/composer/queue-cleanup.ts",
+      "anchor": "catch (error) { return (error as NodeJS.ErrnoException).code !== \"ESRCH\"; }",
+      "replacement": "catch (error) { void error; return true; }",
+      "tests": [
+        "tests/unit/lib-domain-queue-admission.test.ts"
+      ],
+      "why": "A demonstrably dead owner permits one new claim."
+    },
+    {
+      "id": "queue-minute-retry-spacing",
+      "file": "src/lib/composer/queue-cleanup.ts",
+      "anchor": "const RETRY_MS = 60_000;",
+      "replacement": "const RETRY_MS = 0;",
+      "tests": [
+        "tests/unit/lib-domain-queue-admission.test.ts",
+        "tests/unit/lib-domain-queue-confirmation.test.ts"
+      ],
+      "why": "Transport refusal preserves outcomes and spaces attempts across module reloads."
+    },
+    {
+      "id": "queue-ten-record-bound",
+      "file": "src/lib/composer/queue-cleanup.ts",
+      "anchor": ".sort((a, b) => a.since - b.since).slice(0, 10);",
+      "replacement": ".sort((a, b) => a.since - b.since).slice(0, 11);",
+      "tests": [
+        "tests/unit/lib-domain-queue-admission.test.ts"
+      ],
+      "why": "One tick selects at most ten due terminal responsibilities."
+    },
+    {
+      "id": "queue-released-continuation-retention",
+      "file": "src/lib/composer/queue-cleanup.ts",
+      "anchor": "if (opts.nowMs - since >= REVIEW_MS) {",
+      "replacement": "if (opts.nowMs - since >= REVIEW_MS && loadComposerQueue(id)?.phase !== \"released\") {",
+      "tests": [
+        "tests/unit/lib-domain-queue-confirmation.test.ts"
+      ],
+      "why": "Unresolved released continuation retains its thirty-day operator-review bound."
+    },
+    {
+      "id": "queue-accepting-endpoint-pin",
+      "file": "src/lib/runtime/HermesRuntime.ts",
+      "anchor": "const handle = await this.submit(input, endpoint);",
+      "replacement": "const handle = await this.submit(input);",
+      "tests": [
+        "tests/unit/lib-domain-queue-admission.test.ts"
+      ],
+      "why": "The accepting endpoint and receipt remain aligned across admission delays."
+    },
+    {
+      "id": "queue-stop-receipt-validation",
+      "file": "src/lib/runtime/HermesRuntime.ts",
+      "anchor": "if (this.gatewayIdentity(endpoint) !== input.gatewayIdentity) {",
+      "replacement": "if (this.gatewayIdentity(endpoint) !== input.gatewayIdentity && false) {",
+      "tests": [
+        "tests/unit/lib-domain-queue-confirmation.test.ts",
+        "tests/unit/lib-domain-sweep-regressions.test.ts"
+      ],
+      "why": "Stop refuses a changed gateway before credential handoff."
+    },
+    {
+      "id": "queue-invalid-cancel-rollback",
+      "file": "src/lib/composer/cancel.ts",
+      "anchor": "new Error(\"Invalid private Composer queue responsibility; operator review required\"));",
+      "replacement": "new Error(\"Invalid private Composer queue responsibility; operator review required\"));\n              throw new Error(\"Invalid private Composer queue responsibility; operator review required\");",
+      "tests": [
+        "tests/unit/lib-domain-queue-invalid-cancel.test.ts"
+      ],
+      "why": "Invalid metadata cannot roll back three durable local cancellation outcomes."
+    },
+    {
+      "id": "queue-finite-quiet-attempt",
+      "file": "src/lib/runtime/HermesRuntime.ts",
+      "anchor": "const timer = setTimeout(() => attempt.abort(new Error(\"Composer queue cleanup timed out\")), this.timeoutMs);",
+      "replacement": "const timer = setTimeout(() => void attempt.signal.aborted, this.timeoutMs);",
+      "tests": [
+        "tests/unit/lib-domain-queue-admission.test.ts",
+        "tests/unit/lib-domain-queue-confirmation.test.ts"
+      ],
+      "why": "Held readers and non-cooperative polling must settle their finite attempt."
+    },
+    {
+      "id": "default-slot-ownership",
+      "file": "src/lib/models/models-repository.ts",
+      "anchor": ".run(slot, id, isDefault ? 1 : 0);",
+      "replacement": ".run(slot, id, 1);",
+      "tests": [
+        "tests/unit/lib-domain-audit-regressions.test.ts"
+      ],
+      "why": "Clearing one model's default must not clear another model's owned slot."
+    },
+    {
+      "id": "hindsight-query-key",
+      "file": "src/lib/memory/hindsight-route-helpers.ts",
+      "anchor": "query: copyField(\"source_query\"),",
+      "replacement": "query: copyField(\"query\"),",
+      "tests": [
+        "tests/unit/lib-domain-audit-regressions.test.ts",
+        "tests/unit/lib-domain-sweep-regressions.test.ts"
+      ],
+      "why": "Upstream query PATCH carries its literal source_query key."
+    },
+    {
+      "id": "category-constructor-preservation",
+      "file": "src/lib/skills/skills-grouping.ts",
+      "anchor": "const key = (raw || categoryWords(fallback).join(\" \")).toLowerCase();",
+      "replacement": "const key = raw === 'constructor' ? 'uncategorized' : (raw || categoryWords(fallback).join(\" \")).toLowerCase();",
+      "tests": [
+        "tests/unit/lib-domain-audit-regressions.test.ts"
+      ],
+      "why": "Inherited object property names remain real categories with unchanged items."
+    },
+    {
+      "id": "gateway-retry-stop",
+      "file": "src/lib/models/llm.ts",
+      "anchor": "signal?.addEventListener(\"abort\", onAbort, { once: true });",
+      "replacement": "signal?.addEventListener(\"unused-abort\", onAbort, { once: true });",
+      "tests": [
+        "tests/unit/lib-domain-retry-stop.test.ts"
+      ],
+      "why": "Stop settles the current gateway backoff immediately without another paid attempt."
+    },
+    {
+      "id": "env-raw-whitespace",
+      "file": "src/lib/config/env.ts",
+      "anchor": "if (value) return value;",
+      "replacement": "if (value && value.trim()) return value.trim();",
+      "tests": [
+        "tests/unit/lib-domain-remaining-rulings.test.ts"
+      ],
+      "why": "Raw alias precedence and whitespace remain caller-owned."
+    },
+    {
+      "id": "elapsed-day-boundary",
+      "file": "src/lib/utils.ts",
+      "anchor": "if (hours >= 24) return `${Math.floor(hours / 24)}d ${hours % 24}h`;",
+      "replacement": "if (hours > 24) return `${Math.floor(hours / 24)}d ${hours % 24}h`;",
+      "tests": [
+        "tests/unit/lib-domain-remaining-rulings.test.ts"
+      ],
+      "why": "Exactly 24 hours uses the ruled day bucket."
+    },
+    {
+      "id": "chat-canonical-default",
+      "file": "src/lib/chat/chat-utils.ts",
+      "anchor": "if (id === CHAT_DEFAULT_MODEL) return \"Agent Default\";",
+      "replacement": "if (id === \"hermes-agent\") return \"Agent Default\";",
+      "tests": [
+        "tests/unit/lib-domain-remaining-rulings.test.ts"
+      ],
+      "why": "The changed canonical constant drives model display."
+    },
+    {
+      "id": "invalid-receipt-local-agent-cancel",
+      "file": "src/lib/composer/cancel.ts",
+      "anchor": "updateRun(agentRun.id, { status: \"cancelled\", error: CANCELLED_BY_USER });",
+      "replacement": "updateRun(agentRun.id, { status: \"started\", error: CANCELLED_BY_USER });",
+      "tests": [
+        "tests/unit/lib-domain-queue-invalid-cancel.test.ts"
+      ],
+      "why": "Malformed private responsibility cannot prevent the local agent cancellation."
+    }
+  ]
+}

@@ -1,0 +1,1265 @@
+{
+  "task": "T-0189",
+  "inspectedRevision": "01040a434187215e071e4b3788dc950074d7474d",
+  "reviewer": "Turing 01a0fcea-6e43-74d1-b149-9bd09f700a8f",
+  "method": "Independent source/disposition review, frozen independent behavioural oracles, unchanged full gate and owned production browser walk. Final R2, mutation and hosted acceptance recorded separately.",
+  "counts": {
+    "findings": 20,
+    "operatorDispositions": 6,
+    "coverage": 31
+  },
+  "groups": {
+    "findings": [
+      {
+        "id": "lib-data-03",
+        "sourceReference": "org/plans/2026-09-refactor-ownership.json#findings/lib-data-03",
+        "inspectedRevision": "01040a434187215e071e4b3788dc950074d7474d",
+        "evidence": [
+          "src/lib/db/apply-mission-repeat-migration.ts:8",
+          "src/lib/db-schema.ts:37",
+          "org/reviews/2026-10-t0189-data-verification.md",
+          "tmp/t0189-full-gate-1790960113841/summary.json",
+          "tests/unit/data-transaction-migration-parity.test.ts",
+          "tmp/t0189-coordinator-check/1790957188311/summary.json"
+        ],
+        "scepticVerdict": "Schrodinger source/disposition mapping reviewed; final R2 acceptance separately required",
+        "ruling": "Reverify this T-0164 source-level observation and its item ruling before any edit: Duplicate version reads remain; most proposed saving overlaps 01/05.",
+        "owningTask": "T-0189",
+        "reason": "Shared version reads and writes; baseline location and migration head preserved.",
+        "status": "done",
+        "remainingUncertainty": "Evidence is bounded to source review and named controlled fixtures; no external-installation or release acceptance implied.",
+        "originalRecommendation": {
+          "recommendation": "implement",
+          "reason": "Reuse matching version-reader semantics; preserve mock-isolated shared location and separately owned upgrade retirement."
+        }
+      },
+      {
+        "id": "lib-data-04",
+        "sourceReference": "org/plans/2026-09-refactor-ownership.json#findings/lib-data-04",
+        "inspectedRevision": "01040a434187215e071e4b3788dc950074d7474d",
+        "evidence": [
+          "src/lib/db/apply-legacy-column-repair.ts:28",
+          "src/lib/db/apply-runs-schedules-migration.ts:17",
+          "org/reviews/2026-10-t0189-data-verification.md",
+          "tmp/t0189-full-gate-1790960113841/summary.json",
+          "tests/unit/data-transaction-migration-parity.test.ts",
+          "tmp/t0189-coordinator-check/1790957188311/summary.json"
+        ],
+        "scepticVerdict": "Schrodinger source/disposition mapping reviewed; final R2 acceptance separately required",
+        "ruling": "Reverify this T-0164 source-level observation and its item ruling before any edit: Probe duplication remains; the copies were not shown to disagree semantically.",
+        "owningTask": "T-0189",
+        "reason": "Retain catching and throwing schema probes: their failure contracts differ; a universal replacement is not equivalent.",
+        "status": "ruled-out",
+        "remainingUncertainty": "Evidence is bounded to source review and named controlled fixtures; no external-installation or release acceptance implied.",
+        "originalRecommendation": {
+          "recommendation": "retain-proposed",
+          "reason": "Catching versus throwing probes have different contracts; universal replacement is not justified."
+        }
+      },
+      {
+        "id": "lib-data-06",
+        "sourceReference": "org/plans/2026-09-refactor-ownership.json#findings/lib-data-06",
+        "inspectedRevision": "01040a434187215e071e4b3788dc950074d7474d",
+        "evidence": [
+          "src/lib/db/index.ts:242",
+          "scripts/tooling/migrate-db.ts:95",
+          "org/reviews/2026-10-t0189-data-verification.md",
+          "tmp/t0189-full-gate-1790960113841/summary.json",
+          "tests/unit/data-transaction-migration-parity.test.ts",
+          "tmp/t0189-coordinator-check/1790957188311/summary.json"
+        ],
+        "scepticVerdict": "Schrodinger source/disposition mapping reviewed; final R2 acceptance separately required",
+        "ruling": "Reverify this T-0164 source-level observation and its item ruling before any edit: A fresh `runMigrations()` returns at v3 while the required head is v43, so the app's `getDb()` convergence loop is necessary under current code. The script calls `getDb()` first, which already reaches the head; only its additional loop is redundant now. Removing the app loop requires changing the baseline return and preserving the required-head assertion, not just deleting loops. Net saving is unmeasured.",
+        "owningTask": "T-0189",
+        "reason": "Removed only redundant CLI convergence after getDb. Application convergence and head assertion remain required; rebuild retirement belongs to T-0199.",
+        "status": "done",
+        "remainingUncertainty": "Evidence is bounded to source review and named controlled fixtures; no external-installation or release acceptance implied.",
+        "originalRecommendation": {
+          "recommendation": "implement-and-verify",
+          "reason": "Verify one fresh pass; remove redundant CLI convergence after proof. Application loop depends on separately retained rebuild branch."
+        }
+      },
+      {
+        "id": "lib-data-07",
+        "sourceReference": "org/plans/2026-09-refactor-ownership.json#findings/lib-data-07",
+        "inspectedRevision": "01040a434187215e071e4b3788dc950074d7474d",
+        "evidence": [
+          "docs/running/migration.md:69",
+          "src/lib/sessions/session-repository.ts:345",
+          "org/reviews/2026-10-t0189-data-verification.md",
+          "tmp/t0189-full-gate-1790960113841/summary.json",
+          "tests/unit/data-transaction-migration-parity.test.ts",
+          "tmp/t0189-coordinator-check/1790957188311/summary.json"
+        ],
+        "scepticVerdict": "Schrodinger source/disposition mapping reviewed; final R2 acceptance separately required",
+        "ruling": "Reverify this T-0164 source-level observation and its item ruling before any edit: Counts and some wrapper prose are stale. The `ps-migrate.sh` rebuild warning exists, contrary to one preliminary subclaim.",
+        "owningTask": "T-0189",
+        "reason": "Corrected migration documentation and factual source prose; retained existing rebuild warning.",
+        "status": "done",
+        "remainingUncertainty": "Evidence is bounded to source review and named controlled fixtures; no external-installation or release acceptance implied.",
+        "originalRecommendation": {
+          "recommendation": "implement",
+          "reason": "Correct factual migration and source descriptions; distinguish fresh and retained legacy convergence."
+        }
+      },
+      {
+        "id": "lib-data-09",
+        "sourceReference": "org/plans/2026-09-refactor-ownership.json#findings/lib-data-09",
+        "inspectedRevision": "01040a434187215e071e4b3788dc950074d7474d",
+        "evidence": [
+          "src/lib/sync/sources/SessionSync.ts:24",
+          "src/lib/db/upgrade.ts:61",
+          "org/reviews/2026-10-t0189-data-verification.md",
+          "tmp/t0189-full-gate-1790960113841/summary.json",
+          "tests/unit/data-transaction-sync.test.ts",
+          "tmp/t0189-coordinator-check/1790957188311/summary.json"
+        ],
+        "scepticVerdict": "Schrodinger source/disposition mapping reviewed; final R2 acceptance separately required",
+        "ruling": "Reverify this T-0164 source-level observation and its item ruling before any edit: Writer remains; static source search found no `sync_registry` reader. External readers remain unproved.",
+        "owningTask": "T-0189",
+        "reason": "Removed ruled registry status writers. Table, historical rows and recovery remain; external-reader absence is unproved.",
+        "status": "done",
+        "remainingUncertainty": "Evidence is bounded to source review and named controlled fixtures; no external-installation or release acceptance implied.",
+        "originalRecommendation": {
+          "recommendation": "implement",
+          "reason": "Remove ruled writers; preserve table, data and recovery. External-reader absence remains unproved."
+        }
+      },
+      {
+        "id": "lib-data-10",
+        "sourceReference": "org/plans/2026-09-refactor-ownership.json#findings/lib-data-10",
+        "inspectedRevision": "01040a434187215e071e4b3788dc950074d7474d",
+        "evidence": [
+          "src/lib/sync/sync-repository.ts:86",
+          "tmp/t0189-source-preflight-20261002/receipt.json",
+          "org/reviews/2026-10-t0189-data-verification.md",
+          "tmp/t0189-full-gate-1790960113841/summary.json",
+          "tests/unit/data-transaction-sync.test.ts",
+          "tmp/t0189-coordinator-check/1790957188311/summary.json"
+        ],
+        "scepticVerdict": "Schrodinger source/disposition mapping reviewed; final R2 acceptance separately required",
+        "ruling": "Reverify this T-0164 source-level observation and its item ruling before any edit: Deduplication is per sync run, followed by plain INSERT. The database selects only ten recent rows before the dashboard deduplicates them. Repeated stored rows can crowd a distinct error out of that ten-row window; they do **not** necessarily appear as duplicate cards. `errors24h` counts stored rows but has no current display reader. Existing-row prevalence needs an isolated or authorised database probe.",
+        "owningTask": "T-0189",
+        "reason": "Deduplicate exact source/timestamp/full-message identity; group earliest id before LIMIT10. Preserve historical rows and 500-row retention.",
+        "status": "done",
+        "remainingUncertainty": "Evidence is bounded to source review and named controlled fixtures; no external-installation or release acceptance implied.",
+        "originalRecommendation": {
+          "recommendation": "implement",
+          "reason": "Full identity and group-before-limit; no duplicate-card or real-install prevalence claim."
+        }
+      },
+      {
+        "id": "lib-data-11",
+        "sourceReference": "org/plans/2026-09-refactor-ownership.json#findings/lib-data-11",
+        "inspectedRevision": "01040a434187215e071e4b3788dc950074d7474d",
+        "evidence": [
+          "src/lib/sync/sources/ProcessSync.ts:100",
+          "src/lib/sync/sources/ProcessSync.ts:161",
+          "org/reviews/2026-10-t0189-data-verification.md",
+          "tmp/t0189-full-gate-1790960113841/summary.json",
+          "tests/unit/data-transaction-sync.test.ts",
+          "tmp/t0189-coordinator-check/1790957188311/summary.json"
+        ],
+        "scepticVerdict": "Schrodinger source/disposition mapping reviewed; final R2 acceptance separately required",
+        "ruling": "Reverify this T-0164 source-level observation and its item ruling before any edit: Empty or placeholder token rules differ; replacement transaction is a separate implementation choice.",
+        "owningTask": "T-0189",
+        "reason": "Shared token-presence rules and atomic process snapshot replacement, including empty snapshots. Discovery subprocess failure is a separate T-0196 follow-up.",
+        "status": "done",
+        "remainingUncertainty": "Evidence is bounded to source review and named controlled fixtures; no external-installation or release acceptance implied.",
+        "originalRecommendation": {
+          "recommendation": "implement",
+          "reason": "Unify token presence and make replacement atomic; prior snapshot loss reproduced."
+        }
+      },
+      {
+        "id": "lib-data-12",
+        "sourceReference": "org/plans/2026-09-refactor-ownership.json#findings/lib-data-12",
+        "inspectedRevision": "01040a434187215e071e4b3788dc950074d7474d",
+        "evidence": [
+          "src/lib/sessions/sessions-api-helpers.ts:41",
+          "src/lib/sync/index.ts:37",
+          "org/reviews/2026-10-t0189-data-verification.md",
+          "tmp/t0189-full-gate-1790960113841/summary.json",
+          "tests/unit/data-transaction-repository-contracts.test.ts",
+          "tmp/t0189-coordinator-check/1790957188311/summary.json"
+        ],
+        "scepticVerdict": "Schrodinger source/disposition mapping reviewed; final R2 acceptance separately required",
+        "ruling": "Reverify this T-0164 source-level observation and its item ruling before any edit: Debounced call reaches an idempotent initialiser, not an immediate sync.",
+        "owningTask": "T-0189",
+        "reason": "Retain custom-delay and event-loop debounce semantics and read-only guard. Only inaccurate prose changed; no timestamp substitution.",
+        "status": "ruled-out",
+        "remainingUncertainty": "Evidence is bounded to source review and named controlled fixtures; no external-installation or release acceptance implied.",
+        "originalRecommendation": {
+          "recommendation": "implement-pending-claims",
+          "reason": "Redundant debounce wraps idempotent initialisation. Preserve read-only guard; do not replace with immediate sync."
+        }
+      },
+      {
+        "id": "lib-data-13",
+        "sourceReference": "org/plans/2026-09-refactor-ownership.json#findings/lib-data-13",
+        "inspectedRevision": "01040a434187215e071e4b3788dc950074d7474d",
+        "evidence": [
+          "src/lib/runs/runs-repository.ts:51",
+          "src/lib/stats/stats-repository.ts:111",
+          "org/reviews/2026-10-t0189-data-verification.md",
+          "tmp/t0189-full-gate-1790960113841/summary.json",
+          "tests/unit/data-transaction-usage.test.ts",
+          "tmp/t0189-coordinator-check/1790957188311/summary.json"
+        ],
+        "scepticVerdict": "Schrodinger source/disposition mapping reviewed; final R2 acceptance separately required",
+        "ruling": "Reverify this T-0164 source-level observation and its item ruling before any edit: Stored-usage fallback rules differ. No current stored row was read.",
+        "owningTask": "T-0189",
+        "reason": "Shared stored-usage parser preserves finite supplied totals and component observations; no destructive stored-row rewrite.",
+        "status": "done",
+        "remainingUncertainty": "Evidence is bounded to source review and named controlled fixtures; no external-installation or release acceptance implied.",
+        "originalRecommendation": {
+          "recommendation": "implement",
+          "reason": "Finite explicit totals remain authoritative; sum fallback; preserve absence outcomes. Stored data distribution unknown."
+        }
+      },
+      {
+        "id": "lib-data-14",
+        "sourceReference": "org/plans/2026-09-refactor-ownership.json#findings/lib-data-14",
+        "inspectedRevision": "01040a434187215e071e4b3788dc950074d7474d",
+        "evidence": [
+          "src/lib/analytics/analytics-repository.ts:40",
+          "src/lib/spend/spend-summary.ts:89",
+          "org/reviews/2026-10-t0189-data-verification.md",
+          "tmp/t0189-full-gate-1790960113841/summary.json",
+          "tests/unit/data-transaction-repository-contracts.test.ts",
+          "tmp/t0189-coordinator-check/1790957188311/summary.json"
+        ],
+        "scepticVerdict": "Schrodinger source/disposition mapping reviewed; final R2 acceptance separately required",
+        "ruling": "Reverify this T-0164 source-level observation and its item ruling before any edit: Identical helpers remain; a shared interface has unmeasured cost.",
+        "owningTask": "T-0189",
+        "reason": "Shared synchronous display fallback for exactly three consumers; measured net reduction ten lines. Writes and security/spend guards still propagate failures.",
+        "status": "done",
+        "remainingUncertainty": "Evidence is bounded to source review and named controlled fixtures; no external-installation or release acceptance implied.",
+        "originalRecommendation": {
+          "recommendation": "assess-net-cost",
+          "reason": "Three identical defensive helpers remain; measure replacement/import cost before final disposition; never broaden swallowing."
+        }
+      },
+      {
+        "id": "lib-data-15",
+        "sourceReference": "org/plans/2026-09-refactor-ownership.json#findings/lib-data-15",
+        "inspectedRevision": "01040a434187215e071e4b3788dc950074d7474d",
+        "evidence": [
+          "src/modules/rec-room/lib/story-repository.ts:55",
+          "tmp/t0189-story-preflight-20261002.json",
+          "org/reviews/2026-10-t0189-data-verification.md",
+          "tmp/t0189-full-gate-1790960113841/summary.json",
+          "tests/unit/data-transaction-stories.test.ts",
+          "tmp/t0189-coordinator-check/1790957188311/summary.json",
+          "tmp/t0189-green-validation/tmp/t0188-chat-viewport-1790960747006/walk.json"
+        ],
+        "scepticVerdict": "Schrodinger source/disposition mapping reviewed; final R2 acceptance separately required",
+        "ruling": "Reverify this T-0164 source-level observation and its item ruling before any edit: Four row fields still use unguarded `JSON.parse`. A malformed-row fixture must pin intended fallback behaviour.",
+        "owningTask": "T-0189",
+        "reason": "Guard malformed stored shapes, preserve untouched raw fields and numeric lexemes, and recover writing states in one transaction. Actual SQL list failures remain T-0192.",
+        "status": "done",
+        "remainingUncertainty": "Evidence is bounded to source review and named controlled fixtures; no external-installation or release acceptance implied.",
+        "originalRecommendation": {
+          "recommendation": "implement",
+          "reason": "Guard shapes, preserve raw untouched columns and make whole restart recovery atomic."
+        }
+      },
+      {
+        "id": "lib-data-16",
+        "sourceReference": "org/plans/2026-09-refactor-ownership.json#findings/lib-data-16",
+        "inspectedRevision": "01040a434187215e071e4b3788dc950074d7474d",
+        "evidence": [
+          "src/lib/missions/mission-category-repository.ts:310",
+          "org/reviews/2026-10-t0189-data-verification.md",
+          "tmp/t0189-full-gate-1790960113841/summary.json",
+          "tests/unit/data-transaction-repository-contracts.test.ts",
+          "tmp/t0189-coordinator-check/1790957188311/summary.json"
+        ],
+        "scepticVerdict": "Schrodinger source/disposition mapping reviewed; final R2 acceptance separately required",
+        "ruling": "Reverify this T-0164 source-level observation and its item ruling before any edit: Repository still reads and rewrites template files. A move is structural, with no proved line saving.",
+        "owningTask": "T-0189",
+        "reason": "Retain category filesystem/SQL staging, backup and restoration composition. Old two-walker description does not justify replacement.",
+        "status": "ruled-out",
+        "remainingUncertainty": "Evidence is bounded to source review and named controlled fixtures; no external-installation or release acceptance implied.",
+        "originalRecommendation": {
+          "recommendation": "retain-proposed",
+          "reason": "Current composition owns staging, backup, restoration and immediate SQL lock; old two-walker description is stale."
+        }
+      },
+      {
+        "id": "lib-data-17",
+        "sourceReference": "org/plans/2026-09-refactor-ownership.json#findings/lib-data-17",
+        "inspectedRevision": "01040a434187215e071e4b3788dc950074d7474d",
+        "evidence": [
+          "src/lib/sync/sync-repository.ts:95",
+          "src/lib/db/apply-table-rebuild.ts:28",
+          "org/reviews/2026-10-t0189-data-verification.md",
+          "tmp/t0189-full-gate-1790960113841/summary.json",
+          "tests/unit/data-transaction-models.test.ts",
+          "tmp/t0189-coordinator-check/1790957188311/summary.json"
+        ],
+        "scepticVerdict": "Schrodinger source/disposition mapping reviewed; final R2 acceptance separately required",
+        "ruling": "Reverify this T-0164 source-level observation and its item ruling before any edit: Mixed transaction styles remain. The preliminary timestamp-inconsistency subclaim was refuted.",
+        "owningTask": "T-0189",
+        "reason": "Repair selected model, process, log and story transaction boundaries. Retain specialised immediate transactions and immutable migration history; timestamp subclaim remains refuted.",
+        "status": "done",
+        "remainingUncertainty": "Evidence is bounded to source review and named controlled fixtures; no external-installation or release acceptance implied.",
+        "originalRecommendation": {
+          "recommendation": "implement-and-retain",
+          "reason": "Fix touched transaction boundaries; keep specialised immediate modes and no blanket migration transaction. Timestamp subclaim remains refuted."
+        }
+      },
+      {
+        "id": "lib-data-19",
+        "sourceReference": "org/plans/2026-09-refactor-ownership.json#findings/lib-data-19",
+        "inspectedRevision": "01040a434187215e071e4b3788dc950074d7474d",
+        "evidence": [
+          "src/lib/missions/mission-category-repository.ts:361",
+          "src/lib/seed/catalog-seed.ts:92",
+          "org/reviews/2026-10-t0189-data-verification.md",
+          "tmp/t0189-full-gate-1790960113841/summary.json",
+          "tests/unit/data-transaction-repository-contracts.test.ts",
+          "tmp/t0189-coordinator-check/1790957188311/summary.json"
+        ],
+        "scepticVerdict": "Schrodinger source/disposition mapping reviewed; final R2 acceptance separately required",
+        "ruling": "Reverify this T-0164 source-level observation and its item ruling before any edit: Category rows remain duplicated in SQL and repository code; the old prebuild path is dormant.",
+        "owningTask": "T-0189",
+        "reason": "Retain ten duplicate seed lines: asset loading introduces deployment tracing and generation contracts costing more than the demonstrated duplication. Actual runtime/asset parity tested.",
+        "status": "ruled-out",
+        "remainingUncertainty": "Evidence is bounded to source review and named controlled fixtures; no external-installation or release acceptance implied.",
+        "originalRecommendation": {
+          "recommendation": "assess-net-cost",
+          "reason": "Compare shared seed data while preserving empty-only runtime and merge/replace catalogue policies."
+        }
+      },
+      {
+        "id": "lib-data-21",
+        "sourceReference": "org/plans/2026-09-refactor-ownership.json#findings/lib-data-21",
+        "inspectedRevision": "01040a434187215e071e4b3788dc950074d7474d",
+        "evidence": [
+          "tests/unit/run-migrations-upgrade.integration.test.ts:254",
+          "org/reviews/2026-10-t0189-data-verification.md",
+          "tmp/t0189-full-gate-1790960113841/summary.json",
+          "tests/unit/data-transaction-migration-parity.test.ts",
+          "tmp/t0189-coordinator-check/1790957188311/summary.json"
+        ],
+        "scepticVerdict": "Schrodinger source/disposition mapping reviewed; final R2 acceptance separately required",
+        "ruling": "Reverify this T-0164 source-level observation and its item ruling before any edit: Test-facing constants remain. Ascending order alone would weaken the adjacency assertion.",
+        "owningTask": "T-0189",
+        "reason": "Retain exact adjacent version constants and historical tests; ascending-only replacement weakens the existing contract.",
+        "status": "ruled-out",
+        "remainingUncertainty": "Evidence is bounded to source review and named controlled fixtures; no external-installation or release acceptance implied.",
+        "originalRecommendation": {
+          "recommendation": "retain-proposed",
+          "reason": "Exact adjacency is stronger than ascending order; test-facing constants protect history."
+        }
+      },
+      {
+        "id": "lib-data-23",
+        "sourceReference": "org/plans/2026-09-refactor-ownership.json#findings/lib-data-23",
+        "inspectedRevision": "01040a434187215e071e4b3788dc950074d7474d",
+        "evidence": [
+          "src/lib/db/index.ts:420",
+          "src/app/api/mission-categories/route.ts:43",
+          "org/reviews/2026-10-t0189-data-verification.md",
+          "tmp/t0189-full-gate-1790960113841/summary.json",
+          "tests/unit/data-transaction-schema-health.test.ts",
+          "tmp/t0189-coordinator-check/1790957188311/summary.json"
+        ],
+        "scepticVerdict": "Schrodinger source/disposition mapping reviewed; final R2 acceptance separately required",
+        "ruling": "Reverify this T-0164 source-level observation and its item ruling before any edit: Health check remains in connection module; route and Jest mocks add move cost.",
+        "owningTask": "T-0189",
+        "reason": "Retain schema-health placement; real missing-table fixture produces the required503. Earlier boot failures may still return500, which this test does not generalise away.",
+        "status": "done",
+        "remainingUncertainty": "Evidence is bounded to source review and named controlled fixtures; no external-installation or release acceptance implied.",
+        "originalRecommendation": {
+          "recommendation": "retain-and-verify",
+          "reason": "Keep schema-health placement; verify real missing-table 503, not only mocked route."
+        }
+      },
+      {
+        "id": "lib-data-24",
+        "sourceReference": "org/plans/2026-09-refactor-ownership.json#findings/lib-data-24",
+        "inspectedRevision": "01040a434187215e071e4b3788dc950074d7474d",
+        "evidence": [
+          "src/lib/sessions/session-sync.ts:170",
+          "src/lib/sessions/session-sync.ts:219",
+          "org/reviews/2026-10-t0189-data-verification.md",
+          "tmp/t0189-full-gate-1790960113841/summary.json",
+          "tests/unit/data-transaction-sync.test.ts",
+          "tmp/t0189-coordinator-check/1790957188311/summary.json"
+        ],
+        "scepticVerdict": "Schrodinger source/disposition mapping reviewed; final R2 acceptance separately required",
+        "ruling": "Reverify this T-0164 source-level observation and its item ruling before any edit: Empty branch and voided result remain.",
+        "owningTask": "T-0189",
+        "reason": "Removed empty branch and voided result; preserved mapping, orphan closure and logging effects.",
+        "status": "done",
+        "remainingUncertainty": "Evidence is bounded to source review and named controlled fixtures; no external-installation or release acceptance implied.",
+        "originalRecommendation": {
+          "recommendation": "implement-pending-claims",
+          "reason": "Remove empty branch/voided result while preserving source mapping, orphan closure and logging effects."
+        }
+      },
+      {
+        "id": "lib-data-25",
+        "sourceReference": "org/plans/2026-09-refactor-ownership.json#findings/lib-data-25",
+        "inspectedRevision": "01040a434187215e071e4b3788dc950074d7474d",
+        "evidence": [
+          "src/lib/sessions/sessions-url-state.ts:2",
+          "src/components/session/MissionGroupCard.tsx:24",
+          "org/reviews/2026-10-t0189-data-verification.md",
+          "tmp/t0189-full-gate-1790960113841/summary.json",
+          "tests/unit/data-transaction-repository-contracts.test.ts",
+          "tmp/t0189-coordinator-check/1790957188311/summary.json"
+        ],
+        "scepticVerdict": "Schrodinger source/disposition mapping reviewed; final R2 acceptance separately required",
+        "ruling": "Reverify this T-0164 source-level observation and its item ruling before any edit: Page-only placement remains; grouping has wider consumers and should be assessed separately.",
+        "owningTask": "T-0189",
+        "reason": "Retain pure URL/grouping domain helper with wider consumers; no server-only dependency leak established.",
+        "status": "ruled-out",
+        "remainingUncertainty": "Evidence is bounded to source review and named controlled fixtures; no external-installation or release acceptance implied.",
+        "originalRecommendation": {
+          "recommendation": "retain-proposed",
+          "reason": "Pure domain helper is not server-only; grouping has wider consumers and no dependency leak is established."
+        }
+      },
+      {
+        "id": "lib-data-26",
+        "sourceReference": "org/plans/2026-09-refactor-ownership.json#findings/lib-data-26",
+        "inspectedRevision": "01040a434187215e071e4b3788dc950074d7474d",
+        "evidence": [
+          "src/lib/schema/index.ts:3",
+          "src/lib/templates-handlers/import-pack.ts:12",
+          "org/reviews/2026-10-t0189-data-verification.md",
+          "tmp/t0189-full-gate-1790960113841/summary.json",
+          "tests/unit/data-transaction-repository-contracts.test.ts",
+          "tmp/t0189-coordinator-check/1790957188311/summary.json"
+        ],
+        "scepticVerdict": "Schrodinger source/disposition mapping reviewed; final R2 acceptance separately required",
+        "ruling": "Reverify this T-0164 source-level observation and its item ruling before any edit: One-symbol barrel remains; six suites mock its path.",
+        "owningTask": "T-0189",
+        "reason": "Retain three-line schema facade with one production importer and six test seams; relocation does not remove validator responsibility.",
+        "status": "ruled-out",
+        "remainingUncertainty": "Evidence is bounded to source review and named controlled fixtures; no external-installation or release acceptance implied.",
+        "originalRecommendation": {
+          "recommendation": "retain-proposed",
+          "reason": "Three-line import/mock boundary has one production import and six test seams; relocation removes no validator responsibility."
+        }
+      },
+      {
+        "id": "lib-data-27",
+        "sourceReference": "org/plans/2026-09-refactor-ownership.json#findings/lib-data-27",
+        "inspectedRevision": "01040a434187215e071e4b3788dc950074d7474d",
+        "evidence": [
+          "src/lib/db/apply-profiles-tools-upgrade.ts:24",
+          "org/reviews/2026-10-t0189-data-verification.md",
+          "tmp/t0189-full-gate-1790960113841/summary.json",
+          "tests/unit/data-transaction-migration-parity.test.ts",
+          "tmp/t0189-coordinator-check/1790957188311/summary.json"
+        ],
+        "scepticVerdict": "Schrodinger source/disposition mapping reviewed; final R2 acceptance separately required",
+        "ruling": "Reverify this T-0164 source-level observation and its item ruling before any edit: The v2 parity step still scans every SQL file, but the cited historical v42 probe does not prove that current v43 v2-to-head databases lack `idx_runs_story`. Source paths and the existing climb tests do not settle final `sqlite_master` state. Keep the index outcome unresolved until a disposable v2-to-head and fresh-schema comparison; do not infer that all installations have the index.",
+        "owningTask": "T-0189",
+        "reason": "Actual fresh/degraded/head schema parity and existing idx_runs_story repaired without replaying historical backfill or replacing conflicting indexes.",
+        "status": "done",
+        "remainingUncertainty": "Evidence is bounded to source review and named controlled fixtures; no external-installation or release acceptance implied.",
+        "originalRecommendation": {
+          "recommendation": "verify",
+          "reason": "Compare actual final v2/fresh schemas and idx_runs_story; historical v42 outcome is not current v43 proof."
+        }
+      }
+    ],
+    "operatorDispositions": [
+      {
+        "id": "lib-data-06",
+        "sourceReference": "org/plans/2026-09-refactor-ownership.json#operatorDispositions/lib-data-06",
+        "inspectedRevision": "01040a434187215e071e4b3788dc950074d7474d",
+        "evidence": [
+          "org/reviews/2026-09-decision-register.md:2337",
+          "org/reviews/2026-10-t0189-data-verification.md",
+          "tmp/t0189-full-gate-1790960113841/summary.json",
+          "tests/unit/data-transaction-migration-parity.test.ts",
+          "tmp/t0189-coordinator-check/1790957188311/summary.json"
+        ],
+        "scepticVerdict": "Schrodinger source/disposition mapping reviewed; final R2 acceptance separately required",
+        "ruling": "org/reviews/2026-09-decision-register.md:2324; Reverify the item-specific ruled disposition against its accepted decision and parent qualification.",
+        "owningTask": "T-0189",
+        "reason": "Removed only redundant CLI convergence after getDb. Application convergence and head assertion remain required; rebuild retirement belongs to T-0199.",
+        "status": "done",
+        "remainingUncertainty": "Evidence is bounded to source review and named controlled fixtures; no external-installation or release acceptance implied.",
+        "originalRecommendation": {
+          "recommendation": "implement-and-verify",
+          "reason": "Fresh fall-through exists; CLI convergence needs proof before removal, application loop remains coupled to rebuild."
+        }
+      },
+      {
+        "id": "lib-data-09a",
+        "sourceReference": "org/plans/2026-09-refactor-ownership.json#operatorDispositions/lib-data-09a",
+        "inspectedRevision": "01040a434187215e071e4b3788dc950074d7474d",
+        "evidence": [
+          "org/reviews/2026-09-decision-register.md:3089",
+          "org/reviews/2026-10-t0189-data-verification.md",
+          "tmp/t0189-full-gate-1790960113841/summary.json",
+          "tests/unit/data-transaction-sync.test.ts",
+          "tmp/t0189-coordinator-check/1790957188311/summary.json"
+        ],
+        "scepticVerdict": "Schrodinger source/disposition mapping reviewed; final R2 acceptance separately required",
+        "ruling": "org/reviews/2026-09-decision-register.md:3089; Reverify the item-specific free-band disposition against its accepted decision and parent qualification.",
+        "owningTask": "T-0189",
+        "reason": "Removed ruled registry status writers. Table, historical rows and recovery remain; external-reader absence is unproved.",
+        "status": "done",
+        "remainingUncertainty": "Evidence is bounded to source review and named controlled fixtures; no external-installation or release acceptance implied.",
+        "originalRecommendation": {
+          "recommendation": "implement",
+          "reason": "Remove writers and their possible sync-failure contribution; keep table/recovery."
+        }
+      },
+      {
+        "id": "lib-data-10a",
+        "sourceReference": "org/plans/2026-09-refactor-ownership.json#operatorDispositions/lib-data-10a",
+        "inspectedRevision": "01040a434187215e071e4b3788dc950074d7474d",
+        "evidence": [
+          "org/reviews/2026-09-decision-register.md:3097",
+          "org/reviews/2026-10-t0189-data-verification.md",
+          "tmp/t0189-full-gate-1790960113841/summary.json",
+          "tests/unit/data-transaction-sync.test.ts",
+          "tmp/t0189-coordinator-check/1790957188311/summary.json"
+        ],
+        "scepticVerdict": "Schrodinger source/disposition mapping reviewed; final R2 acceptance separately required",
+        "ruling": "org/reviews/2026-09-decision-register.md:3097; Reverify the item-specific free-band disposition against its accepted decision and parent qualification.",
+        "owningTask": "T-0189",
+        "reason": "Deduplicate exact source/timestamp/full-message identity; group earliest id before LIMIT10. Preserve historical rows and 500-row retention.",
+        "status": "done",
+        "remainingUncertainty": "Evidence is bounded to source review and named controlled fixtures; no external-installation or release acceptance implied.",
+        "originalRecommendation": {
+          "recommendation": "implement",
+          "reason": "Code-only full-identity deduplication, no new unique index or historical deletion."
+        }
+      },
+      {
+        "id": "lib-data-10b",
+        "sourceReference": "org/plans/2026-09-refactor-ownership.json#operatorDispositions/lib-data-10b",
+        "inspectedRevision": "01040a434187215e071e4b3788dc950074d7474d",
+        "evidence": [
+          "org/reviews/2026-09-decision-register.md:2346",
+          "org/reviews/2026-10-t0189-data-verification.md",
+          "tmp/t0189-full-gate-1790960113841/summary.json",
+          "tests/unit/data-transaction-sync.test.ts",
+          "tmp/t0189-coordinator-check/1790957188311/summary.json"
+        ],
+        "scepticVerdict": "Schrodinger source/disposition mapping reviewed; final R2 acceptance separately required",
+        "ruling": "org/reviews/2026-09-decision-register.md:2339; Reverify the item-specific ruled disposition against its accepted decision and parent qualification.",
+        "owningTask": "T-0189",
+        "reason": "Deduplicate exact source/timestamp/full-message identity; group earliest id before LIMIT10. Preserve historical rows and 500-row retention.",
+        "status": "done",
+        "remainingUncertainty": "Evidence is bounded to source review and named controlled fixtures; no external-installation or release acceptance implied.",
+        "originalRecommendation": {
+          "recommendation": "implement",
+          "reason": "MIN(id) representative before LIMIT10; retain ordinary500-row retention."
+        }
+      },
+      {
+        "id": "lib-data-11",
+        "sourceReference": "org/plans/2026-09-refactor-ownership.json#operatorDispositions/lib-data-11",
+        "inspectedRevision": "01040a434187215e071e4b3788dc950074d7474d",
+        "evidence": [
+          "org/reviews/2026-09-decision-register.md:3098",
+          "org/reviews/2026-10-t0189-data-verification.md",
+          "tmp/t0189-full-gate-1790960113841/summary.json",
+          "tests/unit/data-transaction-sync.test.ts",
+          "tmp/t0189-coordinator-check/1790957188311/summary.json"
+        ],
+        "scepticVerdict": "Schrodinger source/disposition mapping reviewed; final R2 acceptance separately required",
+        "ruling": "org/reviews/2026-09-decision-register.md:3098; Reverify the item-specific free-band disposition against its accepted decision and parent qualification.",
+        "owningTask": "T-0189",
+        "reason": "Shared token-presence rules and atomic process snapshot replacement, including empty snapshots. Discovery subprocess failure is a separate T-0196 follow-up.",
+        "status": "done",
+        "remainingUncertainty": "Evidence is bounded to source review and named controlled fixtures; no external-installation or release acceptance implied.",
+        "originalRecommendation": {
+          "recommendation": "implement",
+          "reason": "One empty/comment/placeholder rule; snapshot atomicity is a separate task invariant."
+        }
+      },
+      {
+        "id": "lib-data-13",
+        "sourceReference": "org/plans/2026-09-refactor-ownership.json#operatorDispositions/lib-data-13",
+        "inspectedRevision": "01040a434187215e071e4b3788dc950074d7474d",
+        "evidence": [
+          "org/reviews/2026-09-decision-register.md:3099",
+          "org/reviews/2026-10-t0189-data-verification.md",
+          "tmp/t0189-full-gate-1790960113841/summary.json",
+          "tests/unit/data-transaction-usage.test.ts",
+          "tmp/t0189-coordinator-check/1790957188311/summary.json"
+        ],
+        "scepticVerdict": "Schrodinger source/disposition mapping reviewed; final R2 acceptance separately required",
+        "ruling": "org/reviews/2026-09-decision-register.md:3099; Reverify the item-specific free-band disposition against its accepted decision and parent qualification.",
+        "owningTask": "T-0189",
+        "reason": "Shared stored-usage parser preserves finite supplied totals and component observations; no destructive stored-row rewrite.",
+        "status": "done",
+        "remainingUncertainty": "Evidence is bounded to source review and named controlled fixtures; no external-installation or release acceptance implied.",
+        "originalRecommendation": {
+          "recommendation": "implement",
+          "reason": "Input+output fallback, not unconditional replacement of supplied total."
+        }
+      }
+    ],
+    "coverage": [
+      {
+        "id": "gap-009.a",
+        "sourceReference": "org/plans/2026-09-refactor-ownership.json#coverage/gap-009.a",
+        "inspectedRevision": "01040a434187215e071e4b3788dc950074d7474d",
+        "evidence": [
+          "src/lib/db/migrations/001_baseline.sql:145",
+          "org/reviews/2026-10-t0189-data-verification.md",
+          "tmp/t0189-full-gate-1790960113841/summary.json",
+          "tmp/t0189-column-backup/1790953996932/receipt.json",
+          "tmp/t0189-live-schema-inventory-20261002.json"
+        ],
+        "scepticVerdict": "Schrodinger source/disposition mapping reviewed; final R2 acceptance separately required",
+        "ruling": "Run this T-0164 atomic next proof before closing its owner batch: At current HEAD, Trace candidate dead SQLite columns. Starting check: src/lib/db/migrations/001_baseline.sql:145-160,235-244. Record command/exit or exact file:line, revision and independent review.",
+        "owningTask": "T-0189",
+        "reason": "All five candidate columns traced through readers, writers, migration and recovery. Retain all; occupancy is not deadness proof.",
+        "status": "done",
+        "remainingUncertainty": "Evidence is bounded to source review and named controlled fixtures; no external-installation or release acceptance implied.",
+        "originalRecommendation": {
+          "recommendation": "verify",
+          "reason": "Complete candidate column traces; null/empty occupancy is insufficient."
+        }
+      },
+      {
+        "id": "gap-009.b",
+        "sourceReference": "org/plans/2026-09-refactor-ownership.json#coverage/gap-009.b",
+        "inspectedRevision": "01040a434187215e071e4b3788dc950074d7474d",
+        "evidence": [
+          "org/LOCKBOOK.md:179",
+          "org/reviews/2026-10-t0189-data-verification.md",
+          "tmp/t0189-full-gate-1790960113841/summary.json"
+        ],
+        "scepticVerdict": "Schrodinger source/disposition mapping reviewed; final R2 acceptance separately required",
+        "ruling": "Run this T-0164 atomic next proof before closing its owner batch: At current HEAD, Compare LOCKBOOK rulings to current code. Starting check: org/LOCKBOOK.md; git grep -n ruling identifiers HEAD -- src. Record command/exit or exact file:line, revision and independent review.",
+        "owningTask": "T-0189",
+        "reason": "LOCKBOOK/ADR0004/0009 ownership, immutable history, bounded readings and progression traces retained.",
+        "status": "done",
+        "remainingUncertainty": "Evidence is bounded to source review and named controlled fixtures; no external-installation or release acceptance implied.",
+        "originalRecommendation": {
+          "recommendation": "verify",
+          "reason": "Map repository ownership, immutable migration history, bounded readings and progression rulings to code."
+        }
+      },
+      {
+        "id": "gap-035.b",
+        "sourceReference": "org/plans/2026-09-refactor-ownership.json#coverage/gap-035.b",
+        "inspectedRevision": "01040a434187215e071e4b3788dc950074d7474d",
+        "evidence": [
+          "src/lib/db/upgrade.ts:61",
+          "org/reviews/2026-10-t0189-data-verification.md",
+          "tmp/t0189-full-gate-1790960113841/summary.json",
+          "tmp/t0189-column-backup/1790953996932/receipt.json",
+          "tmp/t0189-live-schema-inventory-20261002.json"
+        ],
+        "scepticVerdict": "Schrodinger source/disposition mapping reviewed; final R2 acceptance separately required",
+        "ruling": "Run this T-0164 atomic next proof before closing its owner batch: Inspect authorised historical installs/backups and external SQL callers; reproduce v2-to-head, fresh, backup and restore paths with non-null source_mtime before a retention or drop ruling.",
+        "owningTask": "T-0189",
+        "reason": "External historical installations and SQL consumers remain unverified. T-0201 must retain this unresolved item; any future drop proposal requires authorised representative history, external-consumer inventory and application restore/restart proof. Owned WAL backup proves only synthetic database-value preservation.",
+        "status": "deferred",
+        "remainingUncertainty": "External historical installations and SQL consumers remain unverified. T-0201 must retain this unresolved item; any future drop proposal requires authorised representative history, external-consumer inventory and application restore/restart proof. Owned WAL backup proves only synthetic database-value preservation.",
+        "originalRecommendation": {
+          "recommendation": "deferred-proof",
+          "reason": "Historical installs/external SQL and source_mtime backup/restore remain unverified. Preserve table/data."
+        }
+      },
+      {
+        "id": "gap-035.c",
+        "sourceReference": "org/plans/2026-09-refactor-ownership.json#coverage/gap-035.c",
+        "inspectedRevision": "01040a434187215e071e4b3788dc950074d7474d",
+        "evidence": [
+          "src/lib/sync/sync-repository.ts:203",
+          "org/reviews/2026-10-t0189-data-verification.md",
+          "tmp/t0189-full-gate-1790960113841/summary.json",
+          "tmp/t0189-column-backup/1790953996932/receipt.json",
+          "tmp/t0189-live-schema-inventory-20261002.json"
+        ],
+        "scepticVerdict": "Schrodinger source/disposition mapping reviewed; final R2 acceptance separately required",
+        "ruling": "Run this T-0164 atomic next proof before closing its owner batch: At current HEAD, Trace every candidate column writer-to-reader. Starting check: All migrations, repository SQL and API consumers. Record command/exit or exact file:line, revision and independent review.",
+        "owningTask": "T-0189",
+        "reason": "Candidate readers/writers/migrations/recovery traced; ruled registry writers removed, values/schema preserved.",
+        "status": "done",
+        "remainingUncertainty": "Evidence is bounded to source review and named controlled fixtures; no external-installation or release acceptance implied.",
+        "originalRecommendation": {
+          "recommendation": "verify",
+          "reason": "Record candidate writers/readers/migrations/recovery; application silence does not exclude external SQL."
+        }
+      },
+      {
+        "id": "gap-035.d",
+        "sourceReference": "org/plans/2026-09-refactor-ownership.json#coverage/gap-035.d",
+        "inspectedRevision": "01040a434187215e071e4b3788dc950074d7474d",
+        "evidence": [
+          "org/tasks/T-0189.json",
+          "org/reviews/2026-10-t0189-data-verification.md",
+          "tmp/t0189-full-gate-1790960113841/summary.json",
+          "tmp/t0189-column-backup/1790953996932/receipt.json",
+          "tmp/t0189-live-schema-inventory-20261002.json"
+        ],
+        "scepticVerdict": "Schrodinger source/disposition mapping reviewed; final R2 acceptance separately required",
+        "ruling": "Run this T-0164 atomic next proof before closing its owner batch: In an isolated or authorised fixture, Decide dead-data removal safety. Starting check: Complete trace plus representative data/recovery review. Record command/exit or exact file:line, revision and independent review.",
+        "owningTask": "T-0189",
+        "reason": "No column or table drop authorised or performed. Retention is scope control, not historical proof.",
+        "status": "done",
+        "remainingUncertainty": "Evidence is bounded to source review and named controlled fixtures; no external-installation or release acceptance implied.",
+        "originalRecommendation": {
+          "recommendation": "deferred-removal",
+          "reason": "No column/table drop proposed or authorised; retention is safe scope control, not historical proof."
+        }
+      },
+      {
+        "id": "gap-036.1",
+        "sourceReference": "org/plans/2026-09-refactor-ownership.json#coverage/gap-036.1",
+        "inspectedRevision": "01040a434187215e071e4b3788dc950074d7474d",
+        "evidence": [
+          "src/lib/sync/sources/LogSync.ts:143",
+          "org/reviews/2026-10-t0189-data-verification.md",
+          "tmp/t0189-full-gate-1790960113841/summary.json",
+          "tests/unit/data-transaction-sync.test.ts",
+          "tmp/t0189-coordinator-check/1790957188311/summary.json"
+        ],
+        "scepticVerdict": "Schrodinger source/disposition mapping reviewed; final R2 acceptance separately required",
+        "ruling": "Run this T-0164 atomic next proof before closing its owner batch: At current HEAD, Determine whether LogSync deduplicates across sync ticks. Starting check: src/lib/sync/sources/LogSync.ts:143-153; src/lib/db/migrations/001_baseline.sql:254-263. Record command/exit or exact file:line, revision and independent review.",
+        "owningTask": "T-0189",
+        "reason": "Real repeated LogSync ticks are covered by exact identity insertion and grouping controls.",
+        "status": "done",
+        "remainingUncertainty": "Evidence is bounded to source review and named controlled fixtures; no external-installation or release acceptance implied.",
+        "originalRecommendation": {
+          "recommendation": "implement",
+          "reason": "Tick-local set does not deduplicate across ticks."
+        }
+      },
+      {
+        "id": "gap-036.2",
+        "sourceReference": "org/plans/2026-09-refactor-ownership.json#coverage/gap-036.2",
+        "inspectedRevision": "01040a434187215e071e4b3788dc950074d7474d",
+        "evidence": [
+          "tmp/t0189-source-preflight-20261002/receipt.json",
+          "org/reviews/2026-10-t0189-data-verification.md",
+          "tmp/t0189-full-gate-1790960113841/summary.json",
+          "tests/unit/data-transaction-sync.test.ts",
+          "tmp/t0189-coordinator-check/1790957188311/summary.json"
+        ],
+        "scepticVerdict": "Schrodinger source/disposition mapping reviewed; final R2 acceptance separately required",
+        "ruling": "Run this T-0164 atomic next proof before closing its owner batch: At current HEAD, Observe duplicate-row behaviour on a disposable repeated-sync fixture. Starting check: rg -n 'uniqueEntries|insertErrorLogEntries' src/lib/sync/sources/LogSync.ts. Record command/exit or exact file:line, revision and independent review.",
+        "owningTask": "T-0189",
+        "reason": "Independent actual LogSync tick witnesses supplement repository preflight; historical duplicates retained.",
+        "status": "done",
+        "remainingUncertainty": "Evidence is bounded to source review and named controlled fixtures; no external-installation or release acceptance implied.",
+        "originalRecommendation": {
+          "recommendation": "verify",
+          "reason": "Independent real LogSync tick oracle remains; coordinator repository probe is not acceptance."
+        }
+      },
+      {
+        "id": "gap-036.3",
+        "sourceReference": "org/plans/2026-09-refactor-ownership.json#coverage/gap-036.3",
+        "inspectedRevision": "01040a434187215e071e4b3788dc950074d7474d",
+        "evidence": [
+          "src/lib/db/migrations/040_runs_spend_source.sql:26",
+          "org/reviews/2026-10-t0189-data-verification.md",
+          "tmp/t0189-full-gate-1790960113841/summary.json",
+          "tests/unit/data-transaction-migration-parity.test.ts",
+          "tmp/t0189-coordinator-check/1790957188311/summary.json"
+        ],
+        "scepticVerdict": "Schrodinger source/disposition mapping reviewed; final R2 acceptance separately required",
+        "ruling": "Run this T-0164 atomic next proof before closing its owner batch: At current HEAD, Verify idx_runs_story after a v2-to-head migration. Starting check: src/lib/db/migrations/040_runs_spend_source.sql:26. Record command/exit or exact file:line, revision and independent review.",
+        "owningTask": "T-0189",
+        "reason": "Actual sqlite_master compared for fresh/degraded/head migration and partial historical040 repair.",
+        "status": "done",
+        "remainingUncertainty": "Evidence is bounded to source review and named controlled fixtures; no external-installation or release acceptance implied.",
+        "originalRecommendation": {
+          "recommendation": "verify",
+          "reason": "Inspect final sqlite_master after fresh/v2 actual migration."
+        }
+      },
+      {
+        "id": "gap-036.5",
+        "sourceReference": "org/plans/2026-09-refactor-ownership.json#coverage/gap-036.5",
+        "inspectedRevision": "01040a434187215e071e4b3788dc950074d7474d",
+        "evidence": [
+          "tests/unit/run-migrations-upgrade.integration.test.ts:194",
+          "org/reviews/2026-10-t0189-data-verification.md",
+          "tmp/t0189-full-gate-1790960113841/summary.json",
+          "tests/unit/data-transaction-migration-parity.test.ts",
+          "tmp/t0189-coordinator-check/1790957188311/summary.json",
+          "tmp/t0189-green-validation/tmp/t0188-chat-viewport-1790960747006/walk.json"
+        ],
+        "scepticVerdict": "Schrodinger source/disposition mapping reviewed; final R2 acceptance separately required",
+        "ruling": "Run this T-0164 atomic next proof before closing its owner batch: At current HEAD, Reproduce relevant Jest and running-app outcomes. Starting check: rg -n 'LogSync|idx_runs_story|needsBaselineRebuild' tests/unit src/lib. Record command/exit or exact file:line, revision and independent review.",
+        "owningTask": "T-0189",
+        "reason": "Migration climb and affected built Story Weaver library, reader, damaged row and two-step deletion exercised at both widths. No real provider claim.",
+        "status": "done",
+        "remainingUncertainty": "Evidence is bounded to source review and named controlled fixtures; no external-installation or release acceptance implied.",
+        "originalRecommendation": {
+          "recommendation": "verify",
+          "reason": "Execute climb and affected running app; reading assertions is not a pass."
+        }
+      },
+      {
+        "id": "gap-038.1",
+        "sourceReference": "org/plans/2026-09-refactor-ownership.json#coverage/gap-038.1",
+        "inspectedRevision": "01040a434187215e071e4b3788dc950074d7474d",
+        "evidence": [
+          "src/lib/composer/composer-repository.ts:184",
+          "org/reviews/2026-10-t0189-data-verification.md",
+          "tmp/t0189-full-gate-1790960113841/summary.json"
+        ],
+        "scepticVerdict": "Schrodinger source/disposition mapping reviewed; final R2 acceptance separately required",
+        "ruling": "Run this T-0164 atomic next proof before closing its owner batch: At current HEAD, Review composer repository bodies and callers. Starting check: rg -n 'prepare\\(' src/lib/composer/composer-repository.ts. Record command/exit or exact file:line, revision and independent review.",
+        "owningTask": "T-0189",
+        "reason": "Retain validated Composer graph replacement, history refusal and rollback. Source review and full historical suite, no generic mapper.",
+        "status": "done",
+        "remainingUncertainty": "Evidence is bounded to source review and named controlled fixtures; no external-installation or release acceptance implied.",
+        "originalRecommendation": {
+          "recommendation": "retain-and-verify",
+          "reason": "Validated graph replacement, history refusal and rollback remain; no generic mapper."
+        }
+      },
+      {
+        "id": "gap-038.2",
+        "sourceReference": "org/plans/2026-09-refactor-ownership.json#coverage/gap-038.2",
+        "inspectedRevision": "01040a434187215e071e4b3788dc950074d7474d",
+        "evidence": [
+          "src/lib/models/models-repository.ts:233",
+          "tmp/t0189-additional-preflight-20261002.json",
+          "org/reviews/2026-10-t0189-data-verification.md",
+          "tmp/t0189-full-gate-1790960113841/summary.json",
+          "tests/unit/data-transaction-models.test.ts",
+          "tmp/t0189-coordinator-check/1790957188311/summary.json"
+        ],
+        "scepticVerdict": "Schrodinger source/disposition mapping reviewed; final R2 acceptance separately required",
+        "ruling": "Run this T-0164 atomic next proof before closing its owner batch: At current HEAD, Review models repository bodies and callers. Starting check: rg -n 'prepare\\(' src/lib/models/models-repository.ts. Record command/exit or exact file:line, revision and independent review.",
+        "owningTask": "T-0189",
+        "reason": "Real SQLite injected default failure rolls back the model insertion and all default assignments.",
+        "status": "done",
+        "remainingUncertainty": "Evidence is bounded to source review and named controlled fixtures; no external-installation or release acceptance implied.",
+        "originalRecommendation": {
+          "recommendation": "implement",
+          "reason": "Model/default partial write reproduced; independent injected-failure oracle remains."
+        }
+      },
+      {
+        "id": "gap-038.3",
+        "sourceReference": "org/plans/2026-09-refactor-ownership.json#coverage/gap-038.3",
+        "inspectedRevision": "01040a434187215e071e4b3788dc950074d7474d",
+        "evidence": [
+          "src/lib/models/credentials-repository.ts:53",
+          "org/reviews/2026-10-t0189-data-verification.md",
+          "tmp/t0189-full-gate-1790960113841/summary.json"
+        ],
+        "scepticVerdict": "Schrodinger source/disposition mapping reviewed; final R2 acceptance separately required",
+        "ruling": "Run this T-0164 atomic next proof before closing its owner batch: At current HEAD, Review credentials repository bodies and callers. Starting check: rg -n 'prepare\\(' src/lib/models/credentials-repository.ts. Record command/exit or exact file:line, revision and independent review.",
+        "owningTask": "T-0189",
+        "reason": "Retain separate credential summary and secret access boundaries. No credential contents collected.",
+        "status": "done",
+        "remainingUncertainty": "Evidence is bounded to source review and named controlled fixtures; no external-installation or release acceptance implied.",
+        "originalRecommendation": {
+          "recommendation": "retain-and-verify",
+          "reason": "Keep summary/secret-bearing access and caller boundaries distinct."
+        }
+      },
+      {
+        "id": "gap-038.4",
+        "sourceReference": "org/plans/2026-09-refactor-ownership.json#coverage/gap-038.4",
+        "inspectedRevision": "01040a434187215e071e4b3788dc950074d7474d",
+        "evidence": [
+          "src/lib/schedule/schedules-repository.ts:71",
+          "org/reviews/2026-10-t0189-data-verification.md",
+          "tmp/t0189-full-gate-1790960113841/summary.json"
+        ],
+        "scepticVerdict": "Schrodinger source/disposition mapping reviewed; final R2 acceptance separately required",
+        "ruling": "Run this T-0164 atomic next proof before closing its owner batch: At current HEAD, Review schedules repository bodies and callers. Starting check: rg -n 'prepare\\(' src/lib/schedule/schedules-repository.ts. Record command/exit or exact file:line, revision and independent review.",
+        "owningTask": "T-0189",
+        "reason": "Retain schedule legacy defaults, counters and transaction semantics. No new live-concurrency claim.",
+        "status": "done",
+        "remainingUncertainty": "Evidence is bounded to source review and named controlled fixtures; no external-installation or release acceptance implied.",
+        "originalRecommendation": {
+          "recommendation": "retain-and-verify",
+          "reason": "Preserve legacy mission defaults, firing counters and transactions; concurrency execution unclaimed."
+        }
+      },
+      {
+        "id": "gap-038.5",
+        "sourceReference": "org/plans/2026-09-refactor-ownership.json#coverage/gap-038.5",
+        "inspectedRevision": "01040a434187215e071e4b3788dc950074d7474d",
+        "evidence": [
+          "src/lib/chat/chat-repository.ts:95",
+          "org/reviews/2026-10-t0189-data-verification.md",
+          "tmp/t0189-full-gate-1790960113841/summary.json"
+        ],
+        "scepticVerdict": "Schrodinger source/disposition mapping reviewed; final R2 acceptance separately required",
+        "ruling": "Run this T-0164 atomic next proof before closing its owner batch: At current HEAD, Review chat repository bodies and callers. Starting check: rg -n 'prepare\\(' src/lib/chat/chat-repository.ts. Record command/exit or exact file:line, revision and independent review.",
+        "owningTask": "T-0189",
+        "reason": "Retain chat null-for-non-array and mixed-array preservation; filtering would change the stored contract.",
+        "status": "done",
+        "remainingUncertainty": "Evidence is bounded to source review and named controlled fixtures; no external-installation or release acceptance implied.",
+        "originalRecommendation": {
+          "recommendation": "retain-and-verify",
+          "reason": "Non-arrays return null; mixed array entries survive. Filtering helper is not equivalent."
+        }
+      },
+      {
+        "id": "gap-038.6",
+        "sourceReference": "org/plans/2026-09-refactor-ownership.json#coverage/gap-038.6",
+        "inspectedRevision": "01040a434187215e071e4b3788dc950074d7474d",
+        "evidence": [
+          "src/lib/laboratory/deep-research/research-repository.ts:56",
+          "org/reviews/2026-10-t0189-data-verification.md",
+          "tmp/t0189-full-gate-1790960113841/summary.json"
+        ],
+        "scepticVerdict": "Schrodinger source/disposition mapping reviewed; final R2 acceptance separately required",
+        "ruling": "Run this T-0164 atomic next proof before closing its owner batch: At current HEAD, Review Deep Research repository bodies and callers. Starting check: rg -n 'prepare\\(' src/lib/laboratory/deep-research/research-repository.ts. Record command/exit or exact file:line, revision and independent review.",
+        "owningTask": "T-0189",
+        "reason": "Retain research null for unrecorded usage/gather, distinct from measured zero.",
+        "status": "done",
+        "remainingUncertainty": "Evidence is bounded to source review and named controlled fixtures; no external-installation or release acceptance implied.",
+        "originalRecommendation": {
+          "recommendation": "retain-and-verify",
+          "reason": "Unrecorded usage/gather stays null, distinct from measured zero."
+        }
+      },
+      {
+        "id": "gap-038.7",
+        "sourceReference": "org/plans/2026-09-refactor-ownership.json#coverage/gap-038.7",
+        "inspectedRevision": "01040a434187215e071e4b3788dc950074d7474d",
+        "evidence": [
+          "src/lib/retention/retention-repository.ts:137",
+          "org/reviews/2026-10-t0189-data-verification.md",
+          "tmp/t0189-full-gate-1790960113841/summary.json"
+        ],
+        "scepticVerdict": "Schrodinger source/disposition mapping reviewed; final R2 acceptance separately required",
+        "ruling": "Run this T-0164 atomic next proof before closing its owner batch: At current HEAD, Review retention repository bodies and callers. Starting check: rg -n 'prepare\\(' src/lib/retention/retention-repository.ts. Record command/exit or exact file:line, revision and independent review.",
+        "owningTask": "T-0189",
+        "reason": "Retain ADR0009 floors, timestamp cutoff and whole-conversation deletion.",
+        "status": "done",
+        "remainingUncertainty": "Evidence is bounded to source review and named controlled fixtures; no external-installation or release acceptance implied.",
+        "originalRecommendation": {
+          "recommendation": "retain-and-verify",
+          "reason": "ADR0009 floors, timestamp cutoff and whole-conversation deletion."
+        }
+      },
+      {
+        "id": "gap-038.8",
+        "sourceReference": "org/plans/2026-09-refactor-ownership.json#coverage/gap-038.8",
+        "inspectedRevision": "01040a434187215e071e4b3788dc950074d7474d",
+        "evidence": [
+          "src/lib/stats/agent-progression-repository.ts:88",
+          "org/reviews/2026-10-t0189-data-verification.md",
+          "tmp/t0189-full-gate-1790960113841/summary.json"
+        ],
+        "scepticVerdict": "Schrodinger source/disposition mapping reviewed; final R2 acceptance separately required",
+        "ruling": "Run this T-0164 atomic next proof before closing its owner batch: At current HEAD, Review progression repository bodies and callers. Starting check: rg -n 'prepare\\(' src/lib/stats/agent-progression-repository.ts. Record command/exit or exact file:line, revision and independent review.",
+        "owningTask": "T-0189",
+        "reason": "Retain ADR0004/0009 append-only progression, schema stamp and capture watermark.",
+        "status": "done",
+        "remainingUncertainty": "Evidence is bounded to source review and named controlled fixtures; no external-installation or release acceptance implied.",
+        "originalRecommendation": {
+          "recommendation": "retain-and-verify",
+          "reason": "ADR0004/0009 append-only history, schema stamp and capture watermark."
+        }
+      },
+      {
+        "id": "gap-038.9",
+        "sourceReference": "org/plans/2026-09-refactor-ownership.json#coverage/gap-038.9",
+        "inspectedRevision": "01040a434187215e071e4b3788dc950074d7474d",
+        "evidence": [
+          "src/lib/analytics/analytics-repository.ts:40",
+          "org/reviews/2026-10-t0189-data-verification.md",
+          "tmp/t0189-full-gate-1790960113841/summary.json",
+          "tests/unit/data-transaction-repository-contracts.test.ts",
+          "tmp/t0189-coordinator-check/1790957188311/summary.json"
+        ],
+        "scepticVerdict": "Schrodinger source/disposition mapping reviewed; final R2 acceptance separately required",
+        "ruling": "Run this T-0164 atomic next proof before closing its owner batch: At current HEAD, Review analytics repository bodies and callers. Starting check: rg -n 'prepare\\(' src/lib/analytics/analytics-repository.ts. Record command/exit or exact file:line, revision and independent review.",
+        "owningTask": "T-0189",
+        "reason": "Real SQLite display-fallback controls and shared usage parser preserve aggregate outcomes.",
+        "status": "done",
+        "remainingUncertainty": "Evidence is bounded to source review and named controlled fixtures; no external-installation or release acceptance implied.",
+        "originalRecommendation": {
+          "recommendation": "retain-and-verify",
+          "reason": "Preserve aggregate fallback queries; helper extraction still requires net-cost assessment."
+        }
+      },
+      {
+        "id": "gap-038.10",
+        "sourceReference": "org/plans/2026-09-refactor-ownership.json#coverage/gap-038.10",
+        "inspectedRevision": "01040a434187215e071e4b3788dc950074d7474d",
+        "evidence": [
+          "src/lib/stats/derive.ts:114",
+          "src/lib/stats/derive.ts:181",
+          "org/reviews/2026-10-t0189-data-verification.md",
+          "tmp/t0189-full-gate-1790960113841/summary.json"
+        ],
+        "scepticVerdict": "Schrodinger source/disposition mapping reviewed; final R2 acceptance separately required",
+        "ruling": "Run this T-0164 atomic next proof before closing its owner batch: At current HEAD, Review stats derivation logic. Starting check: src/lib/stats/derive.ts:1. Record command/exit or exact file:line, revision and independent review.",
+        "owningTask": "T-0189",
+        "reason": "Retain thresholds, UTC streaks and agent/Rec Room separation; source review and existing tests, not a new behaviour change.",
+        "status": "done",
+        "remainingUncertainty": "Evidence is bounded to source review and named controlled fixtures; no external-installation or release acceptance implied.",
+        "originalRecommendation": {
+          "recommendation": "retain-and-verify",
+          "reason": "Preserve thresholds, UTC streaks and agent/Rec Room separation."
+        }
+      },
+      {
+        "id": "gap-038.11",
+        "sourceReference": "org/plans/2026-09-refactor-ownership.json#coverage/gap-038.11",
+        "inspectedRevision": "01040a434187215e071e4b3788dc950074d7474d",
+        "evidence": [
+          "src/lib/retention/retention-prune.ts:255",
+          "org/reviews/2026-10-t0189-data-verification.md",
+          "tmp/t0189-full-gate-1790960113841/summary.json"
+        ],
+        "scepticVerdict": "Schrodinger source/disposition mapping reviewed; final R2 acceptance separately required",
+        "ruling": "Run this T-0164 atomic next proof before closing its owner batch: At current HEAD, Review retention-prune execution logic. Starting check: src/lib/retention/retention-prune.ts:1. Record command/exit or exact file:line, revision and independent review.",
+        "owningTask": "T-0189",
+        "reason": "Retain prune capture refusal, preview and atomic delete/audit; no operator data pruned.",
+        "status": "done",
+        "remainingUncertainty": "Evidence is bounded to source review and named controlled fixtures; no external-installation or release acceptance implied.",
+        "originalRecommendation": {
+          "recommendation": "retain-and-verify",
+          "reason": "Preserve capture refusal, preview and atomic delete/audit."
+        }
+      },
+      {
+        "id": "gap-039.1",
+        "sourceReference": "org/plans/2026-09-refactor-ownership.json#coverage/gap-039.1",
+        "inspectedRevision": "01040a434187215e071e4b3788dc950074d7474d",
+        "evidence": [
+          "src/app/api/mission-categories/route.ts:43",
+          "org/reviews/2026-10-t0189-data-verification.md",
+          "tmp/t0189-full-gate-1790960113841/summary.json",
+          "tests/unit/data-transaction-schema-health.test.ts",
+          "tmp/t0189-coordinator-check/1790957188311/summary.json"
+        ],
+        "scepticVerdict": "Schrodinger source/disposition mapping reviewed; final R2 acceptance separately required",
+        "ruling": "Run this T-0164 atomic next proof before closing its owner batch: At current HEAD, Trace how mission-categories GET uses getSchemaHealth. Starting check: src/app/api/mission-categories/route.ts:43-62; src/lib/db/index.ts:421-440. Record command/exit or exact file:line, revision and independent review.",
+        "owningTask": "T-0189",
+        "reason": "Real schema-health route control preserves required503 and response fields.",
+        "status": "done",
+        "remainingUncertainty": "Evidence is bounded to source review and named controlled fixtures; no external-installation or release acceptance implied.",
+        "originalRecommendation": {
+          "recommendation": "verify",
+          "reason": "Trace ensure, seed, health and503; preserve response fields."
+        }
+      },
+      {
+        "id": "gap-039.2",
+        "sourceReference": "org/plans/2026-09-refactor-ownership.json#coverage/gap-039.2",
+        "inspectedRevision": "01040a434187215e071e4b3788dc950074d7474d",
+        "evidence": [
+          "src/lib/missions/mission-category-repository.ts:375",
+          "org/reviews/2026-10-t0189-data-verification.md",
+          "tmp/t0189-full-gate-1790960113841/summary.json",
+          "tests/unit/data-transaction-schema-health.test.ts",
+          "tmp/t0189-coordinator-check/1790957188311/summary.json"
+        ],
+        "scepticVerdict": "Schrodinger source/disposition mapping reviewed; final R2 acceptance separately required",
+        "ruling": "Run this T-0164 atomic next proof before closing its owner batch: At current HEAD, Verify that the missing-table 503 is reachable on a migrated or corrupt database. Starting check: src/lib/missions/mission-category-repository.ts:313-320. Record command/exit or exact file:line, revision and independent review.",
+        "owningTask": "T-0189",
+        "reason": "Actual missing category table reaches503; failure before that route can still yield500.",
+        "status": "done",
+        "remainingUncertainty": "Evidence is bounded to source review and named controlled fixtures; no external-installation or release acceptance implied.",
+        "originalRecommendation": {
+          "recommendation": "verify",
+          "reason": "Actual corrupt fixture must reach503; earlier boot failures may return500 instead."
+        }
+      },
+      {
+        "id": "gap-040.1",
+        "sourceReference": "org/plans/2026-09-refactor-ownership.json#coverage/gap-040.1",
+        "inspectedRevision": "01040a434187215e071e4b3788dc950074d7474d",
+        "evidence": [
+          "src/lib/sync/SyncScheduler.ts:194",
+          "tmp/t0189-additional-preflight-20261002.json",
+          "org/reviews/2026-10-t0189-data-verification.md",
+          "tmp/t0189-full-gate-1790960113841/summary.json",
+          "tests/unit/data-transaction-scheduler.test.ts",
+          "tmp/t0189-coordinator-check/1790957188311/summary.json"
+        ],
+        "scepticVerdict": "Schrodinger source/disposition mapping reviewed; final R2 acceptance separately required",
+        "ruling": "Run this T-0164 atomic next proof before closing its owner batch: At current HEAD, Review SyncScheduler beyond its outline, including timeout and overlap behaviour. Starting check: src/lib/sync/SyncScheduler.ts:152-285. Record command/exit or exact file:line, revision and independent review.",
+        "owningTask": "T-0189",
+        "reason": "Returned sync failure, coalescing and post-timeout ownership verified; timeout does not pre-empt synchronous work.",
+        "status": "done",
+        "remainingUncertainty": "Evidence is bounded to source review and named controlled fixtures; no external-installation or release acceptance implied.",
+        "originalRecommendation": {
+          "recommendation": "implement",
+          "reason": "Returned failure/overlap/post-timeout overlap reproduced separately; no synchronous pre-emption claim."
+        }
+      },
+      {
+        "id": "gap-040.2",
+        "sourceReference": "org/plans/2026-09-refactor-ownership.json#coverage/gap-040.2",
+        "inspectedRevision": "01040a434187215e071e4b3788dc950074d7474d",
+        "evidence": [
+          "src/modules/hermes/sync/ConfigSync.ts:76",
+          "org/reviews/2026-10-t0189-data-verification.md",
+          "tmp/t0189-full-gate-1790960113841/summary.json"
+        ],
+        "scepticVerdict": "Schrodinger source/disposition mapping reviewed; final R2 acceptance separately required",
+        "ruling": "Run this T-0164 atomic next proof before closing its owner batch: At current HEAD, Review Hermes ConfigSync read/write and failure paths. Starting check: src/modules/hermes/sync/ConfigSync.ts:47-123. Record command/exit or exact file:line, revision and independent review.",
+        "owningTask": "T-0189",
+        "reason": "Retain ConfigSync sanitised malformed-YAML fault with deliberate nonfatal result, suppression and reset.",
+        "status": "done",
+        "remainingUncertainty": "Evidence is bounded to source review and named controlled fixtures; no external-installation or release acceptance implied.",
+        "originalRecommendation": {
+          "recommendation": "retain-and-verify",
+          "reason": "Malformed YAML deliberately records sanitised fault and returns nonfatal success; keep suppression/reset."
+        }
+      },
+      {
+        "id": "gap-041.2",
+        "sourceReference": "org/plans/2026-09-refactor-ownership.json#coverage/gap-041.2",
+        "inspectedRevision": "01040a434187215e071e4b3788dc950074d7474d",
+        "evidence": [
+          "scripts/tooling/prebuild-db.mjs:62",
+          "org/reviews/2026-10-t0189-data-verification.md",
+          "tmp/t0189-full-gate-1790960113841/summary.json"
+        ],
+        "scepticVerdict": "Schrodinger source/disposition mapping reviewed; final R2 acceptance separately required",
+        "ruling": "Run this T-0164 atomic next proof before closing its owner batch: At current HEAD, Assess consequences if prebuild-db.mjs is invoked manually. Starting check: scripts/tooling/prebuild-db.mjs:1-95. Record command/exit or exact file:line, revision and independent review.",
+        "owningTask": "T-0189",
+        "reason": "T-0199 owns manual prebuild unlink of pre-v3 data and retained rebuild retirement. Current build is database-free and does not invoke this script. Do not claim manual invocation safe.",
+        "status": "deferred",
+        "remainingUncertainty": "T-0199 owns manual prebuild unlink of pre-v3 data and retained rebuild retirement. Current build is database-free and does not invoke this script. Do not claim manual invocation safe.",
+        "originalRecommendation": {
+          "recommendation": "defer-to-retirement-owner",
+          "reason": "Manual invocation can unlink pre-v3 data; current build does not invoke it. Keep visible for T0199."
+        }
+      },
+      {
+        "id": "gap-042.2",
+        "sourceReference": "org/plans/2026-09-refactor-ownership.json#coverage/gap-042.2",
+        "inspectedRevision": "01040a434187215e071e4b3788dc950074d7474d",
+        "evidence": [
+          "org/decisions/ADR-0009-retention-for-the-readings-tables.md:74",
+          "org/reviews/2026-10-t0189-data-verification.md",
+          "tmp/t0189-full-gate-1790960113841/summary.json"
+        ],
+        "scepticVerdict": "Schrodinger source/disposition mapping reviewed; final R2 acceptance separately required",
+        "ruling": "Run this T-0164 atomic next proof before closing its owner batch: At current HEAD, Check retention-table policy against proposed drops. Starting check: org/decisions/ADR-0009-retention-for-the-readings-tables.md:74-82. Record command/exit or exact file:line, revision and independent review.",
+        "owningTask": "T-0189",
+        "reason": "Retain ADR0009 constraints; opt-in pruning does not authorise dropping tables.",
+        "status": "done",
+        "remainingUncertainty": "Evidence is bounded to source review and named controlled fixtures; no external-installation or release acceptance implied.",
+        "originalRecommendation": {
+          "recommendation": "retain-proposed",
+          "reason": "Opt-in pruning authority is not table-drop authority."
+        }
+      },
+      {
+        "id": "gap-042.3",
+        "sourceReference": "org/plans/2026-09-refactor-ownership.json#coverage/gap-042.3",
+        "inspectedRevision": "01040a434187215e071e4b3788dc950074d7474d",
+        "evidence": [
+          "org/decisions/ADR-0004-brain-and-body.md:140",
+          "org/reviews/2026-10-t0189-data-verification.md",
+          "tmp/t0189-full-gate-1790960113841/summary.json"
+        ],
+        "scepticVerdict": "Schrodinger source/disposition mapping reviewed; final R2 acceptance separately required",
+        "ruling": "Run this T-0164 atomic next proof before closing its owner batch: At current HEAD, Survey remaining ADRs before any table-drop disposition. Starting check: rg -n -i 'drop table|schema_version|retention' org/decisions. Record command/exit or exact file:line, revision and independent review.",
+        "owningTask": "T-0189",
+        "reason": "Retain ADR0004 benchmark/history storage; no superseding drop ruling.",
+        "status": "done",
+        "remainingUncertainty": "Evidence is bounded to source review and named controlled fixtures; no external-installation or release acceptance implied.",
+        "originalRecommendation": {
+          "recommendation": "retain-proposed",
+          "reason": "Benchmark tables/history explicitly preserved; no superseding drop ruling."
+        }
+      },
+      {
+        "id": "gap-043.1",
+        "sourceReference": "org/plans/2026-09-refactor-ownership.json#coverage/gap-043.1",
+        "inspectedRevision": "01040a434187215e071e4b3788dc950074d7474d",
+        "evidence": [
+          "src/lib/analytics/event-types.ts:18",
+          "src/lib/analytics/categories.ts:36",
+          "org/reviews/2026-10-t0189-data-verification.md",
+          "tmp/t0189-full-gate-1790960113841/summary.json"
+        ],
+        "scepticVerdict": "Schrodinger source/disposition mapping reviewed; final R2 acceptance separately required",
+        "ruling": "Run this T-0164 atomic next proof before closing its owner batch: At current HEAD, Verify present event taxonomy and category mapping. Starting check: src/lib/analytics/event-types.ts:18-85; src/lib/analytics/categories.ts:27-85. Record command/exit or exact file:line, revision and independent review.",
+        "owningTask": "T-0189",
+        "reason": "Retain exhaustive analytics taxonomy and limited read-event exceptions.",
+        "status": "done",
+        "remainingUncertainty": "Evidence is bounded to source review and named controlled fixtures; no external-installation or release acceptance implied.",
+        "originalRecommendation": {
+          "recommendation": "retain-and-verify",
+          "reason": "Preserve exhaustive mapping and limited read-event exceptions."
+        }
+      },
+      {
+        "id": "gap-043.2",
+        "sourceReference": "org/plans/2026-09-refactor-ownership.json#coverage/gap-043.2",
+        "inspectedRevision": "01040a434187215e071e4b3788dc950074d7474d",
+        "evidence": [
+          "src/lib/analytics/event-types.ts:83",
+          "org/reviews/2026-10-t0189-data-verification.md",
+          "tmp/t0189-full-gate-1790960113841/summary.json"
+        ],
+        "scepticVerdict": "Schrodinger source/disposition mapping reviewed; final R2 acceptance separately required",
+        "ruling": "Run this T-0164 atomic next proof before closing its owner batch: At the current tree, Decide whether moving either taxonomy to JSON preserves type and consumer guarantees. Starting check: rg -n 'AnalyticsEventType|EVENT_CATEGORIES' src/lib/analytics. Record command/exit or exact file:line, revision and independent review.",
+        "owningTask": "T-0189",
+        "reason": "Retain literal-union TypeScript. JSON relocation would require replacement typing without demonstrated reduction.",
+        "status": "ruled-out",
+        "remainingUncertainty": "Evidence is bounded to source review and named controlled fixtures; no external-installation or release acceptance implied.",
+        "originalRecommendation": {
+          "recommendation": "retain-proposed",
+          "reason": "Retain literal-union TypeScript; JSON relocation needs replacement typing without reducing duplication."
+        }
+      },
+      {
+        "id": "gap-104.a",
+        "sourceReference": "org/plans/2026-09-refactor-ownership.json#coverage/gap-104.a",
+        "inspectedRevision": "01040a434187215e071e4b3788dc950074d7474d",
+        "evidence": [
+          "src/lib/runtime/state-db.ts:83",
+          "org/reviews/2026-10-t0189-data-verification.md",
+          "tmp/t0189-full-gate-1790960113841/summary.json"
+        ],
+        "scepticVerdict": "Schrodinger source/disposition mapping reviewed; final R2 acceptance separately required",
+        "ruling": "Run this T-0164 atomic next proof before closing its owner batch: At current HEAD, Review runtime/state-db.ts naming and duplication. Starting check: state-db.ts:83 (src/lib/runtime/state-db.ts:83). Record command/exit or exact file:line, revision and independent review.",
+        "owningTask": "T-0189",
+        "reason": "Retain foreign read-only state database ownership: list fallback[], detail throws, handles close. Source/mocked controls do not establish real foreign integration.",
+        "status": "done",
+        "remainingUncertainty": "Evidence is bounded to source review and named controlled fixtures; no external-installation or release acceptance implied.",
+        "originalRecommendation": {
+          "recommendation": "retain-and-verify",
+          "reason": "ADR0002 foreign read-only database: list falls back[], detail throws. Preserve ownership."
+        }
+      },
+      {
+        "id": "gap-104.b",
+        "sourceReference": "org/plans/2026-09-refactor-ownership.json#coverage/gap-104.b",
+        "inspectedRevision": "01040a434187215e071e4b3788dc950074d7474d",
+        "evidence": [
+          "src/lib/runtime/memory-db.ts:29",
+          "org/reviews/2026-10-t0189-data-verification.md",
+          "tmp/t0189-full-gate-1790960113841/summary.json"
+        ],
+        "scepticVerdict": "Schrodinger source/disposition mapping reviewed; final R2 acceptance separately required",
+        "ruling": "Run this T-0164 atomic next proof before closing its owner batch: At current HEAD, Review runtime/memory-db.ts naming and duplication. Starting check: memory-db.ts:29 (src/lib/runtime/memory-db.ts:29). Record command/exit or exact file:line, revision and independent review.",
+        "owningTask": "T-0189",
+        "reason": "Retain foreign read-only memory database adapter, finally close and display-only zero fallback. Real foreign integration unclaimed.",
+        "status": "done",
+        "remainingUncertainty": "Evidence is bounded to source review and named controlled fixtures; no external-installation or release acceptance implied.",
+        "originalRecommendation": {
+          "recommendation": "retain-and-verify",
+          "reason": "ADR0002 foreign read-only adapter, guaranteed close and display-only zero fallback."
+        }
+      }
+    ]
+  },
+  "totals": {
+    "done": 47,
+    "ruled-out": 8,
+    "deferred": 2
+  }
+}

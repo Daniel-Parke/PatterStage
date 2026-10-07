@@ -1,0 +1,21 @@
+{
+  "revision": "74071c2653bcac9c67ec50706ce750d0ef7df0c9",
+  "port": 3804,
+  "results": [
+    {
+      "policy": "current frame-ancestors-only response",
+      "opensMissionDialog": true,
+      "violations": 0,
+      "examples": []
+    },
+    {
+      "policy": "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self'; frame-ancestors 'none'",
+      "opensMissionDialog": false,
+      "violations": 2,
+      "examples": [
+        "Executing inline script violates the following Content Security Policy directive 'script-src 'self''.",
+        "Executing inline script violates the following Content Security Policy directive 'script-src 'self''."
+      ]
+    }
+  ]
+}

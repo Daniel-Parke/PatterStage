@@ -1,0 +1,69 @@
+{
+  "id": "T-0111",
+  "intent": "B17 of the final-release programme: quests. src/lib/quests/quest-defs.ts holds the content as data (id, chapter, action sentence, proof, screen from the registry, teaches, requires, earns) and a pure evaluateQuests() runs inside computeDashboard() after evaluateAchievements, so the dashboard card, the /quests page, the rail badge and the toast all read the stats poll the shell already makes at zero extra requests. Completion is latched in operator_prefs as a high-water mark so retention can never un-complete a quest; the first evaluation seeds silently. FirstRunPanel is replaced, not duplicated. Four chain achievements join ACHIEVEMENT_DEFS. No operator XP or level (ADR-0004).",
+  "declared": {
+    "capabilities": [
+      "edit-code",
+      "edit-docs"
+    ],
+    "side_effects": []
+  },
+  "mode": "standard",
+  "tier_proposed": "R1",
+  "tier_ruled": "R1",
+  "reasons": [
+    {
+      "factor": "size-threshold",
+      "tier_floor": "R1",
+      "source": "derived:diff-size",
+      "evidence": "a new library, a new page, five components, two new event types and a deletion"
+    },
+    {
+      "factor": "taxonomy-change",
+      "tier_floor": "R1",
+      "source": "operator-ruling",
+      "evidence": "artifact.opened and logs.opened added to ANALYTICS_EVENT_TYPES by operator ruling"
+    }
+  ],
+  "status": "done",
+  "owner_session": "unassigned",
+  "claims": [
+    "src/lib/quests/",
+    "src/components/quests/",
+    "src/components/dashboard/NextQuestCard.tsx",
+    "src/app/quests/",
+    "src/hooks/useQuestHost.ts",
+    "src/hooks/useOperatorPrefs.ts",
+    "src/lib/analytics/event-types.ts",
+    "docs/reference/quests.md",
+    "tests/"
+  ],
+  "programme": "B17, depends on B4, B5, B12, B13, B14, B16. Quest-derive tests per proof from fixtures; the latch survives a metrics reset; an integrity test (every screen a registry route, every earns/teaches id real, every proof event in the taxonomy); a walk that watches a quest tick.",
+  "timestamps": {
+    "opened": "2026-09-05T12:00:00Z",
+    "updated": "2026-09-05T21:40:00Z",
+    "closed": "2026-09-05T21:40:00Z"
+  },
+  "invariants": [
+    "I1 A quest is proved by something the server already records. There is no quest state of its own, no /api/quests, and no client that can assert progress: the evaluator reads the same RawMetrics the achievements read, inside the stats poll that was already happening.",
+    "I2 Completion is a HIGH-WATER MARK. `completedAt` is written once, never rewritten, and never removed by the evaluator; retention trimming the events a quest was proved by does not un-complete it. The stored map keeps ids this build no longer defines, so renaming or retiring a quest never deletes an operator's history behind their back.",
+    "I3 The first evaluation of an install seeds and toasts nothing. An operator whose history already satisfies twenty quests is not greeted with twenty toasts for work they did in June.",
+    "I4 A quest this host cannot run STAYS IN BOTH the list and the denominator, loses its Go, and gains one sentence saying what is missing. A denominator that shrank when the gateway went down would be a lie about how much of the programme is left.",
+    "I5 Every capability is TRUE while unknown. A status endpoint that has not answered, or has failed, never marks a quest unavailable: 'unavailable' is a claim, and it is only made once something actually said so.",
+    "I6 The two read events are emitted SERVER-side, from the GET the screen already calls, after the lookup that could 404. There is deliberately no POST on /api/analytics, because a client that could write this ledger could forge the progress that reads it.",
+    "I7 The latch write is skipped under PS_READ_ONLY with the pragma, like every other write on a read path B1 made deliberate, and it writes only when something moved or the install is seeding.",
+    "I8 Every quest's screen is a registry route, every `earns` is a real achievement id, every `teaches` is a declared concept id, and every proof event is in ANALYTICS_EVENT_TYPES. All four are held by a test rather than by care.",
+    "I9 The chain achievements measure the quest PROOFS, not the latch: evaluateAchievements runs before evaluateQuests, so a chain achievement that read the latch would read a value that does not exist yet.",
+    "I10 Curriculum is Rec Room scope. It spans chapter 6, so an agent-scoped Curriculum would let a story written for fun move the Body's record (ADR-0004 decision 5).",
+    "I11 There is no operator XP and no operator level. Progress is chapters and steps; achievements stay the prestige currency.",
+    "I12 A skip is the operator's, and it is visible the moment they make it. The preference is what the server reads to decide `skipped`, so once it has loaded it is what the rows render — in both directions."
+  ],
+  "commits": "e96553b9, 82666549, 449293e2 the oracle alone, measured red; 757be656 the implementation (evaluator, latch, defs, page, components, the two emitters, the FirstRunPanel deletion); and the sweep-and-walk commit that follows this record: the skip-feedback fix the walk found, its oracle measured red, and the five oracles the mutation sweep asked for.",
+  "verification": "Gate on the implementation tree by exit code: lint 0, tsc 0, jest 0, knip 0 (after @public on CONCEPT_IDS), canary 0, build 0, Playwright 133 passed. The e2e suite needed no product change: different specs failed on different runs purely from CPU contention, and the cause was leftover next start processes and seventeen stray Chrome processes from earlier walks, not a regression. That was measured rather than assumed before anything was changed — twelve concurrent /api/stats returned in 244ms and pages in ~15ms — and after killing the strays the suite was green.",
+  "mutation": "Two rounds. Round one: 31 mutants against the committed tree, 21 killed. Three survivors were INEFFECTIVE MUTANTS rather than gaps -- the sweep replaces the FIRST occurrence of a string, and 'skipped' first occurs in a type declaration, 'available' inside the word 'unavailable' in a comment, and `scope: \"recroom\"` on Storyteller rather than on Curriculum. None of the three changed behaviour, so nothing could have killed them. Three more never applied (moved anchors). The four real gaps were one shape: the batch tested the evaluator and the page hard and left the small pieces around them -- two catalogue helpers and three components that render almost nothing -- to be obviously correct. The worst of it was the integrity oracle's own chapter assertion, `expect(measure(m)).toBe(questsMetInChapter(m, 1))`, which compares the implementation to the implementation and is green for EVERY possible implementation; both chapter mutants walked through it. Round two re-aimed the three ineffective mutants at the lines they were always meant to hit, added five more against the newly covered pieces, and included the walk's own find: 13 mutants, 13 killed. tests/unit/b17-the-parts-the-sweep-found.test.tsx carries the new cases and asserts against expectations written independently of the helpers they judge.",
+  "proof": "Isolated instance (production build on 3939, mock-hermes 8747, mock-hindsight 9277), seven scenes, 24 checks, all PASS. The page renders all thirty-two quests across seven chapters with a ring that counts them; chapter 1 opens itself and the rest are shut. On this host — native Windows, no crontab — /api/scripts reports scheduler unavailable and quest 4.3 says UNAVAILABLE ON THIS HOST with the WSL2 sentence and no Go, while staying in the count of 32. The rail badge carries the same denominator in its collapsed dot's title. The dashboard offers a next quest that is genuinely outstanding, and the first-run checklist is gone rather than doubled. A mission dispatched and cancelled through the product's own routes ticks quest 2.5 off the same poll and stamps it; opening an artifact ticks 4.5 (artifact.opened) and opening the Logs page ticks 4.6 (logs.opened) — both new in this batch; a 404 artifact moves the ledger by nothing. The completions are latched in operator_prefs, read back over HTTP, 25 stamps. A skip shows immediately, survives a reload, and unskips. No console errors. Screenshots: scratchpad walk-b17/{quests-page,dashboard-next-quest,quests-after-the-tick}.png.",
+  "deviation": "(1) The plan's spec reads 'dispatch a mission and see quest 1.4 tick'. On this data dir 1.4 was ALREADY complete: B10's walk dispatched a mission through the same routes in its own batch and the latch has held it since, which is the feature working. Un-completing it to re-prove it would have been staging the evidence, so the same mechanism is proved on three quests that were genuinely outstanding here — and two of them are this batch's own new read events, which no earlier walk could have exercised. (2) The walk is now stateful about its own work: it says which of the two proofs it is making on each run, so a green re-run is never mistaken for a fresh transition. (3) docs/quests.md moved to docs/reference/quests.md, because B15's rule is five files at the top of docs/ and a sixth would have broken it; B17's own oracle path was amended with the reason. (4) The generated block's marker is `quests`, not `quest-defs`: one name is better than a page and a generator disagreeing, and B15's block-id list moved with it.",
+  "harness_amendments": "The e2e specs seed-catalog.spec.ts and missions-flows.spec.ts wait for the page's own h1 before asserting on it, the same amendment B16 made to its own spec and for the same reason: every screen is a client component, so its heading does not exist until hydration, and the five-second default is a race rather than a limit. The comment says that, and not the diagnosis that turned out to be about leftover processes. b2-drawer-is-a-dialog.test.tsx gains a QueryClient because QuestBadge joined the Sidebar; the DashboardStats fixtures gain the new quests field; achievements-showcase and stats-derive learn the four chain achievements.",
+  "found_by_the_walk": "One defect, fixed in this batch. The /quests page computed a local skip set but handed the rows `progress.quests`, whose `skipped` flag is the SERVER's and only moves on the twenty-second stats poll — so clicking Skip looked ignored for up to twenty seconds. The union that made the write safe could not express an unskip either, because the stale server view kept re-adding the id it had not been told about. The write keeps its union; the render now follows the preference once it has loaded, because that array is precisely what the server reads next. Two cases pin both directions with the stats answer frozen, measured red before the fix.",
+  "deferred": "Chapter 4's script-scheduling quest completes through B13's fallback scheduler on a host that has one; on native Windows it correctly reads as unavailable, which is what the plan asked for. The `guide.hidden` preference is written by the dashboard card's 'Hide this guide' and there is no un-hide control yet — the pref is allow-listed and readable, so restoring it is a one-control change, and it belongs with whoever next owns the dashboard rather than being wedged in here. src/lib/dashboard/first-run-steps.ts is now a slightly false filename: it holds a docs URL, the facts type and settleFirstRunFacts rather than any steps. Renaming it is a pure move and was left out of a batch that already deletes a panel and its test."
+}

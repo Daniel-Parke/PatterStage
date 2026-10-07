@@ -1,0 +1,8 @@
+-- 025_research_composer_link.sql — link a research run to a Composer node-run (v25)
+--
+-- When a Composer "research" node runs, it drives a research_runs row instead of
+-- a Hermes agent run. composer_node_run_id links that research run back to the
+-- node-run so the engine can settle the stage when the research completes (and
+-- so the standalone Deep Research list can tell workflow-spawned runs apart).
+-- The column is added via the guarded ALTER in
+-- apply-research-composer-link-migration.ts (this file is a no-op marker).

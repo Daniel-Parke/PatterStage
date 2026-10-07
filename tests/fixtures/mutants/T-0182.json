@@ -1,0 +1,29 @@
+{
+  "task": "T-0182",
+  "mutants": [
+    {
+      "id": "m1-reuse-document-nonce",
+      "file": "src/proxy.ts",
+      "anchor": "randomBytes(16).toString(\"base64\")",
+      "replacement": "Buffer.alloc(16).toString(\"base64\")",
+      "tests": ["tests/unit/t0182-csp-policy.test.ts"],
+      "why": "Two document requests must not reuse a predictable or static nonce."
+    },
+    {
+      "id": "m2-admit-script-attributes",
+      "file": "src/proxy.ts",
+      "anchor": "\"script-src-attr 'none'\"",
+      "replacement": "\"script-src-attr 'unsafe-inline'\"",
+      "tests": ["tests/unit/t0182-csp-policy.test.ts"],
+      "why": "Event-handler attributes must remain blocked even when styles are allowed inline."
+    },
+    {
+      "id": "m3-drop-dynamic-script-boundary",
+      "file": "src/proxy.ts",
+      "anchor": "'strict-dynamic'${development",
+      "replacement": "'unsafe-inline'${development",
+      "tests": ["tests/unit/t0182-csp-policy.test.ts"],
+      "why": "The script directive must keep strict-dynamic and reject inline execution."
+    }
+  ]
+}

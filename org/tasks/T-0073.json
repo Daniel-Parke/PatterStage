@@ -1,0 +1,22 @@
+{
+  "id": "T-0073",
+  "intent": "Record F9 of the 2026-08-30 QA pass -- an 'orphaned tunnel' with no offline banner -- as NOT an application defect, with what was actually found in its place.",
+  "declared": {
+    "capabilities": [],
+    "side_effects": []
+  },
+  "mode": "standard",
+  "tier_proposed": "R0",
+  "tier_ruled": "R0",
+  "reasons": [],
+  "status": "done",
+  "owner_session": "t0073-f9-record-2026-08-31",
+  "claims": [],
+  "finding": "REFUTED as a defect. The reporter proposed adding an offline banner for a gateway that has gone away. That banner already exists and is wired in twelve files -- LoadErrorBanner plus the gateway-health surfaces -- so the recommendation was to build something the product has. What they actually hit is an environment condition: a tunnel left running after the process behind it stopped, which is outside the application's control and not something PatterStage can detect as distinct from a slow backend.",
+  "why_it_is_recorded_rather_than_dropped": "A refuted finding that leaves no record is a finding that gets re-filed. This one is especially likely to recur, because the symptom (requests hanging rather than failing) genuinely does look like a missing banner from the outside. The record exists so the next reader reaches the twelve files rather than the patch.",
+  "timestamps": {
+    "opened": "2026-08-31T20:30:00Z",
+    "updated": "2026-08-31T20:30:00Z",
+    "closed": "2026-08-31T20:30:00Z"
+  }
+}

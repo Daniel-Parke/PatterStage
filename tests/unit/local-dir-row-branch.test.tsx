@@ -1,6 +1,7 @@
 /** @jest-environment jsdom */
 
-import { act, render, waitFor } from "@testing-library/react";
+import { act, waitFor } from "@testing-library/react";
+import { renderWithQuery } from "../helpers/render-with-query";
 import LocalDirRow from "@/components/missions/LocalDirRow";
 
 jest.mock("@/components/missions/DirectoryPickerModal", () => ({
@@ -15,9 +16,20 @@ describe("LocalDirRow branch UI", () => {
     jest.useFakeTimers();
     global.fetch = jest.fn().mockResolvedValue({
       ok: true,
+      // The on-the-wire envelope is `{ data: { isGitRepo, branches, current } }`.
+      // The `safeApiCall<T>` helper does NOT unwrap (see api-fetch.ts:85-98)
+      // — it returns `{ ok, data: <body> }` where `data` is the whole
+      // envelope. The post-fix production code in LocalDirRow types the
+      // call as `safeApiCall<{ data?: { isGitRepo, branches, current } }>`
+      // and reads fields via `j.data?.data?.isGitRepo` (two indirections).
+      // The mock body therefore matches the on-the-wire envelope shape.
       json: () =>
         Promise.resolve({
-          data: { isGitRepo: true, branches: ["main", "dev"], current: "dev" },
+          data: {
+            isGitRepo: true,
+            branches: ["main", "dev"],
+            current: "dev",
+          },
         }),
     } as Response);
   });
@@ -29,7 +41,7 @@ describe("LocalDirRow branch UI", () => {
 
   it("hides branch select until repo is git; defaults select to API current", async () => {
     const onChange = jest.fn();
-    const { container, rerender } = render(
+    const { container, rerender } = renderWithQuery(
       <LocalDirRow mode="draft" entry={{ path: "", branch: null }} onChange={onChange} />,
     );
 

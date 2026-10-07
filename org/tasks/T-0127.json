@@ -1,0 +1,69 @@
+{
+  "id": "T-0127",
+  "intent": "U13 of the UI overhaul programme: Home. The Dashboard, dense, because it is the daily first stop; Quests and Help, spacious, because they are read. The dashboard said three of its facts twice; Quests drew three concentric borders around one list; Help's front page called itself Documentation while its rail entry said Help. And the one primitive S4 named that nobody had built, LinkButton, lands here because these three screens are where most of the hand-rolled button-links were.",
+  "declared": {
+    "capabilities": [
+      "edit-source",
+      "edit-tests",
+      "edit-docs"
+    ],
+    "side_effects": []
+  },
+  "mode": "standard",
+  "tier_proposed": "R1",
+  "tier_ruled": "R1",
+  "reasons": [
+    {
+      "factor": "size-threshold",
+      "tier_floor": "R1",
+      "source": "derived:diff-size",
+      "evidence": "one new primitive, one page rewritten in part and one restructured, seven components rewritten or patched, one hook field, one docs title; no route added or removed, no schema, no protected path; four oracle suites and the dashboard suite amended at the lines that change"
+    }
+  ],
+  "status": "done",
+  "owner_session": "t0127-u13-home-2026-09-07",
+  "claims": [
+    "src/app/page.tsx",
+    "src/app/quests/",
+    "src/app/help/",
+    "src/components/dashboard/",
+    "src/components/quests/",
+    "src/components/help/HelpHeader.tsx",
+    "src/components/help/HelpLink.tsx",
+    "src/components/layout/PageHeader.tsx",
+    "src/components/ui/LinkButton.tsx",
+    "src/components/ui/Badge.tsx",
+    "src/hooks/useDashboard.ts",
+    "docs/README.md",
+    "docs/guides/dashboard.md",
+    "docs/guides/quests.md",
+    "docs/guides/help.md",
+    "tests/unit/"
+  ],
+  "programme": "U13, depends on U8. Converts the Home group onto the primitive set.",
+  "timestamps": {
+    "opened": "2026-09-07T23:45:00Z",
+    "updated": "2026-09-08T02:30:00Z",
+    "closed": "2026-09-08T02:30:00Z"
+  },
+  "invariants": [
+    "I1 A FACT IS SAID ONCE, WHERE IT IS BEST SAID. Gateway and Memory are Subsystems rows because the row carries the reason; Errors is a panel because the panel carries the list; the pill row is what neither carries.",
+    "I2 THE PLACE THAT SAYS A FACT OWES THE READ CONTRACT FOR IT. The Subsystems panel became the only place two facts are said, so a failed check is an error with Retry there, not 'Checking...' for ever.",
+    "I3 ONE CARD LEVEL. A chapter is a surface; what is inside a surface is rows and chips, never another surface. A quest this host cannot run is a line, not a box.",
+    "I4 A COLUMN, NOT A GAP. The status word has a fixed column, so the title after it starts at the same x on every row; a title's x must not depend on the length of the word before it.",
+    "I5 A LINK THAT LOOKS LIKE A BUTTON IS A LinkButton. It is Button's chrome at Button's heights, and it stays a link, because a navigation is one.",
+    "I6 THE REGISTRY'S WORD IS ON EVERY SCREEN. Help's front page is Help; a guide page keeps its own name as its heading (B16) and carries HELP as its way back.",
+    "I7 A TARGET IS 24x24. PageHeader's help link and back link are on every page, and they were the two smallest controls in the product."
+  ],
+  "commits": "f7477e3c the U13 oracles, red at 30 of 73; dd663378 the implementation: three pills, the count in the Errors header, the Subsystems Retry, Quests as rows, Help named, LinkButton and its seven callers, and PageHeader's two targets; 6032f54f the unavailable-quest oracle sharpened after the sweep, so a leaked Go can be seen.",
+  "verification": "Gate by exit code on the finished tree: lint 0, tsc 0, jest 0 (6778 tests, 654 suites), knip 0, canary 0, build 0, Playwright 0 (176 passed, 24 skipped), census 0. design-lint 376 -> 362 baselined violations. Walked on the isolated instance at 1440x900 and 390x844: the dashboard's h1 and first block share x (248/248 at 1440, 16/16 at 390), as do Quests' (248/248) and Help's (248/248); nothing on the three screens runs past a 390px viewport (the reconnaissance measured 31 elements doing so on the dashboard; U3's shell had answered it before this batch and the walk confirms zero); every quest title on the page starts at one x (381 at 1440, 149 at 390); PageHeader's help link measures 24x24 where it measured 16x16 on every screen. Screenshots regenerated.",
+  "three_of_six_were_said_twice": "The reconnaissance measured it and the plan named it: Gateway, Memory and Errors each appeared twice on the dashboard. The pill said 'Not running' and the Subsystems row sixty pixels above said 'Not running - http://127.0.0.1:8642 answered the health probe with ok=false', which is the sentence an operator actually needs. Three of the six pills also clipped their own subtext in 133px boxes on a row with 200px spare. The row is three pills now, each a third of the width, and the dashboard says each of its facts once. What the Errors pill carried, the count, is in the Errors panel's header beside the list it counts; what the Gateway pill carried that the row did not - a link to System - is the rail's own entry, one click away, so nothing that was reachable stopped being.",
+  "the_panel_that_became_the_only_place": "Deleting the Gateway and Memory pills made the Subsystems panel the one place two facts are said, and it did not have the read contract: when the check itself failed it read 'Checking...' for ever, because the page never handed it the error. It takes the error and a retry now, the hook exposes the refetch the Retry presses, and the b5 hook harness proves the refetch re-reads. This is the rule T-0096 wrote applied one panel further: the surface that owns a fact owes the failure state for it, and taking a fact away from one surface hands the other the debt.",
+  "three_concentric_borders": "A chapter was a card; every quest inside it was a card; the achievement a quest earns was a tile with its own border inside that. The quest's title also started 23px further right or left down the list depending on whether the word before it was 'To do' or 'Complete'. The chapter is the one surface. Its quests are rows divided by hairlines, the status word sits in a fixed 6rem column so every title starts at one x (the walk reads one value for the whole page at both widths), Go and Skip share a row at one height, and the achievement is a Badge with its icon rather than a bordered tile. The quest this host cannot run keeps its sentence and loses its box: a line headed 'Unavailable on this host', in the blocked tone, and the reason under it.",
+  "help_names_itself_without_unseating_b16": "The plan's line was 'the h1 names itself Help', from a reconnaissance that saw the front page titled Documentation. B16 had already ruled that a guide page's heading is the guide's own name, and the b16 suite pins it. Both hold: the front page IS Help, so its title is Help, and every other Help page carries HELP as its back link - the same slot every other section's sub-page uses for its parent. The corpus's front page is docs/README.md, so the title changed there; the manifest is derived and re-rendered.",
+  "the_primitive_s4_named": "LinkButton is Next's Link on button-chrome.ts. Five hand-rolled button-links go onto it across the three screens - the quest row's Go, the Start here card's Go and All quests, the Progress line's Quests and Achievements, the dispatch strip's full control, the dashboard's Session browser - and the only thing they had in common before was that none was one of Button's three heights. The oracle asks for at least three callers outside ui/, which is the rule for a primitive's place.",
+  "what_the_walk_found": "PageHeader's help '?' was a 16x16 link and its back link a 16px-tall one, on every screen in the product; T-0126 recorded both as U14's and this batch met them because U13 puts a back link on every Help page and made the miss more visible. Both are 24px targets. The Subsystems rows squeezed their reason into a third of a phone's width and the chapter summaries did the same with their blurb; both wrap under their label below sm. And the dashboard's 31 elements past the 390px viewport, the reconnaissance's headline phone defect, were already gone: U3's shell answered it, and the walk reads zero on all three screens.",
+  "mutation": "18 mutants against the committed tree, 17 killed in one round and one survivor that was the oracle's fault, not the code's: a blocked quest still offering Go passed the unavailable-host suite because that suite rendered the row without a Skip handler, so the actions row - and any Go leaking into it - was never drawn. The page always passes one; the test does now (6032f54f), and the mutant dies. The ones that matter most: the Errors header count zeroed, the Subsystems failure swallowed, the hook's refetch made a no-op, the achievement-earning Go and the Start here Go re-pointed at Quests, and every LinkButton forced to one height.",
+  "deviation": "(1) PageHeader's two targets were T-0126's deferred item for U14 and are done here, because this batch puts one of them on every Help page. (2) The Achievements link on the Progress line lost its yellow trophy: on LinkButton the icon takes the control's colour, and one yellow glyph in a row of ghost controls was the kind of colour-as-decoration S5 removes. (3) The census: the shrink-wrapped EmptyState paragraph U12 widened is the same shape the Quests header and the Start here card avoid by being blocks; nothing here needed an allowance.",
+  "deferred": "The Errors panel still truncates long messages to one line behind a title; a Disclosure primitive (also owed by the CharacterCard row) would let a row open; the Platforms panel's inline .env link at 17px is inside a sentence and exempt; the page subtitle truncates at 390 on every screen (PageHeader's, for U14); the Composer/Research/Logs/Chat split-pane, the Artifacts preview pane, the ps-viz-axis strokes and /results/insights CLS, all carried from earlier records."
+}

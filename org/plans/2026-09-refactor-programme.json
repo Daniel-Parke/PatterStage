@@ -1,0 +1,1701 @@
+{
+  "sourceRevision": "1d6b23d1745eac47918ac7ff70fc2a950b783304",
+  "approval": "operator-approved-2026-09-28",
+  "releaseGate": "Q-032 supersedes Q-011 release-first sequencing for approved T-0188 through T-0199 consolidation before release. Q-011 item-specific compatibility promises remain: T-0200 retirement is first post-1.0 only. The operator owns rc.1/v1.0.0 release, real-install acceptance, PR #157 merge, tags and publication.",
+  "decisionAuthority": [
+    "Q-009",
+    "Q-010",
+    "Q-011",
+    "Q-012",
+    "Q-013",
+    "Q-014",
+    "Q-015",
+    "Q-016",
+    "Q-017",
+    "Q-019",
+    "Q-020",
+    "Q-021",
+    "Q-022",
+    "Q-023",
+    "Q-024",
+    "Q-025",
+    "Q-026",
+    "Q-027",
+    "Q-028",
+    "Q-029",
+    "Q-030",
+    "ADR-0011",
+    "ADR-0012",
+    "ADR-0013",
+    "ADR-0014",
+    "Q-032",
+    "Q-033",
+    "Q-034",
+    "Q-035",
+    "Q-036"
+  ],
+  "evidence": [
+    "org/reviews/2026-09-t0164-refactor-recon.md",
+    "org/reviews/2026-09-t0164-findings.jsonl",
+    "org/reviews/2026-09-t0164-coverage.jsonl",
+    "org/reviews/2026-09-t0164-defects.md"
+  ],
+  "batches": [
+    {
+      "id": "T-0180",
+      "name": "Make full-history secret scanning effective",
+      "phase": "prerelease-security",
+      "tierProposed": "R2",
+      "claims": [
+        ".gitleaks.toml",
+        ".github/workflows/gitleaks.yml",
+        "tests/security/secret-scan-*",
+        "org/reviews/2026-09-gitleaks-*"
+      ],
+      "dependsOn": [],
+      "authority": [
+        "Q-012",
+        "Q-024",
+        "S1",
+        "tooling-29",
+        "T-0164 strict-default control"
+      ],
+      "invariants": [
+        "Default scanner rules remain active with narrow named fixture allowances.",
+        "No candidate or expired historical alert is silently declared clear."
+      ],
+      "rollback": "Restore the prior scan configuration only with a replacement strict scan that still catches the planted secret; retain redacted history evidence.",
+      "verify": "A disposable-history planted secret makes the configured Gitleaks job exit nonzero; strict redacted scans record scanner version, ref coverage and every historical candidate, and hosted push plus PR scan jobs pass after remediation."
+    },
+    {
+      "id": "T-0181",
+      "name": "Close filesystem and URL containment proofs",
+      "phase": "prerelease-security",
+      "tierProposed": "R2",
+      "claims": [
+        "src/lib/fs/log-files.ts",
+        "src/lib/search/url-guard.ts",
+        "src/app/api/logs/route.ts",
+        "tests/unit/log-files-*.test.ts",
+        "tests/fixtures/mutants/T-0181.json"
+      ],
+      "dependsOn": [
+        "T-0180"
+      ],
+      "authority": [
+        "S2",
+        "critic-14",
+        "Q-012"
+      ],
+      "invariants": [
+        "GET cannot read and DELETE cannot truncate a sentinel beyond the authorised log root.",
+        "Windows development and Linux production retain normal in-root log access."
+      ],
+      "rollback": "Revert only if a replacement realpath or descriptor-based containment guard passes the same isolated sentinel oracle.",
+      "verify": "On Linux an isolated in-root x.log symlink to an outside sentinel is refused by both GET and DELETE without changing sentinel hash; regular logs still work, mapped private URL addresses are refused in a bounded listener probe, and the Windows-focused guard suite passes."
+    },
+    {
+      "id": "T-0182",
+      "name": "Design and validate a deployable CSP",
+      "phase": "prerelease-security",
+      "tierProposed": "R3",
+      "claims": [
+        "src/proxy.ts",
+        "src/app/layout.tsx",
+        "next.config.ts",
+        "tests/e2e/csp-*.spec.ts",
+        "docs/running/security.md"
+      ],
+      "dependsOn": [
+        "T-0181"
+      ],
+      "authority": [
+        "C1",
+        "critic-04",
+        "T-0164 built-app CSP probe",
+        "Q-012"
+      ],
+      "invariants": [
+        "Frame denial and session origin checks stay intact.",
+        "A nonce or equivalent policy must allow framework hydration without unsafe-inline as a blanket exception."
+      ],
+      "rollback": "Restore the prior headers only if the accepted security design is replaced and the measured CSP gap is explicitly reopened.",
+      "verify": "A built app at desktop and phone widths completes sign-in, Missions dialog, Composer and Help with the candidate enforced policy and zero CSP violations; a planted untrusted inline script is blocked. Record bundle and caching effects and independent R3 approval."
+    },
+    {
+      "id": "T-0183",
+      "name": "Make mission dispatch and cancellation single-owner",
+      "phase": "prerelease-defects",
+      "tierProposed": "R2",
+      "claims": [
+        "src/lib/missions/mission-queue-tick.ts",
+        "src/lib/orchestration/dispatch.ts",
+        "src/lib/missions/mission-handlers/cancel.ts",
+        "tests/unit/mission-dispatch-race*.test.ts"
+      ],
+      "dependsOn": [
+        "T-0182"
+      ],
+      "authority": [
+        "M1",
+        "M2",
+        "Q-027"
+      ],
+      "invariants": [
+        "Overlapping ticks submit at most one paid run for one due mission.",
+        "Cancellation remains final after late acknowledgements; elapsed run deadlines and grace semantics stay unchanged."
+      ],
+      "rollback": "Restore the former scheduling path only with a compatible single-owner reservation that passes the concurrent oracle.",
+      "verify": "A delayed-gateway concurrent tick test submits exactly once, and a late acknowledgement cannot undo cancellation; elapsed deadline and grace fixtures retain their results."
+    },
+    {
+      "id": "T-0184",
+      "name": "Make mission edits and category moves atomic",
+      "phase": "prerelease-defects",
+      "tierProposed": "R2",
+      "claims": [
+        "src/lib/missions/mission-promote-handler.ts",
+        "src/lib/missions/mission-category-repository.ts",
+        "tests/unit/mission-category-atomic*.test.ts",
+        "src/lib/missions/mission-repository.ts"
+      ],
+      "dependsOn": [
+        "T-0183"
+      ],
+      "authority": [
+        "M4",
+        "M5",
+        "Q-014",
+        "M3"
+      ],
+      "invariants": [
+        "A rejected nonblank cron leaves all prior mission columns intact.",
+        "Catalog, legacy/category IDs and disk templates cannot be left silently orphaned by a failed move."
+      ],
+      "rollback": "Restore prior writes only with a replacement transaction and file-failure compensation proven by the same fixtures.",
+      "verify": "Queued-to-cron transition cannot retain or omit the wrong queue flag; invalid nonblank cron, conflicting legacy IDs, catalog rows and an injected template file-write failure each preserve a coherent pre-operation state and report failure."
+    },
+    {
+      "id": "T-0185",
+      "name": "Validate mission prompt, model and old links",
+      "phase": "prerelease-defects",
+      "tierProposed": "R1",
+      "claims": [
+        "src/lib/missions/build-mission-prompt.ts",
+        "src/lib/missions/mission-body.ts",
+        "src/hooks/useMissionsApi.ts",
+        "src/lib/missions/mission-deep-link.ts",
+        "tests/e2e/mission-old-link*.spec.ts"
+      ],
+      "dependsOn": [
+        "T-0184"
+      ],
+      "authority": [
+        "M6",
+        "M7",
+        "M8",
+        "Q-010 public URL preservation"
+      ],
+      "invariants": [
+        "Accepted prompt syntax round-trips without task capture from context.",
+        "Malformed model input returns 4xx without a write; missions beyond the first 200 keep their deep links."
+      ],
+      "rollback": "Revert the bounded parser, validation and by-ID lookup together only if old URLs and 4xx refusals still pass.",
+      "verify": "Literal CDATA context and ordinary nested task examples round-trip through dispatch; modelId 42 receives 4xx with no write; the oldest of 201 seeded missions opens by URL at 1440 and 390 widths."
+    },
+    {
+      "id": "T-0186",
+      "name": "Remove unsafe Hindsight rederive and repair Story Weaver save feedback",
+      "phase": "prerelease-defects",
+      "tierProposed": "R2",
+      "claims": [
+        "scripts/maintenance/hindsight-rederive.sh",
+        "src/app/recroom/story-weaver/[id]/page.tsx",
+        "tests/unit/hindsight-rederive-safety.test.ts",
+        "tests/e2e/story-weaver-save-failure.spec.ts"
+      ],
+      "dependsOn": [
+        "T-0185"
+      ],
+      "authority": [
+        "H1",
+        "A1",
+        "Q-013",
+        "Q-011"
+      ],
+      "invariants": [
+        "A count-only or omitted target cannot delete a live Hindsight bank.",
+        "A failed chapter read-status POST leaves local state unsaved and shows feedback; successful saves remain unchanged."
+      ],
+      "rollback": "Restore only a harmless count-only rederive command if still needed; never reintroduce a live-destructive default or success UI after a failed save.",
+      "verify": "An isolated dry-run Hindsight fixture proves the ruled script cannot delete a live bank by default; failed HTTP and network saves leave Story Weaver status unchanged with visible error, and successful save remains functional at desktop and phone widths."
+    },
+    {
+      "id": "T-0187",
+      "name": "Warn on legacy boot names and retire individually ruled dev-only shims",
+      "phase": "prerelease-release-contract",
+      "tierProposed": "R2",
+      "claims": [
+        "src/instrumentation.ts",
+        "src/lib/config/**",
+        "scripts/bootstrap/**",
+        "tests/unit/legacy-boot-warning.test.ts",
+        "scripts/hardware/ch-db-backup.sh",
+        "scripts/hardware/ch-disk-report.sh",
+        "scripts/hardware/ch-health-check.sh",
+        "scripts/hardware/ch-log-rotate.sh",
+        "scripts/hardware/ch-system-report.sh",
+        "scripts/tooling/eos-compile.mjs",
+        "tests/unit/b15-corpus-moves-under-org.test.ts",
+        "tests/unit/b15-docs-pipeline-is-wired.test.ts",
+        "org/COMPILE_REPORT.md",
+        "org/VENTURE_BRIEF.md",
+        "org/EOS_FEEDBACK.md",
+        "docs/running/host-scheduling.md",
+        "docs/running/cross-platform.md"
+      ],
+      "dependsOn": [
+        "T-0186"
+      ],
+      "authority": [
+        "Q-011",
+        "cross-cutting-04",
+        "tooling-11",
+        "tooling-10b",
+        "org-11"
+      ],
+      "invariants": [
+        "Legacy names and 52 redirects continue to work through v1.0.0.",
+        "A used legacy name emits one non-secret boot warning; no credential value appears in logs.",
+        "Only the five specifically ruled dev-only hardware shims and the refused EOS compiler are retired before v1.0.0; installed data-dir copies and ch-backup remain.",
+        "The accepted org-11 removal changes two b15 test identities explicitly; record that item-specific exception, retirement note and append-only EOS feedback entry."
+      ],
+      "rollback": "Restore compatible alias reads with the warning; restore a retired file only if its ruled caller inventory is refuted. Never remove other aliases before v1.0.0.",
+      "verify": "A real boot with each supported legacy family emits the bounded warning and still starts; a PS-only boot emits none; secret values never appear. The five ruled dev-only shims and refused EOS compiler are absent, installed shims still work, EOS retirement note and feedback exist, the two b15 removals are itemised, and x-ch and redirect acceptance pass before the v1.0.0 tag."
+    },
+    {
+      "id": "T-0188",
+      "name": "Converge migration and table drivers",
+      "phase": "prerelease-structural",
+      "tierProposed": "R2",
+      "claims": [
+        "src/lib/db/index.ts",
+        "src/lib/db/sql-migrations.ts",
+        "src/lib/db/apply-sql.ts",
+        "src/lib/db/apply-benchmark-config-migration.ts",
+        "src/lib/db/apply-bench-gateways-migration.ts",
+        "src/lib/db/apply-mission-phases-migration.ts",
+        "src/lib/db/apply-retire-mission-phases-migration.ts",
+        "src/lib/db/apply-composer-migration.ts",
+        "src/lib/db/apply-memory-providers-migration.ts",
+        "src/lib/db/apply-research-options-migration.ts",
+        "src/lib/db/apply-models-api-style-migration.ts",
+        "src/lib/db/apply-research-composer-link-migration.ts",
+        "src/lib/db/apply-composer-group-link-migration.ts",
+        "src/lib/db/apply-frameworks-migration.ts",
+        "src/lib/db/apply-composer-rejected-migration.ts",
+        "src/lib/db/apply-composer-node-cancelled-migration.ts",
+        "src/lib/db/apply-table-rebuild.ts",
+        "tests/unit/migration-t0188-wrappers.test.ts",
+        "tests/unit/migration-t0188-behaviour.test.ts",
+        "tests/unit/migration-t0188-update-backup-order.test.ts",
+        "tests/unit/t0165-plan-contract.test.ts",
+        "tests/unit/run-migrations-upgrade.integration.test.ts",
+        "tests/unit/u15-one-driver-for-sql-migrations.test.ts",
+        "tests/fixtures/mutants/T-0188.json",
+        "org/reviews/2026-10-t0188-oracle-amendment.md",
+        "org/reviews/2026-10-t0188-migration-verification.md",
+        "org/briefs/T-0188-oracle.md",
+        "org/briefs/T-0188-review.md",
+        "org/tasks/T-0188.json",
+        "org/claims.json",
+        "org/plans/2026-09-refactor-programme.json",
+        "org/plans/2026-09-refactor-programme.md",
+        "org/plans/2026-09-refactor-ownership.mjs",
+        "org/plans/2026-09-refactor-ownership.json",
+        "org/HANDOVER.md",
+        "org/TASKS.md",
+        "org/STATE.md",
+        "scripts/tooling/line-census.baseline.json",
+        "docs/running/migration.md",
+        "scripts/tooling/migrate-db.ts",
+        "docs/manifest.json"
+      ],
+      "dependsOn": [
+        "T-0187",
+        "release-verification-repairs-complete"
+      ],
+      "authority": [
+        "Q-011",
+        "Q-014",
+        "lib-data-01",
+        "lib-data-02",
+        "D1",
+        "Q-032"
+      ],
+      "invariants": [
+        "Fresh and old supported databases converge in one pass or fail loudly.",
+        "Backup precedes migration and user data remains intact."
+      ],
+      "rollback": "Keep a database backup and revert only the driver consolidation; never roll a migrated schema backward in place.",
+      "verify": "Fresh, prior-version and deliberately damaged v15 fixtures yield the specified schema or explicit failure without version advancement; install/update acceptance proves backup-before-migrate on Linux and Windows."
+    },
+    {
+      "id": "T-0189",
+      "name": "Centralise data parsing and transactions",
+      "phase": "prerelease-structural",
+      "tierProposed": "R2",
+      "claims": [
+        "src/lib/runs/parse-stored-usage.ts",
+        "src/lib/runs/runs-repository.ts",
+        "src/lib/stats/stats-repository.ts",
+        "src/lib/stats/agent-stats.ts",
+        "src/lib/analytics/run-aggregates.ts",
+        "src/lib/spend/spend-window.ts",
+        "src/modules/rec-room/lib/story-repository.ts",
+        "src/lib/sync/sync-repository.ts",
+        "src/lib/sync/sources/ProcessSync.ts",
+        "src/lib/sync/sources/LogSync.ts",
+        "tests/unit/data-transaction-usage.test.ts",
+        "tests/unit/data-transaction-stories.test.ts",
+        "tests/unit/data-transaction-sync.test.ts",
+        "org/tasks/T-0189.json",
+        "org/claims.json",
+        "org/briefs/T-0189-oracle.md",
+        "org/briefs/T-0189-review.md",
+        "org/reviews/2026-10-t0189-data-verification.md",
+        "org/reviews/2026-10-t0189-dispositions.json",
+        "org/plans/2026-09-refactor-programme.json",
+        "org/HANDOVER.md",
+        "org/TASKS.md",
+        "org/STATE.md",
+        "docs/manifest.json",
+        "scripts/tooling/line-census.baseline.json",
+        "tests/fixtures/mutants/T-0189.json",
+        "src/lib/sync/sources/SessionSync.ts",
+        "src/lib/sync/sources/EnvSync.ts",
+        "src/lib/sync/env-token-presence.ts",
+        "src/lib/models/models-repository.ts",
+        "src/lib/sync/SyncScheduler.ts",
+        "tests/unit/data-transaction-models.test.ts",
+        "tests/unit/data-transaction-scheduler.test.ts",
+        "tests/unit/data-transaction-migration-parity.test.ts",
+        "tests/unit/data-transaction-schema-health.test.ts",
+        "tests/unit/data-transaction-repository-contracts.test.ts",
+        "src/lib/db/apply-mission-repeat-migration.ts",
+        "scripts/tooling/migrate-db.ts",
+        "docs/running/migration.md",
+        "src/lib/sessions/session-repository.ts",
+        "src/lib/sessions/session-sync.ts",
+        "src/lib/db/safe-read.ts",
+        "src/lib/analytics/analytics-repository.ts",
+        "src/lib/spend/spend-summary.ts",
+        "src/lib/sessions/sessions-api-helpers.ts",
+        "org/briefs/T-0189-oracle-amendment.md",
+        "src/lib/db/sql-migrations.ts",
+        "src/lib/db/index.ts",
+        "src/lib/db/apply-sql.ts",
+        "org/briefs/T-0189-sync-implementation.md"
+      ],
+      "dependsOn": [
+        "T-0188"
+      ],
+      "authority": [
+        "Q-014",
+        "lib-data-03",
+        "lib-data-10",
+        "T-0164 SQLite column inventory",
+        "Q-032"
+      ],
+      "invariants": [
+        "Column readers, writers and recovery are traced before any schema or table removal.",
+        "Invalid JSON and transaction failure do not create partial application state."
+      ],
+      "rollback": "Revert code paths with a fixture database; defer any irreversible column drop until compatibility evidence and a separate ruling exist.",
+      "verify": "Table-driver and JSON boundary suites reject malformed rows predictably; injected write failure rolls back every related row, and the 529-column inventory records each proposed change with reader/writer/migration evidence."
+    },
+    {
+      "id": "T-0190",
+      "name": "Converge client reads and write ownership",
+      "phase": "prerelease-structural",
+      "tierProposed": "R2",
+      "claims": [
+        "src/hooks/useChatPage.ts",
+        "src/hooks/useChatConversations.ts",
+        "src/hooks/useChatSend.ts",
+        "src/hooks/useChatTranscript.ts",
+        "src/hooks/useAgentRunStream.ts",
+        "src/lib/chat/chat-utils.ts",
+        "src/hooks/useMissionsApi.ts",
+        "src/hooks/useMissionsData.ts",
+        "src/hooks/useMissionCategories.ts",
+        "src/hooks/useMissionDispatch.ts",
+        "src/hooks/useMissionTemplateActions.ts",
+        "src/hooks/useMissionComposer.ts",
+        "src/hooks/useMissionsPage.ts",
+        "src/app/work/missions/page.tsx",
+        "src/components/missions/MissionsList.tsx",
+        "src/components/missions/MissionEditorPanel.tsx",
+        "src/components/missions/MissionCreateForm.tsx",
+        "src/hooks/useApiResource.ts",
+        "src/lib/api/api-write.ts",
+        "src/lib/api/api-fetch.ts",
+        "src/hooks/useOperatorPrefs.ts",
+        "src/hooks/usePreferenceWrite.ts",
+        "src/components/layout/Sidebar.tsx",
+        "src/app/recroom/story-weaver/[id]/page.tsx",
+        "src/app/recroom/story-weaver/create/page.tsx",
+        "src/components/memory/HindsightBrowser.tsx",
+        "src/components/memory/hindsight/useHindsightCrudTab.ts",
+        "src/components/memory/hindsight/useHindsightMemories.ts",
+        "src/components/memory/hindsight/useHindsightModels.ts",
+        "src/components/memory/hindsight/useHindsightDirectives.ts",
+        "src/lib/memory/hindsight-client.ts",
+        "src/hooks/useModels.ts",
+        "src/hooks/useModelsPage.ts",
+        "src/hooks/useModelActions.ts",
+        "src/hooks/useModelFallbackConfig.ts",
+        "src/hooks/useModelFallbackChain.ts",
+        "src/hooks/useVersionFooter.ts",
+        "src/components/providers/FeedbackProvider.tsx",
+        "src/lib/ui/theme.ts",
+        "src/components/ui/Input.tsx",
+        "src/components/ui/Select.tsx",
+        "tests/unit/chat-response-ownership.test.tsx",
+        "tests/unit/mission-query-ownership.test.tsx",
+        "tests/unit/story-client-boundaries.test.tsx",
+        "tests/unit/hindsight-query-feedback.test.tsx",
+        "tests/unit/preference-write-contract.test.tsx",
+        "tests/unit/client-query-observers.test.tsx",
+        "tests/e2e/client-read-ownership.spec.ts",
+        "tests/unit/b14-story-reader-writes-on-request.test.tsx",
+        "tests/unit/story-stop-and-the-write-latch.test.tsx",
+        "tests/unit/story-stop-holds-every-call.test.tsx",
+        "tests/unit/story-cost-is-on-screen.test.tsx",
+        "tests/unit/hindsight-browser-render.test.tsx",
+        "tests/unit/b7-memory-empty-states.test.tsx",
+        "org/tasks/T-0190.json",
+        "org/claims.json",
+        "org/briefs/T-0190-oracle.md",
+        "org/briefs/T-0190-review.md",
+        "org/reviews/2026-10-t0190-client-verification.md",
+        "org/reviews/2026-10-t0190-dispositions.json",
+        "org/plans/2026-09-refactor-programme.json",
+        "org/HANDOVER.md",
+        "org/TASKS.md",
+        "org/STATE.md",
+        "docs/manifest.json",
+        "scripts/tooling/line-census.baseline.json",
+        "scripts/tooling/design-lint.baseline.json",
+        "tests/fixtures/mutants/T-0190.json"
+      ],
+      "dependsOn": [
+        "T-0189"
+      ],
+      "authority": [
+        "Q-016",
+        "hooks-01",
+        "hooks-03",
+        "hooks-07",
+        "hooks-08",
+        "app-02",
+        "Q-032"
+      ],
+      "invariants": [
+        "Missions board errors remain visible in place.",
+        "Mutation invalidation, deadline timing and read-only refusals survive composition-root moves."
+      ],
+      "rollback": "Revert each Chat, Mission, Story/Hindsight or preference cohort independently with its shared interfaces and oracles. Keep every prior receipt/checkpoint; no database migration or stored-key rewrite.",
+      "verify": "Freeze independent public-action behavioural oracles and historical identities before changes. Prove controlled async ownership/cache/error/storage/explicit-action cases, real page browser journeys at1440x900/390x844 and measured stats observer trace. Run app/test types,fullJest,unchangedten-stagegate; cleancommittedmutation controls/restoration; independentR2; all implementation/closure-head hosted jobs. Disposition all48ownershipitems without overstating provider/integration proof.",
+      "reviewed_followups": {
+        "reviewer": "Fermat 01a0fd2b-be08-7d50-848f-4034e5832160, read-only 2026-10-02; no independent runtime execution",
+        "status": "Queued for exact claims, router verdict and red oracle before batch implementation; not acceptance",
+        "items": [
+          {
+            "title": "Chat response ownership",
+            "evidenceStatus": "Coordinator-reproduced delayed NewChat draft/selection loss on production01040a43; remaining stream races await independent tests",
+            "sourcePaths": [
+              "src/hooks/useChatConversations.ts",
+              "src/hooks/useChatSend.ts",
+              "src/hooks/useChatTranscript.ts",
+              "src/hooks/useAgentRunStream.ts"
+            ],
+            "receiptNote": "tmp/t0190-chat-browser-preflight-20261002.md",
+            "verify": "Deferred NewChat creation, conversation switch, late send failure and draft/transcript/approval ownership; late POST alone is not draft-loss proof."
+          },
+          {
+            "title": "Missions response ownership",
+            "evidenceStatus": "source-supported, runtime reproduction pending",
+            "sourcePaths": [
+              "src/hooks/useMissionsData.ts"
+            ],
+            "receiptNote": "tmp/t0185-current-review-20261002.md",
+            "verify": "Old detail after newer detail/deletion/selection; obsolete list error after newer success; category/template invalidation, visible errors, polling, old links and cancellation rollback."
+          }
+        ],
+        "claim_rule": "Name exact new unit .tsx and browser oracle paths; current glob claims do not establish ownership. Amend Verify and rollback at opening. Preserve T0189 -> T0190 -> T0191 -> T0192 dependencies."
+      }
+    },
+    {
+      "id": "T-0191",
+      "name": "Unify proven component primitives and names",
+      "phase": "prerelease-structural",
+      "tierProposed": "R2",
+      "claims": [
+        "src/components/layout/AppPageShell.tsx",
+        "src/components/models/CredentialsPanel.tsx",
+        "src/components/models/FallbackChainList.tsx",
+        "src/modules/rec-room/components/StoryCard.tsx",
+        "src/app/results/sessions/[id]/page.tsx",
+        "src/components/memory/hindsight/DirectivesTab.tsx",
+        "src/components/memory/hindsight/MentalModelsTab.tsx",
+        "src/app/work/research/page.tsx",
+        "src/components/composer/ComposerRunForm.tsx",
+        "src/components/composer/WorkflowCanvas.tsx",
+        "src/components/ui/Input.tsx",
+        "src/components/ui/field/Toggle.tsx",
+        "src/components/ui/field/Select.tsx",
+        "src/components/dashboard/DispatchStrip.tsx",
+        "src/components/dashboard/ProcessesPanel.tsx",
+        "src/components/layout/BranchDropdown.tsx",
+        "src/components/ui/CategoryAccordion.tsx",
+        "src/components/session/MessageBubble.tsx",
+        "src/components/models/FallbackConfigPanel.tsx",
+        "src/app/agent/skills/page.tsx",
+        "src/components/skills/SkillsSections.tsx",
+        "src/components/skills/SkillsSearchResults.tsx",
+        "src/components/skills/SkillCategoryList.tsx",
+        "src/components/skills/SkillRowList.tsx",
+        "src/components/ui/TemplateCard.tsx",
+        "src/components/schedule/SchedulePicker.tsx",
+        "src/components/chat/MessageBubble.tsx",
+        "src/components/skills/SimpleMarkdown.tsx",
+        "src/lib/chat/chat-utils.ts",
+        "src/hooks/useChatPage.ts",
+        "src/modules/rec-room/components/GenerateOverlay.tsx",
+        "src/app/globals.css",
+        "scripts/tooling/design-lint.mjs",
+        "src/hooks/useMissionDispatch.ts",
+        "src/components/ui/Toast.tsx",
+        "src/components/ui/feedback-context.ts",
+        "src/components/providers/FeedbackProvider.tsx",
+        "src/modules/rec-room/components/ReaderBody.tsx",
+        "src/modules/rec-room/components/ChapterReader.tsx",
+        "src/modules/rec-room/components/StoryReaderOverlays.tsx",
+        "src/app/recroom/story-weaver/[id]/page.tsx",
+        "src/components/missions/MissionEditorPanel.tsx",
+        "tests/unit/components-contextual-controls.test.tsx",
+        "tests/unit/components-primitive-parity.test.tsx",
+        "tests/unit/components-collection-actions.test.tsx",
+        "tests/unit/components-chat-markdown.test.tsx",
+        "tests/unit/components-progress-feedback.test.tsx",
+        "tests/unit/components-token-preservation.test.tsx",
+        "tests/e2e/component-accessibility-responsive.spec.ts",
+        "tests/unit/u0-the-gate-sees-what-it-claims.test.ts",
+        "tests/unit/u2-the-contrast-gate-refuses.test.ts",
+        "tests/unit/components/schedule/SchedulePicker.test.tsx",
+        "org/tasks/T-0191.json",
+        "org/claims.json",
+        "org/briefs/T-0191-oracle.md",
+        "org/briefs/T-0191-review.md",
+        "org/reviews/2026-10-t0191-component-verification.md",
+        "org/reviews/2026-10-t0191-dispositions.json",
+        "org/plans/2026-09-refactor-programme.json",
+        "org/plans/2026-09-refactor-ownership.mjs",
+        "org/plans/2026-09-refactor-ownership.json",
+        "org/HANDOVER.md",
+        "org/TASKS.md",
+        "org/STATE.md",
+        "docs/manifest.json",
+        "scripts/tooling/line-census.baseline.json",
+        "scripts/tooling/design-lint.baseline.json",
+        "tests/fixtures/mutants/T-0191.json",
+        "src/hooks/useCopyToClipboard.ts",
+        "src/components/session/constants.tsx",
+        "src/components/ui/LiveDot.tsx",
+        "src/components/memory/MemoryInsights.tsx",
+        "src/components/viz/StatStrip.tsx",
+        "src/components/models/PerRowDeleteButton.tsx",
+        "src/components/missions/MissionCreateForm.tsx",
+        "org/reviews/2026-10-t0191-unit-oracle-provenance.json",
+        "src/components/auth/SessionManager.tsx",
+        "src/components/config/ConfigField.tsx",
+        "src/components/memory/MemoryProviderSettings.tsx",
+        "src/components/memory/HindsightBrowser.tsx",
+        "src/components/logs/LogFilePicker.tsx",
+        "src/components/logs/LogTerminal.tsx",
+        "src/components/session/SessionFilterBar.tsx",
+        "src/components/skills/SkillRow.tsx",
+        "src/components/spend/SpendPanel.tsx",
+        "src/app/agent/settings/page.tsx",
+        "src/components/ui/field/SearchInput.tsx",
+        "src/components/ui/field/NumberInput.tsx",
+        "src/components/ui/field/index.ts",
+        "docs/contributing/design-tokens.md",
+        "docs/images/settings.png",
+        "docs/images/memory.png",
+        "docs/images/composer.png",
+        "tests/unit/b6-config-field-unset-and-range.test.tsx",
+        "tests/unit/b7-memory-empty-states.test.tsx",
+        "tests/unit/field-kit.test.tsx",
+        "tests/unit/t0162-house-control-names.test.tsx",
+        "docs/contributing/repo-guide.md",
+        "src/app/work/chat/page.tsx",
+        "src/components/models/ModelEditor.tsx",
+        "src/app/recroom/story-weaver/layout.tsx",
+        "org/QUESTIONS.md"
+      ],
+      "dependsOn": [
+        "T-0190"
+      ],
+      "authority": [
+        "Q-016",
+        "Q-025",
+        "components-02",
+        "components-03",
+        "components-04",
+        "components-05",
+        "components-08",
+        "Q-032"
+      ],
+      "invariants": [
+        "Select and Picker remain distinct.",
+        "Contextual names, keyboard focus, reduced motion and responsive hierarchy remain accessible.",
+        "Chat uses SimpleMarkdown with guarded links and a Copy button for code blocks."
+      ],
+      "rollback": "Revert each primitive or responsive cohort with its consumers; revert Story lifecycle and feedback changes as coherent interfaces while retaining regression tests. No schema, stored-key or data migration.",
+      "verify": "Independent red-first public-action oracles; exact historical test-name parity except two ruled Schedule test deletions and four Q-034 declaration-dependent RGB identities. At1440x900/390x844 prove truthful Story progress/refusal/Stop, chapter-start positioning, accessible complete control text, keyboard/touch and responsive states. Preserve current cache/ownership contracts and all retention controls. Measure actual full-cohort net benefit before each fold. Full unchanged ten-stage gate, clean committed causal sweep with restored controls, independent R2 and every hosted job at implementation and closure heads. Account for every owned finding/split/coverage row and uncertainty. Preserve all11 historical clipboard cases unchanged; actual pending/refused writes must not display copied success. Correct six bounded stale component comments without changing their executable behaviour.",
+      "reviewed_followups": {
+        "reviewer": "Fermat 01a0fd2b-be08-7d50-848f-4034e5832160, read-only 2026-10-02; no independent runtime execution",
+        "status": "Queued for exact claims, router verdict and red oracle before batch implementation; not acceptance",
+        "items": [
+          {
+            "title": "Phone chat input",
+            "evidenceStatus": "reproduced in owned production fixture",
+            "sourcePaths": [
+              "src/components/layout/AppPageShell.tsx"
+            ],
+            "receiptNote": "tmp/t0191-chat-viewport-finding-20261002.md",
+            "verify": "390x844 input834..876; require visible input/focus/mobile sheet at both widths, preserve transcript scrolling. Claim chat page/root layout only if required."
+          },
+          {
+            "title": "Phone credential name",
+            "evidenceStatus": "reproduced in owned production fixture",
+            "sourcePaths": [
+              "src/components/models/CredentialsPanel.tsx"
+            ],
+            "receiptNote": "tmp/t0191-credential-viewport-finding-20261002.md",
+            "verify": "Require readable visible populated-row label, not only accessible name; preserve controls/secret hints/CRUD."
+          },
+          {
+            "title": "Fallback actions",
+            "evidenceStatus": "observed phone clipping; geometry/touch proof pending",
+            "sourcePaths": [
+              "src/components/models/FallbackChainList.tsx"
+            ],
+            "receiptNote": "tmp/t0192-fallback-live-finding-20261002.md",
+            "verify": "Require visible/focusable/discoverable controls and deliberate scroll reachability; automatic Playwright scroll is insufficient."
+          },
+          {
+            "title": "Story card phone hierarchy",
+            "evidenceStatus": "inspected presentation judgement, not WCAG classification",
+            "sourcePaths": [
+              "src/modules/rec-room/components/StoryCard.tsx"
+            ],
+            "receiptNote": "tmp/t0189-green-validation/tmp/t0188-chat-viewport-1790960747006/walk.json",
+            "verify": "At390x844 keep Owned review story and Owned damaged fixture titles readable; allow complete metadata items the available width and separate action row. Preserve desktop1440x900 identity, all data/actions and two-step delete; include longer title/status and keyboard states. This is authorised responsive repair, not a visual redesign."
+          },
+          {
+            "title": "Missing transcript has no primary heading",
+            "evidenceStatus": "Reproduced in owned production fixture on01040a43 at both widths; independent source verification pending",
+            "sourcePaths": [
+              "src/app/results/sessions/[id]/page.tsx"
+            ],
+            "receiptNote": "tmp/t0189-green-validation/tmp/t0188-chat-viewport-1790961702953/walk.json",
+            "verify": "Independently freeze missing404/server-error heading cases before repair; require one primary heading, error feedback/retry/backlink and existing wording at1440x900/390x844. Keep normal transcript and loading states. Search, URLreload and Failedfilter request work; no actual foreign-transcript integration claim."
+          },
+          {
+            "title": "Hindsight phone collection toolbar",
+            "evidenceStatus": "Personally inspected controlled production screenshot; geometry and keyboard oracle pending",
+            "sourcePaths": [
+              "src/components/memory/hindsight/DirectivesTab.tsx",
+              "src/components/memory/hindsight/MentalModelsTab.tsx"
+            ],
+            "receiptNote": "tmp/t0189-green-validation/tmp/t0188-chat-viewport-1790964744875/walk.json",
+            "verify": "At390x844 the collection description must not compress New Directive into a two-line label outside its compact button. Preserve complete readable labels, reachable Refresh/create actions, keyboard focus and desktop hierarchy. Test both collection toolbars and long metadata. This is responsive repair, not redesign; independently freeze before implementation."
+          }
+        ],
+        "claim_rule": "Name exact new unit .tsx and browser oracle paths; current glob claims do not establish ownership. Amend Verify and rollback at opening. Preserve T0189 -> T0190 -> T0191 -> T0192 dependencies.",
+        "opening_additions": [
+          "tmp/t0191-mission-metadata-review-20261002.md",
+          "tmp/t0191-reader-position-finding-20261002.md",
+          "tmp/t0190-green-validation/tmp/t0190-personal-1790980892020/walk.json",
+          "tmp/t0189-green-validation/tmp/t0190-personal-1790980945735/walk.json",
+          "tmp/t0190-green-validation/tmp/t0190-personal-1791028989606/walk.json",
+          "tmp/t0191-stop-overlay-review-20261002.md"
+        ]
+      }
+    },
+    {
+      "id": "T-0192",
+      "name": "Converge API route envelopes and validation",
+      "phase": "prerelease-structural",
+      "tierProposed": "R2",
+      "claims": [
+        "src/lib/api/api-fetch.ts",
+        "src/hooks/useSettingsEditor.ts",
+        "src/hooks/useModelActions.ts",
+        "src/modules/rec-room/handlers/crud.ts",
+        "src/app/api/agent/profiles/[id]/route.ts",
+        "src/modules/hermes/lib/profiles-repository.ts",
+        "src/modules/hermes/lib/fallback-sync.ts",
+        "src/modules/hermes/lib/hermes-fallback-config.ts",
+        "src/app/work/scripts/page.tsx",
+        "src/components/scripts/ScriptEditorModal.tsx",
+        "src/components/composer/ComposerRunForm.tsx",
+        "src/app/api/composer/runs/route.ts",
+        "src/instrumentation.ts",
+        "src/lib/deploy/boot-diagnostics.ts",
+        "src/lib/status/runtime-status.ts",
+        "src/app/api/status/runtime/route.ts",
+        "src/lib/feature-flags.ts",
+        "src/modules/hermes/lib/agent-runtime.ts",
+        "src/app/api/sync/route.ts",
+        "src/app/api/status/route.ts",
+        "src/app/api/update/route.ts",
+        "src/app/api/mission-categories/route.ts",
+        "src/app/api/prefs/route.ts",
+        "src/app/api/admin/sessions/backfill-status/route.ts",
+        "src/lib/api/api-route.ts",
+        "src/lib/api/api-logger.ts",
+        "src/components/models/types.ts",
+        "src/lib/models/credentials-repository.ts",
+        "src/types/console.ts",
+        "src/app/work/missions/page.tsx",
+        "src/hooks/useMissionsPage.ts",
+        "src/hooks/useMissionTemplatesState.ts",
+        "src/components/missions/templates/TemplateEditorModal.tsx",
+        "tests/unit/api-fetch-error-envelope.test.ts",
+        "tests/unit/settings-save-draft-ownership.test.tsx",
+        "tests/unit/model-bulk-default-feedback.test.tsx",
+        "tests/unit/story-list-failure-contract.test.ts",
+        "tests/e2e/route-contract-persistence.spec.ts",
+        "tests/e2e/route-contract-followups.spec.ts",
+        "tests/helpers/route-contract-runtime.ts",
+        "tests/unit/api-route-public-contract.test.ts",
+        "tests/unit/api-route-caller-gate.test.ts",
+        "tests/fixtures/api-route-contract-baseline.json",
+        "tests/unit/runtime-operational-consistency.test.ts",
+        "tests/unit/composer-review-control.test.tsx",
+        "org/tasks/T-0192.json",
+        "org/claims.json",
+        "org/briefs/T-0192-oracle.md",
+        "org/briefs/T-0192-review.md",
+        "org/reviews/2026-10-t0192-route-verification.md",
+        "org/reviews/2026-10-t0192-dispositions.json",
+        "org/plans/2026-09-refactor-programme.json",
+        "org/HANDOVER.md",
+        "org/TASKS.md",
+        "org/STATE.md",
+        "docs/manifest.json",
+        "docs/reference/api.md",
+        "scripts/tooling/line-census.baseline.json",
+        "tests/fixtures/mutants/T-0192.json"
+      ],
+      "dependsOn": [
+        "T-0191"
+      ],
+      "authority": [
+        "Q-010 public contract",
+        "Q-016",
+        "app-04",
+        "cross-cutting-01",
+        "cross-cutting-02",
+        "app-01a-d/h",
+        "Q-032"
+      ],
+      "invariants": [
+        "Every shipped URL and method remains reachable.",
+        "Body validation, auth, read-only, errors and status codes stay exact while large pages move to hooks."
+      ],
+      "rollback": "Revert each coherent defect or route/type/prop cohort with its callers. Retain regression tests; no schema or stored-key migration. Public contracts remain pinned.",
+      "verify": "Independent red-first eight-defect oracles and real persistence under discovered Playwright specs; full URL/method snapshot and operator caller allowlist before route edits; exact error/optional-body/guard contracts; boot/flag/gateway consistency; current82item ledger and measured complete-cohort net counts; cold/warm Windows/Linux built endpoint and event-loop investigation; ordinary1440x900/390x844 personal walks/screenshots; full unchanged ten-stage gate; clean committed causal sweep with passing restored controls; independentR2; every implementation andclosure hosted job.",
+      "reviewed_followups": {
+        "reviewer": "Fermat 01a0fd2b-be08-7d50-848f-4034e5832160, read-only 2026-10-02; no independent runtime execution",
+        "status": "Queued for exact claims, router verdict and red oracle before batch implementation; not acceptance",
+        "items": [
+          {
+            "title": "Profile rename metadata",
+            "evidenceStatus": "reproduced stale metadata",
+            "sourcePaths": [
+              "src/app/api/agent/profiles/[id]/route.ts"
+            ],
+            "receiptNote": "tmp/t0192-profile-live-finding-20261002.md",
+            "verify": "Changed/same slug, clear description, filesystem failure, reference preservation and reload. Claim profiles-repository only if changed."
+          },
+          {
+            "title": "Settings pending-save draft",
+            "evidenceStatus": "reproduced",
+            "sourcePaths": [
+              "src/hooks/useSettingsEditor.ts"
+            ],
+            "receiptNote": "tmp/t0192-settings-live-finding-20261002.md",
+            "verify": "40 -> submit41 -> type42 -> release success: baseline41/newer draft42 unsaved; unchanged success and failure controls. Handoff afterT0190."
+          },
+          {
+            "title": "Last fallback YAML entry",
+            "evidenceStatus": "reproduced stored discrepancy, not Hermes execution",
+            "sourcePaths": [
+              "src/modules/hermes/lib/fallback-sync.ts"
+            ],
+            "receiptNote": "tmp/t0192-fallback-live-finding-20261002.md",
+            "verify": "Real SQLite/YAML disable sole, delete last, explicit empty sync; preserve nonempty/backup/error contracts. Claim config helper only if changed."
+          },
+          {
+            "title": "Bulk default feedback",
+            "evidenceStatus": "reproduced semantic errors reported as success",
+            "sourcePaths": [
+              "src/hooks/useModelActions.ts"
+            ],
+            "receiptNote": "tmp/t0192-bulk-live-finding-20261002.md",
+            "verify": "Allsuccess/semantic/transport/mixed outcome feedback and refreshed defaults; preserve HTTP200data.error for SQLite success/YAML failure. Handoff afterT0190."
+          },
+          {
+            "title": "Story false-empty list",
+            "evidenceStatus": "damaged-row masking reproduced; post-parser SQL failure pending",
+            "sourcePaths": [
+              "src/modules/rec-room/handlers/crud.ts"
+            ],
+            "receiptNote": "tmp/t0189-story-live-finding-20261002.md",
+            "verify": "Injected read failure plus healthy/empty and visible consumer recovery. Explicit bug-fix exception to unchanged error/status wording; preserve URL/method, claim consumers only if required."
+          },
+          {
+            "title": "Null API error envelope loses HTTP status",
+            "evidenceStatus": "reproduced with an in-memory fetch stub; no network",
+            "sourcePaths": [
+              "src/lib/api/api-fetch.ts"
+            ],
+            "receiptNote": "tmp/t0192-api-null-probe.json",
+            "verify": "Independent oracle covers non-2xx JSON null, object, primitive and invalid JSON; preserve status and deliberate error wording without throwing a null-property TypeError. T0190 claims this transport file for comment correction only; add exact implementation authority at T0192 opening."
+          }
+        ],
+        "claim_rule": "Name exact new unit .tsx and browser oracle paths; current glob claims do not establish ownership. Amend Verify and rollback at opening. Preserve T0189 -> T0190 -> T0191 -> T0192 dependencies."
+      },
+      "t0191ReviewFollowups": [
+        {
+          "id": "t0191-script-unread-save",
+          "priority": "P1",
+          "sourcePaths": [
+            "src/app/work/scripts/page.tsx",
+            "src/components/scripts/ScriptEditorModal.tsx"
+          ],
+          "verify": "A pending or failed existing-script read leaves an empty buffer eligible for Save; valid authenticated writable PUT accepts that string. Runtime proof must hold/refuse GET, attempt Save and verify existing bytes survive. A PUT failure may prevent overwrite; this is not auth bypass.",
+          "evidenceStatus": "source-traced, runtime reproduction required"
+        },
+        {
+          "id": "t0191-composer-graph-launch",
+          "priority": "P2",
+          "sourcePaths": [
+            "src/components/composer/ComposerRunForm.tsx",
+            "src/app/api/composer/runs/route.ts"
+          ],
+          "verify": "Missing graph data becomes no stages while Review/confirm can launch. Preserve engine HIL checks; prove complete pre-launch disclosure with held/refused graph reads, not a claim of approval bypass.",
+          "evidenceStatus": "source-traced, runtime reproduction required"
+        }
+      ],
+      "t0191SeedReadLatencyFollowup": {
+        "id": "t0191-real-seed-read-latency",
+        "status": "unresolved",
+        "evidence": "tmp/t0191-full-gate-1791045503471/test-results/*/trace.zip; safe summary: python tmp/t0191-read-failed-traces.py",
+        "observed": "Three six-worker Models cases: mocked reads200 in150–600ms; real stats/runtime/flags/defaults/drift/fallback-config200 in5.4–8.5s. Defaults keeps aggregate page loading.",
+        "qualification": "Root cause unproved. Six separate synchronous Git probes46–51ms do not explain stall; cold route loading remains hypothesis. Fixture preload only separates setup from geometry assertions, not a production latency fix.",
+        "verify": "Measure controlled cold and warm built-app endpoint timings and event-loop blocking on Windows and Linux; establish cause before any performance fix. Retain real-route navigation coverage and budgets; no retries or relaxed deadlines."
+      },
+      "credentialShapeAttribution": {
+        "finding": "cross-cutting-18",
+        "evidence": "gap-051.1; models/types13–18 and credentials-repository15–20",
+        "scope": "Add exact paths at opening; measure public hint-only credential shape convergence, retaining alias if necessary and keeping CredentialWithKey internal."
+      }
+    },
+    {
+      "id": "T-0193",
+      "name": "Extract large page hooks without losing visible state",
+      "phase": "prerelease-structural",
+      "tierProposed": "R2",
+      "claims": [
+        "src/app/work/composer/**",
+        "src/app/work/missions/**",
+        "src/app/recroom/story-weaver/**",
+        "src/hooks/page-*.ts",
+        "tests/e2e/page-state-*.spec.ts",
+        "src/app/agent/profiles/page.tsx",
+        "src/components/agents/CreateProfileModal.tsx",
+        "src/components/agents/EditProfileModal.tsx",
+        "tests/unit/profile-draft-ownership.test.tsx",
+        "src/components/composer/ComposerNodeRunDetail.tsx",
+        "src/app/work/composer/page.tsx",
+        "src/components/scripts/ScriptEditorModal.tsx",
+        "src/app/work/scripts/page.tsx",
+        "src/components/research/ResearchReport.tsx",
+        "src/components/agents/AgentGrowthPanel.tsx",
+        "src/components/skills/SkillsSearchResults.tsx",
+        "src/components/skills/SkillRowList.tsx",
+        "src/components/viz/AreaTrend.tsx",
+        "src/components/viz/StackedAreaTrend.tsx",
+        "src/components/session/MissionGroupCard.tsx",
+        "src/components/logs/LogFilePicker.tsx",
+        "src/app/agent/skills/[...path]/page.tsx",
+        "src/app/agent/models/page.tsx",
+        "src/app/globals.css",
+        "src/app/error.tsx",
+        "tests/e2e/page-state-profile-ownership.spec.ts"
+      ],
+      "dependsOn": [
+        "T-0192"
+      ],
+      "authority": [
+        "Q-016",
+        "app-02",
+        "hooks-07",
+        "hooks-08",
+        "T-0164 44-state route walk",
+        "Q-032",
+        "T-0191 gap-054.1 review: profile-draft late-settlement defect; independent transfer accepted by Laplace on 2026-10-03",
+        "Q-035",
+        "Q-036"
+      ],
+      "invariants": [
+        "URL state, deep links, errors, dropdowns, inspector and dialogs survive the hook move.",
+        "Desktop and phone layouts retain their measured accessible structure.",
+        "Completion of profile create/edit draft A must not close, clear, overwrite or reselect a later draft B. Preserve distinct cancel/reset/clone/default-profile semantics."
+      ],
+      "rollback": "Revert one page and its owned hook at a time; preserve the corrected Composer stacking and contrast oracles.",
+      "verify": "Desktop and phone walks of Composer, Missions and Story Weaver show the same route state, controls, dialogs, focus, h1 and no overflow or console errors; moved test names agree and the page-hook net change is measured. Independently authored red-first profile lifecycle cases hold A, close and open B, settle A, and prove B remains intact for create and edit. Cover success, refusal, selected identity and unmount; browser walks confirm the current dialog remains usable. Disposition t0191-composer-output-save-ownership with independent red-first reproduction and explicit failure/ownership controls; preserve the evidence qualifications in T-0191. Disposition t0191-script-tab-navigation with independent red-first reproduction and explicit failure/ownership controls; preserve the evidence qualifications in T-0191. Disposition t0191-research-copy-and-export with independent red-first reproduction and explicit failure/ownership controls; preserve the evidence qualifications in T-0191. Disposition t0191-agent-growth-error-truth with independent red-first reproduction and explicit failure/ownership controls; preserve the evidence qualifications in T-0191. Disposition t0191-skill-search-category-context with independent red-first reproduction and explicit failure/ownership controls; preserve the evidence qualifications in T-0191. Disposition t0191-trend-chart-text-equivalent with independent red-first reproduction and explicit failure/ownership controls; preserve the evidence qualifications in T-0191. Disposition t0191-collection-state-semantics with independent red-first reproduction and explicit failure/ownership controls; preserve the evidence qualifications in T-0191. Resolve the four explicit T0192 visible-state follow-ups with independent red-first proof, preserved behaviour and desktop/phone evidence; distinguish source hypotheses from reproduced defects.",
+      "t0191ReviewFollowups": [
+        {
+          "id": "t0191-composer-output-save-ownership",
+          "priority": "P2",
+          "sourcePaths": [
+            "src/components/composer/ComposerNodeRunDetail.tsx",
+            "src/app/work/composer/page.tsx"
+          ],
+          "verify": "Saved state and pending completion belong to component instance, not selected run/node output. Hold A, select B, settle A; B must retain its own save eligibility. Refusals already reset idle.",
+          "evidenceStatus": "source-traced, runtime reproduction required"
+        },
+        {
+          "id": "t0191-script-tab-navigation",
+          "priority": "P2",
+          "sourcePaths": [
+            "src/components/scripts/ScriptEditorModal.tsx",
+            "src/app/work/scripts/page.tsx"
+          ],
+          "verify": "Tab and Shift+Tab both insert text and prevent ordinary footer navigation. Preserve deliberate editing shortcuts; demonstrate keyboard exit without changing content. Escape exists, so do not claim absolute focus trap.",
+          "evidenceStatus": "source-traced, runtime reproduction required"
+        },
+        {
+          "id": "t0191-research-copy-and-export",
+          "priority": "P2",
+          "sourcePaths": [
+            "src/components/research/ResearchReport.tsx"
+          ],
+          "verify": "Clipboard refusal lacks handled feedback; export anchors contain actual Button elements. Fresh refusal does not announce success. Preserve report renderer/content and export formats; behaviour tests and keyboard/browser proof precede repair.",
+          "evidenceStatus": "source-traced, runtime reproduction required"
+        },
+        {
+          "id": "t0191-agent-growth-error-truth",
+          "priority": "P2",
+          "sourcePaths": [
+            "src/components/agents/AgentGrowthPanel.tsx",
+            "src/app/agent/profiles/page.tsx"
+          ],
+          "verify": "Read failure ignores the hook error and can render No completed work yet. Prove failure/empty/loading/success distinctions before repair.",
+          "evidenceStatus": "source-traced, runtime reproduction required"
+        },
+        {
+          "id": "t0191-skill-search-category-context",
+          "priority": "P2",
+          "sourcePaths": [
+            "src/components/skills/SkillsSearchResults.tsx",
+            "src/components/skills/SkillRowList.tsx"
+          ],
+          "verify": "Flat search omits showCategory, whose default is false. Verify expected category context against UI contract and preserve grouped results before repair.",
+          "evidenceStatus": "source-traced, runtime reproduction required"
+        },
+        {
+          "id": "t0191-trend-chart-text-equivalent",
+          "priority": "P2",
+          "sourcePaths": [
+            "src/components/viz/AreaTrend.tsx",
+            "src/components/viz/StackedAreaTrend.tsx"
+          ],
+          "verify": "Paths have no accessible daily-value equivalent in inspected Insights placements. Verify rendered alternatives and implement equivalent information without changing values or chart semantics.",
+          "evidenceStatus": "source-traced, runtime reproduction required"
+        },
+        {
+          "id": "t0191-collection-state-semantics",
+          "priority": "P2",
+          "sourcePaths": [
+            "src/components/session/MissionGroupCard.tsx",
+            "src/components/logs/LogFilePicker.tsx"
+          ],
+          "verify": "Mission group expansion and log selection lack equivalent semantic state. Verify actual controls and preserve keyboard/selection ownership; Hindsight selected-tab semantics need the same assessment.",
+          "evidenceStatus": "source-traced, runtime reproduction required"
+        }
+      ],
+      "t0191AttributedConsolidationCandidates": {
+        "source": "gap-051.1 reproduced attribution",
+        "status": "net-benefit-unresolved",
+        "cohorts": [
+          {
+            "paths": [
+              "src/components/composer/ComposerGatePrompt.tsx",
+              "src/components/composer/ComposerNodeRunDetail.tsx"
+            ],
+            "scope": "Measure shared verdict/reasons presentation; preserve advisory versus outcome/suggestions semantics."
+          },
+          {
+            "paths": [
+              "src/components/research/ResearchReport.tsx",
+              "src/lib/laboratory/deep-research/report.ts"
+            ],
+            "scope": "Measure shared STEP_LABEL map alongside Research copy/export cohort; preserve UI/export strings and fallback. This is distinct from the existing defect."
+          }
+        ],
+        "verify": "Before folding, count replacement/import/adapter/test cost and claim all paths. Retain with measured reason if net benefit is absent."
+      },
+      "t0192VisibleStateFollowups": {
+        "authority": "Approved visible-state programme scope; independent Laplace accepted bounded transfer2026-10-04. T0192 review obligations remain separately accounted.",
+        "evidence": "org/reviews/2026-10-t0192-route-verification.md",
+        "items": [
+          {
+            "id": "skill-detail-error-truth",
+            "status": "reproduced500/404atbothwidths",
+            "verify": "Independent red-first tests distinguish failed read from genuine missing resource; preserve missing-route recovery, restore a named h1 and usable retry where appropriate. Repeat desktop/phone walks."
+          },
+          {
+            "id": "models-error-truth",
+            "status": "reproduced500plusfalseemptyatbothwidths",
+            "verify": "Independent red-first failure/loading/empty/success/stale-refresh controls prevent failed registry reads from claiming zero models. Preserve existing models/disclosures during reload and verify recovery."
+          },
+          {
+            "id": "reader-popover-contrast",
+            "status": "rendered4.041muted/2.463selected/2.188hoverratiosobserved",
+            "verify": "Reproduce composited contrast and add independent red oracle before repair. Preserve all five faces, saved sizes/spacing, keyboard and outside-click behaviour; no palette change inferred."
+          },
+          {
+            "id": "reduced-motion-reveal",
+            "status": "source-supportedonly",
+            "verify": "Reproduce initial opacity during stagger delay under reduced motion atbothwidths; existing late motion snapshot does not prove immediate reveal. No timing change without red-first proof."
+          }
+        ],
+        "commentScope": "Qualify stale globals.css migration comments without changing CSS declarations. Do not remove unused-animation or exported token candidates without applicable ruling."
+      },
+      "t0192CommentFollowup": {
+        "finding": "app-19",
+        "status": "partial repair; remaining comments explicitly deferred",
+        "paths": [
+          "src/app/agent/models/page.tsx:1",
+          "src/app/error.tsx:4"
+        ],
+        "scope": "Qualify the legacy /config/models and PR4/PR5 header; identify the Next route error fallback accurately. Keep the existing component identity; Error versus RootError is optional naming, not a type bug. Preserve runtime emission.",
+        "authority": "Approved programme scope; Laplace accepted bounded comment-only T0193 transfer2026-10-04."
+      },
+      "t0206Followup": {
+        "authority": "Q-035, operator approved 2026-10-04",
+        "disposition": "T-0206 remains open and does not block T-0193 after the selector correction passes the full local gate and every required hosted job.",
+        "qualification": "Both latest macOS full runs passed; no cause or timing repair is claimed. Retain the original failures and frozen limits; T-0195 carries the eventual verdict.",
+        "startAmendment": "Q-036 permits starting while current timing failure is red; closure and release checks remain unchanged."
+      },
+      "accountability": "org/reviews/2026-10-t0193-dispositions.json; supplemental programme rows are excluded from historical counts."
+    },
+    {
+      "id": "T-0194",
+      "name": "Align library domains and Hermes ownership",
+      "phase": "prerelease-structural",
+      "tierProposed": "R3",
+      "claims": [
+        "src/lib/**",
+        "src/modules/hermes/**",
+        "tests/unit/lib-domain-*.test.ts",
+        "src/lib/auth/**",
+        "src/lib/api/auth-token.ts",
+        "src/lib/api/auth-throttle.ts",
+        "src/lib/fs/path-security.ts",
+        "src/lib/search/url-guard.ts",
+        "src/lib/scripts/scripts-manager.ts",
+        "src/lib/",
+        "src/modules/hermes/",
+        "src/components/missions/AgentRuntimeDefaultsCard.tsx",
+        "src/hooks/useComposer.ts",
+        "docs/guides/missions.md",
+        "scripts/tooling/design-lint.mjs",
+        "org/decisions/ADR-0018-settings-schema-exception.md",
+        "scripts/tooling/lib-moves.json",
+        "src/modules/hermes/handlers/profile-patch.ts",
+        "src/modules/hermes/lib/state-import.ts",
+        "src/modules/hermes/lib/seed-agent-catalog.ts",
+        "src/modules/hermes/lib/profiles-repository.ts",
+        "tests/unit/apply-profile-or-root-patch.test.ts",
+        "src/modules/hermes/lib/profile-sync-shared.ts",
+        "src/modules/hermes/lib/profile-push.ts",
+        "src/modules/hermes/lib/profile-pull.ts",
+        "src/modules/hermes/lib/profile-drift.ts",
+        "tests/unit/api-routes-complex.test.ts",
+        "src/modules/hermes/lib/hermes-env-sync.ts",
+        "src/modules/hermes/lib/hermes-config-write.ts",
+        "src/modules/hermes/lib/effective-disabled-skills.ts",
+        "src/modules/hermes/lib/config-sync.ts",
+        "src/modules/hermes/lib/config-import.ts",
+        "src/modules/hermes/lib/agent-file-store.ts",
+        "tests/unit/b1-read-only-reads-do-not-write.test.ts",
+        "tests/unit/b4-emits-agent.test.ts",
+        "tests/unit/b6-cleared-defaults-stay-cleared.test.ts",
+        "tests/unit/b6-a-save-survives-a-push.test.ts",
+        "tests/unit/b8-agents-routes.test.ts",
+        "tests/unit/b9-skills-behaviour.test.ts",
+        "tests/unit/b6-config-values-and-unset.test.ts",
+        "tests/unit/config-sync-atomic-replacement.test.ts",
+        "tests/unit/config-writes-refuse-corruption.test.ts",
+        "tests/unit/config-refusals-reach-the-operator.test.ts",
+        "tests/unit/env-file.test.ts",
+        "src/app/api/skills/[name]/toggle/route.ts",
+        "tests/unit/hermes-profile-sync.test.ts",
+        "tests/unit/hermes-drift-missing-files.test.ts",
+        "tests/unit/hermes-state-import.test.ts",
+        "tests/unit/hermes-config-sync-yaml.test.ts",
+        "src/app/api/agent/root/route.ts",
+        "src/app/api/agent/profiles/route.ts",
+        "tests/unit/method-not-allowed-says-allow.test.ts",
+        "src/lib/agents/agent-root-repository.ts",
+        "tests/unit/profiles-api.test.ts",
+        "tests/unit/profile-card-skills-count.test.ts",
+        "tests/unit/profiles-toolsets-api.test.ts",
+        "tests/unit/skills-count-is-one-number.test.ts",
+        "tests/unit/the-push-either-works-or-says-what-happened.test.ts",
+        "tests/unit/lib-domain-retry-stop.test.ts",
+        "tests/unit/lib-domain-deadline-guidance.test.tsx",
+        "tests/unit/lib-domain-queue-admission.test.ts",
+        "tests/unit/lib-domain-ownership.test.ts",
+        "tests/unit/lib-domain-helper-parity.test.ts",
+        "tests/e2e/lib-domain-deadline-guidance.spec.ts",
+        "tests/unit/build-mission-prompt-roundtrip.test.ts",
+        "org/tasks/T-0194.json",
+        "org/claims.json",
+        "org/briefs/T-0194-oracle.md",
+        "org/briefs/T-0194-review.md",
+        "org/reviews/2026-10-t0194-verification.md",
+        "org/reviews/2026-10-t0194-dispositions.json",
+        "org/reviews/2026-10-t0194-preparation.md",
+        "org/plans/2026-09-refactor-programme.json",
+        "org/plans/2026-09-refactor-programme.md",
+        "org/HANDOVER.md",
+        "org/TASKS.md",
+        "org/STATE.md",
+        "docs/manifest.json",
+        "scripts/tooling/line-census.baseline.json",
+        "tests/fixtures/mutants/T-0194.json"
+      ],
+      "dependsOn": [
+        "T-0193"
+      ],
+      "authority": [
+        "ADR-0005",
+        "Q-016",
+        "lib-domains-01",
+        "lib-domains-02",
+        "lib-domains-03",
+        "Q-032",
+        "ADR-0018",
+        "Q-027",
+        "T-0202 accepted queue transfer"
+      ],
+      "invariants": [
+        "Laboratory changes wait for an ADR-0005-compatible design.",
+        "All five path spellings, including regex alternations, are checked when files move."
+      ],
+      "rollback": "Restore the former module exports with aliases only for documented callers; retain moved tests and public behaviour.",
+      "verify": "Independent gateway Stop, elapsed-deadline guidance and completed-queue controls pass; full TypeScript, Knip, path-citation and test-name identities hold. Agent_root/env parser ownership resides in Hermes; Settings field table remains core under accepted ADR0018 and lint predicate unchanged. Laboratory stays deferred. Every20finding/14OP/42coverage row has qualified evidence; reconcile atomic auth/path/URL/script controls without claiming missing proof as an exploit. Full unchanged gate, causal restored sweep, independent R3 review and all required hosted jobs pass."
+    },
+    {
+      "id": "T-0195",
+      "name": "Simplify test harnesses without losing questions",
+      "phase": "prerelease-structural",
+      "tierProposed": "R2",
+      "claims": [
+        "tests/helpers/**",
+        "tests/unit/**",
+        "jest.config.*",
+        "tests/e2e/**",
+        "tests/jest.setup.ts"
+      ],
+      "dependsOn": [
+        "T-0194"
+      ],
+      "authority": [
+        "Q-015",
+        "tests-04",
+        "tests-06",
+        "tests-07",
+        "tests-09",
+        "tests-10",
+        "Q-032"
+      ],
+      "invariants": [
+        "Every moved test retains its name and assertion intent; coverage floors never fall.",
+        "Closed-oracle changes use a different author and a dated amendment."
+      ],
+      "rollback": "Revert one fixture or suite cohort while keeping behaviour tests that exposed defects.",
+      "verify": "Before/after test-name sets agree except red-first additions; the single Node default and explicit jsdom exceptions match execution needs, source-reading suites converted only where behavioural replacements pass, and e2e flake reruns record both results. Independently prove mock factory, restoreAllMocks and SQLite mapping before critic12 comment correction; preserve restoration and all old identities.",
+      "reviewed_followups": [
+        {
+          "id": "t0189-windows-shell-fixture-cleanup",
+          "status": "unresolved-harness-failure",
+          "evidence": "tmp/t0189-full-gate-1790959016924/summary.json;tmp/t0189-coordinator-check/1790959482685/summary.json;tmp/t0189-shell-observation-1790959743905/summary.json",
+          "finding": "Unchanged T0161after-catalog shell fixture once failed Windows cleanup EPERM in full Jest;4/4alone and8106-test diagnostic workload passed. A finally cleanup error can hide a primary setup failure. Originalrootcauseunconfirmed.",
+          "required": "Preserve four historical names/assertions and30-second setupdeadline. Investigate nativeprocess ownership and preserve primary pluscleanup failures. No silentretry/deadlinegrowth/skips; controlled Windows failed-run lifecycle proof before closure."
+        },
+        {
+          "id": "t0190-closure-native-macos-stalled-context",
+          "status": "unresolved-intermittent-harness-failure",
+          "original": "tmp/t0190-closure-failure-attempt1/qualification.json",
+          "review": "org/reviews/2026-10-t0191-component-verification.md#independent-prerequisite-verdict",
+          "laterVerification": "tmp/t0190-hosted-closure-rerun/snapshot-1791029119234.json",
+          "finding": "Closure push attempt1 C02/C05 share a stalled observation: six-second watchdog crossed and final native status did not reach shell completion. Built-in isolated20-case rerun passed. A later full-job pass is verification, not a repair or proven scheduling cause. Attempt2 reran the entire unchanged push workflow, not only macOS; all applicable jobs passed. The PR acceptance path passed separately.",
+          "required": "Investigate with measured native timing; preserve21 realcurl calls, all assertions, six-second watchdog,0.2-second kill grace,25-second outer/RPC/lifecycle bounds and every earlier failure. No retries untilgreen, reduced workload or speculative frozen-helper changes."
+        },
+        {
+          "id": "tests06-verify-wording-clarification",
+          "status": "approved-scope-clarified",
+          "originalVerify": "Before/after test-name sets agree except red-first additions; jsdom default and node exceptions match execution needs, source-reading suites converted only where behavioural replacements pass, and e2e flake reruns record both results. Independently prove mock factory, restoreAllMocks and SQLite mapping before critic12 comment correction; preserve restoration and all old identities.",
+          "authority": "Approved tests-06 default-Node route; Parfit independent R2 scope review, Q015. This clarifies internal execution policy, not a target, coverage, deadline or identity change.",
+          "required": "Independent actualresolved environment controls freeze before the exact different-author config-pin amendment. Keep all711 existing pragmas initially; add only the identified DOM exceptions and preserve Next/mappings/workers/floors."
+        }
+      ],
+      "t0191WindowsRenameFollowup": {
+        "finding": "Full gate1791043080359 failed unchanged T0163 credential removal on EPERM atomic rename;8398pass/1fail. Unchanged same-environment isolated suite7/7exit0. Distinct from earlier cleanup deletion failure; no shared cause proven.",
+        "evidence": [
+          "tmp/t0191-full-gate-1791043080359/jest.log",
+          "tmp/t0191-t0163-alone.json",
+          "tmp/t0191-t0163-alone.log"
+        ],
+        "source": [
+          "src/modules/hermes/lib/hermes-config-write.ts:38",
+          "tests/unit/t0163-hermes-env-permissions.test.ts:172"
+        ],
+        "review": "Nash read-only: unique root, synchronous I/O, restored spies/umask; no explicit retained handle or same-path writer found. Laplace permits another full verification with all receipts retained. No antivirus/handle/scheduling causation established.",
+        "required": "Investigate native Windows ownership and transient replacement failure without silent retry, test weakening or deadline growth. Preserve this signature independently of cleanup and worker-exit uncertainty.",
+        "recurrence20261003": {
+          "full": "tmp/t0191-full-gate-1791056177702/jest.log",
+          "case": "hermes-config-sync-env: every Hermes provider with an env var routes to its mapped env var",
+          "alone": "tmp/t0191-hermes-sync-env-alone.json",
+          "alonePassed": 9,
+          "signature": "EPERM rename .env.tmp-PID-time-random to .env at hermes-config-write.ts38",
+          "limits": "Same writer signature as priorT0163, different case. Tests/source unchanged; cause unproved. No sharedcause claim with older cleanup-delete EPERM. No source retry, new permissions, lowered concurrency or waived check."
+        }
+      }
+    },
+    {
+      "id": "T-0196",
+      "name": "Consolidate tooling and CI paths",
+      "phase": "prerelease-structural",
+      "tierProposed": "R2",
+      "claims": [
+        "scripts/**",
+        ".github/workflows/**",
+        "Dockerfile",
+        ".dockerignore",
+        "docker-compose.yml",
+        "docker-compose.real-hermes.yml",
+        "docker-compose.bench-gateway.yml",
+        "tests/scripts/**",
+        "mock-hermes/server.mjs",
+        "mock-llm/server.mjs",
+        "mock-hindsight/server.mjs"
+      ],
+      "dependsOn": [
+        "T-0195"
+      ],
+      "authority": [
+        "Q-009",
+        "Q-013",
+        "tooling-04",
+        "tooling-05",
+        "tooling-16",
+        "tooling-19",
+        "tooling-22",
+        "Q-032"
+      ],
+      "invariants": [
+        "Windows Git Bash development remains supported.",
+        "Every public npm command keeps its name except the individually ruled dead test:e2e-bench-gateway removal in T-0199; the complete gate remains exit-code binding.",
+        "The ch_data, ch_hermes and /data/ch Compose names stay to preserve existing data; add why-comments."
+      ],
+      "rollback": "Restore a removed internal wrapper only if its caller test demonstrates a live need; do not restore blind gates.",
+      "verify": "Windows and Linux install, update, build, Docker context, CI and ten-step gate pass; planted design/read/write violations fail, and live tooling census falls against its frozen target. Measure critic11 mock JSON-reader consolidation including standalone Docker packaging. Reconcile gap005b historical15-patch discrepancy and three expired alerts using redacted scanner/ref evidence; retain unavailable historical proof explicitly."
+    },
+    {
+      "id": "T-0197",
+      "name": "Repair running and root documentation",
+      "phase": "prerelease-structural",
+      "tierProposed": "R1",
+      "claims": [
+        "docs/**",
+        "README.md",
+        "CONTRIBUTING.md",
+        "CHANGELOG.md"
+      ],
+      "dependsOn": [
+        "T-0196"
+      ],
+      "authority": [
+        "Q-011",
+        "Q-013",
+        "docs-01",
+        "docs-02",
+        "docs-04",
+        "docs-08",
+        "Q-032"
+      ],
+      "invariants": [
+        "Canonical running, migration and security commands remain correct.",
+        "Manifest and link checks are generated from source and no synced output is hand-edited."
+      ],
+      "rollback": "Revert only an inaccurate source document and regenerate its derived manifest.",
+      "verify": "Every documented command is exercised or explicitly marked operator-only, manifest and link checks pass, CHANGELOG matches shipped versions, and the live-doc scope is measured against its fixed baseline."
+    },
+    {
+      "id": "T-0198",
+      "name": "Consolidate live organisation guidance",
+      "phase": "prerelease-structural",
+      "tierProposed": "R2",
+      "claims": [
+        "org/HANDOVER.md",
+        "org/QUESTIONS.md",
+        "org/PLAYBOOKS.md",
+        "org/tasks/new-records-only",
+        "tests/unit/org-process-*.test.ts"
+      ],
+      "dependsOn": [
+        "T-0197"
+      ],
+      "authority": [
+        "Q-010",
+        "Q-015",
+        "org-04",
+        "org-09",
+        "ADR-0011",
+        "Q-032"
+      ],
+      "invariants": [
+        "Protected set, historical tasks, append-only ledgers and derived views are untouched without their specific authority.",
+        "Claims and rendered views remain reproducible."
+      ],
+      "rollback": "Revert only live guidance changes and render views from unchanged task records; do not rewrite history.",
+      "verify": "A fresh task record renders views deterministically, a planted protected edit is refused without accepted ADR, claims enforce two writers, and live organisation scope is reported separately from protected/history/generated counts.",
+      "readiness_followups_20261002": {
+        "reviewer": "Schrodinger, read-only readiness; not acceptance",
+        "evidence": "tmp/t0198-t0201-readiness-20261002.md",
+        "items": [
+          "Reconcile all40owned items, not only guidance length. Preserve historical/protected/generated material and account additively for unlocated finalR2receipts T0182-T0186.",
+          "Run pinnedEOS seed/session/task-schema proof, deterministic views, protected-edit refusal and two-writer enforcement on owned fixtures."
+        ],
+        "scope": "Opening requirements only; exact claims, routing and independent oracles precede implementation."
+      }
+    },
+    {
+      "id": "T-0199",
+      "name": "Remove ruled dead internal surfaces",
+      "phase": "prerelease-removal",
+      "tierProposed": "R2",
+      "claims": [
+        "package.json",
+        "docker-compose.bench-gateway.yml",
+        "tests/scripts/bench-gateway-itest.sh",
+        "test-harness/bench-gateway.Dockerfile",
+        "test-harness/bench-gateway-entrypoint.sh",
+        "test-harness/bench-gateway-e2e.mjs",
+        "test-harness/baseline-fix-verify.mjs",
+        "test-harness/poll-pair.mjs",
+        "test-harness/poll-run.mjs",
+        "src/lib/db/upgrade.ts",
+        "src/lib/db/index.ts",
+        "scripts/lib/ps-migrate.sh",
+        "docs/running/migration.md",
+        "docs/running/backup.md",
+        "docs/running/data-storage.md",
+        "docs/contributing/testing.md",
+        "tests/unit/db-upgrade.integration.test.ts",
+        "tests/unit/b6-backup-route.test.ts",
+        "tests/unit/b6-database-backup.test.ts",
+        "tests/fixtures/dead-surface-*.json"
+      ],
+      "dependsOn": [
+        "T-0198"
+      ],
+      "authority": [
+        "Q-011",
+        "Q-013",
+        "tooling-02",
+        "tooling-12",
+        "lib-data-05",
+        "Q-032"
+      ],
+      "invariants": [
+        "Only individually ruled dead and uncalled internals are removed.",
+        "Documented routes, database tables and data-bearing paths stay until their separate ruling; test:e2e-bench-gateway is the expressly ruled npm command exception.",
+        "ps-relocate.sh remains supported while control-hub directory discovery remains.",
+        "Removing lib-data-05's unreachable rebuild includes its caller, shell warning, tests and documented promise; pre-baseline backup listing remains."
+      ],
+      "rollback": "Restore any accidentally live path immediately with its caller oracle; retain compatibility until the post-1.0 retirement release.",
+      "verify": "A static and runtime caller inventory proves each removed internal has no supported caller; the eight ruled benchmark harness files and test:e2e-bench-gateway command are absent, ps-relocate remains. The unreachable baseline rebuild, index caller, shell warning and false guide promise are absent while old pre-baseline backup listings and their b6 tests remain; full install/update and URL matrix stay green, and every removed path is itemised with its Q-013 or Q-014 ruling.",
+      "readiness_followups_20261002": {
+        "reviewer": "Schrodinger, read-only readiness; not acceptance",
+        "evidence": "tmp/t0198-t0201-readiness-20261002.md",
+        "items": [
+          "Explicitly inherit T0189 deferred gap-041.2. Claim scripts/tooling/prebuild-db.mjs, inspected db-schema-ensure consumers and affected docs/tests at opening. Manual invocation belowversion3 still deletes DB/WAL/SHM; database-free npm build does not prove this path safe. Use isolated fixtures and the existing ruled removal authority. Preserve T0189 history."
+        ],
+        "scope": "Opening requirements only; exact claims, routing and independent oracles precede implementation."
+      }
+    },
+    {
+      "id": "T-0200",
+      "name": "Retire first-post-1.0 aliases as one release unit",
+      "phase": "post-v1-removal",
+      "tierProposed": "R3",
+      "claims": [
+        "scripts/bootstrap/**",
+        "src/lib/config/**",
+        "src/lib/config/legacy-boot.ts",
+        "src/lib/api/api-auth.ts",
+        "src/lib/api/read-only.ts",
+        "src/lib/host/paths.ts",
+        "src/proxy.ts",
+        "next.config.ts",
+        "scripts/application/ch-deploy.sh",
+        "scripts/hardware/ch-backup.sh",
+        "docs/running/migration.md",
+        "tests/unit/legacy-alias-retirement.test.ts",
+        "scripts/bootstrap/backup-hermes-config.sh",
+        "scripts/bootstrap/setup-hindsight.sh",
+        "scripts/bootstrap/setup.mjs",
+        "scripts/bootstrap/setup.sh",
+        "scripts/docs/build-site.mjs",
+        "scripts/docs/extract.ts",
+        "scripts/docs/lib.mjs",
+        "scripts/hardware/ps-db-backup.mjs",
+        "scripts/hardware/ps-db-backup.sh",
+        "scripts/hardware/ps-disk-report.mjs",
+        "scripts/hardware/ps-disk-report.sh",
+        "scripts/hardware/ps-log-rotate.mjs",
+        "scripts/hardware/ps-log-rotate.sh",
+        "scripts/hardware/reconnect-hindsight.sh",
+        "scripts/lib/ps-dotenv-local.sh",
+        "scripts/lib/ps-env.sh",
+        "scripts/lib/ps-rename-migrate.sh",
+        "scripts/maintenance/ps-migrate.sh",
+        "scripts/maintenance/ps-relocate.sh",
+        "scripts/tooling/_env-local.mjs",
+        "scripts/tooling/discover-agents.mjs",
+        "scripts/tooling/ensure-hermes-model-sync.ts",
+        "scripts/tooling/hermes-registry-import.mjs",
+        "scripts/tooling/import-hermes-state.ts",
+        "scripts/tooling/migrate-to-runtime.mjs",
+        "scripts/tooling/ps-deploy.mjs",
+        "scripts/tooling/seed-catalog.ts",
+        "scripts/tooling/t0205-loopback-diagnostic.mjs",
+        "src/app/agent/profiles/page.tsx",
+        "src/app/agent/settings/restore/page.tsx",
+        "src/app/agent/skills/page.tsx",
+        "src/app/agent/tools/page.tsx",
+        "src/app/api/agent/profiles/sync/pull/route.ts",
+        "src/app/results/sessions/page.tsx",
+        "src/app/work/research/page.tsx",
+        "src/components/missions/MissionCreateForm.tsx",
+        "src/hooks/useModelActions.ts",
+        "src/lib/api/api-fetch.ts",
+        "src/lib/api/api-write.ts",
+        "src/lib/composer/engine.ts",
+        "src/lib/composer/schema.ts",
+        "src/lib/composer/seed.ts",
+        "src/lib/db/apply-bench-gateways-migration.ts",
+        "src/lib/db/apply-research-composer-link-migration.ts",
+        "src/lib/db/apply-research-options-migration.ts",
+        "src/lib/db/sql-migrations.ts",
+        "src/lib/git/git-branch.ts",
+        "src/lib/missions/mission-handlers/dispatch.ts",
+        "src/lib/missions/mission-promote-handler.ts",
+        "src/lib/missions/mission-submit-requirement.ts",
+        "src/lib/orchestration/run-deadline.ts",
+        "src/lib/orchestration/scheduler/tick.ts",
+        "src/lib/search/index.ts",
+        "src/lib/templates-handlers/update.ts",
+        "src/lib/ui/dispatch-mode.ts",
+        "src/lib/update-handlers/shared.ts",
+        "src/modules/hermes/lib/agent-runtime.ts",
+        "src/modules/hermes/lib/home.ts",
+        "src/modules/hermes/lib/profile-paths.ts",
+        "src/instrumentation.ts",
+        "src/lib/config/env.ts"
+      ],
+      "dependsOn": [
+        "T-0199",
+        "operator-v1-release"
+      ],
+      "authority": [
+        "Q-011",
+        "cross-cutting-04",
+        "tooling-11",
+        "critic-08"
+      ],
+      "invariants": [
+        "CH_, CONTROL_HUB_, AGENT_HOME, x-ch-*, the still-supported ch-deploy/ch-backup shims and 52 redirects survive through v1.0.0; T-0187's five specifically ruled dev-only shims are the exception.",
+        "control-hub.db discovery, ps-relocate and ch_data/ch_hermes Compose volume names survive retirement; security aliases without PS twins refuse boot."
+      ],
+      "rollback": "Keep a tagged pre-retirement release and migration route; restore aliases only together with their warning and tripwire contracts.",
+      "verify": "The operator's v1.0.0 tag and T-0187 warning proof precede retirement; a fresh git-grep alias inventory accounts for every active CH_, CONTROL_HUB_, AGENT_HOME, x-ch and ch.sessions reader, with exact file claims and PS replacement tests. Old aliases work in 1.0 and are absent only in the first post-1.0 candidate, missing PS security twins fail boot, while historical database discovery, ps-relocate, Compose volume names and every ruled redirect remain intact under migration tests.",
+      "readiness_followups_20261002": {
+        "reviewer": "Schrodinger, read-only readiness; not acceptance",
+        "evidence": "tmp/t0198-t0201-readiness-20261002.md",
+        "items": [
+          "Before post-v1.0 opening obtain different-author dated correction to contradictory redirect Verify:52ruled redirects survive throughv1.0 and retire after it; historical DB discovery,ps-relocate,Compose names remain preservation exceptions. Q033 deferral unchanged."
+        ],
+        "scope": "Opening requirements only; exact claims, routing and independent oracles precede implementation."
+      }
+    },
+    {
+      "id": "T-0201",
+      "name": "Close the programme row by row",
+      "phase": "closing",
+      "tierProposed": "R2",
+      "claims": [
+        "org/plans/2026-09-refactor-programme.md",
+        "org/plans/2026-09-refactor-ownership.json",
+        "org/plans/2026-09-refactor-final-dispositions.json",
+        "org/HANDOVER.md",
+        "scripts/tooling/refactor-closing-oracle.mjs"
+      ],
+      "dependsOn": [
+        "T-0200"
+      ],
+      "authority": [
+        "Q-009",
+        "Q-017",
+        "Q-023",
+        "T-0164 itemised ledgers"
+      ],
+      "invariants": [
+        "Original and new targets never move; every miss names its baseline, final number and reason.",
+        "Every preliminary finding, split decision and coverage atom ends done, ruled out or deferred with evidence and owner."
+      ],
+      "rollback": "Reopen the closing record if any CI job, route, census row or finding disposition is unverified; never edit the frozen baselines.",
+      "verify": "The closing oracle reads committed baseline files and reports all eight rows and each miss; all 265 findings, 163 split decisions and 285 atoms have unique final reasoned dispositions, all local and hosted jobs are green, and no protected edit or removal lacks its ruling.",
+      "readiness_followups_20261002": {
+        "reviewer": "Schrodinger, read-only readiness; not acceptance",
+        "evidence": "tmp/t0198-t0201-readiness-20261002.md",
+        "items": [
+          "Prepare unique final dispositions for265findings163splitdecisions285atoms, including inherited batchdeferreditems and current finalcounts against frozen targets. A completed all-pathway matrix is still required; individual greenwalks are bounded. T0200dependency and operatorreleaseboundary unchanged."
+        ],
+        "scope": "Opening requirements only; exact claims, routing and independent oracles precede implementation."
+      }
+    }
+  ],
+  "closing": {
+    "measureFile": "org/plans/2026-09-refactor-measures.json",
+    "dispositionFile": "org/plans/2026-09-refactor-final-dispositions.json",
+    "oracle": "scripts/tooling/refactor-closing-oracle.mjs",
+    "missPolicy": "Report every miss with the committed baseline, target, final number and written reason; aggregate improvement cannot conceal any failed row."
+  },
+  "externalPrerequisites": {
+    "release-verification-repairs-complete": {
+      "requiresAll": {
+        "T-0202": {
+          "independentAcceptance": "required",
+          "closure": "required",
+          "localFullGate": {
+            "requiredResult": "pass"
+          },
+          "sweep": {
+            "committed": true,
+            "clean": true
+          },
+          "httpMatrix": {
+            "enabled": true,
+            "cases": 15,
+            "requiredResult": "all-pass"
+          }
+        },
+        "T-0203": {
+          "independentAcceptance": "required",
+          "closure": "required",
+          "localFullGate": {
+            "revision": "current-head",
+            "requiredResult": "pass"
+          },
+          "sweep": {
+            "committed": true,
+            "clean": true
+          },
+          "hostedJobs": {
+            "revision": "exact-head",
+            "events": [
+              "push",
+              "pull_request"
+            ],
+            "selection": "every-required-job",
+            "requiredResult": "all-pass"
+          },
+          "nativeMacHttp": {
+            "execution": "native-macos",
+            "enabled": true,
+            "cases": 21,
+            "requiredResult": "all-pass"
+          }
+        },
+        "T-0204": {
+          "revision": "latest-repair-head",
+          "independentAcceptance": {
+            "tier": "R2",
+            "requiredResult": "accepted"
+          },
+          "closure": "required",
+          "localFullGate": {
+            "scope": "complete",
+            "tree": "unchanged",
+            "requiredResult": "pass"
+          },
+          "sweep": {
+            "committed": true,
+            "clean": true
+          },
+          "scannerAcceptance": {
+            "execution": "actual",
+            "imageIdentity": "digest-pinned",
+            "cleanScan": {
+              "requiredResult": "accepted"
+            },
+            "plantedScanner": {
+              "deterministic": true,
+              "requiredResult": "accepted"
+            }
+          },
+          "frozenT0203Checks": {
+            "selection": "all",
+            "requiredResult": "all-pass"
+          },
+          "repairedCanary": {
+            "requiredResult": "pass"
+          },
+          "hostedJobs": {
+            "revision": "exact-head",
+            "events": [
+              "push",
+              "pull_request"
+            ],
+            "selection": "every-required-job",
+            "requiredResult": "all-pass"
+          }
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,22 @@
+{
+  "task": "T-0159",
+  "why": "The ledger and ten rulings must remain traceable; these mutants remove a source identity and reverse the selected product choice.",
+  "mutants": [
+    {
+      "id": "m1-a-preliminary-finding-disappears",
+      "file": "org/reviews/2026-09-evidence-ledger.jsonl",
+      "anchor": "\"id\":\"critic-01\"",
+      "replacement": "\"id\":\"critic-01-missing\"",
+      "tests": ["tests/unit/k8-evidence-ledger.test.ts"],
+      "why": "The oracle must reject a ledger that silently renames an original finding."
+    },
+    {
+      "id": "m2-the-select-picker-ruling-reverses",
+      "file": "org/reviews/2026-09-refactor-addendum.md",
+      "anchor": "**Select and Picker remain separate**",
+      "replacement": "**Select replaces Picker**",
+      "tests": ["tests/unit/k8-evidence-ledger.test.ts"],
+      "why": "The dated ruling must retain the operator's selected product boundary."
+    }
+  ]
+}

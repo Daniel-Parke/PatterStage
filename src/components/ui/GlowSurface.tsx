@@ -1,11 +1,20 @@
 "use client";
 
 import type { CSSProperties, ReactNode } from "react";
-import type { AccentColor } from "@/types/hermes";
-import { glowSurfaceRgbMap } from "@/lib/theme";
+import type { AccentColor } from "@/types/console";
+import { glowSurfaceRgbMap } from "@/lib/ui/theme";
+
+/**
+ * The elements a surface may be. Containers only, and closed on purpose: an
+ * open `ElementType` would let a caller render a `<form>` or a `<button>`
+ * here, and this component forwards no props those need (T-0122).
+ */
+export type SurfaceElement = "div" | "section" | "header" | "article" | "aside";
 
 export interface GlowSurfaceProps {
   children: ReactNode;
+  /** The element to render. Defaults to a div. */
+  as?: SurfaceElement;
   /** When omitted, renders a plain wrapper (no glow). */
   accent?: AccentColor;
   /** Multiplier for shadow strength (1 = default). */
@@ -20,6 +29,7 @@ export interface GlowSurfaceProps {
  */
 export default function GlowSurface({
   children,
+  as: Tag = "div",
   accent,
   intensity = 1,
   animated = false,
@@ -27,7 +37,7 @@ export default function GlowSurface({
   ...rest
 }: GlowSurfaceProps & Record<string, unknown>) {
   if (!accent) {
-    return <div className={className} {...rest}>{children}</div>;
+    return <Tag className={className} {...rest}>{children}</Tag>;
   }
 
   const rgb = glowSurfaceRgbMap[accent];
@@ -49,8 +59,8 @@ export default function GlowSurface({
     .join(" ");
 
   return (
-    <div className={glowClasses} style={style} {...rest}>
+    <Tag className={glowClasses} style={style} {...rest}>
       {children}
-    </div>
+    </Tag>
   );
 }

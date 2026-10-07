@@ -1,0 +1,13 @@
+{
+  "task": "T-0186",
+  "mutants": [
+    {
+      "id": "m1-drop-reader-error-from-header",
+      "file": "src/modules/rec-room/components/ReaderHeader.tsx",
+      "anchor": "{errorBanner}",
+      "replacement": "{null}",
+      "tests": ["tests/unit/u12-the-reader-register.test.tsx", "tests/unit/story-reader-error-banner.test.tsx"],
+      "why": "A save failure must remain visible in the reader header without covering its controls."
+    }
+  ]
+}

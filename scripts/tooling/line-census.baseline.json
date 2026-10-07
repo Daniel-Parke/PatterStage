@@ -1,0 +1,1375 @@
+{
+  "measuredAt": "2026-10-07",
+  "counts": {
+    "srcLines": 102412,
+    "testLines": 155307,
+    "scriptsLines": 13597,
+    "srcRepeatedWindowLines": 655,
+    "testRepeatedWindowLines": 4774,
+    "routesWithTryCatch": 11,
+    "handRolledReadHooks": 2,
+    "writeHooksWithoutMutation": 0,
+    "repeatedTypeShapeFiles": 2,
+    "oneImporterComponents": 103,
+    "libRootFiles": 6,
+    "commentEssays": 8,
+    "suitesMockingDbInline": 15
+  },
+  "allowed": [
+    {
+      "measuredAt": "2026-09-09",
+      "rise": "testLines rose from 121762 to 121900",
+      "reason": "C1 (T-0136): the oracle suites add their lines to tests; api-route.ts sits at the lib root beside api-logger.ts and api-response.ts until C7 moves the three"
+    },
+    {
+      "measuredAt": "2026-09-09",
+      "rise": "libRootFiles rose from 71 to 72",
+      "reason": "C1 (T-0136): the oracle suites add their lines to tests; api-route.ts sits at the lib root beside api-logger.ts and api-response.ts until C7 moves the three"
+    },
+    {
+      "measuredAt": "2026-09-09",
+      "rise": "testLines rose from 121900 to 121915",
+      "reason": "C1 (T-0136): the oracle suite adds its lines to tests"
+    },
+    {
+      "measuredAt": "2026-09-09",
+      "rise": "testLines rose from 121915 to 121926",
+      "reason": "C1 (T-0136): four suites that read the handler spelling say why they read two"
+    },
+    {
+      "measuredAt": "2026-09-09",
+      "rise": "testLines rose from 121926 to 122030",
+      "reason": "C2 (T-0137): the oracle suite adds its lines to tests; src/components/models/types.ts lost fourteen code lines to the library's ApiModel and kept its comments, so it crossed the essay line without gaining a comment"
+    },
+    {
+      "measuredAt": "2026-09-09",
+      "rise": "commentEssays rose from 107 to 108",
+      "reason": "C2 (T-0137): the oracle suite adds its lines to tests; src/components/models/types.ts lost fourteen code lines to the library's ApiModel and kept its comments, so it crossed the essay line without gaining a comment"
+    },
+    {
+      "measuredAt": "2026-09-09",
+      "rise": "handRolledReadHooks rose from 5 to 11",
+      "reason": "C3 (T-0138): the read measure walks the AST for a fetch reachable from a useEffect callback through the file's own functions; the regex before it counted 5, three of them click handlers, and missed eight loaders called from effects. Two of the honest thirteen (the Story Weaver pages) moved onto useApiResource in C3; the eleven left are named by --report and held here."
+    },
+    {
+      "measuredAt": "2026-09-09",
+      "rise": "srcLines rose from 105410 to 105422",
+      "reason": "T-0139: the Models page reload fix adds twelve source lines (the settled flag, its comment, the page's note) and its oracle suite 167 test lines; the oracle's fetch double repeats the models suites' stanza, which C4 (T-0140) folds into tests/helpers."
+    },
+    {
+      "measuredAt": "2026-09-09",
+      "rise": "testLines rose from 121189 to 121356",
+      "reason": "T-0139: the Models page reload fix adds twelve source lines (the settled flag, its comment, the page's note) and its oracle suite 167 test lines; the oracle's fetch double repeats the models suites' stanza, which C4 (T-0140) folds into tests/helpers."
+    },
+    {
+      "measuredAt": "2026-09-09",
+      "rise": "testRepeatedWindowLines rose from 6027 to 6044",
+      "reason": "T-0139: the Models page reload fix adds twelve source lines (the settled flag, its comment, the page's note) and its oracle suite 167 test lines; the oracle's fetch double repeats the models suites' stanza, which C4 (T-0140) folds into tests/helpers."
+    },
+    {
+      "measuredAt": "2026-09-09",
+      "rise": "testLines rose from 121356 to 121516",
+      "reason": "T-0140: the custom-fallback oracle adds 160 test lines and mocks the db through dbSingletonMock, which the predicate counts as inline until C4 (T-0141) names that factory too."
+    },
+    {
+      "measuredAt": "2026-09-09",
+      "rise": "suitesMockingDbInline rose from 100 to 101",
+      "reason": "T-0140: the custom-fallback oracle adds 160 test lines and mocks the db through dbSingletonMock, which the predicate counts as inline until C4 (T-0141) names that factory too."
+    },
+    {
+      "measuredAt": "2026-09-09",
+      "rise": "testLines rose from 120549 to 120624",
+      "reason": "C5 (T-0142): the oracle suite adds its 75 lines to tests; every other measure fell or held."
+    },
+    {
+      "measuredAt": "2026-09-09",
+      "rise": "testRepeatedWindowLines rose from 4637 to 4651",
+      "reason": "C5 (T-0142): the oracle suite adds its 75 lines to tests; every other measure fell or held."
+    },
+    {
+      "measuredAt": "2026-09-10",
+      "rise": "testLines rose from 120624 to 121388",
+      "reason": "C6 (T-0143): tests grow by two keeps-its-body suites modelled on T-0139's and by the api-fetch preamble that now routes safeApiCall through the same map in five suites; the src windows are the models page's handler lists, unchanged, re-counted after the folds moved lines around them."
+    },
+    {
+      "measuredAt": "2026-09-10",
+      "rise": "srcRepeatedWindowLines rose from 1176 to 1190",
+      "reason": "C6 (T-0143): tests grow by two keeps-its-body suites modelled on T-0139's and by the api-fetch preamble that now routes safeApiCall through the same map in five suites; the src windows are the models page's handler lists, unchanged, re-counted after the folds moved lines around them."
+    },
+    {
+      "measuredAt": "2026-09-10",
+      "rise": "testRepeatedWindowLines rose from 4651 to 4783",
+      "reason": "C6 (T-0143): tests grow by two keeps-its-body suites modelled on T-0139's and by the api-fetch preamble that now routes safeApiCall through the same map in five suites; the src windows are the models page's handler lists, unchanged, re-counted after the folds moved lines around them."
+    },
+    {
+      "measuredAt": "2026-09-10",
+      "rise": "srcLines rose from 100864 to 100872",
+      "reason": "C6 (T-0143): the baseline was cut before gate 8 caught two targets this batch introduced; src rises by the skip link's focus-only sizing and the rail chip's floor with the comments that say why, and tests by the oracle case that holds the skip link to the button's scale."
+    },
+    {
+      "measuredAt": "2026-09-10",
+      "rise": "testLines rose from 121388 to 121422",
+      "reason": "C6 (T-0143): the baseline was cut before gate 8 caught two targets this batch introduced; src rises by the skip link's focus-only sizing and the rail chip's floor with the comments that say why, and tests by the oracle case that holds the skip link to the button's scale."
+    },
+    {
+      "measuredAt": "2026-09-10",
+      "rise": "testRepeatedWindowLines rose from 4783 to 4786",
+      "reason": "C6 (T-0143): the baseline was cut before gate 8 caught two targets this batch introduced; src rises by the skip link's focus-only sizing and the rail chip's floor with the comments that say why, and tests by the oracle case that holds the skip link to the button's scale."
+    },
+    {
+      "measuredAt": "2026-09-10",
+      "rise": "srcLines rose from 100872 to 100890",
+      "reason": "C7 (T-0144): libRootFiles 71 to 6. src rises by the headers the six remaining root files now carry, each saying why it belongs to no domain, and one of them tips a file over the essay predicate; tests rise by the C7 oracle, which reads the five spellings of a lib path a codemod has to rewrite."
+    },
+    {
+      "measuredAt": "2026-09-10",
+      "rise": "testLines rose from 121422 to 121538",
+      "reason": "C7 (T-0144): libRootFiles 71 to 6. src rises by the headers the six remaining root files now carry, each saying why it belongs to no domain, and one of them tips a file over the essay predicate; tests rise by the C7 oracle, which reads the five spellings of a lib path a codemod has to rewrite."
+    },
+    {
+      "measuredAt": "2026-09-10",
+      "rise": "commentEssays rose from 8 to 9",
+      "reason": "C7 (T-0144): libRootFiles 71 to 6. src rises by the headers the six remaining root files now carry, each saying why it belongs to no domain, and one of them tips a file over the essay predicate; tests rise by the C7 oracle, which reads the five spellings of a lib path a codemod has to rewrite."
+    },
+    {
+      "measuredAt": "2026-09-10",
+      "rise": "srcLines rose from 100890 to 100894",
+      "reason": "C7 (T-0144): the mutation sweep found the root-header check soft, so every root file now carries the marker the oracle demands and the oracle demands the marker as well as the reason; four src lines and eight test lines are that sharpening."
+    },
+    {
+      "measuredAt": "2026-09-10",
+      "rise": "testLines rose from 121538 to 121546",
+      "reason": "C7 (T-0144): the mutation sweep found the root-header check soft, so every root file now carries the marker the oracle demands and the oracle demands the marker as well as the reason; four src lines and eight test lines are that sharpening."
+    },
+    {
+      "measuredAt": "2026-09-10",
+      "rise": "testLines rose from 121112 to 121114",
+      "reason": "C8 (T-0145): two lines of comment on C0's status assertion, saying which status a filed plan may have and that C8 is what makes it done."
+    },
+    {
+      "measuredAt": "2026-09-12",
+      "rise": "testLines rose from 121114 to 121204",
+      "reason": "K0's oracle: 90 test lines that hold the decision register complete (T-0146)"
+    },
+    {
+      "measuredAt": "2026-09-12",
+      "rise": "testLines rose from 121204 to 121259",
+      "reason": "K0 (T-0146): the register oracle, 4 tests, and the c8 amendment its own growth forced (POLICY-closed-oracles, ruled 2026-09-12)"
+    },
+    {
+      "measuredAt": "2026-09-12",
+      "rise": "testLines rose from 121259 to 121398",
+      "reason": "K1 (T-0147): the oracle that holds the three CI failures, each checkable on Windows"
+    },
+    {
+      "measuredAt": "2026-09-12",
+      "rise": "testLines rose from 121398 to 121402",
+      "reason": "the navigator install in b6-cleared-defaults-stay-cleared: four lines that let a node suite build the whole DOM it needs, not just part of it"
+    },
+    {
+      "measuredAt": "2026-09-12",
+      "rise": "testLines rose from 121402 to 121426",
+      "reason": "the pipe regression check in k1-ci-can-go-green: 18 lines for the truncation only macOS saw"
+    },
+    {
+      "measuredAt": "2026-09-12",
+      "rise": "srcLines rose from 100881 to 100885",
+      "reason": "K2 (T-0148): the discipline oracle, 14 tests; plus the hit-target and pipe checks the CI-green batch added in 9df98afc and a68597ae"
+    },
+    {
+      "measuredAt": "2026-09-12",
+      "rise": "testLines rose from 121426 to 121568",
+      "reason": "K2 (T-0148): the discipline oracle, 14 tests; plus the hit-target and pipe checks the CI-green batch added in 9df98afc and a68597ae"
+    },
+    {
+      "measuredAt": "2026-09-12",
+      "rise": "testLines rose from 121568 to 121978",
+      "reason": "K3 (T-0149): the K3 oracle's 309 lines, authored by an ORACLE session, and the 100 lines of the c8 testLines amendment the operator ruled on 2026-09-12"
+    },
+    {
+      "measuredAt": "2026-09-12",
+      "rise": "srcLines rose from 100885 to 100978",
+      "reason": "K4/T-0151, the security fixes: the url-guard's IPv6 carrier decoding, the workspace guard's path test, the sessions limiter sharing one client-key derivation, and critic-03b's chmod at six writers of operator data, with the K4 oracle and critic-05c's x-ps-* signing cases"
+    },
+    {
+      "measuredAt": "2026-09-12",
+      "rise": "testLines rose from 121978 to 122275",
+      "reason": "K4/T-0151, the security fixes: the url-guard's IPv6 carrier decoding, the workspace guard's path test, the sessions limiter sharing one client-key derivation, and critic-03b's chmod at six writers of operator data, with the K4 oracle and critic-05c's x-ps-* signing cases"
+    },
+    {
+      "measuredAt": "2026-09-12",
+      "rise": "testLines rose from 122275 to 122301",
+      "reason": "K4/T-0151, the security fixes: the url-guard's IPv6 carrier decoding, the workspace guard's path test, the sessions limiter sharing one client-key derivation, and critic-03b's chmod at six writers of operator data, with the K4 oracle and critic-05c's x-ps-* signing cases"
+    },
+    {
+      "measuredAt": "2026-09-12",
+      "rise": "srcLines rose from 100978 to 101050",
+      "reason": "K4/T-0151, the security fixes: the url-guard's IPv6 expansion and carrier decoding, the workspace guard's path test, the sessions limiter sharing one client-key derivation and exporting its window count, and critic-03b's chmod at every writer of operator data plus the sweep of the copies already on disk, with the K4 oracle and critic-05c's x-ps-* signing cases"
+    },
+    {
+      "measuredAt": "2026-09-12",
+      "rise": "testLines rose from 122301 to 122386",
+      "reason": "K4/T-0151, the security fixes: the url-guard's IPv6 expansion and carrier decoding, the workspace guard's path test, the sessions limiter sharing one client-key derivation and exporting its window count, and critic-03b's chmod at every writer of operator data plus the sweep of the copies already on disk, with the K4 oracle and critic-05c's x-ps-* signing cases"
+    },
+    {
+      "measuredAt": "2026-09-12",
+      "rise": "testLines rose from 122386 to 122396",
+      "reason": "T-0151: the two holes the mutation sweep found in the K4 oracle — a restrictToOwner count loose enough to survive deleting one, and a .dockerignore substring test that a commented-out rule still satisfies"
+    },
+    {
+      "measuredAt": "2026-09-12",
+      "rise": "testLines rose from 122396 to 123081",
+      "reason": "K5/T-0153, the ruled security items: the K5 oracle, 65 cases and 771 lines, which drives every route losing a route-level read-only check through proxy() and calls the six host-side handlers directly. Net of the eleven cases app-06's ruling deletes with the function they tested, each replaced in the oracle and each removal site carrying a pointer to where the assertion went"
+    },
+    {
+      "measuredAt": "2026-09-12",
+      "rise": "testLines rose from 123081 to 123849",
+      "reason": "K6/T-0154, the gates see. routesWithTryCatch rises because the measure was widened, not because the tree grew a catch: it counted the serverErrorFromCatch helper by name, and eleven catches in six files logged and answered 500 by hand (app-04a, ruled 2026-09-12). Every one of the eighteen was already there. testLines and testRepeatedWindowLines are the K6 oracle, which proves each of the five gates BLIND before it is fixed, so it carries the shipped predicate beside the fixed one. scriptsLines is a new key: the census walked src and tests alone, so the tooling that referees every batch was measured by nothing (tooling-22)"
+    },
+    {
+      "measuredAt": "2026-09-12",
+      "rise": "testRepeatedWindowLines rose from 4334 to 4345",
+      "reason": "K6/T-0154, the gates see. routesWithTryCatch rises because the measure was widened, not because the tree grew a catch: it counted the serverErrorFromCatch helper by name, and eleven catches in six files logged and answered 500 by hand (app-04a, ruled 2026-09-12). Every one of the eighteen was already there. testLines and testRepeatedWindowLines are the K6 oracle, which proves each of the five gates BLIND before it is fixed, so it carries the shipped predicate beside the fixed one. scriptsLines is a new key: the census walked src and tests alone, so the tooling that referees every batch was measured by nothing (tooling-22)"
+    },
+    {
+      "measuredAt": "2026-09-12",
+      "rise": "routesWithTryCatch rose from 13 to 18",
+      "reason": "K6/T-0154, the gates see. routesWithTryCatch rises because the measure was widened, not because the tree grew a catch: it counted the serverErrorFromCatch helper by name, and eleven catches in six files logged and answered 500 by hand (app-04a, ruled 2026-09-12). Every one of the eighteen was already there. testLines and testRepeatedWindowLines are the K6 oracle, which proves each of the five gates BLIND before it is fixed, so it carries the shipped predicate beside the fixed one. scriptsLines is a new key: the census walked src and tests alone, so the tooling that referees every batch was measured by nothing (tooling-22)"
+    },
+    {
+      "measuredAt": "2026-09-12",
+      "rise": "scriptsLines rose from 8975 to 8978",
+      "reason": "K6/T-0154: three lines in check-doc-links.mjs, rewording the SCOPE comment so it no longer writes the pre-C7 theme path that c7's own gate refuses. The first scripts measure of the batch is necessarily cut before the last edit to a script, because the census now measures the tooling it is part of"
+    },
+    {
+      "measuredAt": "2026-09-12",
+      "rise": "testLines rose from 123849 to 123864",
+      "reason": "K6/T-0154, the independent review's fixes. scriptsLines rises because the measure was widened again, not because scripts/ grew: it counted only the four extensions the APP is written in, and the review found 3,501 lines of .sh, .mts, .cjs and .py under scripts/ that a measure named for that tree was silently leaving out - the same defect class the batch exists to fix. testLines is the two test files the review corrected: a case whose name said the opposite of what it asserted, and a header claiming in the present tense that the shared helper mocks api-auth"
+    },
+    {
+      "measuredAt": "2026-09-12",
+      "rise": "scriptsLines rose from 8978 to 12961",
+      "reason": "K6/T-0154, the independent review's fixes. scriptsLines rises because the measure was widened again, not because scripts/ grew: it counted only the four extensions the APP is written in, and the review found 3,501 lines of .sh, .mts, .cjs and .py under scripts/ that a measure named for that tree was silently leaving out - the same defect class the batch exists to fix. testLines is the two test files the review corrected: a case whose name said the opposite of what it asserted, and a header claiming in the present tense that the shared helper mocks api-auth"
+    },
+    {
+      "measuredAt": "2026-09-12",
+      "rise": "testLines rose from 123864 to 124351",
+      "reason": "K6/T-0154: the ORACLE session's amendment closing the two mutation-sweep survivors and three rot risks it found in its own work. An AST probe that shares none of the census's brace matching (m5 moved routes.sites 25 to 26 without moving the file list, which is why the first differential, sharing the algorithm AND comparing only file lists, saw nothing); a scripts-extension property derived from the tree rather than a list (m10); a JSX walk that cross-checks the raw-control rule's file set; and two pins replaced by properties so a later burn-down does not turn them red"
+    },
+    {
+      "measuredAt": "2026-09-26",
+      "rise": "testLines rose from 124351 to 124454",
+      "reason": "T-0159: 103 evidence-oracle test lines and 194 in-repo evidence-ledger checker lines make the review auditable"
+    },
+    {
+      "measuredAt": "2026-09-26",
+      "rise": "scriptsLines rose from 12961 to 13155",
+      "reason": "T-0159: 103 evidence-oracle test lines and 194 in-repo evidence-ledger checker lines make the review auditable"
+    },
+    {
+      "measuredAt": "2026-09-26",
+      "rise": "scriptsLines rose from 13155 to 13162",
+      "reason": "T-0159: the ledger reconciliation checker adds explicit pending-ruling and contradictory-Select-Picker detection"
+    },
+    {
+      "measuredAt": "2026-09-26",
+      "rise": "testLines rose from 124454 to 124564",
+      "reason": "T-0150: one hermetic session-fixture oracle and isolated e2e preparation, setup and assertion comments"
+    },
+    {
+      "measuredAt": "2026-09-26",
+      "rise": "testLines rose from 124564 to 124609",
+      "reason": "T-0152: three browser layout oracles and one rendered-notice regression oracle for the real 24px no-agent split"
+    },
+    {
+      "measuredAt": "2026-09-26",
+      "rise": "testLines rose from 124609 to 124750",
+      "reason": "T-0160: behavioural runner-integrity oracle and content-sensitive gate/sweep evidence; the macOS isolated tmpdir canonicalisation corrects a hosted T-0150 prerequisite failure"
+    },
+    {
+      "measuredAt": "2026-09-26",
+      "rise": "scriptsLines rose from 13162 to 13263",
+      "reason": "T-0160: behavioural runner-integrity oracle and content-sensitive gate/sweep evidence; the macOS isolated tmpdir canonicalisation corrects a hosted T-0150 prerequisite failure"
+    },
+    {
+      "measuredAt": "2026-09-26",
+      "rise": "testLines rose from 124750 to 124895",
+      "reason": "T-0160 independent R2 amendment: four red-first counterexample tests for symlinked deletion/mutation, non-assertion crashes and absent rerun specs; five guard lines added without widening the original census measures"
+    },
+    {
+      "measuredAt": "2026-09-26",
+      "rise": "scriptsLines rose from 13263 to 13268",
+      "reason": "T-0160 independent R2 amendment: four red-first counterexample tests for symlinked deletion/mutation, non-assertion crashes and absent rerun specs; five guard lines added without widening the original census measures"
+    },
+    {
+      "measuredAt": "2026-09-26",
+      "rise": "testLines rose from 124895 to 124934",
+      "reason": "T-0160 second independent amendment: a red-first two-case oracle distinguishes a TypeError that quotes matcher syntax from an actual Jest assertion; classifier now anchors the first failure line"
+    },
+    {
+      "measuredAt": "2026-09-26",
+      "rise": "scriptsLines rose from 13268 to 13271",
+      "reason": "T-0160 second independent amendment: a red-first two-case oracle distinguishes a TypeError that quotes matcher syntax from an actual Jest assertion; classifier now anchors the first failure line"
+    },
+    {
+      "measuredAt": "2026-09-26",
+      "rise": "testLines rose from 124934 to 124999",
+      "reason": "T-0160 third independent amendment: genuine Jest matcher evidence is distinguished from thrown Error text; frozen test names and assertions retained with realistic failureDetails fixtures"
+    },
+    {
+      "measuredAt": "2026-09-26",
+      "rise": "testRepeatedWindowLines rose from 4345 to 4371",
+      "reason": "T-0160 third independent amendment: genuine Jest matcher evidence is distinguished from thrown Error text; frozen test names and assertions retained with realistic failureDetails fixtures"
+    },
+    {
+      "measuredAt": "2026-09-26",
+      "rise": "testLines rose from 124999 to 125044",
+      "reason": "T-0160 fourth independent amendment: forged matcher metadata oracle and real-shaped frozen fixtures; matcher message and stack correlation prevents non-assertion kills"
+    },
+    {
+      "measuredAt": "2026-09-26",
+      "rise": "scriptsLines rose from 13271 to 13275",
+      "reason": "T-0160 fourth independent amendment: forged matcher metadata oracle and real-shaped frozen fixtures; matcher message and stack correlation prevents non-assertion kills"
+    },
+    {
+      "measuredAt": "2026-09-26",
+      "rise": "testRepeatedWindowLines rose from 4371 to 4380",
+      "reason": "T-0160 fourth independent amendment: forged matcher metadata oracle and real-shaped frozen fixtures; matcher message and stack correlation prevents non-assertion kills"
+    },
+    {
+      "measuredAt": "2026-09-26",
+      "rise": "testLines rose from 125044 to 125049",
+      "reason": "T-0160: independent T-0152 browser-oracle readiness amendment after full-gate load evidence; the three cases and one-pixel geometry contract remain"
+    },
+    {
+      "measuredAt": "2026-09-26",
+      "rise": "testLines rose from 125049 to 125120",
+      "reason": "T-0160: independent red-first Jest assertion attribution amendment for negated and toThrow matcher shapes"
+    },
+    {
+      "measuredAt": "2026-09-26",
+      "rise": "scriptsLines rose from 13275 to 13278",
+      "reason": "T-0160: independent red-first Jest assertion attribution amendment for negated and toThrow matcher shapes"
+    },
+    {
+      "measuredAt": "2026-09-26",
+      "rise": "testRepeatedWindowLines rose from 4380 to 4404",
+      "reason": "T-0160: independent red-first Jest assertion attribution amendment for negated and toThrow matcher shapes"
+    },
+    {
+      "measuredAt": "2026-09-26",
+      "rise": "testLines rose from 125120 to 125177",
+      "reason": "T-0160: independent red-first nested Jest matcher stack amendment, preserving seven runner suites"
+    },
+    {
+      "measuredAt": "2026-09-26",
+      "rise": "testRepeatedWindowLines rose from 4404 to 4416",
+      "reason": "T-0160: independent red-first nested Jest matcher stack amendment, preserving seven runner suites"
+    },
+    {
+      "measuredAt": "2026-09-26",
+      "rise": "testLines rose from 125177 to 125189",
+      "reason": "T-0166: independent synchronisation amendment retains two Models-page test names and all thirteen assertions"
+    },
+    {
+      "measuredAt": "2026-09-26",
+      "rise": "testLines rose from 125189 to 125217",
+      "reason": "T-0157: four-case red-first framework version oracle for ruled Next and ESLint pair"
+    },
+    {
+      "measuredAt": "2026-09-26",
+      "rise": "testLines rose from 125217 to 125294",
+      "reason": "T-0157: independently authored four-case black-box framework auth and framing oracle"
+    },
+    {
+      "measuredAt": "2026-09-26",
+      "rise": "srcLines rose from 100983 to 100987",
+      "reason": "T-0161: independent build-purity, Hermes import, backup and CI oracles; explicit migration wiring"
+    },
+    {
+      "measuredAt": "2026-09-26",
+      "rise": "testLines rose from 125294 to 125795",
+      "reason": "T-0161: independent build-purity, Hermes import, backup and CI oracles; explicit migration wiring"
+    },
+    {
+      "measuredAt": "2026-09-26",
+      "rise": "scriptsLines rose from 13278 to 13314",
+      "reason": "T-0161: independent build-purity, Hermes import, backup and CI oracles; explicit migration wiring"
+    },
+    {
+      "measuredAt": "2026-09-27",
+      "rise": "testLines rose from 125795 to 126310",
+      "reason": "T-0161 R2 review: 14 independent backup, setup and failure-path cases; align three bootstrap and migration runners"
+    },
+    {
+      "measuredAt": "2026-09-27",
+      "rise": "scriptsLines rose from 13314 to 13363",
+      "reason": "T-0161 R2 review: 14 independent backup, setup and failure-path cases; align three bootstrap and migration runners"
+    },
+    {
+      "measuredAt": "2026-09-27",
+      "rise": "testRepeatedWindowLines rose from 4406 to 4422",
+      "reason": "T-0161 R2 review: 14 independent backup, setup and failure-path cases; align three bootstrap and migration runners"
+    },
+    {
+      "measuredAt": "2026-09-27",
+      "rise": "scriptsLines rose from 13363 to 13369",
+      "reason": "T-0161: verify owner-only backup modes after the shared best-effort chmod helper, and fail closed before migration"
+    },
+    {
+      "measuredAt": "2026-09-27",
+      "rise": "srcLines rose from 100987 to 101009",
+      "reason": "T-0161 second independent oracle: back up both database candidates and create private Node copies before any write; 5 new behaviour cases and Linux mode coverage"
+    },
+    {
+      "measuredAt": "2026-09-27",
+      "rise": "testLines rose from 126310 to 126584",
+      "reason": "T-0161 second independent oracle: back up both database candidates and create private Node copies before any write; 5 new behaviour cases and Linux mode coverage"
+    },
+    {
+      "measuredAt": "2026-09-27",
+      "rise": "scriptsLines rose from 13369 to 13396",
+      "reason": "T-0161 second independent oracle: back up both database candidates and create private Node copies before any write; 5 new behaviour cases and Linux mode coverage"
+    },
+    {
+      "measuredAt": "2026-09-27",
+      "rise": "testLines rose from 126584 to 126698",
+      "reason": "T-0161 hosted CI repair: independent symlink CLI oracle adds 114 test lines and 24 repeated test-window lines; canonical entry detection adds six script lines while deferred database permission narrowing removes four source lines"
+    },
+    {
+      "measuredAt": "2026-09-27",
+      "rise": "scriptsLines rose from 13396 to 13402",
+      "reason": "T-0161 hosted CI repair: independent symlink CLI oracle adds 114 test lines and 24 repeated test-window lines; canonical entry detection adds six script lines while deferred database permission narrowing removes four source lines"
+    },
+    {
+      "measuredAt": "2026-09-27",
+      "rise": "testRepeatedWindowLines rose from 4422 to 4446",
+      "reason": "T-0161 hosted CI repair: independent symlink CLI oracle adds 114 test lines and 24 repeated test-window lines; canonical entry detection adds six script lines while deferred database permission narrowing removes four source lines"
+    },
+    {
+      "measuredAt": "2026-09-27",
+      "rise": "testLines rose from 126698 to 126815",
+      "reason": "T-0161 independent Hermes alias oracle adds 117 test lines; canonical entry detection adds seven script lines so explicit imports cannot report success after an aliased no-op"
+    },
+    {
+      "measuredAt": "2026-09-27",
+      "rise": "scriptsLines rose from 13402 to 13409",
+      "reason": "T-0161 independent Hermes alias oracle adds 117 test lines; canonical entry detection adds seven script lines so explicit imports cannot report success after an aliased no-op"
+    },
+    {
+      "measuredAt": "2026-09-27",
+      "rise": "srcLines rose from 101005 to 101010",
+      "reason": "T-0161 two independent explicit-seed failure oracles and mutation fixtures raise measured test lines 241 and repeated test windows 67; strict catalog opt-in and Hermes failure exit add five source and five script lines while preserving boot best-effort behavior"
+    },
+    {
+      "measuredAt": "2026-09-27",
+      "rise": "testLines rose from 126815 to 127056",
+      "reason": "T-0161 two independent explicit-seed failure oracles and mutation fixtures raise measured test lines 241 and repeated test windows 67; strict catalog opt-in and Hermes failure exit add five source and five script lines while preserving boot best-effort behavior"
+    },
+    {
+      "measuredAt": "2026-09-27",
+      "rise": "scriptsLines rose from 13409 to 13414",
+      "reason": "T-0161 two independent explicit-seed failure oracles and mutation fixtures raise measured test lines 241 and repeated test windows 67; strict catalog opt-in and Hermes failure exit add five source and five script lines while preserving boot best-effort behavior"
+    },
+    {
+      "measuredAt": "2026-09-27",
+      "rise": "testRepeatedWindowLines rose from 4446 to 4513",
+      "reason": "T-0161 two independent explicit-seed failure oracles and mutation fixtures raise measured test lines 241 and repeated test windows 67; strict catalog opt-in and Hermes failure exit add five source and five script lines while preserving boot best-effort behavior"
+    },
+    {
+      "measuredAt": "2026-09-27",
+      "rise": "srcLines rose from 101010 to 101023",
+      "reason": "T-0161 independent tools-manifest and model-sync refusal oracles plus mutants raise testLines 249 and repeated test windows 86; strict explicit catalog seeding raises source lines 13 and safe model-sync refusal raises script lines 5"
+    },
+    {
+      "measuredAt": "2026-09-27",
+      "rise": "testLines rose from 127056 to 127305",
+      "reason": "T-0161 independent tools-manifest and model-sync refusal oracles plus mutants raise testLines 249 and repeated test windows 86; strict explicit catalog seeding raises source lines 13 and safe model-sync refusal raises script lines 5"
+    },
+    {
+      "measuredAt": "2026-09-27",
+      "rise": "scriptsLines rose from 13414 to 13419",
+      "reason": "T-0161 independent tools-manifest and model-sync refusal oracles plus mutants raise testLines 249 and repeated test windows 86; strict explicit catalog seeding raises source lines 13 and safe model-sync refusal raises script lines 5"
+    },
+    {
+      "measuredAt": "2026-09-27",
+      "rise": "testRepeatedWindowLines rose from 4513 to 4599",
+      "reason": "T-0161 independent tools-manifest and model-sync refusal oracles plus mutants raise testLines 249 and repeated test windows 86; strict explicit catalog seeding raises source lines 13 and safe model-sync refusal raises script lines 5"
+    },
+    {
+      "measuredAt": "2026-09-27",
+      "rise": "srcLines rose from 101023 to 101029",
+      "reason": "T-0161 four independent fail-closed assertions and mutant cases raise measured test lines 345 and repeated test windows 55; strict discovery and partial-retry reporting add six source lines, configured registry protection adds seven script lines"
+    },
+    {
+      "measuredAt": "2026-09-27",
+      "rise": "testLines rose from 127305 to 127650",
+      "reason": "T-0161 four independent fail-closed assertions and mutant cases raise measured test lines 345 and repeated test windows 55; strict discovery and partial-retry reporting add six source lines, configured registry protection adds seven script lines"
+    },
+    {
+      "measuredAt": "2026-09-27",
+      "rise": "scriptsLines rose from 13419 to 13426",
+      "reason": "T-0161 four independent fail-closed assertions and mutant cases raise measured test lines 345 and repeated test windows 55; strict discovery and partial-retry reporting add six source lines, configured registry protection adds seven script lines"
+    },
+    {
+      "measuredAt": "2026-09-27",
+      "rise": "testRepeatedWindowLines rose from 4599 to 4654",
+      "reason": "T-0161 four independent fail-closed assertions and mutant cases raise measured test lines 345 and repeated test windows 55; strict discovery and partial-retry reporting add six source lines, configured registry protection adds seven script lines"
+    },
+    {
+      "measuredAt": "2026-09-27",
+      "rise": "srcLines rose from 101029 to 101033",
+      "reason": "T-0161 independent shell selected-root and missing-profiles oracles plus mutants raise measured test lines 203 and repeated test windows 35; strict profiles propagation adds four source lines while the shell change replaces one command line"
+    },
+    {
+      "measuredAt": "2026-09-27",
+      "rise": "testLines rose from 127650 to 127853",
+      "reason": "T-0161 independent shell selected-root and missing-profiles oracles plus mutants raise measured test lines 203 and repeated test windows 35; strict profiles propagation adds four source lines while the shell change replaces one command line"
+    },
+    {
+      "measuredAt": "2026-09-27",
+      "rise": "testRepeatedWindowLines rose from 4654 to 4689",
+      "reason": "T-0161 independent shell selected-root and missing-profiles oracles plus mutants raise measured test lines 203 and repeated test windows 35; strict profiles propagation adds four source lines while the shell change replaces one command line"
+    },
+    {
+      "measuredAt": "2026-09-27",
+      "rise": "srcLines rose from 101033 to 101042",
+      "reason": "T-0161: transactional import of only missing Hermes profiles adds 9 source and 2 script lines; independent SOUL-only, SQLite-refusal and malformed-config rollback oracles add 187 test lines"
+    },
+    {
+      "measuredAt": "2026-09-27",
+      "rise": "testLines rose from 127853 to 128040",
+      "reason": "T-0161: transactional import of only missing Hermes profiles adds 9 source and 2 script lines; independent SOUL-only, SQLite-refusal and malformed-config rollback oracles add 187 test lines"
+    },
+    {
+      "measuredAt": "2026-09-27",
+      "rise": "scriptsLines rose from 13426 to 13428",
+      "reason": "T-0161: transactional import of only missing Hermes profiles adds 9 source and 2 script lines; independent SOUL-only, SQLite-refusal and malformed-config rollback oracles add 187 test lines"
+    },
+    {
+      "measuredAt": "2026-09-27",
+      "rise": "srcLines rose from 101042 to 101055",
+      "reason": "T-0161: fail-closed handling for partial Hermes rows and disappearing configured config adds 13 source and 14 script lines; independent profile, shell, CLI and deploy race oracles add 203 test lines"
+    },
+    {
+      "measuredAt": "2026-09-27",
+      "rise": "testLines rose from 128040 to 128243",
+      "reason": "T-0161: fail-closed handling for partial Hermes rows and disappearing configured config adds 13 source and 14 script lines; independent profile, shell, CLI and deploy race oracles add 203 test lines"
+    },
+    {
+      "measuredAt": "2026-09-27",
+      "rise": "scriptsLines rose from 13428 to 13442",
+      "reason": "T-0161: fail-closed handling for partial Hermes rows and disappearing configured config adds 13 source and 14 script lines; independent profile, shell, CLI and deploy race oracles add 203 test lines"
+    },
+    {
+      "measuredAt": "2026-09-27",
+      "rise": "srcLines rose from 101055 to 101064",
+      "reason": "T-0161: protect edited root fields despite blank SOUL and remember configured Hermes before deploy build; 9 source and 5 script lines plus 84 independent test lines"
+    },
+    {
+      "measuredAt": "2026-09-27",
+      "rise": "testLines rose from 128243 to 128327",
+      "reason": "T-0161: protect edited root fields despite blank SOUL and remember configured Hermes before deploy build; 9 source and 5 script lines plus 84 independent test lines"
+    },
+    {
+      "measuredAt": "2026-09-27",
+      "rise": "scriptsLines rose from 13442 to 13447",
+      "reason": "T-0161: protect edited root fields despite blank SOUL and remember configured Hermes before deploy build; 9 source and 5 script lines plus 84 independent test lines"
+    },
+    {
+      "measuredAt": "2026-09-27",
+      "rise": "testLines rose from 128323 to 128380",
+      "reason": "T-0161: independent closed C8 oracle amendment adds seven fall-and-growth-accounting cases and corrects the historical ledger walk, net 57 test lines; Q-015 identity preserved"
+    },
+    {
+      "measuredAt": "2026-09-27",
+      "rise": "testLines rose from 128380 to 128382",
+      "reason": "Two test lines make the T-0161 SQLite and dynamic-import oracles portable on hosted Linux and macOS without changing their assertions or test identities."
+    },
+    {
+      "measuredAt": "2026-09-27",
+      "rise": "srcLines rose from 101064 to 101065",
+      "reason": "T-0156 adds manifest-wide Help route coverage and a red-first client-boundary regression oracle; one source line renders the icon inside the server/client boundary"
+    },
+    {
+      "measuredAt": "2026-09-27",
+      "rise": "testLines rose from 128382 to 128473",
+      "reason": "T-0156 adds manifest-wide Help route coverage and a red-first client-boundary regression oracle; one source line renders the icon inside the server/client boundary"
+    },
+    {
+      "measuredAt": "2026-09-27",
+      "rise": "srcLines rose from 101065 to 101096",
+      "reason": "T-0162 repairs cross-file effect-read measurement from zero to five named files and adds planted-violation, accessibility and exact Knip gate oracles; tooling and source grow only for those gate repairs"
+    },
+    {
+      "measuredAt": "2026-09-27",
+      "rise": "testLines rose from 128473 to 128640",
+      "reason": "T-0162 repairs cross-file effect-read measurement from zero to five named files and adds planted-violation, accessibility and exact Knip gate oracles; tooling and source grow only for those gate repairs"
+    },
+    {
+      "measuredAt": "2026-09-27",
+      "rise": "scriptsLines rose from 13447 to 13595",
+      "reason": "T-0162 repairs cross-file effect-read measurement from zero to five named files and adds planted-violation, accessibility and exact Knip gate oracles; tooling and source grow only for those gate repairs"
+    },
+    {
+      "measuredAt": "2026-09-27",
+      "rise": "handRolledReadHooks rose from 0 to 5",
+      "reason": "T-0162 repairs cross-file effect-read measurement from zero to five named files and adds planted-violation, accessibility and exact Knip gate oracles; tooling and source grow only for those gate repairs"
+    },
+    {
+      "measuredAt": "2026-09-27",
+      "rise": "testLines rose from 128640 to 128743",
+      "reason": "T-0162 independent Q-021 C6/C8/form-control amendments add 103 test lines while retaining every prior test name; the coordinator adds fixture assertions for on-demand reads and complete Knip globs"
+    },
+    {
+      "measuredAt": "2026-09-27",
+      "rise": "srcLines rose from 101096 to 101106",
+      "reason": "T-0163: independently frozen credential-permission oracle and fail-closed owner-only bootstrap and runtime writers"
+    },
+    {
+      "measuredAt": "2026-09-27",
+      "rise": "testLines rose from 128741 to 129311",
+      "reason": "T-0163: independently frozen credential-permission oracle and fail-closed owner-only bootstrap and runtime writers"
+    },
+    {
+      "measuredAt": "2026-09-27",
+      "rise": "scriptsLines rose from 13595 to 13615",
+      "reason": "T-0163: independently frozen credential-permission oracle and fail-closed owner-only bootstrap and runtime writers"
+    },
+    {
+      "measuredAt": "2026-09-27",
+      "rise": "testLines rose from 129311 to 129316",
+      "reason": "T-0163 dated independent oracle amendment: distinguish intentional early chmod refusal from missing fixture execution, preserving 13 test names"
+    },
+    {
+      "measuredAt": "2026-09-27",
+      "rise": "srcLines rose from 101106 to 101129",
+      "reason": "T-0163 independent review: nine red-first security regressions and repairs for owner-only Hermes directories, exclusive staging and collision-safe backups"
+    },
+    {
+      "measuredAt": "2026-09-27",
+      "rise": "testLines rose from 129316 to 129719",
+      "reason": "T-0163 independent review: nine red-first security regressions and repairs for owner-only Hermes directories, exclusive staging and collision-safe backups"
+    },
+    {
+      "measuredAt": "2026-09-27",
+      "rise": "scriptsLines rose from 13615 to 13626",
+      "reason": "T-0163 independent review: nine red-first security regressions and repairs for owner-only Hermes directories, exclusive staging and collision-safe backups"
+    },
+    {
+      "measuredAt": "2026-09-27",
+      "rise": "testLines rose from 129719 to 129770",
+      "reason": "T-0168: independent symlinked-TMPDIR credential oracle adds canonical-path instrumentation and a red-first regression while preserving six existing test identities"
+    },
+    {
+      "measuredAt": "2026-09-27",
+      "rise": "srcLines rose from 101129 to 101137",
+      "reason": "T-0169: eight net source lines delay Settings hash scrolling until file layout settles; 31 net test lines add the red-first delayed-Hermes browser oracle"
+    },
+    {
+      "measuredAt": "2026-09-27",
+      "rise": "testLines rose from 129770 to 129801",
+      "reason": "T-0169: eight net source lines delay Settings hash scrolling until file layout settles; 31 net test lines add the red-first delayed-Hermes browser oracle"
+    },
+    {
+      "measuredAt": "2026-09-27",
+      "rise": "testLines rose from 129801 to 129850",
+      "reason": "T-0169: 49 net test lines add a behavioural Jest oracle for the Settings hash-jump readiness guard, so the committed-tree mutation sweep can verify the browser fix"
+    },
+    {
+      "measuredAt": "2026-09-27",
+      "rise": "testLines rose from 129850 to 129852",
+      "reason": "T-0169: two test lines preserve and restore the DOM scrollIntoView descriptor after the behavioural mutation oracle"
+    },
+    {
+      "measuredAt": "2026-09-27",
+      "rise": "srcLines rose from 101137 to 101155",
+      "reason": "T-0170: PR 234 adds two liveness routes (18 source lines) and a four-test behaviour oracle (62 test lines); six cross-file test windows come from its request fixture and assertions, retained to prove public GET and protected unsafe methods."
+    },
+    {
+      "measuredAt": "2026-09-27",
+      "rise": "testLines rose from 129852 to 129914",
+      "reason": "T-0170: PR 234 adds two liveness routes (18 source lines) and a four-test behaviour oracle (62 test lines); six cross-file test windows come from its request fixture and assertions, retained to prove public GET and protected unsafe methods."
+    },
+    {
+      "measuredAt": "2026-09-27",
+      "rise": "testRepeatedWindowLines rose from 4683 to 4689",
+      "reason": "T-0170: PR 234 adds two liveness routes (18 source lines) and a four-test behaviour oracle (62 test lines); six cross-file test windows come from its request fixture and assertions, retained to prove public GET and protected unsafe methods."
+    },
+    {
+      "measuredAt": "2026-09-27",
+      "rise": "testLines rose from 129914 to 129926",
+      "reason": "T-0170 independent oracle amendment: twelve test lines add explicit PS_READ_ONLY coverage for both new liveness paths while preserving four original test names and assertions."
+    },
+    {
+      "measuredAt": "2026-09-27",
+      "rise": "testLines rose from 129926 to 129983",
+      "reason": "T-0173 adds 57 lines of independent temporary Dependabot pause oracle tests; source and repeated-window measures are unchanged."
+    },
+    {
+      "measuredAt": "2026-09-27",
+      "rise": "testLines rose from 129983 to 130166",
+      "reason": "T-0174 adds 183 independent Pages publication oracle lines and 68 guard-script lines to reject unsafe uploads; source and duplication measures are unchanged."
+    },
+    {
+      "measuredAt": "2026-09-27",
+      "rise": "scriptsLines rose from 13626 to 13694",
+      "reason": "T-0174 adds 183 independent Pages publication oracle lines and 68 guard-script lines to reject unsafe uploads; source and duplication measures are unchanged."
+    },
+    {
+      "measuredAt": "2026-09-27",
+      "rise": "testLines rose from 130166 to 130269",
+      "reason": "T-0175 adds 103 independently authored dependency acceptance lines for three version proposals; source, scripts and duplication measures are unchanged."
+    },
+    {
+      "measuredAt": "2026-09-27",
+      "rise": "testLines rose from 130269 to 130384",
+      "reason": "T-0176 adds 115 independent visual-dependency oracle lines and 70 cross-file repeated test-window lines because it freezes the same package/lockfile contract for a separate version batch; a two-consumer helper would add interface cost and could obscure test identity. All source and other census measures remain unchanged."
+    },
+    {
+      "measuredAt": "2026-09-27",
+      "rise": "testRepeatedWindowLines rose from 4689 to 4759",
+      "reason": "T-0176 adds 115 independent visual-dependency oracle lines and 70 cross-file repeated test-window lines because it freezes the same package/lockfile contract for a separate version batch; a two-consumer helper would add interface cost and could obscure test identity. All source and other census measures remain unchanged."
+    },
+    {
+      "measuredAt": "2026-09-27",
+      "rise": "testLines rose from 130384 to 130477",
+      "reason": "T-0177 adds a red-first six-name Knip version and JSON-identity oracle. An independent amendment shared real type and manifest-loading code across three dependency suites, reducing the initial rise by 19 test lines and 30 repeated-window lines while preserving all 21 names and assertions. The net batch rise is +93 test lines and +30 repeated test-window lines; source and other measures are unchanged."
+    },
+    {
+      "measuredAt": "2026-09-27",
+      "rise": "testRepeatedWindowLines rose from 4759 to 4789",
+      "reason": "T-0177 adds a red-first six-name Knip version and JSON-identity oracle. An independent amendment shared real type and manifest-loading code across three dependency suites, reducing the initial rise by 19 test lines and 30 repeated-window lines while preserving all 21 names and assertions. The net batch rise is +93 test lines and +30 repeated test-window lines; source and other measures are unchanged."
+    },
+    {
+      "measuredAt": "2026-09-27",
+      "rise": "testLines rose from 130477 to 130502",
+      "reason": "T-0178 adds 25 test lines for the independent Playwright version oracle; repeated windows stay at 4,789"
+    },
+    {
+      "measuredAt": "2026-09-27",
+      "rise": "testLines rose from 130502 to 130580",
+      "reason": "T-0179 adds 78 test lines for the independent paired-React and peer-compatibility oracle; repeated windows remain 4,789"
+    },
+    {
+      "measuredAt": "2026-09-28",
+      "rise": "srcLines rose from 101155 to 101970",
+      "reason": "T-0158 opaque browser-session security: new auth/session source and scripts, independent security oracles, one sign-in component, and explicit session interfaces; no legacy target changed"
+    },
+    {
+      "measuredAt": "2026-09-28",
+      "rise": "testLines rose from 130580 to 133067",
+      "reason": "T-0158 opaque browser-session security: new auth/session source and scripts, independent security oracles, one sign-in component, and explicit session interfaces; no legacy target changed"
+    },
+    {
+      "measuredAt": "2026-09-28",
+      "rise": "scriptsLines rose from 13694 to 13763",
+      "reason": "T-0158 opaque browser-session security: new auth/session source and scripts, independent security oracles, one sign-in component, and explicit session interfaces; no legacy target changed"
+    },
+    {
+      "measuredAt": "2026-09-28",
+      "rise": "srcRepeatedWindowLines rose from 1000 to 1012",
+      "reason": "T-0158 opaque browser-session security: new auth/session source and scripts, independent security oracles, one sign-in component, and explicit session interfaces; no legacy target changed"
+    },
+    {
+      "measuredAt": "2026-09-28",
+      "rise": "oneImporterComponents rose from 103 to 104",
+      "reason": "T-0158 opaque browser-session security: new auth/session source and scripts, independent security oracles, one sign-in component, and explicit session interfaces; no legacy target changed"
+    },
+    {
+      "measuredAt": "2026-09-28",
+      "rise": "testLines rose from 133067 to 133073",
+      "reason": "T-0158 independent six-line failure-only quiet-stream diagnostics after a reproducible full-load flake; 31 browser test names and assertions retained"
+    },
+    {
+      "measuredAt": "2026-09-28",
+      "rise": "testLines rose from 133073 to 133135",
+      "reason": "T-0158 red-first real-Hermes network fixture oracle adds 62 test lines to protect the explicit public origin, loopback host bindings and PORT override after hosted acceptance failed; original five targets remain fixed"
+    },
+    {
+      "measuredAt": "2026-09-28",
+      "rise": "srcLines rose from 101970 to 102131",
+      "reason": "T-0158: independently authored held-response oracles and shared fixture add 368 test lines; post-revocation completion guards across every protected API method add 161 source lines; the read-only scanner's wrapped-handler recognition adds seven tooling lines. Repeated windows and other shape measures do not rise."
+    },
+    {
+      "measuredAt": "2026-09-28",
+      "rise": "testLines rose from 133135 to 133503",
+      "reason": "T-0158: independently authored held-response oracles and shared fixture add 368 test lines; post-revocation completion guards across every protected API method add 161 source lines; the read-only scanner's wrapped-handler recognition adds seven tooling lines. Repeated windows and other shape measures do not rise."
+    },
+    {
+      "measuredAt": "2026-09-28",
+      "rise": "scriptsLines rose from 13763 to 13770",
+      "reason": "T-0158: independently authored held-response oracles and shared fixture add 368 test lines; post-revocation completion guards across every protected API method add 161 source lines; the read-only scanner's wrapped-handler recognition adds seven tooling lines. Repeated windows and other shape measures do not rise."
+    },
+    {
+      "measuredAt": "2026-09-28",
+      "rise": "testLines rose from 133503 to 133518",
+      "reason": "T-0158: different-author backup oracle amendment adds a non-vacuous guard check for the new POSTImpl export while preserving all 11 test names and assertions."
+    },
+    {
+      "measuredAt": "2026-09-28",
+      "rise": "testLines rose from 133518 to 133585",
+      "reason": "T-0158: independent raw Authorization rotation oracle adds three held-response cases; a different author shared the gateway fixture for a net nine-line reduction and kept repeated test windows at 4786."
+    },
+    {
+      "measuredAt": "2026-09-28",
+      "rise": "srcLines rose from 102131 to 102141",
+      "reason": "T-0164: two Composer visibility and contrast fixes with red-first Playwright oracles; independent-recon ledger closure assertion"
+    },
+    {
+      "measuredAt": "2026-09-28",
+      "rise": "testLines rose from 133585 to 133747",
+      "reason": "T-0164: two Composer visibility and contrast fixes with red-first Playwright oracles; independent-recon ledger closure assertion"
+    },
+    {
+      "measuredAt": "2026-09-28",
+      "rise": "testLines rose from 133747 to 133754",
+      "reason": "T-0164: independent Q-015 bloom oracle amendment preserves nine test identities and protects absolute Composer positioning"
+    },
+    {
+      "measuredAt": "2026-09-28",
+      "rise": "testLines rose from 133754 to 133911",
+      "reason": "T-0165: red-first plan and closing-oracle tests add 157 test lines; committed-baseline closing script adds 53 tooling lines without changing product scope"
+    },
+    {
+      "measuredAt": "2026-09-28",
+      "rise": "scriptsLines rose from 13770 to 13823",
+      "reason": "T-0165: red-first plan and closing-oracle tests add 157 test lines; committed-baseline closing script adds 53 tooling lines without changing product scope"
+    },
+    {
+      "measuredAt": "2026-09-28",
+      "rise": "testLines rose from 133911 to 133958",
+      "reason": "T-0165 final ruling assertions add 47 test lines and the committed-baseline disposition audit adds 42 tooling lines; both are required to prove the plan contract and do not change product scope"
+    },
+    {
+      "measuredAt": "2026-09-28",
+      "rise": "scriptsLines rose from 13823 to 13865",
+      "reason": "T-0165 final ruling assertions add 47 test lines and the committed-baseline disposition audit adds 42 tooling lines; both are required to prove the plan contract and do not change product scope"
+    },
+    {
+      "measuredAt": "2026-09-28",
+      "rise": "testLines rose from 133958 to 133968",
+      "reason": "T-0165 final alias-reader and lib-data-05 ownership assertions add ten plan-oracle lines so ruled work cannot be assigned to an unrelated batch"
+    },
+    {
+      "measuredAt": "2026-09-28",
+      "rise": "testLines rose from 133968 to 134061",
+      "reason": "T-0180 adds a red-first secret-scan oracle and a disposable-history planted-secret control; no product source grows"
+    },
+    {
+      "measuredAt": "2026-09-28",
+      "rise": "testLines rose from 134061 to 134123",
+      "reason": "T-0180 independent R2 review found workflow ordering and traversal gaps; its separate four-case red-first oracle adds 62 test lines"
+    },
+    {
+      "measuredAt": "2026-09-28",
+      "rise": "srcLines rose from 102141 to 102188",
+      "reason": "T-0181 security boundary adds descriptor, symlink and hardlink protection plus independently amended filesystem oracles without removing tests"
+    },
+    {
+      "measuredAt": "2026-09-28",
+      "rise": "testLines rose from 134123 to 134465",
+      "reason": "T-0181 security boundary adds descriptor, symlink and hardlink protection plus independently amended filesystem oracles without removing tests"
+    },
+    {
+      "measuredAt": "2026-09-28",
+      "rise": "testRepeatedWindowLines rose from 4786 to 4802",
+      "reason": "T-0181 security boundary adds descriptor, symlink and hardlink protection plus independently amended filesystem oracles without removing tests"
+    },
+    {
+      "measuredAt": "2026-09-28",
+      "rise": "srcLines rose from 102188 to 102234",
+      "reason": "T-0182 adds six independent Jest CSP checks and sixteen desktop/phone browser cases, including the separately ruled fail-closed 500 oracle; source growth is the nonce policy and pre-hydration controls, with no removals or loosened coverage."
+    },
+    {
+      "measuredAt": "2026-09-28",
+      "rise": "testLines rose from 134465 to 134898",
+      "reason": "T-0182 adds six independent Jest CSP checks and sixteen desktop/phone browser cases, including the separately ruled fail-closed 500 oracle; source growth is the nonce policy and pre-hydration controls, with no removals or loosened coverage."
+    },
+    {
+      "measuredAt": "2026-09-28",
+      "rise": "testRepeatedWindowLines rose from 4786 to 4792",
+      "reason": "T-0182 adds six independent Jest CSP checks and sixteen desktop/phone browser cases, including the separately ruled fail-closed 500 oracle; source growth is the nonce policy and pre-hydration controls, with no removals or loosened coverage."
+    },
+    {
+      "measuredAt": "2026-09-28",
+      "rise": "srcLines rose from 102234 to 102420",
+      "reason": "T-0183 adds frozen mission concurrency, cancellation, cron and restart oracles plus durable claim guards; all moved test names are preserved"
+    },
+    {
+      "measuredAt": "2026-09-28",
+      "rise": "testLines rose from 134898 to 135739",
+      "reason": "T-0183 adds frozen mission concurrency, cancellation, cron and restart oracles plus durable claim guards; all moved test names are preserved"
+    },
+    {
+      "measuredAt": "2026-09-29",
+      "rise": "srcLines rose from 102420 to 102493",
+      "reason": "T-0184: 20 red-first mission/category cases and transactional file recovery add measured lines; original programme targets remain unchanged"
+    },
+    {
+      "measuredAt": "2026-09-29",
+      "rise": "testLines rose from 135739 to 136318",
+      "reason": "T-0184: 20 red-first mission/category cases and transactional file recovery add measured lines; original programme targets remain unchanged"
+    },
+    {
+      "measuredAt": "2026-09-29",
+      "rise": "testRepeatedWindowLines rose from 4766 to 4778",
+      "reason": "T-0184: 20 red-first mission/category cases and transactional file recovery add measured lines; original programme targets remain unchanged"
+    },
+    {
+      "measuredAt": "2026-09-29",
+      "rise": "srcLines rose from 102493 to 102598",
+      "reason": "T-0185: 105 source lines implement prompt, model and old-link guards; 609 test lines add independent behaviour oracles and shared fixtures; 12 source and 16 test repeated-window lines remain after the reviewed fixture consolidation, below C4's fixed 4800 ceiling"
+    },
+    {
+      "measuredAt": "2026-09-29",
+      "rise": "testLines rose from 136318 to 136927",
+      "reason": "T-0185: 105 source lines implement prompt, model and old-link guards; 609 test lines add independent behaviour oracles and shared fixtures; 12 source and 16 test repeated-window lines remain after the reviewed fixture consolidation, below C4's fixed 4800 ceiling"
+    },
+    {
+      "measuredAt": "2026-09-29",
+      "rise": "srcRepeatedWindowLines rose from 998 to 1010",
+      "reason": "T-0185: 105 source lines implement prompt, model and old-link guards; 609 test lines add independent behaviour oracles and shared fixtures; 12 source and 16 test repeated-window lines remain after the reviewed fixture consolidation, below C4's fixed 4800 ceiling"
+    },
+    {
+      "measuredAt": "2026-09-29",
+      "rise": "testRepeatedWindowLines rose from 4778 to 4794",
+      "reason": "T-0185: 105 source lines implement prompt, model and old-link guards; 609 test lines add independent behaviour oracles and shared fixtures; 12 source and 16 test repeated-window lines remain after the reviewed fixture consolidation, below C4's fixed 4800 ceiling"
+    },
+    {
+      "measuredAt": "2026-09-29",
+      "rise": "testLines rose from 136927 to 137029",
+      "reason": "T-0185 mutation follow-up: 102 test lines add two independent behaviour suites and a counted deferred fixture to kill the two surviving mutants; repeated test windows remain 4794 below C4's fixed 4800 ceiling"
+    },
+    {
+      "measuredAt": "2026-09-29",
+      "rise": "testLines rose from 137029 to 137040",
+      "reason": "T-0185 loaded e2e fixture amendment: 11 test lines replace 200 concurrent HTTP seeds with an isolated SQLite transaction and add an exact 201-row proof; repeated test windows stay 4794"
+    },
+    {
+      "measuredAt": "2026-09-29",
+      "rise": "srcLines rose from 102598 to 102616",
+      "reason": "T-0186: Story Weaver read-status saves now check HTTP and network outcomes before local commit, and the red-first browser and removal oracles add 93 test lines; the operator-ruled destructive Hindsight script removes 236 tooling lines."
+    },
+    {
+      "measuredAt": "2026-09-29",
+      "rise": "testLines rose from 137040 to 137133",
+      "reason": "T-0186: Story Weaver read-status saves now check HTTP and network outcomes before local commit, and the red-first browser and removal oracles add 93 test lines; the operator-ruled destructive Hindsight script removes 236 tooling lines."
+    },
+    {
+      "measuredAt": "2026-09-29",
+      "rise": "srcLines rose from 102616 to 102617",
+      "reason": "T-0186 supplemental red-first browser oracle adds 169 counted lines for unconfirmed 200 replies, overlapping saves and Next navigation at two widths; an independent name-preserving success-fixture correction adds six lines, and the final source message adds one line. The fixed repeated-window and C4 ceilings are unchanged."
+    },
+    {
+      "measuredAt": "2026-09-29",
+      "rise": "testLines rose from 137133 to 137308",
+      "reason": "T-0186 supplemental red-first browser oracle adds 169 counted lines for unconfirmed 200 replies, overlapping saves and Next navigation at two widths; an independent name-preserving success-fixture correction adds six lines, and the final source message adds one line. The fixed repeated-window and C4 ceilings are unchanged."
+    },
+    {
+      "measuredAt": "2026-09-29",
+      "rise": "testLines rose from 137308 to 137484",
+      "reason": "T-0186: two separate red-first phone geometry oracles add shared isolated Story Weaver fixtures; source lines fall and the fixed closing target remains unchanged"
+    },
+    {
+      "measuredAt": "2026-09-29",
+      "rise": "testRepeatedWindowLines rose from 4794 to 4834",
+      "reason": "T-0186: two separate red-first phone geometry oracles add shared isolated Story Weaver fixtures; source lines fall and the fixed closing target remains unchanged"
+    },
+    {
+      "measuredAt": "2026-09-29",
+      "rise": "testLines rose from 137471 to 137520",
+      "reason": "T-0186: the mutation survivor required one focused reader-header behaviour suite with a dismiss control; the fixed repeated-window target remains at 4800"
+    },
+    {
+      "measuredAt": "2026-09-29",
+      "rise": "testLines rose from 137520 to 137521",
+      "reason": "T-0186: independent amendment adds one explicit Jest presence matcher so the mutation sweep can classify a missing banner by structured assertion"
+    },
+    {
+      "measuredAt": "2026-09-29",
+      "rise": "srcLines rose from 102611 to 102675",
+      "reason": "T-0187: independent red-first boot and bridge oracles add 370 test lines, including a shared process fixture; the one-time key-only warning and Hermes adapter add 64 source lines. Exactly two ruled EOS-compiler-only test identities retire; the fixed C4 repeated-window ceiling remains 4800 and current repeated test windows remain 4794."
+    },
+    {
+      "measuredAt": "2026-09-29",
+      "rise": "testLines rose from 137521 to 137891",
+      "reason": "T-0187: independent red-first boot and bridge oracles add 370 test lines, including a shared process fixture; the one-time key-only warning and Hermes adapter add 64 source lines. Exactly two ruled EOS-compiler-only test identities retire; the fixed C4 repeated-window ceiling remains 4800 and current repeated test windows remain 4794."
+    },
+    {
+      "measuredAt": "2026-09-29",
+      "rise": "srcLines rose from 102675 to 102679",
+      "reason": "T-0187: independent red-first inherited environment and repeated-line oracles add 417 test lines; repairing final warning provenance adds 54 script lines and four source lines; fixed repeated-window ceilings do not rise"
+    },
+    {
+      "measuredAt": "2026-09-29",
+      "rise": "testLines rose from 137891 to 138308",
+      "reason": "T-0187: independent red-first inherited environment and repeated-line oracles add 417 test lines; repairing final warning provenance adds 54 script lines and four source lines; fixed repeated-window ceilings do not rise"
+    },
+    {
+      "measuredAt": "2026-09-29",
+      "rise": "scriptsLines rose from 13439 to 13493",
+      "reason": "T-0187: independent red-first inherited environment and repeated-line oracles add 417 test lines; repairing final warning provenance adds 54 script lines and four source lines; fixed repeated-window ceilings do not rise"
+    },
+    {
+      "measuredAt": "2026-09-29",
+      "rise": "testLines rose from 138308 to 138470",
+      "reason": "T-0187: independent final provenance oracle adds 162 test lines; exact inherited branch and Hindsight port repairs add 11 script lines; repeated-window ceilings unchanged"
+    },
+    {
+      "measuredAt": "2026-09-29",
+      "rise": "scriptsLines rose from 13493 to 13504",
+      "reason": "T-0187: independent final provenance oracle adds 162 test lines; exact inherited branch and Hindsight port repairs add 11 script lines; repeated-window ceilings unchanged"
+    },
+    {
+      "measuredAt": "2026-09-29",
+      "rise": "testLines rose from 138470 to 138519",
+      "reason": "T-0187: independent hardware-log red-first oracle adds 49 test lines; selectors corrected without script growth; repeated-window ceilings unchanged"
+    },
+    {
+      "measuredAt": "2026-09-29",
+      "rise": "srcLines rose from 102679 to 102681",
+      "reason": "T-0187: independent concurrent-register red-first oracle adds 100 net test lines after name-preserving fixture extraction; one-time warning race repair adds two source lines; C4 repeated windows remain 4794 below fixed 4800 ceiling"
+    },
+    {
+      "measuredAt": "2026-09-29",
+      "rise": "testLines rose from 138519 to 138619",
+      "reason": "T-0187: independent concurrent-register red-first oracle adds 100 net test lines after name-preserving fixture extraction; one-time warning race repair adds two source lines; C4 repeated windows remain 4794 below fixed 4800 ceiling"
+    },
+    {
+      "measuredAt": "2026-09-29",
+      "rise": "testLines rose from 138619 to 138659",
+      "reason": "T-0187: independent survivor oracle for m2 adds 40 test lines; fixed cross-file repeated-window count remains 4794"
+    },
+    {
+      "measuredAt": "2026-09-29",
+      "rise": "testLines rose from 138659 to 138764",
+      "reason": "T-0202: the independently authored 14-case release HTTP oracle adds 105 counted TypeScript lines. Application lines and repeated-window counts stay unchanged; the separate Python fixture and bounded harness repair are verification cost, not structural savings."
+    },
+    {
+      "measuredAt": "2026-09-30",
+      "rise": "testLines rose from 138764 to 138872",
+      "reason": "T-0202: seven independently authored default-install checks and scheduler teardown add 108 counted TypeScript test lines after the original 105-line HTTP oracle. Source lines and repeated windows are unchanged; Python fixture and harness lines are verification cost. Fixed C4 ceiling remains 4800."
+    },
+    {
+      "measuredAt": "2026-09-30",
+      "rise": "testLines rose from 138872 to 138942",
+      "reason": "T-0202: independent red-first interactive protocol oracle adds 70 counted TypeScript test lines. Its separate native Python companion has 354 physical lines outside this historical measure. No fixed programme target changes; repeated test windows stay 4794 against the fixed 4800 ceiling."
+    },
+    {
+      "measuredAt": "2026-09-30",
+      "rise": "testLines rose from 138942 to 139351",
+      "reason": "T-0203: independent 28-case CI prerequisite oracle, including a separately authorised noisy-install regression, and the internal macOS GNU timeout/Bash preparation script; fixed programme targets and all existing test identities remain unchanged."
+    },
+    {
+      "measuredAt": "2026-09-30",
+      "rise": "scriptsLines rose from 13504 to 13566",
+      "reason": "T-0203: independent 28-case CI prerequisite oracle, including a separately authorised noisy-install regression, and the internal macOS GNU timeout/Bash preparation script; fixed programme targets and all existing test identities remain unchanged."
+    },
+    {
+      "measuredAt": "2026-10-01",
+      "rise": "testLines rose from 139351 to 139473",
+      "reason": "T-0203: independently authored delayed-TERM regression and exact 29-identity portable/native harness extraction; infrastructure remains distinct from semantic failure; no product additions or fixed-target changes"
+    },
+    {
+      "measuredAt": "2026-10-01",
+      "rise": "testLines rose from 139473 to 139517",
+      "reason": "T-0203: independently authorised real outer-shell pin and separate same-filesystem calibration retain 29 prerequisite and seven defaults identities, real HTTP/authentication and all bounds; 44 test harness lines, no product change or fixed-target increase."
+    },
+    {
+      "measuredAt": "2026-10-01",
+      "rise": "testLines rose from 139517 to 139889",
+      "reason": "T-0204: 359 independently authored CLI oracle and calibrated preload lines plus 13 canary repair lines preserve redaction, real Git witnesses, failure classification and cleanup. Repeated test windows remain 4794 below the unchanged 4800 ceiling; all fixed programme targets remain unchanged."
+    },
+    {
+      "measuredAt": "2026-10-01",
+      "rise": "testLines rose from 139889 to 140730",
+      "reason": "T-0188: 70 independently authored oracle cases and preserved-name Q-015/witness amendments add 841 test lines; migration implementation removes 480 source lines and 42 repeated source-window lines. Test repeated-window ceiling4800 and all historical/programme targets remain unchanged."
+    },
+    {
+      "measuredAt": "2026-10-01",
+      "rise": "testLines rose from 140730 to 140927",
+      "reason": "T-0205: +197 measured TypeScript test lines add the independent20-case native HTTP call-context oracle; all prior names/assertions and repeated-window ceiling4800 remain. The Python observer and Python harness repair lie outside this existing measure scope and remain separately inventoried. Fixed programme and historical targets do not change."
+    },
+    {
+      "measuredAt": "2026-10-01",
+      "rise": "testLines rose from 140927 to 140957",
+      "reason": "T-0188: +30 test lines add independently authorised public-chain Auth42/43 storage witnesses and valid controls within the same105 identities. All original assertions, fixed targets and repeated-window ceiling4800 remain."
+    },
+    {
+      "measuredAt": "2026-10-02",
+      "rise": "testLines rose from 140957 to 141133",
+      "reason": "T-0205 adds seven independently authored loopback binding and native HTTP ownership regression tests; fixed programme targets remain unchanged."
+    },
+    {
+      "measuredAt": "2026-10-02",
+      "rise": "testRepeatedWindowLines rose from 4794 to 4808",
+      "reason": "T-0205 adds seven independently authored loopback binding and native HTTP ownership regression tests; fixed programme targets remain unchanged."
+    },
+    {
+      "measuredAt": "2026-10-02",
+      "rise": "testLines rose from 141133 to 141143",
+      "reason": "T-0205 independent seven-assertion cleanup extraction costs 10 census-counted test lines and removes 14 repeated lines; unchanged C4 ceiling and all fixed programme targets remain."
+    },
+    {
+      "measuredAt": "2026-10-02",
+      "rise": "scriptsLines rose from 13563 to 13645",
+      "reason": "T-0205: 82-line additive redacted native observer diagnostic, independent R2 authorised, preserves exact launcher, setup/launch/cleanup failures; closing targets unchanged"
+    },
+    {
+      "measuredAt": "2026-10-02",
+      "rise": "testLines rose from 141143 to 141292",
+      "reason": "T-0205: nine new independent worker-budget cases and different-author strict validation amendment preserve all existing identities/floors/deadlines; plus82-line redacted diagnostic; targets unchanged"
+    },
+    {
+      "measuredAt": "2026-10-02",
+      "rise": "scriptsLines rose from 13645 to 13677",
+      "reason": "T-0205 adds typed, redacted stalled-context diagnostic metrics for unresolved hosted macOS cleanup failures; preserves all formal tests, deadlines and coverage floors."
+    },
+    {
+      "measuredAt": "2026-10-02",
+      "rise": "testLines rose from 141292 to 142727",
+      "reason": "T-0189 adds 421 independently authored red-first data boundary, migration, recovery and concurrency oracle cases across eight suites (1435 test lines). Source shrinks by 49 lines, repeated source windows by 22 and tooling by 10; test identities and coverage floors remain intact. Programme targets are unchanged."
+    },
+    {
+      "measuredAt": "2026-10-02",
+      "rise": "suitesMockingDbInline rose from 14 to 15",
+      "reason": "T-0189 adds 421 independently authored red-first data boundary, migration, recovery and concurrency oracle cases across eight suites (1435 test lines). Source shrinks by 49 lines, repeated source windows by 22 and tooling by 10; test identities and coverage floors remain intact. Programme targets are unchanged."
+    },
+    {
+      "measuredAt": "2026-10-02",
+      "rise": "srcLines rose from 102152 to 102216",
+      "reason": "T-0189 independent review added four red-first recovery preservation cases and a minimal inherited-env typing correction. A local validated-JSON span scanner preserves unrelated numeric lexemes and duplicate fields on Node20; whole-object serialisation would corrupt stored values. No historical tests, targets or coverage floors were removed or lowered."
+    },
+    {
+      "measuredAt": "2026-10-02",
+      "rise": "testLines rose from 142727 to 142881",
+      "reason": "T-0189 independent review added four red-first recovery preservation cases and a minimal inherited-env typing correction. A local validated-JSON span scanner preserves unrelated numeric lexemes and duplicate fields on Node20; whole-object serialisation would corrupt stored values. No historical tests, targets or coverage floors were removed or lowered."
+    },
+    {
+      "measuredAt": "2026-10-02",
+      "rise": "testLines rose from 142881 to 142884",
+      "reason": "T-0189 adds three type-only oracle lines to expose its genuine migration dependency to Knip. Independent verification proves byte-identical emitted JavaScript and unchanged 31 cases; no static-analysis ignore, baseline exception, target or coverage-floor change."
+    },
+    {
+      "measuredAt": "2026-10-02",
+      "rise": "srcLines rose from 102216 to 102361",
+      "reason": "T-0190: independent red-first client/cache/selection/storage and polling oracles, plus required ownership guards and atomic confirmed-write publication. Historical test identities and all coverage floors preserved; structural targets unchanged. Named Fast Chat streaming exception and two read-detector hits remain visible."
+    },
+    {
+      "measuredAt": "2026-10-02",
+      "rise": "testLines rose from 142884 to 144916",
+      "reason": "T-0190: independent red-first client/cache/selection/storage and polling oracles, plus required ownership guards and atomic confirmed-write publication. Historical test identities and all coverage floors preserved; structural targets unchanged. Named Fast Chat streaming exception and two read-detector hits remain visible."
+    },
+    {
+      "measuredAt": "2026-10-02",
+      "rise": "testRepeatedWindowLines rose from 4794 to 4842",
+      "reason": "T-0190: independent red-first client/cache/selection/storage and polling oracles, plus required ownership guards and atomic confirmed-write publication. Historical test identities and all coverage floors preserved; structural targets unchanged. Named Fast Chat streaming exception and two read-detector hits remain visible."
+    },
+    {
+      "measuredAt": "2026-10-02",
+      "rise": "srcLines rose from 102361 to 102377",
+      "reason": "T-0190 independent Story settlement controls and lifecycle repair; preserve every existing test identity. Shared Mission fixture reduces repeated windows below unchanged4800. Programme targets remain fixed."
+    },
+    {
+      "measuredAt": "2026-10-02",
+      "rise": "testLines rose from 144916 to 144960",
+      "reason": "T-0190 independent Story settlement controls and lifecycle repair; preserve every existing test identity. Shared Mission fixture reduces repeated windows below unchanged4800. Programme targets remain fixed."
+    },
+    {
+      "measuredAt": "2026-10-02",
+      "rise": "srcLines rose from 102377 to 102378",
+      "reason": "T-0190 independent seven-case cancel/update/promote continuation oracle adds169testlines; one request-ownership guard fixes three reproduced races. Existing identities and fixed4800repeat ceiling preserved; programme targets unchanged."
+    },
+    {
+      "measuredAt": "2026-10-02",
+      "rise": "testLines rose from 144960 to 145129",
+      "reason": "T-0190 independent seven-case cancel/update/promote continuation oracle adds169testlines; one request-ownership guard fixes three reproduced races. Existing identities and fixed4800repeat ceiling preserved; programme targets unchanged."
+    },
+    {
+      "measuredAt": "2026-10-02",
+      "rise": "testLines rose from 145129 to 145150",
+      "reason": "T-0190 independent mutation-test strengthening preserves50cases and adds3HTTP200 Hindsight fallback/recovery controls;21test lines, unchanged4796duplicate windows and4800C4ceiling. Fixed programme targets remain unchanged."
+    },
+    {
+      "measuredAt": "2026-10-03",
+      "rise": "testLines rose from 145150 to 146855",
+      "reason": "T-0191: 1705 net test lines add the independently authored component oracle and accepted additive lifecycle, label, reselection and geometry regressions; original identities are preserved except the two separately ruled Schedule retirements. Source shrinks250 lines, repeated source coverage shrinks88, test repeated coverage stays4796. Fixed programme targets unchanged."
+    },
+    {
+      "measuredAt": "2026-10-03",
+      "rise": "srcLines rose from 102128 to 102132",
+      "reason": "T-0191 independent R2 found transient ready feedback after Stop; accepted red-first regression adds41 test lines. Four source lines clear completed feedback and guard post-publication cancellation; confirmed edits survive. No fixed target or coverage floor changes."
+    },
+    {
+      "measuredAt": "2026-10-03",
+      "rise": "testLines rose from 146855 to 146896",
+      "reason": "T-0191 independent R2 found transient ready feedback after Stop; accepted red-first regression adds41 test lines. Four source lines clear completed feedback and guard post-publication cancellation; confirmed edits survive. No fixed target or coverage floor changes."
+    },
+    {
+      "measuredAt": "2026-10-03",
+      "rise": "testLines rose from 146896 to 146947",
+      "reason": "T-0191: 51 independently authored browser-fixture lifecycle lines preserve all 58 cases, explicitly drain active handlers before interception removal, and retain route failures; Playwright 1.62.1 premature fallback reproduced and normal six-worker run passed."
+    },
+    {
+      "measuredAt": "2026-10-03",
+      "rise": "testLines rose from 146947 to 147031",
+      "reason": "T-0191 independently reviewed fixture-only fresh-socket transport and six real seed preloads preserve 58 case bodies, assertions and deadlines; normal six-worker receipt1791053156358 passes58. Extra test infrastructure lines address proven transport/reset and fixture timing defects; production latency remains T-0192 unresolved."
+    },
+    {
+      "measuredAt": "2026-10-03",
+      "rise": "testLines rose from 147031 to 147075",
+      "reason": "T-0191 independent physical-wheel helper correction verifies exposed hit targets before gestures, preserving58case bodies,80/16limits,waits and finalgeometry assertions. Synthetic original-red/candidate-green/overlay-refusal and normal6worker58pass receipt1791054723911. Added test instrumentation records hit targets and offsets; no sourcegrowth or fixedtarget change."
+    },
+    {
+      "measuredAt": "2026-10-03",
+      "rise": "testLines rose from 147075 to 147076",
+      "reason": "T-0191 independent mutation-attribution amendment adds one explicit cardinality assertion before preserved timer visibility;23case identities and all other behaviour unchanged. Original18KILLED1ERROR retained; exact candidate04bd5c1e reviewed by Laplace and23controls/type/lint pass. No production or runner change."
+    },
+    {
+      "measuredAt": "2026-10-04",
+      "rise": "testLines rose from 147076 to 150463",
+      "reason": "T-0192 adds 3387 net test lines (147076 to 150463) for regression and contract oracles with recorded authorship and independent review. Historical test identities and coverage floors are preserved. Fixed programme targets remain unchanged. One-importer components remain 103 after shared chart types retain legitimate UI boundary consumers."
+    },
+    {
+      "measuredAt": "2026-10-04",
+      "rise": "testLines rose from 150463 to 150531",
+      "reason": "T-0192: four independent sign-in document metadata cases and causal rejection assertions preserving all16 fetch identities; no ceiling or historical target changes."
+    },
+    {
+      "measuredAt": "2026-10-04",
+      "rise": "testLines rose from 150531 to 150587",
+      "reason": "T-0192: preserve all 48 tooling oracle identities on Node 20 and 24 with isolated ESM/CJS execution barriers; add two exact non-secret evidence fingerprint assertions. No production growth or target change."
+    },
+    {
+      "measuredAt": "2026-10-04",
+      "rise": "testLines rose from 150587 to 150680",
+      "reason": "T-0192: two independent loaded-Credentials browser contrast regressions close the loading-state coverage gap; no contrast floor or production target changed."
+    },
+    {
+      "measuredAt": "2026-10-04",
+      "rise": "testLines rose from 150680 to 150681",
+      "reason": "T-0192: one exact non-secret fingerprint membership assertion added by an independent author; all three existing identities and scanner controls retained."
+    },
+    {
+      "measuredAt": "2026-10-04",
+      "rise": "testLines rose from 150681 to 150772",
+      "reason": "T-0206: independent W01 amendment adds fourteen negative-command and owned-shell exit-preservation controls for the macOS diagnostic; product counts and fixed targets unchanged."
+    },
+    {
+      "measuredAt": "2026-10-04",
+      "rise": "srcLines rose from 102062 to 102077",
+      "reason": "T-0193: 50 independent unit and12 browser regressions; net15source lines for profile ownership, truthful read errors and accessible UI state after Missions41line and shared-label6line savings; fixed programme targets unchanged"
+    },
+    {
+      "measuredAt": "2026-10-04",
+      "rise": "testLines rose from 150767 to 151608",
+      "reason": "T-0193: 50 independent unit and12 browser regressions; net15source lines for profile ownership, truthful read errors and accessible UI state after Missions41line and shared-label6line savings; fixed programme targets unchanged"
+    },
+    {
+      "measuredAt": "2026-10-04",
+      "rise": "testLines rose from 151608 to 151760",
+      "reason": "T-0193: independent Composer lifecycle controls and narrow Q015 amendments preserving all21original hashes and37/12floors; source102068(+6), tests151760(+993), repeated source693(-12); fixed targets unchanged"
+    },
+    {
+      "measuredAt": "2026-10-04",
+      "rise": "testLines rose from 151760 to 151770",
+      "reason": "T-0193 retains59newunit and12browser regressions plus independent closed-oracle amendments; ten fixture-readiness lines preserve58physical keyboard identities. Net source+6 protects draft/save ownership and truthful reads after measured consolidation."
+    },
+    {
+      "measuredAt": "2026-10-04",
+      "rise": "testLines rose from 151770 to 152071",
+      "reason": "T-0206 independent actual-invocation diagnostic oracle: 10 new controls and additive workflow assertions, +301 test lines; no product growth or target change"
+    },
+    {
+      "measuredAt": "2026-10-04",
+      "rise": "srcLines rose from 102068 to 102407",
+      "reason": "T-0194/T-0207: durable Composer cleanup and address-pinned research transport add bounded production responsibilities; independent red-first queue, library, DNS, runtime and env oracles add regression lines. Existing exact test identities and approved obsolete-helper retirements are preserved; all original targets remain unchanged."
+    },
+    {
+      "measuredAt": "2026-10-04",
+      "rise": "testLines rose from 152071 to 154261",
+      "reason": "T-0194/T-0207: durable Composer cleanup and address-pinned research transport add bounded production responsibilities; independent red-first queue, library, DNS, runtime and env oracles add regression lines. Existing exact test identities and approved obsolete-helper retirements are preserved; all original targets remain unchanged."
+    },
+    {
+      "measuredAt": "2026-10-04",
+      "rise": "testRepeatedWindowLines rose from 4787 to 4795",
+      "reason": "T-0194/T-0207: durable Composer cleanup and address-pinned research transport add bounded production responsibilities; independent red-first queue, library, DNS, runtime and env oracles add regression lines. Existing exact test identities and approved obsolete-helper retirements are preserved; all original targets remain unchanged."
+    },
+    {
+      "measuredAt": "2026-10-04",
+      "rise": "srcLines rose from 102407 to 102408",
+      "reason": "T-0194: one explicit reasoned pragma for canonical/legacy env-key metadata; no filesystem access, predicate change or target change."
+    },
+    {
+      "measuredAt": "2026-10-04",
+      "rise": "srcLines rose from 102408 to 102409",
+      "reason": "T0194/T0207 operator-authorised independent retained-fixture seams, exact config inverse guards and K3 anti-vacuity assertions; all existing names, deadlines and behaviour assertions held. One source line restores the required root-purpose comment. Targets unchanged."
+    },
+    {
+      "measuredAt": "2026-10-04",
+      "rise": "testLines rose from 154261 to 154322",
+      "reason": "T0194/T0207 operator-authorised independent retained-fixture seams, exact config inverse guards and K3 anti-vacuity assertions; all existing names, deadlines and behaviour assertions held. One source line restores the required root-purpose comment. Targets unchanged."
+    },
+    {
+      "measuredAt": "2026-10-04",
+      "rise": "testRepeatedWindowLines rose from 4795 to 4826",
+      "reason": "T0194/T0207 operator-authorised independent retained-fixture seams, exact config inverse guards and K3 anti-vacuity assertions; all existing names, deadlines and behaviour assertions held. One source line restores the required root-purpose comment. Targets unchanged."
+    },
+    {
+      "measuredAt": "2026-10-04",
+      "rise": "testLines rose from 154313 to 154359",
+      "reason": "T-0194 committed-sweep follow-up: two independently authored behaviour controls close one survivor and one non-qualifying Promise assertion; existing tests, source and targets unchanged."
+    },
+    {
+      "measuredAt": "2026-10-04",
+      "rise": "testLines rose from 154359 to 154382",
+      "reason": "T-0207 hosted installer failure: two independent build-input controls bind the actual Python-selected harness to accepted Node24; existing tests and runtime minimum guard unchanged."
+    },
+    {
+      "measuredAt": "2026-10-04",
+      "rise": "testLines rose from 154382 to 154891",
+      "reason": "T-0195 adds 13 frozen harness controls and a tests-only lexical comment checker; 33 existing DOM suites receive explicit environment docblocks. No old test retired; fixed programme targets retained."
+    },
+    {
+      "measuredAt": "2026-10-07",
+      "rise": "testLines rose from 154891 to 155012",
+      "reason": "T-0195 adds 15 independent harness and baseline-lifecycle controls, the lexical tests-only checker and 33 explicit DOM docblocks; all previous test identities and fixed programme targets remain."
+    },
+    {
+      "measuredAt": "2026-10-07",
+      "rise": "testRepeatedWindowLines rose from 4768 to 4812",
+      "reason": "T-0195 adds 15 independent harness and baseline-lifecycle controls, the lexical tests-only checker and 33 explicit DOM docblocks; all previous test identities and fixed programme targets remain."
+    },
+    {
+      "measuredAt": "2026-10-07",
+      "rise": "testLines rose from 154991 to 154997",
+      "reason": "Operator-authorised T-0195 historical dependency oracle amendment adds six exact expected entries for unchanged installed development packages; no old pin, assertion, name or fixed target changes."
+    },
+    {
+      "measuredAt": "2026-10-07",
+      "rise": "testRepeatedWindowLines rose from 4768 to 4774",
+      "reason": "Operator-authorised T-0195 historical dependency oracle amendment adds six exact expected entries for unchanged installed development packages; no old pin, assertion, name or fixed target changes."
+    },
+    {
+      "measuredAt": "2026-10-07",
+      "rise": "srcLines rose from 102409 to 102412",
+      "reason": "T-0208 adds 171 independently red-first fallback refusal oracle lines, one causal mutant manifest, and the existing transaction boundary; no existing tests retired or targets changed."
+    },
+    {
+      "measuredAt": "2026-10-07",
+      "rise": "testLines rose from 154997 to 155169",
+      "reason": "T-0208 adds 171 independently red-first fallback refusal oracle lines, one causal mutant manifest, and the existing transaction boundary; no existing tests retired or targets changed."
+    },
+    {
+      "measuredAt": "2026-10-07",
+      "rise": "testLines rose from 155169 to 155185",
+      "reason": "T-0206 adds a 16-line red-first structural oracle for the confirmed six-selector CI/runtime mismatch; coverage, commands, workers and frozen timing controls are unchanged."
+    },
+    {
+      "measuredAt": "2026-10-07",
+      "rise": "testLines rose from 155185 to 155307",
+      "reason": "T-0208 adds the independent 149-line empty-Chat geometry oracle, eight red cases and two green controls; no existing tests or census rules change."
+    }
+  ]
+}

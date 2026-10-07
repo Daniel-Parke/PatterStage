@@ -1,0 +1,34 @@
+{
+  "id": "T-0072",
+  "intent": "Build the restart-under-load regression test the 2026-08-30 QA pass asked for -- their strongest recommendation -- with the one correction it needed: it cannot be a Playwright spec.",
+  "declared": {
+    "capabilities": [
+      "edit-tests"
+    ],
+    "side_effects": []
+  },
+  "mode": "standard",
+  "tier_proposed": "R1",
+  "tier_ruled": "R1",
+  "reasons": [],
+  "status": "done",
+  "owner_session": "t0072-restart-recovery-2026-08-31",
+  "claims": [
+    "tests/integration/runtime/restart-recovery.mjs",
+    "package.json"
+  ],
+  "the_correction": "Playwright runs against an ALREADY-STARTED server and has no way to kill the process under it. Process control is the subject, so the harness lives beside the other runtime smokes and uses the primitives boot-smoke.mjs already uses: detachedSpawn and killPid from scripts/tooling/_platform.mjs.",
+  "what_is_under_test": "Not dispatch. BOOT RECOVERY -- the three sweeps that run when a process starts and finds work its predecessor left mid-flight: reconcileRunsOnBoot, failStuckResearchRuns and failStuckChatMessages. Each exists because a crash leaves a row nothing else will ever move: a fire-and-forget job has no in-process resume, so without them the research page spins forever and a chat bubble stays mid-reply for the life of the database. Plus the scheduler LEASE, which a new process must take over rather than defer to a dead pid -- a lease held by a killed process means schedules never fire again, and the only signal is the pill comparing the two pids T-0071 fenced.",
+  "what_is_real_and_what_is_seeded": "The KILL is real: the server is spawned detached and terminated with killPid({tree:true}), not shut down gracefully, so the second process genuinely inherits an uncleaned database. The in-flight ROWS are seeded rather than produced by a live agent, and the harness header says so plainly. What is under test is what happens to a row a crash left behind, and writing that exact state needs no Hermes, no gateway and no model.",
+  "two_facts_now_encoded": [
+    "Both instrumentation sweeps carry a 30-MINUTE cutoff and are called at boot with their defaults, so a row created a second before the crash is deliberately NOT swept -- the next boot might be a fast restart of a job still legitimately in flight. The seeds are backdated for that reason, and a naive version of this harness would have passed for the wrong reason or failed for one.",
+    "A run that reached the backend is left alone. reconcileRunsOnBoot fails only runs with NO backend runId; failing a submitted one would report a job the backend may still be executing as dead. That is the control, and it is the assertion most likely to catch a well-meant widening."
+  ],
+  "mutation_finding": "Five mutations, five caught, and one is worth recording. Removing reconcileRunsOnBoot ENTIRELY still leaves the run `failed`, because the live reconcile tick reaches it too -- with a different message. The status assertion alone would therefore have passed on a build with the boot sweep deleted, and it is the REASON assertions that carry the weight. Two sweeps agreeing on an outcome and disagreeing on the explanation is exactly what a status-only test cannot see.",
+  "verification": "Seventeen assertions, all passing against a real kill and restart on win32. Wired as npm run test:restart-recovery, alongside the other manual runtime smokes.",
+  "timestamps": {
+    "opened": "2026-08-31T19:30:00Z",
+    "updated": "2026-08-31T20:30:00Z",
+    "closed": "2026-08-31T20:30:00Z"
+  }
+}

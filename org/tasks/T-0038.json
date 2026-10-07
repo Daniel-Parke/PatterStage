@@ -1,0 +1,56 @@
+{
+  "id": "T-0038",
+  "intent": "An unknown config section should help the operator recover. The 404 branch echoes the slug and offers one Back link. CONFIG_SECTIONS is already imported in that file and already enumerated by the sibling page, so listing the 26 valid sections needs no new import or data source. Add a nearest-match resolver feeding the EXISTING SECTION_ALIASES/aliasTarget redirect: the guessed slug 'agent-settings' is exactly slugify('Agent Settings'), and slug.replace(/-/g,'_') alone rescues six more. Source: the operator's live Hermes QA pass on dev@43d16c30, 2026-08-26. Root cause traced by three read-only investigations and re-verified independently; NOT a regression from the consolidation work, which only put a QA pass in front of pages nobody had text-scraped before.",
+  "declared": {
+    "capabilities": [
+      "edit-source"
+    ],
+    "side_effects": []
+  },
+  "mode": "standard",
+  "tier_proposed": "R1",
+  "tier_ruled": "R2",
+  "reasons": [],
+  "status": "done",
+  "owner_session": "t0038-config-unknown-section-2026-08-26",
+  "claims": [
+    "src/app/config/",
+    "src/lib/config-schema.ts",
+    "tests/"
+  ],
+  "invariants": [
+    "INV-1 A slug that IS a section never redirects. resolveSectionRedirect returns null for every own key of CONFIG_SECTIONS, and the page gates the effect on !sectionDef as well, so a valid section cannot be sent anywhere even if the resolver were wrong.",
+    "INV-2 Every non-null result is a full path: either a literal SECTION_ALIASES value or /config/<id> for an own key of CONFIG_SECTIONS. Never a bare id, never /config/undefined. The aliases map to full paths and the ids do not, so the resolver, not its caller, is what closes that gap.",
+    "INV-3 One hop terminates. Feed the /config/ tail of any non-null result back through the resolver and it returns null, so router.replace cannot loop. Checked exhaustively over every id, every label slug, every hyphenated id variant, every unique id prefix and the alias table.",
+    "INV-4 No self-redirect. The result is never /config/<the slug that was passed in>.",
+    "INV-5 An ambiguous prefix does not guess. A slug that prefixes two or more ids resolves to null and the operator gets the list instead; 's' prefixes six sections, and guessing one of six is worse than showing all of them.",
+    "INV-6 Membership is own-key membership. 'constructor', 'toString' and '__proto__' are unknown sections, not valid ones, in getSectionDef and in every lookup the resolver makes.",
+    "INV-7 The recovery page lists every section in CONFIG_SECTIONS, one link to /config/<id> per section, carrying that section's own label. The count is derived from the record, never written down."
+  ],
+  "oracle": {
+    "authored": "before implementation, in the owning session, per EXECUTOR R2",
+    "files": [
+      "tests/unit/config-section-redirect.test.ts",
+      "tests/unit/config-unknown-section-page.test.tsx"
+    ],
+    "frozen_evidence": "Run against the unmodified tree at 43d16c30. config-section-redirect.test.ts could not run at all: 'Test suite failed to run, TypeError: Cannot convert undefined or null to object at Object.keys' on Object.keys(SECTION_ALIASES), because neither SECTION_ALIASES nor resolveSectionRedirect was exported yet. config-unknown-section-page.test.tsx reported 13 failed, 5 passed, 18 total. The 5 that passed are exactly the behaviour that must NOT change: the slug is still echoed, the Back link still exists, the model alias still redirects, a valid section still does not redirect, and the alias target still stops.",
+    "final": "48 passed, 48 total across the two files. Full suite 356 suites / 2,995 tests green.",
+    "mutation_evidence": "Five mutations of the implementation, each applied alone and restored from a scratchpad copy. M1 delete the valid-section guard: INV-1, INV-3 and INV-4 go red (the page-level test stays green, which is the belt-and-braces `sectionDef ? null :` guard holding on its own). M2 prefix length === 1 becomes >= 1: all four INV-5 ambiguity cases plus the page's 'shows the list rather than guessing' go red. M3 restore the raw prototype lookups in getSectionDef and the label map: INV-2 and all five INV-6 cases go red. M4 return a bare id instead of a full path: INV-2, the six hyphen rescues, the label sweep and six page redirects go red, 14 in total. M5 render Object.entries(CONFIG_SECTIONS).slice(0, 20) on the page: all three INV-7 cases plus the ambiguity case go red. Every guard has now been seen to fail."
+  },
+  "rollback": {
+    "plan": "git revert the single commit. Client-side render plus one pure module function: no schema, no migration, no API route, no config file and no data touched, so a revert restores the previous 404 branch exactly and needs no follow-up step.",
+    "blast_radius": "src/app/config/[section]/page.tsx and the two new exports in src/lib/config-schema.ts. CONFIG_SECTIONS, getSectionDef and fileKeyForFilePath keep their signatures; getSectionDef's only behaviour change is that inherited Object.prototype keys stop counting as sections, which previously returned a Function where a SectionDef was expected and crashed the render.",
+    "signal": "npm run build plus the frozen oracle. A regression shows as a red oracle, not as a judgement call."
+  },
+  "notes": [
+    "Record correction, repository outranks the note: CONFIG_SECTIONS was NOT imported by src/app/config/[section]/page.tsx at 43d16c30 (line 15 imported getSectionDef and fileKeyForFilePath only), so the listing did need a new import after all. It needed no new data source, which is the part of the claim that held.",
+    "Record correction: CONFIG_SECTIONS holds 27 sections, not 26. The sibling index page enumerates 25 of them through its six CATEGORIES; hermes_md and env are reachable only from the sidebar. The recovery page derives the count and lists all 27.",
+    "tier_ruled is R2 with an empty reasons array. Treated as binding and worked at R2: invariants and rollback recorded here before the implementation existed, oracle authored first and seen to fail against the old behaviour.",
+    "Discovered while closing INV-6, and fixed here rather than deferred because it is the same sentence as the task intent: getSectionDef used a bare `CONFIG_SECTIONS[sectionId] || null`, so /config/constructor and /config/toString resolved to inherited Object.prototype members. Those are truthy non-SectionDefs, so the page skipped the unknown-section branch entirely and crashed the render on sectionDef.fields.length. An unknown section that cannot reach the recovery page has not recovered. The same hazard would have been inherited by the alias table and the label map, where it would have handed router.replace a Function.",
+    "Not done, and deliberately: the resolver is case-sensitive, so /config/Agent-Settings still lands on the recovery page rather than redirecting. It is a real miss, but the operator now sees all 27 sections listed there, so the recovery path is one click either way."
+  ],
+  "timestamps": {
+    "opened": "2026-08-26T09:00:00Z",
+    "updated": "2026-08-26T19:55:00Z"
+  }
+}

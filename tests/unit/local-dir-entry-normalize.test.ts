@@ -1,4 +1,4 @@
-import { normalizeLocalDirsInput, formatLocalDirEntryLine } from "@/lib/local-dir-entry";
+import { normalizeLocalDirsInput } from "@/lib/fs/local-dir-entry";
 
 describe("normalizeLocalDirsInput", () => {
   it("maps string[] to LocalDirEntry[]", () => {
@@ -23,15 +23,5 @@ describe("normalizeLocalDirsInput", () => {
   it("returns [] for non-array", () => {
     expect(normalizeLocalDirsInput(null)).toEqual([]);
     expect(normalizeLocalDirsInput({})).toEqual([]);
-  });
-});
-
-describe("formatLocalDirEntryLine", () => {
-  it("includes branch hint when set", () => {
-    expect(formatLocalDirEntryLine({ path: "/p", branch: "dev" })).toContain("Use git branch: dev");
-  });
-
-  it("omits branch line when absent", () => {
-    expect(formatLocalDirEntryLine({ path: "/p", branch: null })).toBe("  - /p");
   });
 });

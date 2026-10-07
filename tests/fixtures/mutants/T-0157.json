@@ -1,0 +1,22 @@
+{
+  "task": "T-0157",
+  "why": "The committed manifest must retain both halves of the ruled framework security update.",
+  "mutants": [
+    {
+      "id": "m1-next-reverts-to-affected-release",
+      "file": "package.json",
+      "anchor": "\"next\": \"16.3.6\"",
+      "replacement": "\"next\": \"16.2.9\"",
+      "tests": ["tests/unit/t0157-framework-version.test.ts"],
+      "why": "A manifest regression to the audited critical Next range must make the oracle red."
+    },
+    {
+      "id": "m2-eslint-config-diverges",
+      "file": "package.json",
+      "anchor": "\"eslint-config-next\": \"16.3.6\"",
+      "replacement": "\"eslint-config-next\": \"16.2.9\"",
+      "tests": ["tests/unit/t0157-framework-version.test.ts"],
+      "why": "The ESLint config must land with the same framework release."
+    }
+  ]
+}

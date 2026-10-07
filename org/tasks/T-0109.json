@@ -1,0 +1,71 @@
+{
+  "id": "T-0109",
+  "intent": "B15 of the final-release programme: the documentation pipeline, the re-tier of docs/, Start Here and Concepts. Executes ADR-0010: the governance corpus moves under org/ with git mv, inbound references updated in the same commit, docs/README.md becomes the six-tier reading path with one pointer to org/. docs/ re-tiered into start-here, concepts, guides, running, reference and contributing with kebab-case slugs and front matter; docs/manifest.json generated and held by check-derived-views. scripts/docs/build-site.mjs (markdown-it and gray-matter, two devDependencies) builds site/ and public/help/; scripts/docs/serve.mjs; scripts/docs/extract.ts for the generated blocks; scripts/docs/check.mts joins npm run lint. .github/workflows/docs-pages.yml publishes to GitHub Pages on push to main (decision 9) and ci.yml gains a docs-build step. Start Here (what it is, install per decision 10, the first hour, quests, getting help) and Concepts (the eleven nouns) written here.",
+  "declared": {
+    "capabilities": [
+      "edit-docs",
+      "edit-code",
+      "filesystem"
+    ],
+    "side_effects": [
+      "new-dependency",
+      "ci-config"
+    ]
+  },
+  "mode": "standard",
+  "tier_proposed": "R2",
+  "tier_ruled": "R2",
+  "reasons": [
+    {
+      "factor": "ci-stateful-infra",
+      "tier_floor": "R2",
+      "source": "derived:ci-config",
+      "evidence": ".github/workflows/docs-pages.yml is new and ci.yml changes"
+    },
+    {
+      "factor": "size-threshold",
+      "tier_floor": "R1",
+      "source": "derived:diff-size",
+      "evidence": "the whole of docs/ moves or is re-tiered"
+    }
+  ],
+  "status": "done",
+  "owner_session": "unassigned",
+  "claims": [
+    "docs/",
+    "org/",
+    "OPERATORS_GUIDE.md",
+    "scripts/docs/",
+    "scripts/tooling/check-derived-views.mjs",
+    "scripts/tooling/eos-compile.mjs",
+    ".github/workflows/",
+    "package.json",
+    "public/help/",
+    ".gitignore",
+    "tests/"
+  ],
+  "programme": "B15, depends on B3 (T-0097) and B4 (T-0098). docs:check fixtures red then green; the built site opens from file://; fragments, manifest and concepts exist for every page. The two devDependencies are the durable-band decision the plan records (decision 3: a small in-repo generator, no new framework).",
+  "timestamps": {
+    "opened": "2026-09-05T10:30:00Z",
+    "updated": "2026-09-06T20:00:00Z",
+    "closed": "2026-09-06T20:00:00Z"
+  },
+  "invariants": [
+    "I1 docs/**/*.md is the single source. The published site, the in-app Help fragments and the screenshot set are three renderings of one corpus, not three copies of the prose.",
+    "I2 Every page opens with front matter naming its title, summary, tier and position. A malformed block is refused by name, with every missing required key reported at once; an unknown key is a refusal rather than a silent drop, because a typo'd screan: is a page that documents nothing.",
+    "I3 docs/manifest.json is derived and byte-stable: sections in tier order, pages by nav then slug, nothing from the clock. check-derived-views recomputes it and compares.",
+    "I4 The docs gate refuses six things: a registry route with no guide, a screen: that is not a route, a missing screenshot, a concept no page under docs/concepts/ defines, a stale or unclosed generated block, and a retired URL named in prose. It does NOT refuse a source path, a filesystem template or a fence whose generator does not exist yet.",
+    "I5 The covered route set is documentedRoutes(), the rail's own routes plus the Settings index. The 27 generated settings-section editors share one guide, because 27 guides for one form is not a gate, it is a chore.",
+    "I6 The built site opens from a file:// URL: every href relative, the stylesheet inlined, the search index a script rather than a fetch, because Chrome gives a file:// page an opaque origin and blocks the request.",
+    "I7 The in-app half is fragments, not pages: no html, head, style or script, and no root-relative link, so Help can render them inside the app's own chrome and rebase them.",
+    "I8 The governance corpus lives under org/, with every inbound reference moved in the same commit. Nothing under src/, scripts/, ops/, tests/, docs/ or .github/ still names an old governance path.",
+    "I9 The six tiers are start-here, concepts, guides, running, reference and contributing. Every one of the 23 documented routes has a guide; every concept a page names is defined by a page under docs/concepts/."
+  ],
+  "commits": "cd189b9b the oracle alone (6 files, 154 cases, measured red: 148 failing, 6 named controls); 41ddb25b the implementation (lib.mjs, build-site.mjs, check.mts, extract.ts, serve.mjs, the re-tier and its 167 repaired links, the corpus move and its inbound references, documentedRoutes(), the second derived view, the four npm scripts, the Pages workflow, and start-here plus concepts written); cb6770aa and 746f47c1 the sharper oracles the sweep asked for; 8d27b9c2 a real summary on every page.",
+  "verification": "Gate on the implementation tree by exit code: lint 0 (now with docs:check in the chain, after check-doc-links and before eslint), tsc 0, jest 0 (5534 tests), knip 0, canary 0, build 0 (prebuild now builds the Help fragments), Playwright 132 passed 9 skipped. The canary needed no blessing: the only digest that moved was a comment edit inside migration 032, which was reverted, because a shipped migration is a record and not a document to keep current. Beyond the gates, every relative href in the built site was resolved against the disk: 5,686 links, all landing, none root-relative.",
+  "mutation": "50 mutants against the committed tree, 43 killed on the first pass and 50 after six sharper cases. Three gaps were one shape: the oracle recomputed the documented-route filter instead of calling the documentedRoutes() the product ships, so the two could drift while the gate stayed green; the manifest fixture's two guides were alphabetical AND in nav order, so no case could tell a nav sort from no sort; and nothing asked whether a page outside the concepts tier could define a concept by its basename. Two more were about what the checker must NOT refuse: an unimplemented fence and a source path. One mutant was retired rather than killed: the manifest comparator carried a section key the grouping loop already settled, so removing it changed nothing; the redundant key is deleted instead, which is the honest answer to a mutant that survives because it is a no-op.",
+  "proof": "The built site, served by its own scripts/docs/serve.mjs on 4173 and walked in the browser pane at 1280x800: the index renders with the six-tier rail, a search box and the reading path; clicking 'The first hour' navigates by a relative href to a page whose prose is the real first hour, not a stub; /guides/missions.html and /concepts/mission.html both answer 200. The same index was also opened directly from a file:// URL and rendered correctly, which is the requirement decision 3 makes and the reason the stylesheet is inlined and the search index is a script. public/help/ carries manifest.json, concepts.json, search.json and a fragment per page.",
+  "deviation": "(1) One new devDependency, markdown-it, not two: js-yaml is already a runtime dependency of this repo and already parses this front-matter convention, and a second YAML parser in one tree is a second answer to a settled question. (2) The in-app half is fragments rendered inside AppPageShell, not an iframe over a copied site: decision 3's prose said iframe, the B15 bullet and B16 both supersede it. (3) The site's search loads window.__PS_DOCS_SEARCH__ from a script rather than fetching search.json, because a file:// page cannot fetch. (4) check-derived-views imports the docs library LAZILY and treats a tree with no docs/ as having no second view rather than as a refusal: its own drift oracle runs it against fixture repos that hold only org/, and this script's job is to catch a view that disagrees with its source, not to assert which directories a repository has. (5) The nine generated blocks are wired and eight produce real content; quest-defs returns an honest placeholder until B17 lands src/lib/quests/, and no docs page carries a fence yet, so B18 inserts the markers where it wants the facts.",
+  "harness_amendments": "Six. The corpus oracle's inbound sweep blanks every NEW home before looking for an old one: it was a bare substring sweep, and 'org/EOS_OPERATORS_GUIDE.md' contains 'OPERATORS_GUIDE.md', so it refused the very reference the move is supposed to produce and could not both pass and let docs/README.md point at org/. Four oracles carry a file-level eslint-disable for no-require-imports, with the reason: they load scripts/docs/lib.mjs by a COMPUTED path so that typecheck:tests stayed green while the module was unwritten. derived-views-drift.test.ts says in a comment why its fixtures carry no scripts/docs/lib.mjs. And four existing suites point at the moved documents: b1-api-md-matches-the-route-tree, b6-credentials-rotate-route, b1-colour-classes-name-declared-tokens and b2-copy.",
+  "deferred": "The guides are stubs with real front matter, real summaries and a three-heading skeleton; B18 writes their prose against the finished product and inserts the generated-block markers. Screenshots are re-captured in B18, so no page carries a shots: key yet. The in-app Help page itself is B16. Whether GitHub Pages is set to 'GitHub Actions' is an operator action the repository cannot assert (decision 9). Two facts the prose could not establish and therefore leaves out: the quest chapters, which exist only in the plan until B17, and artifacts on disk, which the schema is ready for and nothing writes."
+}

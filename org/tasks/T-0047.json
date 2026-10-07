@@ -1,0 +1,43 @@
+{
+  "id": "T-0047",
+  "intent": "Scope the client deadline T-0040 added, or name its reach. T-0040 gave apiFetch a 45s ceiling, justified entirely from chat: it sits above the HermesRuntime 30s gateway deadline so the server's real diagnosis wins the race. But the constant governed EVERY call through apiFetch. Push all, Pull all, model-catalogue sync, catalogue import and seeding all reach it through runSyncAction with no caller signal and therefore no override, and their work scales with the size of the install rather than with the request, so a large install had its sync aborted mid-flight and was told it had timed out - both wrong and alarming, since the operation was progressing. Source: batch-B review of T-0040, 2026-08-26. Closed 2026-08-26. The deadline is now chosen per call: API_FETCH_TIMEOUT_MS (45s) stays the interactive default, API_FETCH_BULK_TIMEOUT_MS (5 min) is what the nine bulk sites ask for.",
+  "declared": {
+    "capabilities": [
+      "edit-source"
+    ],
+    "side_effects": []
+  },
+  "mode": "standard",
+  "tier_proposed": "R1",
+  "tier_ruled": "R2",
+  "reasons": [],
+  "status": "done",
+  "owner_session": "t0047-deadline-reach-2026-08-26",
+  "invariants": [
+    "I1 A caller's own AbortSignal still wins outright, and no deadline is attached when one is supplied. Several call sites cancel on unmount or on a superseded request; overriding that would leak both the request and the state update it resolves into.",
+    "I2 The 45s interactive default is unchanged and pinned by test, so this task cannot be read later as having quietly relaxed the T-0040 fix.",
+    "I3 The timeout message reports the budget that ACTUALLY fired, not the default. A bulk call claiming 'no response after 45s' when it waited five minutes sends the reader looking for the wrong problem."
+  ],
+  "oracle_provenance": "Authored BEFORE any production file was opened for edit and committed on its own at 4cb6f5ba, ahead of the implementation at 7f667d54. One file, tests/unit/api-fetch-deadline-reach.test.ts, measured against dev@67c6b112: 3 red, 4 green. The four greens are deliberate no-regression guards - the 45s default, the path naming, a caller's own AbortSignal winning outright, and the JSON headers.",
+  "decision_five_minutes": "Five minutes is a compromise, not a measurement. Long enough that reaching it means something is genuinely stuck rather than merely large; short enough that a wedged request does not hold a spinner forever, which is the failure the whole mechanism exists to prevent. Recorded as a judgement so a future reader can overturn it on evidence rather than guessing at intent.",
+  "rollback": "Revert 7f667d54.",
+  "claims": [
+    "src/lib/api-fetch.ts",
+    "src/lib/operation-sync-action.ts",
+    "src/app/operations/agents/page.tsx",
+    "src/app/operations/skills/page.tsx",
+    "src/app/operations/tools/page.tsx",
+    "src/hooks/useModelActions.ts",
+    "src/hooks/useModelsRegistry.ts",
+    "src/app/config/seed/page.tsx",
+    "tests/"
+  ],
+  "deferred": [
+    "The per-model sync sites now share the bulk ceiling with the whole-catalogue ones, because they go through the same doSync helper. A longer ceiling never makes a fast call slower - it only changes when we give up - so this is harmless, but it does mean a single wedged per-model push waits five minutes rather than 45 seconds. Splitting the helper for that one case was not worth the duplication today."
+  ],
+  "timestamps": {
+    "opened": "2026-08-26T18:00:00Z",
+    "updated": "2026-08-26T18:40:00Z",
+    "closed": "2026-08-26T18:40:00Z"
+  }
+}

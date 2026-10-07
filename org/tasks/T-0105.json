@@ -1,0 +1,63 @@
+{
+  "id": "T-0105",
+  "intent": "B11 of the final-release programme: Sessions, tier 1. Source vocabulary from the API's bySource with an unknown-source fallback (D29, blocker); a Failed badge with exit code on rows, the error on the transcript, a Failed filter (D30, blocker); API noise duration-based in SQL (D31); a guard on the inline state.db sync (D35); refetch while anything is live and Refresh on a running transcript (D36); valid interactive nesting via stretched-link rows (D32); a status-aware error with Retry instead of Session Not Found (D33); search, filter and page in the URL (D37); expand-all, in-transcript search, role chips, copy transcript (D38); First/Last and page size (D39); a payload cap with a truncated flag (D40); the group card says N on this page (D34). Tier 2 (SQL group-by, virtualisation, sync off the read path) is deferred by the plan.",
+  "declared": {
+    "capabilities": [
+      "edit-code",
+      "database"
+    ],
+    "side_effects": []
+  },
+  "mode": "standard",
+  "tier_proposed": "R1",
+  "tier_ruled": "R1",
+  "reasons": [
+    {
+      "factor": "size-threshold",
+      "tier_floor": "R1",
+      "source": "derived:diff-size",
+      "evidence": "the sessions list, card, transcript and route"
+    }
+  ],
+  "status": "done",
+  "owner_session": "session-b11",
+  "claims": [
+    "src/lib/sessions/",
+    "src/lib/runtime/state-db.ts",
+    "src/app/api/sessions/",
+    "src/app/results/sessions/",
+    "src/components/session/",
+    "src/components/ui/Pagination.tsx",
+    "src/hooks/useSessions.ts",
+    "src/hooks/useSessionDetail.ts",
+    "docs/",
+    "tests/"
+  ],
+  "programme": "B11, depends on B2 (T-0096) and B10 (T-0104). Filter tests, card tests, a URL-state test, a jsdom nesting test; the Playwright sessions spec.",
+  "timestamps": {
+    "opened": "2026-09-05T10:30:00Z",
+    "updated": "2026-09-06T02:00:00Z",
+    "closed": "2026-09-06T02:00:00Z"
+  },
+  "invariants": [
+    "I1 A session's source is whatever the column holds. Seven names have badges, anything else prints itself, and nothing is ever badged as a source it is not.",
+    "I2 The filter buttons are the sources the same filter can still reach, computed over every condition except the source one, so picking one does not delete the rest.",
+    "I3 A failed session says so: a badge with the exit code on the row, the error in its title, and an alert with both on the transcript. The list can be asked for the failures, in SQL.",
+    "I4 Hide API noise is a duration, in SQL. A tiny api session that lived under a minute is noise however long ago it ran; one that ran for five minutes is not, however recent. The rows, the count and the tiles describe one set.",
+    "I5 One inline state.db sync per two-second burst, stamped before the call, so a throwing sync cannot re-arm itself on the next request.",
+    "I6 Live means live. The list polls while anything is running and stops when nothing is; the elapsed counter ticks only while something on the page is live; the transcript polls and offers Refresh whenever its session is active, not only when it has no messages.",
+    "I7 No anchor inside an anchor and none inside a button. The row is a div whose title carries a stretched link over a positioned parent; the group's Mission link is a sibling of its expander.",
+    "I8 A transcript that failed to load says which failure: four statuses have their own heading, everything else has the honest fallback, and every one of them offers Retry and a way back.",
+    "I9 A transcript answer carries at most MAX_SESSION_MESSAGES messages, the newest ones, in reading order, and says so when it left older ones behind.",
+    "I10 A transcript can be read: expand all, search inside it, copy what is shown, with the count line saying how much of it that is.",
+    "I11 The list view is in the URL, defaults omitted, and comes back from it: search, source, status, page and page size. A junk page clamps rather than asking for row NaN.",
+    "I12 A history of 716 pages has First and Last and a page size, and the group card counts the page it can see rather than claiming to show every session in the group."
+  ],
+  "commits": "50fda898 the oracle alone (6 files, 96 cases, measured red: 72 failing, 24 green controls); bf26fb32 the implementation (the vocabulary and the reachable sources, the failure on the row and the transcript and in SQL, the duration-based noise filter, the sync guard, the nesting, the load-error headings, the message cap, the reading controls, the URL state, the paging and the group card, plus a new Playwright spec and the docs); then five sharper oracles the sweep asked for and the transcript the walk asked for.",
+  "verification": "Gate b11 on the implementation tree by exit code: lint 0 (agent-files, doc-links, derived views, read-only guards, icon-button names, form-control names, design-lint 0 baselined, contrast, coverage floors, eslint, typecheck:tests), tsc 0, jest 0 (527 suites, 5041 tests), knip 0, canary unchanged and re-checked, build 0, Playwright 129 passed 9 skipped, including tests/e2e/sessions-list-and-transcript.spec.ts.",
+  "mutation": "45 mutants against the committed tree, 39 killed on the first pass and 45 after five sharper oracles. The gaps were all the same shape, a layer nothing asked: the route, where the reachable sources become a field and a source the UI has no word for is forwarded or dropped; the URL helper, where writing every default back survived; the message cap's default, where a cap of zero survived; and the stretched link, without which the row loses the click target the wrapping anchor used to give it. The sixth was the noise rule: every fixture in the existing suite had a null endedAt, so the age rule and the duration rule agreed on all of them, and the cases now turn on the one thing that separates them, a thirty-second session that ended a week ago.",
+  "proof": "Isolated instance (production build of the implementation tree, e2e-b1 data dir, mock-hermes 8747) with two rows the product cannot make written into its database, a subagent session and one that died with exit 137, plus thirty filler rows. Five scenes, 27 checks, all PASS. (1) The list answers ['cli','mission','subagent'], and filtering to subagent returns only subagent rows while still offering the other two. (2) The subagent row is badged Subagent, the failed one 'Failed - exit 137', both filters are on the bar, and the page has no anchor inside an anchor and none inside a button. (3) The Failed filter reaches the URL and survives a reload, with the search term. (4) The transcript of the failed session shows the word, the exit code and the reason, and offers Expand all, a transcript search and Copy transcript; a session id that does not exist gets its own heading and a Retry, never 'Session Not Found'. (5) At 25 a page, First is disabled at the start, Last reaches the end, and both the page and the size are in the URL.",
+  "deviation": "(1) useSessions takes an object rather than positionals: it was already five and would have been eight, and a call site reading useSessions(page, source, 50, search, null, true, false) is one nobody can check. (2) The sources list keeps its last non-empty value across a refetch, because a filter change is a new query key and the bar would otherwise vanish under the click that changed it. (3) MessageBubble adjusts its expanded state during render rather than in an effect, which is React's own pattern for state that follows a prop and the one that has the answer on screen in the same commit as the click. (4) The proof walk found a gap the oracle could not: a PatterStage session row with no transcript anywhere answered 404 unless its source was mission or cron, so a failed CLI session, which is exactly the case D30 is about, told the operator it did not exist. Any row answers now, carrying how it ended and a note saying no transcript was written.",
+  "harness_amendments": "session-filters' isApiNoiseSession block was an age block: every fixture had a null endedAt, so both rules agreed on all six cases. Re-aimed at duration, including the case that separates them. sessions-api-helpers' 'ignores unknown enum values' split in two, because an unknown source is now accepted by shape and only the agent type is an enum. sessions-detail-in-flight-note gained the guard module's new reader in its double, without which the route asks for a limit of undefined. record-surfaces reads '2 on this page'. session-tiles-agree-with-header's stub payload gained sources, since the buttons come from the API now. session-detail-helpers' byte-equivalence case destructures the three ending fields off before comparing the four envelope ones, which the case above it asserts. And the transcript oracle's LONG_ANSWER fixture is trimmed: testing-library normalises an element's text before comparing, so a fixture ending in a space could never be matched by getByText and the case would have failed whatever the product did.",
+  "deferred": "Tier 2 is deferred by the plan and stays deferred: no SQL group-by-mission aggregate (the card counts its page and says so), no virtualised transcript (the cap is the answer for now), and the state.db sync is guarded rather than moved off the read path. The list still has no jump-to-page box or date range. isApiNoiseSession is kept although the SQL is what runs in the product: it is the same rule, testable without a database, and the sweep uses it."
+}

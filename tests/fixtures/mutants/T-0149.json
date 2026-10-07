@@ -1,0 +1,30 @@
+{
+  "task": "T-0149",
+  "why": "K3 ratifies four protected lines and restores 47 closed records. Each mutant puts back one half of what the codemod did, or takes away the index row, and the oracle must go red.",
+  "mutants": [
+    {
+      "id": "m1-a-closed-record-is-rewritten-again",
+      "file": "org/tasks/T-0048.json",
+      "anchor": "src/lib/api-auth.ts was a thin alias",
+      "replacement": "src/lib/api/api-auth.ts was a thin alias",
+      "tests": ["tests/unit/k3-a-closed-record-keeps-its-spelling.test.ts"],
+      "why": "a record closed in August cannot name a path September made, and the restore is worth nothing if nothing notices it being undone"
+    },
+    {
+      "id": "m2-the-index-loses-a-decision",
+      "file": "docs/adr/README.md",
+      "anchor": "| [ADR-0010](../../org/decisions/ADR-0010-governance-corpus-lives-under-org.md) | The governance corpus lives under org/; docs/ holds product documentation only | accepted |\n",
+      "replacement": "",
+      "tests": ["tests/unit/k3-a-closed-record-keeps-its-spelling.test.ts"],
+      "why": "the public index omitted ADR-0010 for a week; the check exists so it cannot happen quietly again"
+    },
+    {
+      "id": "m3-a-ratified-protected-line-is-reverted",
+      "file": "org/policy.json",
+      "anchor": "        \"src/lib/api/api-auth.ts\",",
+      "replacement": "        \"src/lib/api-auth.ts\",",
+      "tests": ["tests/unit/k3-a-closed-record-keeps-its-spelling.test.ts"],
+      "why": "this is the whole argument for ratifying rather than reverting: a sensitive pattern that matches no file routes no auth-surface factor, and the oracle must see the pattern stop resolving"
+    }
+  ]
+}

@@ -1,0 +1,75 @@
+{
+  "task": "T-0204",
+  "mutants": [
+    {
+      "id": "m1-allowed-positive-candidate",
+      "anchor": "const plantedValue = Array.from({ length: 26 }, (_, index) => String.fromCharCode(65 + index) + String(index % 10)).join(\"\");",
+      "replacement": "const plantedValue = \"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopA\";",
+      "why": "A letters-only candidate cannot prove the configured positive scanner control.",
+      "file": "tests/security/secret-scan-canary.mjs",
+      "tests": [
+        "tests/unit/secret-scan-canary-behaviour.test.ts"
+      ]
+    },
+    {
+      "id": "m2-ignore-clean-findings",
+      "anchor": "clear.exit !== 0 || clear.findings.length !== 0",
+      "replacement": "clear.exit !== 0",
+      "why": "A clean scan with findings must never be accepted.",
+      "file": "tests/security/secret-scan-canary.mjs",
+      "tests": [
+        "tests/unit/secret-scan-canary-behaviour.test.ts"
+      ]
+    },
+    {
+      "id": "m3-ignore-planted-rule",
+      "anchor": "finding.RuleID === \"generic-api-key\"",
+      "replacement": "true",
+      "why": "An unrelated rule cannot establish the configured planted generic-key witness.",
+      "file": "tests/security/secret-scan-canary.mjs",
+      "tests": [
+        "tests/unit/secret-scan-canary-behaviour.test.ts"
+      ]
+    },
+    {
+      "id": "m4-ignore-planted-file",
+      "anchor": "finding.File === \"planted.txt\"",
+      "replacement": "true",
+      "why": "A finding in another file cannot establish the planted history witness.",
+      "file": "tests/security/secret-scan-canary.mjs",
+      "tests": [
+        "tests/unit/secret-scan-canary-behaviour.test.ts"
+      ]
+    },
+    {
+      "id": "m5-ignore-detection-exit",
+      "anchor": "planted.exit !== 1 ||",
+      "replacement": "false ||",
+      "why": "A finding without the scanner's required exit one cannot establish successful rejection.",
+      "file": "tests/security/secret-scan-canary.mjs",
+      "tests": [
+        "tests/unit/secret-scan-canary-behaviour.test.ts"
+      ]
+    },
+    {
+      "id": "m6-misclassify-scanner-exit",
+      "anchor": "if (exit !== 0 && exit !== 1) throw new Error(`Scanner infrastructure failure: invalid exit ${exit}`);",
+      "replacement": "if (false) throw new Error(`Scanner infrastructure failure: invalid exit ${exit}`);",
+      "why": "An invalid scanner exit must remain infrastructure, distinct from completed missed detection.",
+      "file": "tests/security/secret-scan-canary.mjs",
+      "tests": [
+        "tests/unit/secret-scan-canary-behaviour.test.ts"
+      ]
+    },
+    {
+      "id": "m7-hide-missing-report",
+      "anchor": "if (!existsSync(report)) throw new Error(\"Scanner infrastructure failure: missing JSON report\");",
+      "replacement": "if (!existsSync(report)) return { exit, findings: [] };",
+      "why": "A missing fresh report must not masquerade as a completed empty scan.",
+      "file": "tests/security/secret-scan-canary.mjs",
+      "tests": [
+        "tests/unit/secret-scan-canary-behaviour.test.ts"
+      ]
+    }
+  ]
+}

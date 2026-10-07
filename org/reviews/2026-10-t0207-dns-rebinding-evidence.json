@@ -1,0 +1,29 @@
+{
+  "probe": "owned DNS answer changes between guard and transport",
+  "node": "v24.21.0",
+  "sourceBinding": [
+    {
+      "path": "src/lib/search/url-guard.ts",
+      "sha256": "12e8deefef85e0dc94d8014985164e35889a31fc88d5dd77252ca2544a4dcb32",
+      "lfSha256": "12e8deefef85e0dc94d8014985164e35889a31fc88d5dd77252ca2544a4dcb32"
+    },
+    {
+      "path": "src/lib/search/visit.ts",
+      "sha256": "98b5533085849a0b2778b1df31a7e764155f60e927cf81ab5dfd027a4d33066b",
+      "lfSha256": "98b5533085849a0b2778b1df31a7e764155f60e927cf81ab5dfd027a4d33066b"
+    }
+  ],
+  "substitutions": {
+    "guardResolver": "8.8.8.8, no request sent there",
+    "transportResolver": "127.0.0.1 for reserved owned-rebinding.invalid only"
+  },
+  "guardLookups": 1,
+  "transportLookups": 1,
+  "ownedLoopbackRequests": 1,
+  "returnedMarker": true,
+  "unrelatedNetwork": false,
+  "filesWritten": false,
+  "probeSha256": "e80429dfe7c66ac9ae07b0ae37253b23905a48d260c4e263dfb2ef462088b37c",
+  "exitCode": 0,
+  "observedAt": "2026-10-04T17:40:09.385Z"
+}

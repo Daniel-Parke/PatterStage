@@ -9,10 +9,28 @@ on:
 jobs:
   scan:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     steps:
       - uses: actions/checkout@v5
         with:
           fetch-depth: 0
-      - uses: gitleaks/gitleaks-action@v2
+          persist-credentials: false
+      - name: Fetch every remote branch for full-history coverage
+        run: git fetch --no-tags --prune origin '+refs/heads/*:refs/remotes/origin/*'
+      - name: Scan all fetched history with the proved rules
+        run: |
+          docker run --rm --network none \
+            --mount "type=bind,source=${PWD},target=/repo,readonly" \
+            --workdir /repo \
+            ghcr.io/gitleaks/gitleaks:v8.30.1@sha256:c00b6bd0aeb3071cbcb79009cb16a60dd9e0a7c60e2be9ab65d25e6bc8abbb7f \
+            git . --no-banner --redact=100 --config .gitleaks.toml \
+            --gitleaks-ignore-path .gitleaksignore
+      - uses: gitleaks/gitleaks-action@v3
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITLEAKS_CONFIG: .gitleaks.toml
+          GITLEAKS_VERSION: 8.30.1
+          GITLEAKS_ENABLE_COMMENTS: false
+      - name: Prove a planted history secret fails the configured scanner
+        run: node tests/security/secret-scan-canary.mjs

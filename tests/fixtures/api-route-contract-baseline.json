@@ -1,0 +1,718 @@
+{
+  "sourceRevision": "4a0ce1968befcfd33f392478627b9ac668e67ef1",
+  "inventory": "Explicit TypeScript HTTP exports; implicit framework HEAD/OPTIONS are not exports.",
+  "operatorAllowlist": [
+    {
+      "path": "/api/admin/sessions/backfill-status",
+      "reason": "Operator-triggered historical session status backfill; no UI caller."
+    },
+    {
+      "path": "/api/agents/progression",
+      "reason": "Retained progression history reader; no UI consumer yet."
+    },
+    {
+      "path": "/api/memory",
+      "reason": "Retained operator memory status API; no UI consumer."
+    },
+    {
+      "path": "/api/missions/[id]",
+      "reason": "Retained individual mission REST reader for API symmetry."
+    }
+  ],
+  "routes": [
+    {
+      "path": "/api/admin/sessions/backfill-status",
+      "methods": [
+        "GET",
+        "POST"
+      ]
+    },
+    {
+      "path": "/api/agent/files/[key]",
+      "methods": [
+        "GET",
+        "PUT"
+      ]
+    },
+    {
+      "path": "/api/agent/profiles",
+      "methods": [
+        "GET",
+        "POST"
+      ]
+    },
+    {
+      "path": "/api/agent/profiles/[id]",
+      "methods": [
+        "DELETE",
+        "GET",
+        "PUT"
+      ]
+    },
+    {
+      "path": "/api/agent/profiles/[id]/toolsets",
+      "methods": [
+        "DELETE",
+        "GET",
+        "PUT"
+      ]
+    },
+    {
+      "path": "/api/agent/profiles/sync/import",
+      "methods": [
+        "GET",
+        "POST"
+      ]
+    },
+    {
+      "path": "/api/agent/profiles/sync/pull",
+      "methods": [
+        "POST"
+      ]
+    },
+    {
+      "path": "/api/agent/profiles/sync/push",
+      "methods": [
+        "POST"
+      ]
+    },
+    {
+      "path": "/api/agent/root",
+      "methods": [
+        "GET",
+        "POST",
+        "PUT"
+      ]
+    },
+    {
+      "path": "/api/agents",
+      "methods": [
+        "GET"
+      ]
+    },
+    {
+      "path": "/api/agents/experience",
+      "methods": [
+        "GET"
+      ]
+    },
+    {
+      "path": "/api/agents/progression",
+      "methods": [
+        "GET"
+      ]
+    },
+    {
+      "path": "/api/analytics",
+      "methods": [
+        "GET"
+      ]
+    },
+    {
+      "path": "/api/analytics/insights",
+      "methods": [
+        "GET"
+      ]
+    },
+    {
+      "path": "/api/analytics/timeseries",
+      "methods": [
+        "GET"
+      ]
+    },
+    {
+      "path": "/api/artifacts",
+      "methods": [
+        "GET",
+        "POST"
+      ]
+    },
+    {
+      "path": "/api/artifacts/[id]",
+      "methods": [
+        "DELETE",
+        "GET"
+      ]
+    },
+    {
+      "path": "/api/auth/session",
+      "methods": [
+        "DELETE"
+      ]
+    },
+    {
+      "path": "/api/auth/sessions/list",
+      "methods": [
+        "POST"
+      ]
+    },
+    {
+      "path": "/api/auth/sessions/revoke",
+      "methods": [
+        "POST"
+      ]
+    },
+    {
+      "path": "/api/auth/sign-in",
+      "methods": [
+        "POST"
+      ]
+    },
+    {
+      "path": "/api/backup",
+      "methods": [
+        "GET",
+        "POST"
+      ]
+    },
+    {
+      "path": "/api/chat",
+      "methods": [
+        "GET",
+        "POST"
+      ]
+    },
+    {
+      "path": "/api/chat/[id]",
+      "methods": [
+        "DELETE",
+        "GET"
+      ]
+    },
+    {
+      "path": "/api/chat/[id]/approval",
+      "methods": [
+        "POST"
+      ]
+    },
+    {
+      "path": "/api/chat/[id]/messages",
+      "methods": [
+        "GET",
+        "POST"
+      ]
+    },
+    {
+      "path": "/api/chat/[id]/messages/[messageId]",
+      "methods": [
+        "PATCH"
+      ]
+    },
+    {
+      "path": "/api/chat/[id]/stop",
+      "methods": [
+        "POST"
+      ]
+    },
+    {
+      "path": "/api/composer/runs",
+      "methods": [
+        "GET",
+        "POST"
+      ]
+    },
+    {
+      "path": "/api/composer/runs/[id]",
+      "methods": [
+        "GET"
+      ]
+    },
+    {
+      "path": "/api/composer/runs/[id]/cancel",
+      "methods": [
+        "POST"
+      ]
+    },
+    {
+      "path": "/api/composer/runs/[id]/clarify",
+      "methods": [
+        "POST"
+      ]
+    },
+    {
+      "path": "/api/composer/runs/[id]/events",
+      "methods": [
+        "GET"
+      ]
+    },
+    {
+      "path": "/api/composer/runs/[id]/nodes/[nodeId]/approve",
+      "methods": [
+        "POST"
+      ]
+    },
+    {
+      "path": "/api/composer/workflows",
+      "methods": [
+        "GET",
+        "POST"
+      ]
+    },
+    {
+      "path": "/api/composer/workflows/[id]",
+      "methods": [
+        "DELETE",
+        "GET",
+        "PUT"
+      ]
+    },
+    {
+      "path": "/api/config",
+      "methods": [
+        "GET",
+        "PUT"
+      ]
+    },
+    {
+      "path": "/api/credentials",
+      "methods": [
+        "GET",
+        "POST"
+      ]
+    },
+    {
+      "path": "/api/credentials/[id]",
+      "methods": [
+        "DELETE",
+        "GET",
+        "PATCH"
+      ]
+    },
+    {
+      "path": "/api/cron/hardware",
+      "methods": [
+        "DELETE",
+        "GET",
+        "POST",
+        "PUT"
+      ]
+    },
+    {
+      "path": "/api/feature-flags",
+      "methods": [
+        "GET"
+      ]
+    },
+    {
+      "path": "/api/fs/git/branches",
+      "methods": [
+        "GET"
+      ]
+    },
+    {
+      "path": "/api/fs/list",
+      "methods": [
+        "GET"
+      ]
+    },
+    {
+      "path": "/api/gateway/health",
+      "methods": [
+        "GET"
+      ]
+    },
+    {
+      "path": "/api/gateway/models",
+      "methods": [
+        "GET"
+      ]
+    },
+    {
+      "path": "/api/health",
+      "methods": [
+        "GET"
+      ]
+    },
+    {
+      "path": "/api/healthz",
+      "methods": [
+        "GET"
+      ]
+    },
+    {
+      "path": "/api/laboratory/research",
+      "methods": [
+        "GET",
+        "POST"
+      ]
+    },
+    {
+      "path": "/api/laboratory/research/[id]",
+      "methods": [
+        "GET"
+      ]
+    },
+    {
+      "path": "/api/laboratory/research/[id]/cancel",
+      "methods": [
+        "POST"
+      ]
+    },
+    {
+      "path": "/api/laboratory/research/[id]/events",
+      "methods": [
+        "GET"
+      ]
+    },
+    {
+      "path": "/api/laboratory/research/[id]/export",
+      "methods": [
+        "GET"
+      ]
+    },
+    {
+      "path": "/api/laboratory/research/presets",
+      "methods": [
+        "DELETE",
+        "GET",
+        "POST"
+      ]
+    },
+    {
+      "path": "/api/logs",
+      "methods": [
+        "DELETE",
+        "GET"
+      ]
+    },
+    {
+      "path": "/api/memory",
+      "methods": [
+        "DELETE",
+        "GET",
+        "POST",
+        "PUT"
+      ]
+    },
+    {
+      "path": "/api/memory/config",
+      "methods": [
+        "GET",
+        "POST",
+        "PUT"
+      ]
+    },
+    {
+      "path": "/api/memory/hindsight",
+      "methods": [
+        "DELETE",
+        "GET",
+        "POST"
+      ]
+    },
+    {
+      "path": "/api/mission-categories",
+      "methods": [
+        "DELETE",
+        "GET",
+        "POST",
+        "PUT"
+      ]
+    },
+    {
+      "path": "/api/missions",
+      "methods": [
+        "GET",
+        "POST"
+      ]
+    },
+    {
+      "path": "/api/missions/[id]",
+      "methods": [
+        "GET"
+      ]
+    },
+    {
+      "path": "/api/missions/[id]/cancel",
+      "methods": [
+        "POST"
+      ]
+    },
+    {
+      "path": "/api/missions/[id]/run",
+      "methods": [
+        "GET"
+      ]
+    },
+    {
+      "path": "/api/models",
+      "methods": [
+        "GET",
+        "POST"
+      ]
+    },
+    {
+      "path": "/api/models/[id]",
+      "methods": [
+        "DELETE",
+        "GET",
+        "PUT"
+      ]
+    },
+    {
+      "path": "/api/models/[id]/diff",
+      "methods": [
+        "GET",
+        "POST"
+      ]
+    },
+    {
+      "path": "/api/models/defaults",
+      "methods": [
+        "GET",
+        "PUT"
+      ]
+    },
+    {
+      "path": "/api/models/fallbacks",
+      "methods": [
+        "GET",
+        "POST"
+      ]
+    },
+    {
+      "path": "/api/models/fallbacks/[id]",
+      "methods": [
+        "DELETE",
+        "GET",
+        "PUT"
+      ]
+    },
+    {
+      "path": "/api/models/fallbacks/config",
+      "methods": [
+        "GET",
+        "PUT"
+      ]
+    },
+    {
+      "path": "/api/models/import",
+      "methods": [
+        "GET",
+        "POST"
+      ]
+    },
+    {
+      "path": "/api/models/sync/drift",
+      "methods": [
+        "GET"
+      ]
+    },
+    {
+      "path": "/api/models/sync/pull",
+      "methods": [
+        "POST"
+      ]
+    },
+    {
+      "path": "/api/models/sync/push",
+      "methods": [
+        "POST"
+      ]
+    },
+    {
+      "path": "/api/monitor",
+      "methods": [
+        "GET"
+      ]
+    },
+    {
+      "path": "/api/orchestration/chat",
+      "methods": [
+        "POST"
+      ]
+    },
+    {
+      "path": "/api/prefs",
+      "methods": [
+        "GET",
+        "PUT"
+      ]
+    },
+    {
+      "path": "/api/runs/[id]",
+      "methods": [
+        "GET"
+      ]
+    },
+    {
+      "path": "/api/runs/[id]/events",
+      "methods": [
+        "GET"
+      ]
+    },
+    {
+      "path": "/api/runs/reconcile",
+      "methods": [
+        "POST"
+      ]
+    },
+    {
+      "path": "/api/schedules",
+      "methods": [
+        "GET",
+        "POST"
+      ]
+    },
+    {
+      "path": "/api/schedules/[id]",
+      "methods": [
+        "DELETE",
+        "GET",
+        "PATCH"
+      ]
+    },
+    {
+      "path": "/api/schedules/[id]/run",
+      "methods": [
+        "POST"
+      ]
+    },
+    {
+      "path": "/api/scripts",
+      "methods": [
+        "GET"
+      ]
+    },
+    {
+      "path": "/api/scripts/[name]",
+      "methods": [
+        "DELETE",
+        "GET",
+        "PUT"
+      ]
+    },
+    {
+      "path": "/api/scripts/logs",
+      "methods": [
+        "GET"
+      ]
+    },
+    {
+      "path": "/api/scripts/run",
+      "methods": [
+        "POST"
+      ]
+    },
+    {
+      "path": "/api/seed",
+      "methods": [
+        "GET",
+        "POST"
+      ]
+    },
+    {
+      "path": "/api/seed/clean",
+      "methods": [
+        "GET",
+        "POST"
+      ]
+    },
+    {
+      "path": "/api/sessions",
+      "methods": [
+        "GET",
+        "POST"
+      ]
+    },
+    {
+      "path": "/api/sessions/[id]",
+      "methods": [
+        "GET"
+      ]
+    },
+    {
+      "path": "/api/skills",
+      "methods": [
+        "GET"
+      ]
+    },
+    {
+      "path": "/api/skills/[...path]",
+      "methods": [
+        "GET"
+      ]
+    },
+    {
+      "path": "/api/skills/[name]",
+      "methods": [
+        "GET",
+        "PUT"
+      ]
+    },
+    {
+      "path": "/api/skills/[name]/toggle",
+      "methods": [
+        "GET",
+        "POST",
+        "PUT"
+      ]
+    },
+    {
+      "path": "/api/spend",
+      "methods": [
+        "GET",
+        "PUT"
+      ]
+    },
+    {
+      "path": "/api/stats",
+      "methods": [
+        "GET"
+      ]
+    },
+    {
+      "path": "/api/status",
+      "methods": [
+        "GET"
+      ]
+    },
+    {
+      "path": "/api/status/runtime",
+      "methods": [
+        "GET"
+      ]
+    },
+    {
+      "path": "/api/status/subsystems",
+      "methods": [
+        "GET"
+      ]
+    },
+    {
+      "path": "/api/stories",
+      "methods": [
+        "GET",
+        "POST"
+      ]
+    },
+    {
+      "path": "/api/sync",
+      "methods": [
+        "GET",
+        "POST"
+      ]
+    },
+    {
+      "path": "/api/templates",
+      "methods": [
+        "GET",
+        "POST"
+      ]
+    },
+    {
+      "path": "/api/tools",
+      "methods": [
+        "GET",
+        "POST"
+      ]
+    },
+    {
+      "path": "/api/update",
+      "methods": [
+        "GET",
+        "POST"
+      ]
+    }
+  ]
+}

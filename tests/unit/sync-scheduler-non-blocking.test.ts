@@ -3,7 +3,7 @@
 /**
  * Regression tests for the SyncScheduler non-blocking fixes.
  *
- * Background: 2026-06-01, the Control Hub server wedged for 20+ hours
+ * Background: 2026-06-01, the PatterStage server wedged for 20+ hours
  * because a sync source's synchronous I/O blocked the Node event loop.
  * The fix in PR #136 added three guarantees:
  *

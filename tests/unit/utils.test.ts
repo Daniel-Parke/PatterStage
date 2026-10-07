@@ -4,7 +4,6 @@ import {
   timeUntil,
   formatBytes,
   formatElapsed,
-  truncate,
   messageSummary,
   safeJsonParse,
 } from "@/lib/utils";
@@ -200,34 +199,6 @@ describe("formatBytes", () => {
   it("caps at GB for very large values", () => {
     const huge = 1073741824 * 1024; // 1 TB
     expect(formatBytes(huge)).toMatch(/GB$/);
-  });
-});
-
-describe("truncate", () => {
-  it("returns short strings unchanged", () => {
-    expect(truncate("hello", 10)).toBe("hello");
-  });
-
-  it("truncates long strings with ellipsis", () => {
-    expect(truncate("hello world", 6)).toBe("hello…");
-  });
-
-  it("handles exact length", () => {
-    expect(truncate("hello", 5)).toBe("hello");
-  });
-
-  it("returns empty string for maxLen of 0", () => {
-    expect(truncate("hello", 0)).toBe("");
-  });
-
-  it("returns empty string for negative maxLen", () => {
-    expect(truncate("hello", -1)).toBe("");
-    expect(truncate("hello", -100)).toBe("");
-  });
-
-  it("handles empty string input", () => {
-    expect(truncate("", 5)).toBe("");
-    expect(truncate("", 0)).toBe("");
   });
 });
 
