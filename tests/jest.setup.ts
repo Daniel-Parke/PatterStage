@@ -94,8 +94,8 @@ if (typeof globalThis.Request === "undefined") {
 // Individual test files that need specific mock behavior should additionally mock
 // "@/lib/db" to return their per-test mock values.
 //
-// NOTE: tests that call jest.restoreAllMocks() in afterAll may inadvertently
-// remove this global mock — avoid calling restoreAllMocks() in new tests.
+// restoreAllMocks restores spies and replaced properties. Module factories from
+// jest.mock and ordinary jest.fn implementations remain installed.
 const mockDbMethods = {
   pragma: jest.fn(),
   exec: jest.fn(),

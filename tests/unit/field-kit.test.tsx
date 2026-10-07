@@ -1,3 +1,4 @@
+/** @jest-environment jsdom */
 /**
  * Component tests for the Field Kit primitives (src/components/ui/field/*)
  * and equivalent Field/Input compositions after retiring TextInput.

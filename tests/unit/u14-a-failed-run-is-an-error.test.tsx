@@ -1,3 +1,4 @@
+/** @jest-environment jsdom */
 
 /**
  * U14 · A failed run is an error.

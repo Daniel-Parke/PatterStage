@@ -1,3 +1,4 @@
+/** @jest-environment jsdom */
 
 /**
  * U18 · The transcript says it once.

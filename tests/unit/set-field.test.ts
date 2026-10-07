@@ -1,3 +1,4 @@
+/** @jest-environment jsdom */
 /**
  * Unit tests for the `setField` helper (src/lib/config/set-field.ts).
  *

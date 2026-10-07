@@ -1,3 +1,4 @@
+/** @jest-environment jsdom */
 
 /**
  * U19 · An empty page offers its action.

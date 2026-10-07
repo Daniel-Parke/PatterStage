@@ -1,3 +1,4 @@
+/** @jest-environment jsdom */
 /**
  * U15 · The dead are gone.
  *

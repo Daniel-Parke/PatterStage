@@ -1,3 +1,4 @@
+/** @jest-environment jsdom */
 
 /**
  * U17 · The phone keeps its title.

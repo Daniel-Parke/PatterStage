@@ -12,6 +12,25 @@ const parse = (file: string, source: string) => ts.createSourceFile(file, source
 
 function historicalConfig(file: string, source: string): ts.SourceFile {
   const tree = parse(file, source);
+  if (file === "jest.config.js") {
+    const declarations: ts.Node[] = [];
+    function visit(node: ts.Node) {
+      if (ts.isPropertyAssignment(node) || ts.isShorthandPropertyAssignment(node) ||
+          ts.isMethodDeclaration(node) || ts.isGetAccessorDeclaration(node) || ts.isSetAccessorDeclaration(node)) {
+        const name = node.name;
+        if (ts.isComputedPropertyName(name) ||
+            ((ts.isIdentifier(name) || ts.isStringLiteralLike(name)) && name.text === "testEnvironment")) declarations.push(node);
+      }
+      ts.forEachChild(node, visit);
+    }
+    visit(tree);
+    if (declarations.length !== 1) return tree;
+    const declaration = declarations[0];
+    if (!ts.isPropertyAssignment(declaration) || !ts.isIdentifier(declaration.name) ||
+        !ts.isStringLiteral(declaration.initializer) || declaration.initializer.text !== "jest-environment-node") return tree;
+    const value = declaration.initializer;
+    return parse(file, source.slice(0, value.getStart(tree)) + '"jest-environment-jsdom"' + source.slice(value.end));
+  }
   if (file !== "next.config.ts") return tree;
   const imports = tree.statements.filter(ts.isImportDeclaration).filter(node =>
     ts.isStringLiteral(node.moduleSpecifier) && node.moduleSpecifier.text === "./src/lib/config/env");

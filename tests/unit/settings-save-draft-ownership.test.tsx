@@ -1,3 +1,4 @@
+/** @jest-environment jsdom */
 import { act, renderHook, waitFor } from "@testing-library/react";
 import { useSettingsEditor } from "@/hooks/useSettingsEditor";
 import { queryWrapper } from "../helpers/render-with-query";

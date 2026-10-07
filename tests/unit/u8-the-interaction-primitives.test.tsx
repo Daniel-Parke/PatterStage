@@ -1,3 +1,4 @@
+/** @jest-environment jsdom */
 /**
  * U8 (T-0122): the three interaction primitives, built and oracled, not adopted.
  *

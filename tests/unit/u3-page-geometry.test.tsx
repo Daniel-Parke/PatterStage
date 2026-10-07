@@ -1,3 +1,4 @@
+/** @jest-environment jsdom */
 /**
  * U3 (T-0117): one container owns the left edge.
  *

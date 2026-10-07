@@ -14,7 +14,7 @@ const coverageThreshold = require("./scripts/tooling/coverage-floors.cjs");
 const config = {
   // Bound fixture contention while retaining the full corpus and coverage floors.
   maxWorkers: 2,
-  testEnvironment: "jest-environment-jsdom",
+  testEnvironment: "jest-environment-node",
   setupFilesAfterEnv: ["<rootDir>/tests/jest.setup.ts"],
   moduleNameMapper: {
     "^@/(.*)$": "<rootDir>/src/$1",

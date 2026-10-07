@@ -1,3 +1,4 @@
+/** @jest-environment jsdom */
 
 /**
  * U18 · Prose is Inter; a count is mono.

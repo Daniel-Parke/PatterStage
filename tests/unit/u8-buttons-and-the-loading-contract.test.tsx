@@ -1,3 +1,4 @@
+/** @jest-environment jsdom */
 /**
  * U8 (T-0122): the button set gets heights, disabled gets a colour, and the
  * loading contract gets a component instead of twenty-four strings.

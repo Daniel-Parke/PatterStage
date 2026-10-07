@@ -1,11 +1,11 @@
 {
-  "measuredAt": "2026-10-04",
+  "measuredAt": "2026-10-07",
   "counts": {
-    "srcLines": 102409,
-    "testLines": 154382,
+    "srcLines": 102412,
+    "testLines": 155169,
     "scriptsLines": 13597,
     "srcRepeatedWindowLines": 655,
-    "testRepeatedWindowLines": 4768,
+    "testRepeatedWindowLines": 4774,
     "routesWithTryCatch": 11,
     "handRolledReadHooks": 2,
     "writeHooksWithoutMutation": 0,
@@ -1325,6 +1325,41 @@
       "measuredAt": "2026-10-04",
       "rise": "testLines rose from 154359 to 154382",
       "reason": "T-0207 hosted installer failure: two independent build-input controls bind the actual Python-selected harness to accepted Node24; existing tests and runtime minimum guard unchanged."
+    },
+    {
+      "measuredAt": "2026-10-04",
+      "rise": "testLines rose from 154382 to 154891",
+      "reason": "T-0195 adds 13 frozen harness controls and a tests-only lexical comment checker; 33 existing DOM suites receive explicit environment docblocks. No old test retired; fixed programme targets retained."
+    },
+    {
+      "measuredAt": "2026-10-07",
+      "rise": "testLines rose from 154891 to 155012",
+      "reason": "T-0195 adds 15 independent harness and baseline-lifecycle controls, the lexical tests-only checker and 33 explicit DOM docblocks; all previous test identities and fixed programme targets remain."
+    },
+    {
+      "measuredAt": "2026-10-07",
+      "rise": "testRepeatedWindowLines rose from 4768 to 4812",
+      "reason": "T-0195 adds 15 independent harness and baseline-lifecycle controls, the lexical tests-only checker and 33 explicit DOM docblocks; all previous test identities and fixed programme targets remain."
+    },
+    {
+      "measuredAt": "2026-10-07",
+      "rise": "testLines rose from 154991 to 154997",
+      "reason": "Operator-authorised T-0195 historical dependency oracle amendment adds six exact expected entries for unchanged installed development packages; no old pin, assertion, name or fixed target changes."
+    },
+    {
+      "measuredAt": "2026-10-07",
+      "rise": "testRepeatedWindowLines rose from 4768 to 4774",
+      "reason": "Operator-authorised T-0195 historical dependency oracle amendment adds six exact expected entries for unchanged installed development packages; no old pin, assertion, name or fixed target changes."
+    },
+    {
+      "measuredAt": "2026-10-07",
+      "rise": "srcLines rose from 102409 to 102412",
+      "reason": "T-0208 adds 171 independently red-first fallback refusal oracle lines, one causal mutant manifest, and the existing transaction boundary; no existing tests retired or targets changed."
+    },
+    {
+      "measuredAt": "2026-10-07",
+      "rise": "testLines rose from 154997 to 155169",
+      "reason": "T-0208 adds 171 independently red-first fallback refusal oracle lines, one causal mutant manifest, and the existing transaction boundary; no existing tests retired or targets changed."
     }
   ]
 }

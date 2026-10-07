@@ -1,3 +1,4 @@
+/** @jest-environment jsdom */
 /**
  * U14 · Retry re-sends the prompt.
  *

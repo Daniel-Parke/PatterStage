@@ -1,3 +1,4 @@
+/** @jest-environment jsdom */
 /**
  * U18 · The header says what the panel says.
  *

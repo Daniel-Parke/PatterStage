@@ -1,3 +1,4 @@
+/** @jest-environment jsdom */
 
 /**
  * U17 · A banner's sentence comes first; its action wraps under it.

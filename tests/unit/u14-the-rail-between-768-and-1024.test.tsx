@@ -1,3 +1,4 @@
+/** @jest-environment jsdom */
 
 /**
  * U14 · The rail between 768 and 1024.

@@ -1,3 +1,4 @@
+/** @jest-environment jsdom */
 /**
  * The Models page keeps what is on screen across a reload (T-0139).
  *

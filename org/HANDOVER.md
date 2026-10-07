@@ -2,10 +2,46 @@
 summary: What the consolidation programme did and left behind, how a batch was landed, what is open, and what waits next
 type: venture
 tags: [handover, consolidation]
-updated: 2026-10-04
+updated: 2026-10-07
 ---
 
 # Handover · PatterStage, 2026-10-02
+
+## Current integration checkpoint, 7 October
+
+T0195 remains active. Its red requirements are committed d1cfc3de, initial
+named lexical baseline1007f576, history-recapture regression609ca8d0 and
+pending-capture regressiondb48bb19. The implementation is still uncommitted:
+single Node default,33 explicit DOM exceptions, accurately described mock
+restoration, direct declarations of two unchanged development dependencies,
+and a committed-history comment ratchet. The actual158-suite before/after
+cohort passes1833 cases with identical names. The original13 controls and
+new history regression pass; the additional pending-capture control passes
+and fails under its owned overwrite mutant.
+
+The independently authorised shared fixture saves21 test lines and restores
+repeated test windows4812→4768 below the unchanged4800 ceiling. Its two names,
+26 assertions and30-second deadlines remain; both causal mutants fail.
+Final independent adoption and the complete unchanged-tree gate, committed
+sweep and hosted checks still precede acceptance. Evidence and original
+failures are in the T0195 verification and amendment reviews.
+
+T0209 polish is preserved separately atc623fd9d on
+polish/t0209-ui-refinement in../PatterStage-polish. Independent review verifies
+its45-source-file diff and full gate bound to41a7325b, with9055 unit and528
+browser passes. It has not landed ondev. Four locations lose machine-word
+monospace; the retained visual log predates the final two fixes. Its singular
+session reader is a frozen T0042 oracle and needs the exact Q015 amendment
+procedure. A fresh integrated walk and a new combined-tree gate are required.
+The design census has stale ceilings; tighten only through its producer after
+fresh settled-tree measurements. Histogram labels await narrow R2 authority;
+the new404 feature remains outside this polish scope.
+
+T0196–T0199,T0201 and named T0208 repairs remain outstanding. T0200 retirement
+remains deferred throughv1.0. The refreshed closure6dc4ce15 push still fails
+macOS H12 at37242011425; T0206's cause is unproved. No retry, relaxed bound,
+whole-product acceptance or release is claimed. Operator data/port3333 remain
+outside validation.
 
 ## T0195 opened and current hosted limit, 5 October
 

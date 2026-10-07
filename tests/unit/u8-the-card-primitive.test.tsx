@@ -1,3 +1,4 @@
+/** @jest-environment jsdom */
 /**
  * U8 (T-0122): the Surface primitive learns the two things that were stopping
  * 57 files from using it - and a gate for a byte nobody can see.

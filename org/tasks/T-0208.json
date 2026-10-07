@@ -1,6 +1,6 @@
 {
   "id": "T-0208",
-  "intent": "Reproduce and repair T0194 reconnaissance hypotheses in Tools advanced-JSON feedback, Rec Room validation/completion transitions and four client read-failure surfaces. Preserve drafts, existing valid actions, output, spend and genuine empty-state behaviour. Exact candidates/evidence are in org/reviews/2026-10-t0194-recon-defects.json; no source implementation or runtime acceptance is claimed. Expanded source review also covers response-reported gateway/research usage loss, Skills editor request ownership, stale Sessions pagination, overlapping Logs deletion, partial Sync feedback, unknown Platforms state and clean-preview scope. Confirm each hypothesis independently before implementing; preview scope needs an explicit contract before any deletion test beyond isolated fixtures. The eleven-page body pass also adds controlled delayed-write ownership in Composer/Research/Tools, Chat Stop refusal, Script logs ownership and cached/empty read truth. All remain source hypotheses until independent controlled reproduction. First confirmed prerequisite cohort: fallbackDELETE returns500 on WindowsEPERM configreplacement after committing SQLite deletion (ownedruntime-XvCqW0DB0/YAML1). Exact rollback/failure-preservation scope is org/briefs/T-0208-fallback-rollback-oracle.md; independentredbeforeimplementation. Othernamedhypotheses remain open; no retry/whole-two-store-atomicity claim. Independent R2 REVIEWER Gauss adopted the frozen four-case fallback oracle on 2026-10-07 at db48bb19 (SHA b6ef4cdbdb483c1a001abd5eb97ee172aab23db5f2867414f0200026486cdb36; 2 red/2 green, 18 existing controls green). Repair is limited to the existing synchronous DELETE transaction boundary; rollback is the inverse of that handler-only implementation. No Windows retry or complete T0208 closure is authorised. Evidence and limits: org/reviews/2026-10-t0208-fallback-rollback.md.",
+  "intent": "Reproduce and repair T0194 reconnaissance hypotheses in Tools advanced-JSON feedback, Rec Room validation/completion transitions and four client read-failure surfaces. Preserve drafts, existing valid actions, output, spend and genuine empty-state behaviour. Exact candidates/evidence are in org/reviews/2026-10-t0194-recon-defects.json; no source implementation or runtime acceptance is claimed. Expanded source review also covers response-reported gateway/research usage loss, Skills editor request ownership, stale Sessions pagination, overlapping Logs deletion, partial Sync feedback, unknown Platforms state and clean-preview scope. Confirm each hypothesis independently before implementing; preview scope needs an explicit contract before any deletion test beyond isolated fixtures. The eleven-page body pass also adds controlled delayed-write ownership in Composer/Research/Tools, Chat Stop refusal, Script logs ownership and cached/empty read truth. All remain source hypotheses until independent controlled reproduction. First confirmed prerequisite cohort: fallbackDELETE returns500 on WindowsEPERM configreplacement after committing SQLite deletion (ownedruntime-XvCqW0DB0/YAML1). Exact rollback/failure-preservation scope is org/briefs/T-0208-fallback-rollback-oracle.md; independentredbeforeimplementation. Othernamedhypotheses remain open; no retry/whole-two-store-atomicity claim. Independent R2 REVIEWER Gauss adopted the frozen four-case fallback oracle on 2026-10-07 at db48bb19 (SHA b6ef4cdbdb483c1a001abd5eb97ee172aab23db5f2867414f0200026486cdb36; 2 red/2 green, 18 existing controls green). Repair is limited to the existing synchronous DELETE transaction boundary; rollback is the inverse of that handler-only implementation. No Windows retry or complete T0208 closure is authorised. Evidence and limits: org/reviews/2026-10-t0208-fallback-rollback.md. Latest local acceptance: whole owned gate1791367787825 passes all10steps with9074unit/513browser cases,9/24 existing skips and unchanged tree. Prior red attempts and partial rerun retained. Source implementation may land in separate T0195/T0208 commits; complete-task closure awaits committed causal sweep and exact-head hosted jobs. No full-product or release acceptance.",
   "declared": {
     "capabilities": [
       "edit-code",
@@ -47,13 +47,22 @@
     "src/app/api/models/fallbacks/[id]/route.ts",
     "tests/unit/fallback-delete-refusal-rollback.test.ts",
     "org/briefs/T-0208-fallback-rollback-oracle.md",
-    "org/reviews/2026-10-t0208-fallback-rollback.md"
+    "org/reviews/2026-10-t0208-fallback-rollback.md",
+    "tests/fixtures/mutants/T-0208.json"
   ],
   "timestamps": {
     "opened": "2026-10-04T17:42:23.377703+00:00",
-    "updated": "2026-10-07T10:07:39.594353+00:00"
+    "updated": "2026-10-07T10:25:47.196785+00:00"
   },
-  "verdicts": [],
+  "verdicts": [
+    {
+      "role": "REVIEWER",
+      "session": "01a11562-421e-72f1-bce4-668d08db7c2f",
+      "verdict": "pass",
+      "date": "2026-10-07T10:25:47.196785+00:00",
+      "notes": "Bounded independent source adoption on 7October: Exact existing synchronous DELETE transaction wrapper; unchanged frozen4 cases+18parent controls22green/lint/types0; post-replacement and crash uncertainty retained. Source adoption only, not whole-task closure. Complete owned gate1791367787825 has all10steps0,9074unit/513browserpasses,2buildpurity controls, unchanged stampc2365f0ebb0119abd7c39ac13ab197ce7bff6a1c5213aaa9a3fa2458483d84da. Committed sweep and exact-head hosted results pending."
+    }
+  ],
   "tier_ruled": "R2",
   "reasons": [
     {
@@ -68,5 +77,15 @@
       "source": "declared",
       "evidence": "declared side effect: sends-external"
     }
-  ]
+  ],
+  "oracle_provenance": {
+    "files": [
+      "tests/unit/fallback-delete-refusal-rollback.test.ts"
+    ],
+    "hashes": {
+      "tests/unit/fallback-delete-refusal-rollback.test.ts": "b6ef4cdbdb483c1a001abd5eb97ee172aab23db5f2867414f0200026486cdb36"
+    },
+    "author_session": "Lagrange 01a115c9-b3c7-76b1-ad95-717feb15e05b independent first fallback cohort, frozen before implementation",
+    "independence_method": "metamorphic"
+  }
 }

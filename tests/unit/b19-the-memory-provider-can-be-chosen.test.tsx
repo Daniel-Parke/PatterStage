@@ -1,3 +1,4 @@
+/** @jest-environment jsdom */
 /**
  * T-0113: three screens say the memory provider is set on the Memory page.
  *

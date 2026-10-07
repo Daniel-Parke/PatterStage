@@ -1,3 +1,4 @@
+/** @jest-environment jsdom */
 
 /**
  * U17 · SplitPane, the one two-column shape.

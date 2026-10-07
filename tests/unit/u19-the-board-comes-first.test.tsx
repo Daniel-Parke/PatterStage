@@ -1,3 +1,4 @@
+/** @jest-environment jsdom */
 
 /**
  * U19 · The board comes first.

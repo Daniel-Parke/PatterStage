@@ -1,3 +1,4 @@
+/** @jest-environment jsdom */
 /**
  * Field associates its label with its control BY CONSTRUCTION.
  *

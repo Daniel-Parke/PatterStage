@@ -1,3 +1,4 @@
+/** @jest-environment jsdom */
 
 /**
  * U19 · The terminal owns its toolbar.

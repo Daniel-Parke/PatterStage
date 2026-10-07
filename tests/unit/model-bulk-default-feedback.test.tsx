@@ -1,3 +1,4 @@
+/** @jest-environment jsdom */
 import { act, renderHook } from "@testing-library/react";
 import { useModelActions } from "@/hooks/useModelActions";
 import type { TaskType } from "@/lib/models/task-types";

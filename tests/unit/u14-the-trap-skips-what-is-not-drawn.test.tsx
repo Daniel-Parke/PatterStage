@@ -1,3 +1,4 @@
+/** @jest-environment jsdom */
 
 /**
  * U14 · The focus trap skips what is not drawn.

@@ -1,3 +1,4 @@
+/** @jest-environment jsdom */
 
 /**
  * U18 · One Push all.

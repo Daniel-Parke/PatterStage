@@ -1,3 +1,4 @@
+/** @jest-environment jsdom */
 /**
  * C4 · The test harnesses.
  *

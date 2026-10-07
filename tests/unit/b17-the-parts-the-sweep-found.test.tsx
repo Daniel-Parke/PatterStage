@@ -1,3 +1,4 @@
+/** @jest-environment jsdom */
 /**
  * T-0111: the four things B17's mutation sweep proved nothing about.
  *

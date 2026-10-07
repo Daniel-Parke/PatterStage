@@ -62,3 +62,15 @@ sweep; controls and restoration must pass. Observe every hosted job.
 Rollback restores the exact configuration/annotation cohort or comment checker;
 retain behaviour tests that exposed defects. Never change a coverage floor,
 deadline, concurrency, test name, assertion intent or historical task record.
+
+## Independently found producer recapture regression
+
+Parfit's owned fixture proves that deleting only a working baseline allows
+capture again even while HEAD contains the original baseline. Normal checking
+still refuses against HEAD. This is a capture defect, not a check bypass.
+The independent R2 reviewer authorises Sartre to add an ordinary matcher
+regression in `tests/unit/test-comment-census-history.test.ts`, with committed
+baseline, absent working baseline and a new essay. Capture must refuse without
+recreating the file or changing HEAD. Preserve the existing initial capture
+and overwrite controls. Commit this additional executed red before the
+coordinator implements a HEAD-existence guard. No old oracle is weakened.

@@ -1,3 +1,4 @@
+/** @jest-environment jsdom */
 
 /**
  * U20 · Polish, each a line.

@@ -1,3 +1,4 @@
+/** @jest-environment jsdom */
 /**
  * The Skills page keeps what is on screen across a reload (C6, T-0143).
  *
