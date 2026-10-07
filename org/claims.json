@@ -82,7 +82,11 @@
         "tests/fixtures/mutants/T-0208.json",
         "tests/unit/ci-validated-runtime.test.ts",
         "org/reviews/2026-10-t0195-ci-runtime-alignment.md",
-        ".github/workflows/ci.yml"
+        ".github/workflows/ci.yml",
+        "src/app/work/chat/page.tsx",
+        "org/briefs/T-0208-chat-banner-oracle.md",
+        "org/reviews/2026-10-t0208-chat-banner.md",
+        "tests/e2e/chat-empty-banner-visibility.spec.ts"
       ],
       "status": "active"
     }
