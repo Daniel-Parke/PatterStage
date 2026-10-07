@@ -175,3 +175,11 @@ Evidence:tmp/t0194-committed-sweeps-1791368763841/summary.json and runs.json.
 No NOT-APPLIED,INEFFECTIVE,SURVIVED or infrastructure result is called killed.
 Exact-head hosted acceptance remains pending. T0208's other findings remain
 active; the green local gate does not establish a Windows holder or release.
+
+## Latest prerequisite landing, 7 October
+
+CI runtime selection and the real empty-Chat warning defect are repaired in separate commits `2e923aed` and `ba85d4c5`. Complete owned gate `1791376312504` passes all ten steps, 9,075 unit and 523 browser tests, two build-purity controls, unchanged canary and both censuses. Recorded before/after stamp is identical `4ec3a994db1cfd0d9543aa2163813be78d72e824eda3dda1662be9d9d58e9d31`. Main and owned committed Git trees match `46ae635b5d1a7f832f48aab7dfe6a8a1ad5ca07b`.
+
+The runtime selector has one production Jest mutation kill with passing restored control. Chat has one separately reported dedicated Playwright causal kill: 10 green, 8 intended geometry reds plus 2 green under reversal, and 10 green after exact restoration/rebuild. See the respective review files and `tmp/t0195-combined-gate-adoption-20261007.json`. The earlier failed gates and final worker-force-exit warning remain preserved. Fresh census equality is qualified row by row in the Chat review; no baseline or tolerance was changed.
+
+T-0195 remains in-review until every applicable hosted job at the final pushed head has been observed. The failed f1f9162c PR macOS run is not waived by push or local green. T-0206 retains native-crash and historical timing uncertainty; T-0208 retains its other named hypotheses. This is bounded prerequisite acceptance, not whole-product or release acceptance.

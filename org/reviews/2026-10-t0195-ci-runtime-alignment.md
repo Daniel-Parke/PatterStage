@@ -60,3 +60,11 @@ Correction: sixteen static it declarations are present in the crashed suite.
 The earlier12 figure incorrectly subtracted cross-platform pass totals with
 different platform-dependent cases. Report the missing returned suite results,
 not an inferred unexecuted count. Original logs and failed head stay preserved.
+
+## Local landing and causal verification, 7 October
+
+The exact six selectors land in `2e923aed`; the separately gated Chat prerequisite lands in `ba85d4c5`. Complete combined gate `1791376312504` passes all ten steps with 9,075 unit and 523 browser passes, two build-purity controls and unchanged tree stamp `4ec3a994db1cfd0d9543aa2163813be78d72e824eda3dda1662be9d9d58e9d31`. Main and the preserved owned checkpoint share committed tree `46ae635b5d1a7f832f48aab7dfe6a8a1ad5ca07b`.
+
+Production sweep `tmp/t0206-runtime-sweep-1791377211714/summary.json` runs on clean `ba85d4c5`: one control passes, one exact selector reversal causes the intended `toEqual` failure, and the restored control passes. All three structured runs contain the same case, no skips or runtime errors. Actual source newline adaptation precedes unique-anchor classification. The unchanged production runner verifies source/mode restoration and clean status. This is one representative selector kill, not evidence that Node changes resolve SIGSEGV.
+
+Independent R2 adoption: `tmp/t0195-combined-gate-adoption-20261007.json`. Final exact-head hosted runtime and every applicable job still need observation. T-0206's historical timing failures and native-crash cause remain open. No retry, worker reduction, timeout increase or failure waiver has been made.

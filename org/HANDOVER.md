@@ -9,44 +9,57 @@ updated: 2026-10-07
 
 ## Current integration checkpoint, 7 October
 
-T0195 implementation has landed locally on dev at978ddd93. It uses a single
-Node test default,33 explicit DOM exceptions, correct mock-restoration
-wording,two unchanged direct development declarations and a committed-history
-comment ratchet. All711 original pragmas remain. The actual158-suite cohort
-passes1833 identical names before/after. Six operator-authorised R3 expected
-dependency additions and the exact R2 config/fixture amendments are independently
-adopted. The shared fixture saves21lines and44repeated-window lines.
+T-0195 source is on dev at978ddd93; its independently adopted harness keeps711
+original pragmas,33 explicit DOM exceptions and1833 identical cohort test names.
+The first T-0208 fallback rollback repair is separately committed atc251319e.
+Its real SQLite control and committed mutation evidence remain bounded to
+pre-replacement refusal; other two-store/Windows uncertainty remains open.
 
-The full owned candidate gate1791367787825 passes all10steps:9074unit passes,
-513browser passes,the build,two build-purity controls,unchanged canary and
-both censuses. Its source is unchanged throughout. The committed c251319e
-sweeps kill11of11 harness mutants plus the fallback rollback mutant,with
-passing controls before/after,zero runtime errors and verified restoration.
-T0195 is in-review until all exact-head hosted checks have been observed.
-Earlier failures and the force-exit warning are preserved in its review.
+Two further prerequisites land separately:2e923aed pins all6existing CI Node
+selectors to validated24.21.0;ba85d4c5 keeps empty-Chat warnings visible with
+one conditional height class. The scroll hook is unchanged. Red5751f01e has
+8 intended geometry reds/2green; the unchanged10cases then pass at1440/390.
 
-First confirmed T0208 repair lands atc251319e: a refused pre-replacement
-fallback config write now rolls back SQLite deletion and ordering. Four real
-SQLite cases and18parent controls pass. This does not resolve intermittent
-Windows file sharing,post-replacement/crash consistency or other named T0208
-findings. The unchanged spec passing alone never waived its earlier full-run
-failure. T0208 remains active.
+Complete owned gate1791376312504 passes all10steps:9075unit/523browser cases,
+9/24historical skips,the build,2build-purity controls,canary and both censuses.
+Its stamp is unchanged4ec3a994; main and owned checkpointd8a467e share Git tree
+46ae635b5d1a7f832f48aab7dfe6a8a1ad5ca07b. Independent R2 adoption is
+tmp/t0195-combined-gate-adoption-20261007.json. No later metadata fingerprint
+is claimed to equal that finished gate.
 
-Original T0209 polish branchc623fd9d and allseven commits remain untouched in
-../PatterStage-polish. Its owned integration copy is tmp/t0209-integration.
-Independent T0042 reader adoption preserves all9names/assertions/type guards;
-oldsingular1red/new9green. Four machine-term styling regressions have8new
-desktop/phone red-first browser cases committedad2637ce only in that copy.
-Source fixes build and typecheck; the test's generic font-family assumption
-needs its authorised separate-author correction to actualJetBrainsMono.
-Retained initial/font-test/build infrastructure failures are not green evidence.
-A fresh final route walk,producer-based design-census tightening and combined
-dev gate still precede integration. Histogram labels and404 remain distinct.
+Runtime production sweep1791377211714 catches1selector mutant with real
+passing before/after controls and exact restoration. Chat's dedicated manual
+Playwright sweep catches1height mutant:10green,8geometry reds/2green,
+finally restored/rebuilt10green. All30owned processes stop; original failures
+and the initial prebuild guard ERROR remain retained. It is not a Jest kill.
+Fresh census:split2to1;22other metrics identical;21additional existing shared
+Badge borders366to387 beneath unchanged714ceiling. The exact update response
+at capture is not attested. No census rule, tolerance or baseline has changed.
 
-T0196–T0199,T0201 and remaining T0208 repairs are outstanding. T0200 stays
-deferred throughv1.0. The old6dc4ce15 hosted macOSH12 failure remains owned by
-T0206; no cause,retry or relaxed bound is claimed. Operator data andport3333
-stay outside validation. No full-product or release acceptance.
+T-0195 remains in-review until every final exact-head hosted job passes. PR
+f1f9162c macOS had SIGSEGV; its distinct16-declaration suite returned no
+results. Node alignment does not establish the cause. Historical C02/C05/H12
+timing uncertainty and native-crash investigation stay with active T-0206.
+T-0208 remains active for all other named hypotheses.
+
+Original T-0209 branchc623fd9d and all7commits are preserved in
+../PatterStage-polish. Owned integration is tmp/t0209-integration. Independent
+reader adoption holds9names/assertions,old singular1red/new9green. Four
+machine-term style regressions have8red-first browser cases; the separately
+authorised exact font matcher now proves8red/8green,lint/types0. Attribution
+is Gauss's R2 authority relayed by the coordinator, not a new human ruling.
+It still needs record normalisation,fresh combined gate/census tightening and
+final controlled route/state review before landing. A bounded49-frame owned
+walk is saved in tmp/t0209-preview-1791369370596/walk-manifest.json; some
+early frames contain loading/scroll transitions, and all pathways/below-fold
+states are not yet accepted. Visual preview3941 uses isolated data/auth-none;
+it is not session acceptance or the new dev Chat artifact. Histogram labels
+and a new404 remain separate scope decisions.
+
+T-0196–T-0199,T-0201,remaining T-0208 repairs and T-0209 integration remain.
+T-0200 stays deferred throughv1.0. Operator data andport3333 remain outside
+validation. Merges/releases/settings remain operator actions. No complete
+programme,paid-provider,whole-product or release acceptance is claimed.
 
 ## T0195 opened and current hosted limit, 5 October
 
