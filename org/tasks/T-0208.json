@@ -1,6 +1,6 @@
 {
   "id": "T-0208",
-  "intent": "Reproduce and repair T0194 reconnaissance hypotheses in Tools advanced-JSON feedback, Rec Room validation/completion transitions and four client read-failure surfaces. Preserve drafts, existing valid actions, output, spend and genuine empty-state behaviour. Exact candidates/evidence are in org/reviews/2026-10-t0194-recon-defects.json; no source implementation or runtime acceptance is claimed. Expanded source review also covers response-reported gateway/research usage loss, Skills editor request ownership, stale Sessions pagination, overlapping Logs deletion, partial Sync feedback, unknown Platforms state and clean-preview scope. Confirm each hypothesis independently before implementing; preview scope needs an explicit contract before any deletion test beyond isolated fixtures. The eleven-page body pass also adds controlled delayed-write ownership in Composer/Research/Tools, Chat Stop refusal, Script logs ownership and cached/empty read truth. All remain source hypotheses until independent controlled reproduction.",
+  "intent": "Reproduce and repair T0194 reconnaissance hypotheses in Tools advanced-JSON feedback, Rec Room validation/completion transitions and four client read-failure surfaces. Preserve drafts, existing valid actions, output, spend and genuine empty-state behaviour. Exact candidates/evidence are in org/reviews/2026-10-t0194-recon-defects.json; no source implementation or runtime acceptance is claimed. Expanded source review also covers response-reported gateway/research usage loss, Skills editor request ownership, stale Sessions pagination, overlapping Logs deletion, partial Sync feedback, unknown Platforms state and clean-preview scope. Confirm each hypothesis independently before implementing; preview scope needs an explicit contract before any deletion test beyond isolated fixtures. The eleven-page body pass also adds controlled delayed-write ownership in Composer/Research/Tools, Chat Stop refusal, Script logs ownership and cached/empty read truth. All remain source hypotheses until independent controlled reproduction. First confirmed prerequisite cohort: fallbackDELETE returns500 on WindowsEPERM configreplacement after committing SQLite deletion (ownedruntime-XvCqW0DB0/YAML1). Exact rollback/failure-preservation scope is org/briefs/T-0208-fallback-rollback-oracle.md; independentredbeforeimplementation. Othernamedhypotheses remain open; no retry/whole-two-store-atomicity claim. Independent R2 REVIEWER Gauss adopted the frozen four-case fallback oracle on 2026-10-07 at db48bb19 (SHA b6ef4cdbdb483c1a001abd5eb97ee172aab23db5f2867414f0200026486cdb36; 2 red/2 green, 18 existing controls green). Repair is limited to the existing synchronous DELETE transaction boundary; rollback is the inverse of that handler-only implementation. No Windows retry or complete T0208 closure is authorised. Evidence and limits: org/reviews/2026-10-t0208-fallback-rollback.md.",
   "declared": {
     "capabilities": [
       "edit-code",
@@ -17,8 +17,8 @@
   },
   "mode": "high-assurance",
   "tier_proposed": "R2",
-  "status": "proposed",
-  "owner_session": "2026-10-04-t0194-coordinator",
+  "status": "active",
+  "owner_session": "2026-10-07-t0208-fallback-coordinator",
   "claims": [
     "org/tasks/T-0208.json",
     "src/app/agent/tools/page.tsx",
@@ -43,11 +43,15 @@
     "src/hooks/useChatSend.ts",
     "src/app/work/scripts/page.tsx",
     "src/hooks/useComposer.ts",
-    "src/components/composer/ComposerRunInput.tsx"
+    "src/components/composer/ComposerRunInput.tsx",
+    "src/app/api/models/fallbacks/[id]/route.ts",
+    "tests/unit/fallback-delete-refusal-rollback.test.ts",
+    "org/briefs/T-0208-fallback-rollback-oracle.md",
+    "org/reviews/2026-10-t0208-fallback-rollback.md"
   ],
   "timestamps": {
     "opened": "2026-10-04T17:42:23.377703+00:00",
-    "updated": "2026-10-04T17:42:23.377703+00:00"
+    "updated": "2026-10-07T10:07:39.594353+00:00"
   },
   "verdicts": [],
   "tier_ruled": "R2",
