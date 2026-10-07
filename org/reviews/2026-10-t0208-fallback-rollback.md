@@ -41,3 +41,14 @@ success-audit timing and crash consistency remain uncertainties. The actual
 Windows file holder and the intermittent positive journey remain unresolved.
 Other T-0208 findings remain open. No universal two-store atomicity or full
 T-0195 gate success is claimed.
+
+## Repair controls
+
+The handler now uses that existing outer synchronous transaction. In the
+owned validation checkout at cb7e48c6 plus the implementation overlay,
+`tmp/t0208-focused-1791367696925/results.json` reports all four unchanged
+oracle cases and eighteen parent controls passing. Lint and test typecheck
+each exit zero. The source changes only the import and DELETE boundary.
+The new causal mutant bypasses that boundary; its committed-tree sweep
+remains pending. A full gate, hosted checks and independent implementation
+acceptance remain required.

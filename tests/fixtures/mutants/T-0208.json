@@ -1,0 +1,7 @@
+{
+  "task": "T-0208",
+  "notes": ["First confirmed fallback refusal cohort only; other T-0208 investigations remain open.", "Controls execute before and after restoration. Infrastructure failures are never mutation kills."],
+  "mutants": [
+    {"id":"fallback-delete-without-rollback","file":"src/app/api/models/fallbacks/[id]/route.ts","anchor":"return inTransaction(() => {","replacement":"return ((work: () => NextResponse) => work())(() => {","tests":["tests/unit/fallback-delete-refusal-rollback.test.ts"],"why":"A failed pre-replacement configuration write must roll back deletion and chain positions in real SQLite."}
+  ]
+}
