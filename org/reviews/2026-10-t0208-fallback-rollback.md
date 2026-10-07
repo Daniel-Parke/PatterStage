@@ -52,3 +52,18 @@ each exit zero. The source changes only the import and DELETE boundary.
 The new causal mutant bypasses that boundary; its committed-tree sweep
 remains pending. A full gate, hosted checks and independent implementation
 acceptance remain required.
+
+
+## Committed causal sweep, 7 October
+
+The source commits978ddd93 (T0195) andc251319e (T0208 first cohort) are
+separate and independently revertable. At clean dev c251319e the actual
+production sweep kills all11 T0195 mutants and the one T0208 transaction
+mutant. Thirty-five unmodified T0195 controls pass before and after; four
+T0208 controls pass before and after. Its mutant yields the two intended
+SQLite preservation matcher failures. All16 structured Jest runs contain
+zero runtime-error suites. Byte/mode restoration and clean-tree checks pass.
+Evidence:tmp/t0194-committed-sweeps-1791368763841/summary.json and runs.json.
+No NOT-APPLIED,INEFFECTIVE,SURVIVED or infrastructure result is called killed.
+Exact-head hosted acceptance remains pending. T0208's other findings remain
+active; the green local gate does not establish a Windows holder or release.

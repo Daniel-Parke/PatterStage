@@ -9,39 +9,44 @@ updated: 2026-10-07
 
 ## Current integration checkpoint, 7 October
 
-T0195 remains active. Its red requirements are committed d1cfc3de, initial
-named lexical baseline1007f576, history-recapture regression609ca8d0 and
-pending-capture regressiondb48bb19. The implementation is still uncommitted:
-single Node default,33 explicit DOM exceptions, accurately described mock
-restoration, direct declarations of two unchanged development dependencies,
-and a committed-history comment ratchet. The actual158-suite before/after
-cohort passes1833 cases with identical names. The original13 controls and
-new history regression pass; the additional pending-capture control passes
-and fails under its owned overwrite mutant.
+T0195 implementation has landed locally on dev at978ddd93. It uses a single
+Node test default,33 explicit DOM exceptions, correct mock-restoration
+wording,two unchanged direct development declarations and a committed-history
+comment ratchet. All711 original pragmas remain. The actual158-suite cohort
+passes1833 identical names before/after. Six operator-authorised R3 expected
+dependency additions and the exact R2 config/fixture amendments are independently
+adopted. The shared fixture saves21lines and44repeated-window lines.
 
-The independently authorised shared fixture saves21 test lines and restores
-repeated test windows4812→4768 below the unchanged4800 ceiling. Its two names,
-26 assertions and30-second deadlines remain; both causal mutants fail.
-Final independent adoption and the complete unchanged-tree gate, committed
-sweep and hosted checks still precede acceptance. Evidence and original
-failures are in the T0195 verification and amendment reviews.
+The full owned candidate gate1791367787825 passes all10steps:9074unit passes,
+513browser passes,the build,two build-purity controls,unchanged canary and
+both censuses. Its source is unchanged throughout. The committed c251319e
+sweeps kill11of11 harness mutants plus the fallback rollback mutant,with
+passing controls before/after,zero runtime errors and verified restoration.
+T0195 is in-review until all exact-head hosted checks have been observed.
+Earlier failures and the force-exit warning are preserved in its review.
 
-T0209 polish is preserved separately atc623fd9d on
-polish/t0209-ui-refinement in../PatterStage-polish. Independent review verifies
-its45-source-file diff and full gate bound to41a7325b, with9055 unit and528
-browser passes. It has not landed ondev. Four locations lose machine-word
-monospace; the retained visual log predates the final two fixes. Its singular
-session reader is a frozen T0042 oracle and needs the exact Q015 amendment
-procedure. A fresh integrated walk and a new combined-tree gate are required.
-The design census has stale ceilings; tighten only through its producer after
-fresh settled-tree measurements. Histogram labels await narrow R2 authority;
-the new404 feature remains outside this polish scope.
+First confirmed T0208 repair lands atc251319e: a refused pre-replacement
+fallback config write now rolls back SQLite deletion and ordering. Four real
+SQLite cases and18parent controls pass. This does not resolve intermittent
+Windows file sharing,post-replacement/crash consistency or other named T0208
+findings. The unchanged spec passing alone never waived its earlier full-run
+failure. T0208 remains active.
 
-T0196–T0199,T0201 and named T0208 repairs remain outstanding. T0200 retirement
-remains deferred throughv1.0. The refreshed closure6dc4ce15 push still fails
-macOS H12 at37242011425; T0206's cause is unproved. No retry, relaxed bound,
-whole-product acceptance or release is claimed. Operator data/port3333 remain
-outside validation.
+Original T0209 polish branchc623fd9d and allseven commits remain untouched in
+../PatterStage-polish. Its owned integration copy is tmp/t0209-integration.
+Independent T0042 reader adoption preserves all9names/assertions/type guards;
+oldsingular1red/new9green. Four machine-term styling regressions have8new
+desktop/phone red-first browser cases committedad2637ce only in that copy.
+Source fixes build and typecheck; the test's generic font-family assumption
+needs its authorised separate-author correction to actualJetBrainsMono.
+Retained initial/font-test/build infrastructure failures are not green evidence.
+A fresh final route walk,producer-based design-census tightening and combined
+dev gate still precede integration. Histogram labels and404 remain distinct.
+
+T0196–T0199,T0201 and remaining T0208 repairs are outstanding. T0200 stays
+deferred throughv1.0. The old6dc4ce15 hosted macOSH12 failure remains owned by
+T0206; no cause,retry or relaxed bound is claimed. Operator data andport3333
+stay outside validation. No full-product or release acceptance.
 
 ## T0195 opened and current hosted limit, 5 October
 

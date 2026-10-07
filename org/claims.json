@@ -75,12 +75,21 @@
         "src/app/api/models/fallbacks/[id]/route.ts",
         "org/briefs/T-0208-fallback-rollback-oracle.md",
         "org/reviews/2026-10-t0208-fallback-rollback.md",
-        "tmp/t0209-integration/tests/e2e/t0209-machine-terms.spec.ts",
         "tmp/t0209-integration/src/app/agent/models/page.tsx",
         "tmp/t0209-integration/src/app/agent/skills/page.tsx",
         "tmp/t0209-integration/src/components/agents/AgentProfilesOverview.tsx",
         "tmp/t0209-integration/src/components/models/DefaultsGrid.tsx",
         "tests/fixtures/mutants/T-0208.json"
+      ],
+      "status": "active"
+    },
+    {
+      "lane_id": "T-0209-font-oracle",
+      "task_id": "T-0209",
+      "session_id": "independent-machine-font-oracle",
+      "host": "local",
+      "path_claims": [
+        "tmp/t0209-integration/tests/e2e/t0209-machine-terms.spec.ts"
       ],
       "status": "active"
     }
