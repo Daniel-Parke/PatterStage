@@ -36,7 +36,7 @@ Fresh census:split2to1;22other metrics identical;21additional existing shared
 Badge borders366to387 beneath unchanged714ceiling. The exact update response
 at capture is not attested. No census rule, tolerance or baseline has changed.
 
-T-0195 remains in-review until every final exact-head hosted job passes. PR
+T-0195 is done for its landed harness cohort: all4workflows atffd9608c pass, including all11PRjobs and9pushjobs plus2event skips. R2closure receipt:tmp/t0195-closure-review-ffd9608c.json. Closingmetadatahead jobs still require observation before downstream implementation. PR
 f1f9162c macOS had SIGSEGV; its distinct16-declaration suite returned no
 results. Node alignment does not establish the cause. Historical C02/C05/H12
 timing uncertainty and native-crash investigation stay with active T-0206.
@@ -56,7 +56,7 @@ states are not yet accepted. Visual preview3941 uses isolated data/auth-none;
 it is not session acceptance or the new dev Chat artifact. Histogram labels
 and a new404 remain separate scope decisions.
 
-T-0196–T-0199,T-0201,remaining T-0208 repairs and T-0209 integration remain.
+T-0196 is opened under R2 for the operator-ruled npm configuration cohort; its exact claims and red-first contract are in org/briefs/T-0196-oracle.md. Implementation waits on closingmetadatahead hosted checks. AllotherT0196obligations,T0197–T0199,T0201,remainingT0208repairs andT0209integration remain.
 T-0200 stays deferred throughv1.0. Operator data andport3333 remain outside
 validation. Merges/releases/settings remain operator actions. No complete
 programme,paid-provider,whole-product or release acceptance is claimed.

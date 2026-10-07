@@ -1,6 +1,6 @@
 {
   "id": "T-0196",
-  "intent": "Consolidate tooling and CI paths. Approved authority, invariants, dependencies, rollback and exact Verify remain in org/plans/2026-09-refactor-programme.json. Receive the exact unresolved review proofs in org/reviews/2026-10-t0194-review-handoff.md; preserve original evidence and do not treat allocation as completion. Red-first oracle and exact opening claims precede implementation.",
+  "intent": "Consolidate tooling and CI paths. Approved authority, invariants, dependencies, rollback and exact Verify remain in org/plans/2026-09-refactor-programme.json. Receive the exact unresolved review proofs in org/reviews/2026-10-t0194-review-handoff.md; preserve original evidence and do not treat allocation as completion. Red-first oracle and exact opening claims precede implementation. First coherent cohort opened afterT0195closure:tooling17 operatorruling standardise npm, recorded12September and reverified7October. Exactfirstsourceallowlist .npmrc/package.json/.gitignore only; separate newunit oracle tests/unit/t0196-npm-standardisation.test.ts. See org/briefs/T-0196-oracle.md for properties,invariants,rollback andexactVerify. Frozenred-first oracle thenimplementation only afterclosingmetadataheadCI; no newsourcewindow. Preserve allnpmcommands/dependencies/engines/overrides/lockbytes,onecanonicalartifactignorecopy andprivateNPMconfigignore. No existingtest/CIcommand amendment,installation/storedeletion or broadoldclaim scope implied. R2reason remains CIstateful tooling; independent review authorises thisboundedopening. Allremaining T0196obligations stayopen; firstcohort isnotwhole-task completion.",
   "declared": {
     "capabilities": [
       "edit-code",
@@ -16,8 +16,8 @@
   },
   "mode": "high-assurance",
   "tier_proposed": "R2",
-  "status": "proposed",
-  "owner_session": "2026-10-04-t0194-coordinator",
+  "status": "active",
+  "owner_session": "2026-10-07-t0196-coordinator",
   "claims": [
     "scripts/**",
     ".github/workflows/**",
@@ -31,13 +31,30 @@
     "mock-llm/server.mjs",
     "mock-hindsight/server.mjs",
     "org/tasks/T-0196.json",
-    "org/reviews/2026-10-t0194-review-handoff.md"
+    "org/reviews/2026-10-t0194-review-handoff.md",
+    ".npmrc",
+    "package.json",
+    ".gitignore",
+    "tests/unit/t0196-npm-standardisation.test.ts",
+    "org/briefs/T-0196-oracle.md",
+    "org/reviews/2026-10-t0196-npm-standardisation.md",
+    "scripts/tooling/line-census.baseline.json",
+    "org/claims.json",
+    "org/HANDOVER.md"
   ],
   "timestamps": {
     "opened": "2026-10-04T22:00:44.414178+00:00",
-    "updated": "2026-10-04T22:00:44.414178+00:00"
+    "updated": "2026-10-07T13:38:59.275404+00:00"
   },
-  "verdicts": [],
+  "verdicts": [
+    {
+      "role": "REVIEWER",
+      "session": "01a11562-421e-72f1-bce4-668d08db7c2f",
+      "verdict": "pass",
+      "date": "2026-10-07T13:38:59.275404+00:00",
+      "notes": "Bounded R2 oracle-first opening authority from tmp/t0195-closure-review-ffd9608c.json; operator tooling17 ruling independently verified. No implementation/test acceptance yet."
+    }
+  ],
   "tier_ruled": "R2",
   "reasons": [
     {
