@@ -356,7 +356,7 @@ export default function ChatPage() {
                   onRetry={() => void reloadActiveConversation()}
                 />
               ) : messages.length === 0 ? (
-                <div className="flex flex-col items-center justify-center h-full text-center py-24">
+              <div className={`flex flex-col items-center justify-center ${bannerStates.length === 0 ? "h-full " : ""}text-center py-24`}>
                   <Card variant="raised" padding="none" className="w-16 h-16 flex items-center justify-center mb-4">
                     <MessageCircle className="w-8 h-8 text-ps-text-muted" />
                   </Card>

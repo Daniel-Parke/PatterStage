@@ -2,7 +2,7 @@
   "measuredAt": "2026-10-07",
   "counts": {
     "srcLines": 102412,
-    "testLines": 155169,
+    "testLines": 155307,
     "scriptsLines": 13597,
     "srcRepeatedWindowLines": 655,
     "testRepeatedWindowLines": 4774,
@@ -1360,6 +1360,16 @@
       "measuredAt": "2026-10-07",
       "rise": "testLines rose from 154997 to 155169",
       "reason": "T-0208 adds 171 independently red-first fallback refusal oracle lines, one causal mutant manifest, and the existing transaction boundary; no existing tests retired or targets changed."
+    },
+    {
+      "measuredAt": "2026-10-07",
+      "rise": "testLines rose from 155169 to 155185",
+      "reason": "T-0206 adds a 16-line red-first structural oracle for the confirmed six-selector CI/runtime mismatch; coverage, commands, workers and frozen timing controls are unchanged."
+    },
+    {
+      "measuredAt": "2026-10-07",
+      "rise": "testLines rose from 155185 to 155307",
+      "reason": "T-0208 adds the independent 149-line empty-Chat geometry oracle, eight red cases and two green controls; no existing tests or census rules change."
     }
   ]
 }
