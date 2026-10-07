@@ -10,7 +10,7 @@ At dev f1f9162c, all four workflows finished. Both secret scans and push CI
 pass. PR CI passes its full browser/acceptance, install, real Hermes, Docker,
 Linux and boot/shell jobs, but macOS unit coverage fails. Job112748279916 in
 run37608052780 reports Jest worker8973, SIGSEGV, null exit code. Actual totals:
-9062 cases pass,5 skip; one suite fails to execute its12 cases. Next build and
+9062 cases pass,5 skip; one suite returns no case results. Next build and
 purity in that macOS job do not run. The failed run is retained, not retried.
 
 The failing console-shapes-and-dead-ends suite already explicitly uses Node;
@@ -43,3 +43,20 @@ Bounded reviewer authority:tmp/t0195-ci-runtime-alignment-authority-20261007.jso
 Hosted receipts:tmp/t0195-hosted-1791370067890/snapshot.json and
 tmp/t0195-native-crash-classification-20261007.json. No universal compatibility
 or release acceptance follows from a later green run.
+
+
+## Red adoption and exact implementation
+
+The prepatch one-case oracle freezes at SHA256
+67c48a1498376629aa9f21aa264a10030affed3fbdcf6db634aaea9aa6e3fca1:
+one intended matcher red,ten unchanged observer passes,zero runtime errors.
+Gauss independently adopts the preserved red receipt. It is committed at
+f9c95d56 before changing only six version selectors. The inverse is exact;
+parsed workflow fields are otherwise identical. The same eleven focused
+cases then pass. Proofs:tmp/t0206-runtime-proof and
+tmp/t0206-runtime-focus-1791371333271. Whole gate/sweep/hosted checks pending.
+
+Correction: sixteen static it declarations are present in the crashed suite.
+The earlier12 figure incorrectly subtracted cross-platform pass totals with
+different platform-dependent cases. Report the missing returned suite results,
+not an inferred unexecuted count. Original logs and failed head stay preserved.
