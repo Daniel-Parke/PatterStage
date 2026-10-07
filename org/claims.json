@@ -79,17 +79,10 @@
         "tmp/t0209-integration/src/app/agent/skills/page.tsx",
         "tmp/t0209-integration/src/components/agents/AgentProfilesOverview.tsx",
         "tmp/t0209-integration/src/components/models/DefaultsGrid.tsx",
-        "tests/fixtures/mutants/T-0208.json"
-      ],
-      "status": "active"
-    },
-    {
-      "lane_id": "T-0209-font-oracle",
-      "task_id": "T-0209",
-      "session_id": "independent-machine-font-oracle",
-      "host": "local",
-      "path_claims": [
-        "tmp/t0209-integration/tests/e2e/t0209-machine-terms.spec.ts"
+        "tests/fixtures/mutants/T-0208.json",
+        "tests/unit/ci-validated-runtime.test.ts",
+        "org/reviews/2026-10-t0195-ci-runtime-alignment.md",
+        ".github/workflows/ci.yml"
       ],
       "status": "active"
     }
